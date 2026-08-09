@@ -1,0 +1,208 @@
+# 世界事实（truth）与初始知识分布。
+# truth_value: true / false / null(尚未确定)
+# 关键：truth_value 永远不会进入 NPC 上下文。NPC 只看到 initial_knowledge 中属于自己的那条。
+
+facts:
+  - key: fact_shen_is_blood_agent
+    statement: 大长老沈鹤是血魔宗埋在青云宗的卧底
+    truth_value: true
+    scope: WORLD
+    sensitivity: 1.0
+    subject: great_elder_shen
+    related: [great_elder_shen, xue_hong, blood_demon_sect, qingyun_sect]
+    initial_knowledge:
+      great_elder_shen: {state: KNOWN, confidence: 1.0, source: SEED}
+      xue_hong: {state: KNOWN, confidence: 1.0, source: SEED}
+      blood_agent_wu: {state: KNOWN, confidence: 0.9, source: TOLD_BY}
+      lin_qingxue: {state: SUSPECTED, confidence: 0.35, source: INFERRED}
+      elder_qin: {state: SUSPECTED, confidence: 0.22, source: INFERRED}
+      lu_xuan: {state: SUSPECTED, confidence: 0.12, source: INFERRED}
+      # 其他所有人：UNKNOWN（缺省）
+
+  - key: fact_herbs_stolen
+    statement: 青云宗灵药园近三个月持续有药材失窃
+    truth_value: true
+    scope: FACTION
+    sensitivity: 0.5
+    related: [qingyun_sect, bai_su, elder_yao, elder_qin]
+    initial_knowledge:
+      bai_su: {state: KNOWN, confidence: 1.0, source: WITNESSED}
+      elder_yao: {state: KNOWN, confidence: 1.0, source: WITNESSED}
+      elder_qin: {state: KNOWN, confidence: 0.9, source: TOLD_BY}
+      lu_xuan: {state: KNOWN, confidence: 0.9, source: TOLD_BY}
+      great_elder_shen: {state: KNOWN, confidence: 1.0, source: WITNESSED}
+      lin_qingxue: {state: BELIEVED, confidence: 0.8, source: RUMOR}
+      han_mo: {state: KNOWN, confidence: 1.0, source: WITNESSED}
+      disciple_chen: {state: HEARD, confidence: 0.5, source: RUMOR}
+      zhao_wuji: {state: HEARD, confidence: 0.4, source: RUMOR}
+
+  - key: fact_stolen_herbs_match_blood_pill
+    statement: 失窃药材的组合正好凑成一份血魂丹的方子
+    truth_value: true
+    scope: PERSONAL
+    sensitivity: 0.9
+    related: [elder_yao, lin_qingxue]
+    initial_knowledge:
+      elder_yao: {state: BELIEVED, confidence: 0.85, source: INFERRED}
+      lin_qingxue: {state: SUSPECTED, confidence: 0.4, source: INFERRED}
+      great_elder_shen: {state: KNOWN, confidence: 1.0, source: SEED}
+
+  - key: fact_han_mo_stole_herbs
+    statement: 韩墨曾在灵药园偷拿过两株凝血草并卖到坊市
+    truth_value: true
+    scope: PERSONAL
+    sensitivity: 0.7
+    subject: han_mo
+    related: [han_mo, herbalist_gu, bai_su]
+    initial_knowledge:
+      han_mo: {state: KNOWN, confidence: 1.0, source: WITNESSED}
+      herbalist_gu: {state: KNOWN, confidence: 0.9, source: WITNESSED}
+      bai_su: {state: SUSPECTED, confidence: 0.3, source: INFERRED}
+
+  - key: fact_blackwind_demonic_qi
+    statement: 黑风山近月出现异常魔气
+    truth_value: true
+    scope: WORLD
+    sensitivity: 0.2
+    related: [blackwind_mountain, hunter_liu, qingyun_sect]
+    initial_knowledge:
+      hunter_liu: {state: KNOWN, confidence: 1.0, source: WITNESSED}
+      lin_qingxue: {state: KNOWN, confidence: 0.9, source: WITNESSED}
+      lu_xuan: {state: BELIEVED, confidence: 0.7, source: TOLD_BY}
+      elder_qin: {state: BELIEVED, confidence: 0.7, source: TOLD_BY}
+      great_elder_shen: {state: KNOWN, confidence: 1.0, source: SEED}
+      blood_agent_wu: {state: KNOWN, confidence: 1.0, source: WITNESSED}
+      qian_duo: {state: HEARD, confidence: 0.5, source: RUMOR}
+      disciple_chen: {state: HEARD, confidence: 0.35, source: RUMOR}
+
+  - key: fact_drained_beast_corpses
+    statement: 黑风山外围有被抽干精血的野兽尸体
+    truth_value: true
+    scope: PERSONAL
+    sensitivity: 0.6
+    related: [hunter_liu, blackwind_mountain]
+    initial_knowledge:
+      hunter_liu: {state: KNOWN, confidence: 1.0, source: WITNESSED}
+      blood_agent_wu: {state: KNOWN, confidence: 1.0, source: WITNESSED}
+
+  - key: fact_crimson_realm_opens_soon
+    statement: 赤霞秘境将在数月后开启
+    truth_value: true
+    scope: WORLD
+    sensitivity: 0.0
+    related: [crimson_cloud_realm, qingyun_sect, free_cultivator_league]
+    initial_knowledge:
+      lu_xuan: {state: KNOWN, confidence: 1.0, source: SEED}
+      great_elder_shen: {state: KNOWN, confidence: 1.0, source: SEED}
+      elder_qin: {state: KNOWN, confidence: 1.0, source: SEED}
+      elder_yao: {state: KNOWN, confidence: 1.0, source: SEED}
+      lin_qingxue: {state: KNOWN, confidence: 1.0, source: SEED}
+      zhao_wuji: {state: KNOWN, confidence: 1.0, source: SEED}
+      qian_duo: {state: KNOWN, confidence: 1.0, source: SEED}
+      disciple_chen: {state: KNOWN, confidence: 0.9, source: RUMOR}
+      han_mo: {state: HEARD, confidence: 0.6, source: RUMOR}
+      xue_hong: {state: KNOWN, confidence: 1.0, source: SEED}
+      blood_agent_wu: {state: KNOWN, confidence: 1.0, source: TOLD_BY}
+
+  - key: fact_lin_senior_sister_disappeared
+    statement: 三年前林清雪的师姐在黑风谷失踪，宗门结论是遭遇妖兽
+    truth_value: true
+    scope: FACTION
+    sensitivity: 0.3
+    related: [lin_qingxue, blackwind_valley, qingyun_sect]
+    initial_knowledge:
+      lin_qingxue: {state: KNOWN, confidence: 1.0, source: WITNESSED}
+      lu_xuan: {state: KNOWN, confidence: 1.0, source: SEED}
+      great_elder_shen: {state: KNOWN, confidence: 1.0, source: SEED}
+      elder_qin: {state: KNOWN, confidence: 1.0, source: SEED}
+      qian_duo: {state: KNOWN, confidence: 0.8, source: RUMOR}
+      disciple_chen: {state: HEARD, confidence: 0.6, source: RUMOR}
+
+  - key: fact_senior_sister_was_killed
+    statement: 林清雪的师姐并非死于妖兽，而是被灭口
+    truth_value: true
+    scope: WORLD
+    sensitivity: 1.0
+    related: [lin_qingxue, great_elder_shen]
+    initial_knowledge:
+      great_elder_shen: {state: KNOWN, confidence: 1.0, source: SEED}
+      xue_hong: {state: KNOWN, confidence: 0.8, source: TOLD_BY}
+      lin_qingxue: {state: SUSPECTED, confidence: 0.5, source: INFERRED}
+      qian_duo: {state: SUSPECTED, confidence: 0.3, source: INFERRED}
+
+  - key: fact_someone_buying_soul_grass
+    statement: 半个月前有戴斗笠的人在百草堂高价收购噬魂草
+    truth_value: true
+    scope: PERSONAL
+    sensitivity: 0.7
+    related: [herbalist_gu, blood_agent_wu]
+    initial_knowledge:
+      herbalist_gu: {state: KNOWN, confidence: 1.0, source: WITNESSED}
+      blood_agent_wu: {state: KNOWN, confidence: 1.0, source: WITNESSED}
+
+  - key: fact_zhao_bought_shady_pill
+    statement: 赵无极从坊市买过一枚来路不明的丹药
+    truth_value: true
+    scope: PERSONAL
+    sensitivity: 0.5
+    subject: zhao_wuji
+    related: [zhao_wuji, rogue_cultivator_du]
+    initial_knowledge:
+      zhao_wuji: {state: KNOWN, confidence: 1.0, source: WITNESSED}
+      rogue_cultivator_du: {state: KNOWN, confidence: 1.0, source: WITNESSED}
+
+  - key: fact_guard_ma_took_bribes
+    statement: 马奎收钱在夜里提前离岗过
+    truth_value: true
+    scope: PERSONAL
+    sensitivity: 0.6
+    subject: guard_ma
+    related: [guard_ma]
+    initial_knowledge:
+      guard_ma: {state: KNOWN, confidence: 1.0, source: WITNESSED}
+      blood_agent_wu: {state: KNOWN, confidence: 0.8, source: WITNESSED}
+
+  - key: fact_ancient_truce
+    statement: 四百年前青云宗曾与血魔宗秘密和谈，条件从未公开
+    truth_value: true
+    scope: WORLD
+    sensitivity: 0.8
+    related: [qingyun_sect, blood_demon_sect, scripture_keeper]
+    initial_knowledge:
+      scripture_keeper: {state: BELIEVED, confidence: 0.7, source: DOCUMENT}
+      great_elder_shen: {state: KNOWN, confidence: 1.0, source: SEED}
+      xue_hong: {state: KNOWN, confidence: 1.0, source: SEED}
+
+  - key: fact_bai_su_saw_figure
+    statement: 白苏曾在夜里看见有人翻出灵药园北墙，但认不出是谁
+    truth_value: true
+    scope: PERSONAL
+    sensitivity: 0.5
+    subject: bai_su
+    related: [bai_su]
+    initial_knowledge:
+      bai_su: {state: KNOWN, confidence: 1.0, source: WITNESSED}
+
+  - key: fact_qian_duo_has_witness_record
+    statement: 钱多手上有一份三年前黑风谷失踪案的目击记录
+    truth_value: true
+    scope: PERSONAL
+    sensitivity: 0.7
+    subject: qian_duo
+    related: [qian_duo, lin_qingxue]
+    initial_knowledge:
+      qian_duo: {state: KNOWN, confidence: 1.0, source: WITNESSED}
+
+  # 一条为假的传言 —— 用于验证 truth=false 时 NPC 也可以"相信"
+  - key: fact_lin_is_sect_master_daughter
+    statement: 林清雪是宗主的私生女
+    truth_value: false
+    scope: WORLD
+    sensitivity: 0.1
+    related: [lin_qingxue, lu_xuan]
+    initial_knowledge:
+      disciple_chen: {state: BELIEVED, confidence: 0.6, source: RUMOR}
+      zhao_wuji: {state: HEARD, confidence: 0.3, source: RUMOR}
+      guard_ma: {state: HEARD, confidence: 0.4, source: RUMOR}
+      lin_qingxue: {state: DISBELIEVED, confidence: 1.0, source: WITNESSED}
+      lu_xuan: {state: DISBELIEVED, confidence: 1.0, source: WITNESSED}

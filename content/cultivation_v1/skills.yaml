@@ -1,0 +1,163 @@
+skill_categories:
+  - {key: attack, name: 攻击}
+  - {key: defense, name: 防御}
+  - {key: movement, name: 身法}
+  - {key: sense, name: 神识}
+  - {key: support, name: 辅助}
+  - {key: craft, name: 技艺}
+  - {key: forbidden, name: 禁术}
+
+skills:
+  - key: basic_qi_palm
+    name: 引气掌
+    category: attack
+    required_realm: qi_refining
+    required_stage: early
+    spiritual_cost: 8
+    cooldown_minutes: 1
+    power: 10
+    description: 最基础的灵力外放，打在人身上像被木棍抽了一下。
+    effects: {damage_type: blunt}
+
+  - key: azure_cloud_sword_art
+    name: 青云剑诀
+    category: attack
+    required_realm: qi_refining
+    required_stage: late
+    spiritual_cost: 30
+    cooldown_minutes: 2
+    power: 38
+    description: 青云宗根本剑法，讲究连绵不绝。真正的威力要到筑基才显出来。
+    effects: {damage_type: sword, combo: true}
+
+  - key: azure_frost_sword
+    name: 青霜剑意
+    category: attack
+    required_realm: foundation
+    required_stage: early
+    spiritual_cost: 90
+    cooldown_minutes: 5
+    power: 120
+    description: 林清雪以冰灵根改出来的剑意，剑过之处结霜。
+    effects: {damage_type: sword, element: ice, slow: 0.3}
+
+  - key: raging_flame_palm
+    name: 烈焰掌
+    category: attack
+    required_realm: foundation
+    required_stage: early
+    spiritual_cost: 80
+    cooldown_minutes: 4
+    power: 105
+    description: 赵家家传掌法，刚猛有余，收势不足。
+    effects: {damage_type: fire, element: fire}
+
+  - key: frost_step
+    name: 踏霜
+    category: movement
+    required_realm: foundation
+    required_stage: early
+    spiritual_cost: 25
+    cooldown_minutes: 1
+    power: 0
+    description: 短距离瞬移，落脚处留下一层薄霜。
+    effects: {agility_bonus: 8, escape_bonus: 0.2}
+
+  - key: shadow_step
+    name: 缩地步
+    category: movement
+    required_realm: qi_refining
+    required_stage: middle
+    spiritual_cost: 15
+    cooldown_minutes: 1
+    power: 0
+    description: 散修中流传很广的身法，跑得快，不好看。
+    effects: {agility_bonus: 5, escape_bonus: 0.15}
+
+  - key: spirit_sense
+    name: 神识
+    category: sense
+    required_realm: foundation
+    required_stage: early
+    spiritual_cost: 12
+    cooldown_minutes: 0
+    power: 0
+    description: 神识外放，方圆数十丈内的动静瞒不过。
+    effects: {perception_bonus: 8, detect_bonus: 0.25}
+
+  - key: spirit_sense_minor
+    name: 灵觉
+    category: sense
+    required_realm: qi_refining
+    required_stage: middle
+    spiritual_cost: 5
+    cooldown_minutes: 0
+    power: 0
+    description: 炼气期能做到的极限，只能感觉到"有人"。
+    effects: {perception_bonus: 3, detect_bonus: 0.08}
+
+  - key: golden_core_pressure
+    name: 金丹威压
+    category: support
+    required_realm: golden_core
+    required_stage: early
+    spiritual_cost: 60
+    cooldown_minutes: 10
+    power: 0
+    description: 不需要动手。境界差距本身就是武器。
+    effects: {intimidate_bonus: 0.6, suppress_lower_realm: true}
+
+  - key: binding_chain
+    name: 缚灵锁
+    category: support
+    required_realm: golden_core
+    required_stage: early
+    spiritual_cost: 120
+    cooldown_minutes: 30
+    power: 0
+    description: 执法长老拿人用的法术，锁住灵力运转。
+    effects: {disable_spiritual_power: true, duration_minutes: 60}
+
+  - key: pill_refinement
+    name: 丹道
+    category: craft
+    required_realm: qi_refining
+    required_stage: late
+    spiritual_cost: 40
+    cooldown_minutes: 240
+    power: 0
+    description: 炼丹。火候差一分，一炉药材就废了。
+    effects: {craft: pill}
+
+  - key: herb_identification
+    name: 识药
+    category: craft
+    required_realm: mortal
+    required_stage: normal
+    spiritual_cost: 0
+    cooldown_minutes: 0
+    power: 0
+    description: 认得出药材的品相、年份和产地。
+    effects: {craft: herb, appraise_bonus: 0.3}
+
+  - key: blood_concealment
+    name: 血遁匿息
+    category: forbidden
+    required_realm: foundation
+    required_stage: early
+    spiritual_cost: 70
+    cooldown_minutes: 60
+    power: 0
+    description: 以精血为代价隐去气息，正道视为邪术。
+    effects: {detection_penalty: 0.6, health_cost_ratio: 0.05, forbidden: true}
+
+  - key: blood_refinement
+    name: 血炼
+    category: forbidden
+    required_realm: golden_core
+    required_stage: early
+    spiritual_cost: 200
+    cooldown_minutes: 1440
+    power: 0
+    description: 以他人精血修补自身。血魔宗立宗之本。
+    effects: {steal_cultivation: true, forbidden: true}

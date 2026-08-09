@@ -1,0 +1,110 @@
+# 背景 NPC 模板。世界模拟需要人时按模板批量生成，不需要每个都手写。
+
+surnames: [张, 王, 李, 赵, 陈, 刘, 周, 吴, 郑, 孙, 马, 朱, 胡, 林, 何, 高, 罗, 梁, 宋, 唐]
+given_names_male: [山, 川, 石, 铁, 平, 安, 明, 远, 舟, 松, 岩, 河, 云, 风, 峰, 阳, 忠, 志]
+given_names_female: [芸, 莲, 兰, 秀, 巧, 珠, 燕, 玉, 蓉, 婉, 素, 萍, 霜, 月, 芝, 荷]
+
+templates:
+  - key: outer_disciple
+    name: 外门弟子
+    weight: 40
+    character_type: BACKGROUND
+    faction: qingyun_sect
+    faction_rank: 外门弟子
+    age: {min: 15, max: 30}
+    realm: qi_refining
+    realm_stage_weights: {early: 5, middle: 3, late: 2, peak: 1}
+    stats: {strength: [9, 14], agility: [9, 14], perception: [8, 13], intelligence: [8, 13], willpower: [8, 14], charisma: [8, 14]}
+    traits_range: {cautious: [0.3, 0.7], proud: [0.1, 0.5], compassionate: [0.3, 0.7], ambitious: [0.3, 0.8]}
+    values_pool: [strength, family, friends, fairness, comfort]
+    speech_styles: [平实, 拘谨, 爽快, 唯唯诺诺]
+    schedule: {default: cultivate, slots: [{phase: dawn, activity: cultivate}, {phase: morning, activity: work}, {phase: afternoon, activity: work}, {phase: dusk, activity: social}, {phase: night, activity: cultivate}, {phase: deep_night, activity: sleep}]}
+    locations: [qingyun_outer_disciple_quarters, qingyun_spirit_field, qingyun_training_ground, qingyun_outer_hall]
+    skills: [basic_qi_palm]
+    items: [{key: spirit_stone, qty: [20, 200]}, {key: coarse_robe, qty: 1}]
+
+  - key: inner_disciple
+    name: 内门弟子
+    weight: 12
+    character_type: BACKGROUND
+    faction: qingyun_sect
+    faction_rank: 内门弟子
+    age: {min: 20, max: 45}
+    realm: qi_refining
+    realm_stage_weights: {late: 3, peak: 4}
+    stats: {strength: [12, 17], agility: [12, 17], perception: [10, 15], intelligence: [10, 15], willpower: [11, 16], charisma: [9, 15]}
+    traits_range: {cautious: [0.3, 0.7], proud: [0.4, 0.8], compassionate: [0.2, 0.6], ambitious: [0.5, 0.9]}
+    values_pool: [strength, sect_loyalty, personal_glory]
+    speech_styles: [端着, 客气, 冷淡]
+    schedule: {default: cultivate, slots: [{phase: dawn, activity: cultivate}, {phase: morning, activity: cultivate}, {phase: afternoon, activity: work}, {phase: night, activity: cultivate}, {phase: deep_night, activity: sleep}]}
+    locations: [qingyun_training_ground, qingyun_main_hall, qingyun_scripture_hall]
+    skills: [azure_cloud_sword_art]
+    items: [{key: spirit_stone, qty: [300, 1500]}, {key: azure_cloud_sword, qty: 1}]
+
+  - key: market_merchant
+    name: 坊市商贩
+    weight: 20
+    character_type: BACKGROUND
+    faction: null
+    age: {min: 25, max: 70}
+    realm: qi_refining
+    realm_stage_weights: {early: 4, middle: 3, late: 1}
+    stats: {strength: [7, 12], agility: [8, 13], perception: [12, 18], intelligence: [11, 17], willpower: [8, 13], charisma: [12, 18]}
+    traits_range: {cautious: [0.5, 0.9], proud: [0.1, 0.4], compassionate: [0.1, 0.5], ambitious: [0.3, 0.7], shrewd: [0.6, 0.95]}
+    values_pool: [profit, self_preservation, old_customers]
+    speech_styles: [热络, 精明, 油滑]
+    schedule: {default: work, slots: [{phase: morning, activity: work}, {phase: afternoon, activity: work}, {phase: dusk, activity: social}, {phase: night, activity: sleep}]}
+    locations: [qingyun_market, herb_shop, auction_house]
+    skills: []
+    items: [{key: spirit_stone, qty: [200, 3000]}]
+
+  - key: rogue_cultivator
+    name: 散修
+    weight: 18
+    character_type: BACKGROUND
+    faction: free_cultivator_league
+    age: {min: 22, max: 90}
+    realm: qi_refining
+    realm_stage_weights: {middle: 3, late: 4, peak: 2}
+    stats: {strength: [11, 17], agility: [12, 18], perception: [10, 16], intelligence: [9, 15], willpower: [9, 15], charisma: [7, 14]}
+    traits_range: {cautious: [0.4, 0.8], proud: [0.2, 0.6], compassionate: [0.1, 0.5], ambitious: [0.4, 0.8], mercenary: [0.5, 0.95]}
+    values_pool: [money, freedom, self_preservation]
+    speech_styles: [简短, 江湖气, 不客气]
+    schedule: {default: work, slots: [{phase: morning, activity: social}, {phase: afternoon, activity: work}, {phase: dusk, activity: social}, {phase: night, activity: social}, {phase: deep_night, activity: sleep}]}
+    locations: [qingyun_market, drunken_immortal_tavern, sunset_valley]
+    skills: [shadow_step, basic_qi_palm]
+    items: [{key: spirit_stone, qty: [50, 800]}]
+
+  - key: villager
+    name: 村民
+    weight: 25
+    character_type: BACKGROUND
+    faction: null
+    age: {min: 12, max: 75}
+    realm: mortal
+    realm_stage_weights: {normal: 1}
+    stats: {strength: [6, 14], agility: [6, 13], perception: [6, 14], intelligence: [5, 12], willpower: [6, 13], charisma: [6, 13]}
+    traits_range: {cautious: [0.4, 0.9], proud: [0.05, 0.3], compassionate: [0.3, 0.8], ambitious: [0.05, 0.3]}
+    values_pool: [family, village, survival]
+    speech_styles: [土话, 老实, 絮叨]
+    schedule: {default: work, slots: [{phase: dawn, activity: work}, {phase: morning, activity: work}, {phase: afternoon, activity: work}, {phase: dusk, activity: eat}, {phase: night, activity: sleep}, {phase: deep_night, activity: sleep}]}
+    locations: [stone_creek_village, qingyun_city]
+    skills: []
+    items: []
+
+  - key: city_guard
+    name: 城卫
+    weight: 10
+    character_type: BACKGROUND
+    faction: great_zhou
+    age: {min: 20, max: 50}
+    realm: qi_refining
+    realm_stage_weights: {early: 5, middle: 2}
+    stats: {strength: [13, 18], agility: [10, 15], perception: [9, 14], intelligence: [7, 12], willpower: [10, 15], charisma: [7, 12]}
+    traits_range: {cautious: [0.3, 0.7], proud: [0.2, 0.5], compassionate: [0.2, 0.5], ambitious: [0.1, 0.4]}
+    values_pool: [order, duty, comfort]
+    speech_styles: [官腔, 粗声粗气]
+    schedule: {default: patrol, slots: [{phase: morning, activity: patrol}, {phase: afternoon, activity: patrol}, {phase: dusk, activity: patrol}, {phase: night, activity: sleep}]}
+    locations: [qingyun_city, qingyun_market]
+    skills: [basic_qi_palm]
+    items: [{key: spirit_stone, qty: [30, 300]}]

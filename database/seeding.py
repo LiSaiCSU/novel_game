@@ -1,0 +1,53 @@
+"""Persist a SeedBundle into SQL."""
+
+from __future__ import annotations
+
+import sqlalchemy as sa
+from sqlalchemy.ext.asyncio import AsyncSession
+
+from database import mappers as m
+from database.models.orm import WorldORM
+from engine.world.seeder import SeedBundle
+
+
+async def persist_bundle(session: AsyncSession, bundle: SeedBundle) -> str:
+    """Write a freshly built world. Idempotent on world id."""
+    existing = await session.get(WorldORM, bundle.world.id)
+    if existing is not None:
+        return bundle.world.id
+
+    session.add(m.world_to_orm(bundle.world))
+    for loc in bundle.locations:
+        session.add(m.location_to_orm(loc))
+    for faction in bundle.factions:
+        session.add(m.faction_to_orm(faction))
+    for item in bundle.items:
+        session.add(m.item_to_orm(item))
+    for skill in bundle.skills:
+        session.add(m.skill_to_orm(skill))
+    for character in bundle.characters:
+        session.add(m.character_to_orm(character))
+    for rel in bundle.relationships:
+        session.add(m.relationship_to_orm(rel))
+    for fact in bundle.facts:
+        session.add(m.fact_to_orm(fact))
+    for knowledge in bundle.knowledge:
+        session.add(m.knowledge_to_orm(knowledge))
+    for inv in bundle.inventory:
+        session.add(m.inventory_to_orm(inv))
+    for cskill in bundle.character_skills:
+        session.add(m.character_skill_to_orm(cskill))
+    for quest in bundle.quests:
+        session.add(m.quest_to_orm(quest))
+    for thread in bundle.plot_threads:
+        session.add(m.thread_to_orm(thread))
+    if bundle.session is not None:
+        session.add(m.session_to_orm(bundle.session))
+
+    await session.flush()
+    return bundle.world.id
+
+
+async def world_exists(session: AsyncSession, world_id: str) -> bool:
+    result = await session.execute(sa.select(WorldORM.id).where(WorldORM.id == world_id))
+    return result.scalars().first() is not None

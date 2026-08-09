@@ -1,0 +1,83 @@
+"""ModelRouter (Prompt section 48).
+
+Cheap models for parsing and bookkeeping, strong models for the characters and
+decisions the player will actually notice. Every name comes from .env.
+"""
+
+from __future__ import annotations
+
+from dataclasses import dataclass
+from typing import Any, ClassVar
+
+from engine.core.types import CharacterType, LLMRole
+
+
+@dataclass(frozen=True, slots=True)
+class ModelChoice:
+    role: LLMRole
+    model: str
+    temperature: float
+    max_output_tokens: int
+
+    @property
+    def configured(self) -> bool:
+        return bool(self.model)
+
+
+class ModelRouter:
+    _DEFAULT_TEMPERATURE: ClassVar[dict[LLMRole, float]] = {
+        LLMRole.INTENT: 0.2,
+        LLMRole.NPC: 0.7,
+        LLMRole.NPC_MAJOR: 0.7,
+        LLMRole.DIRECTOR: 0.6,
+        LLMRole.NARRATIVE: 0.85,
+        LLMRole.MEMORY: 0.3,
+        LLMRole.EMBEDDING: 0.0,
+    }
+    _DEFAULT_MAX_TOKENS: ClassVar[dict[LLMRole, int]] = {
+        LLMRole.INTENT: 700,
+        LLMRole.NPC: 900,
+        LLMRole.NPC_MAJOR: 1100,
+        LLMRole.DIRECTOR: 800,
+        LLMRole.NARRATIVE: 1100,
+        LLMRole.MEMORY: 600,
+        LLMRole.EMBEDDING: 8,
+    }
+
+    def __init__(self, settings: Any) -> None:
+        self._models: dict[LLMRole, str] = {
+            LLMRole.INTENT: getattr(settings, "intent_model", "") or "",
+            LLMRole.NPC: getattr(settings, "npc_model", "") or "",
+            LLMRole.NPC_MAJOR: getattr(settings, "npc_major_model", "") or "",
+            LLMRole.DIRECTOR: getattr(settings, "director_model", "") or "",
+            LLMRole.NARRATIVE: getattr(settings, "narrative_model", "") or "",
+            LLMRole.MEMORY: getattr(settings, "memory_model", "") or "",
+            LLMRole.EMBEDDING: getattr(settings, "embedding_model", "") or "",
+        }
+        # A major-NPC model is optional; fall back to the ordinary NPC model.
+        if not self._models[LLMRole.NPC_MAJOR]:
+            self._models[LLMRole.NPC_MAJOR] = self._models[LLMRole.NPC]
+
+    def choose(
+        self, role: LLMRole, *, temperature: float | None = None, max_output_tokens: int | None = None
+    ) -> ModelChoice:
+        return ModelChoice(
+            role=role,
+            model=self._models.get(role, ""),
+            temperature=(
+                self._DEFAULT_TEMPERATURE.get(role, 0.7) if temperature is None else temperature
+            ),
+            max_output_tokens=(
+                self._DEFAULT_MAX_TOKENS.get(role, 800)
+                if max_output_tokens is None
+                else max_output_tokens
+            ),
+        )
+
+    def for_npc(self, character_type: CharacterType) -> ModelChoice:
+        """Important characters deserve the stronger model."""
+        role = LLMRole.NPC_MAJOR if character_type is CharacterType.MAJOR_NPC else LLMRole.NPC
+        return self.choose(role)
+
+    def configured_roles(self) -> list[LLMRole]:
+        return [role for role, model in self._models.items() if model]

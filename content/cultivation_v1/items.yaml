@@ -1,0 +1,201 @@
+item_types:
+  - {key: currency, name: 货币}
+  - {key: pill, name: 丹药}
+  - {key: herb, name: 灵药}
+  - {key: talisman, name: 符箓}
+  - {key: weapon, name: 法器}
+  - {key: armor, name: 护具}
+  - {key: token, name: 令牌}
+  - {key: material, name: 材料}
+  - {key: book, name: 典籍}
+  - {key: misc, name: 杂物}
+
+rarities:
+  - {key: common, name: 凡品, value_multiplier: 1.0}
+  - {key: uncommon, name: 下品, value_multiplier: 3.0}
+  - {key: rare, name: 中品, value_multiplier: 12.0}
+  - {key: epic, name: 上品, value_multiplier: 60.0}
+  - {key: legendary, name: 极品, value_multiplier: 400.0}
+
+items:
+  - key: spirit_stone
+    name: 灵石
+    type: currency
+    rarity: common
+    value: 1
+    stackable: true
+    description: 修真界通行的硬通货，一枚下品灵石够外门弟子过三天。
+    effects: {}
+
+  - key: qi_recovery_pill
+    name: 回气丹
+    type: pill
+    rarity: common
+    value: 25
+    stackable: true
+    description: 一品丹药，服下后灵力恢复得快些，味道很冲。
+    effects: {restore_spiritual_power_ratio: 0.35}
+
+  - key: healing_pill
+    name: 疗伤丹
+    type: pill
+    rarity: uncommon
+    value: 90
+    stackable: true
+    description: 二品丹药，对外伤有效，对经脉损伤只能拖延。
+    effects: {restore_health_ratio: 0.4, reduce_injury: 0.1}
+
+  - key: foundation_pill
+    name: 筑基丹
+    type: pill
+    rarity: rare
+    value: 2600
+    stackable: true
+    description: 三品丹药。炼气圆满者服下冲击筑基，成算能提三成。青云宗每年只产十余枚。
+    effects: {breakthrough_bonus: 0.30, applies_to_realm: qi_refining}
+
+  - key: solid_origin_pill
+    name: 固元丹
+    type: pill
+    rarity: rare
+    value: 1800
+    stackable: true
+    description: 三品丹药，能吊住凡人的命，也能温养受损的经脉。
+    effects: {restore_health_ratio: 0.6, reduce_injury: 0.3, mortal_life_extension_years: 3}
+
+  - key: blood_coagulation_grass
+    name: 凝血草
+    type: herb
+    rarity: common
+    value: 18
+    stackable: true
+    description: 三年生的凝血草，止血用，也是好几种丹方的辅药。
+    effects: {alchemy_material: true}
+
+  - key: soul_devouring_grass
+    name: 噬魂草
+    type: herb
+    rarity: epic
+    value: 4200
+    stackable: true
+    description: |
+      生于阴煞之地的禁药。正道丹方中几乎不用，唯一常见的用途是血炼。
+      青云宗药园里本来只有两株，用作镇园的对照样本。
+    effects: {alchemy_material: true, restricted: true}
+
+  - key: azure_talisman
+    name: 青云符
+    type: talisman
+    rarity: uncommon
+    value: 60
+    stackable: true
+    description: 青云宗制式符箓，激发后有一击炼气后期水准的剑气。
+    effects: {one_shot_attack_power: 22}
+
+  - key: concealment_talisman
+    name: 匿息符
+    type: talisman
+    rarity: uncommon
+    value: 110
+    stackable: true
+    description: 贴身使用，能压住气息一炷香。对神识强于自己两个境界的人无效。
+    effects: {detection_penalty: 0.35, duration_minutes: 30}
+
+  - key: azure_cloud_sword
+    name: 青云剑
+    type: weapon
+    rarity: uncommon
+    value: 400
+    stackable: false
+    description: 青云宗弟子制式长剑，剑脊刻着云纹，用久了会有自己的脾气。
+    effects: {attack_power: 14}
+
+  - key: frost_edge_sword
+    name: 霜锋
+    type: weapon
+    rarity: rare
+    value: 5200
+    stackable: false
+    description: 以寒铁掺冰髓锻成，出鞘时剑身结霜。
+    effects: {attack_power: 46, element: ice}
+
+  - key: coarse_robe
+    name: 外门弟子服
+    type: armor
+    rarity: common
+    value: 12
+    stackable: false
+    description: 青灰色粗布道袍，浆洗得发白。
+    effects: {defense: 3}
+
+  - key: spirit_silk_robe
+    name: 灵蚕丝袍
+    type: armor
+    rarity: rare
+    value: 3100
+    stackable: false
+    description: 灵蚕丝织成，刀剑难入，内门以上才有配额。
+    effects: {defense: 28}
+
+  - key: sect_master_token
+    name: 青云令
+    type: token
+    rarity: legendary
+    value: 0
+    stackable: false
+    description: 宗主信物。见令如见宗主。
+    effects: {authority: sect_master}
+
+  - key: enforcement_token
+    name: 执法令
+    type: token
+    rarity: epic
+    value: 0
+    stackable: false
+    description: 执法长老信物，持令可查问任何一名弟子。
+    effects: {authority: enforcement}
+
+  - key: inner_disciple_token
+    name: 内门令牌
+    type: token
+    rarity: rare
+    value: 0
+    stackable: false
+    description: 内门弟子身份凭证，可入藏经阁二层。
+    effects: {authority: inner_disciple}
+
+  - key: blood_jade_pendant
+    name: 血玉坠
+    type: misc
+    rarity: epic
+    value: 0
+    stackable: false
+    description: 暗红色的玉坠，贴着皮肤时微温。血魔宗内部信物，外人认不出。
+    effects: {faction_token: blood_demon_sect, hidden: true}
+
+  - key: basic_cultivation_manual
+    name: 《青云引气诀》
+    type: book
+    rarity: common
+    value: 50
+    stackable: false
+    description: 青云宗外门人手一册的入门功法，稳妥但慢。
+    effects: {teaches_skill: basic_qi_palm, cultivation_speed: 1.0}
+
+  - key: azure_cloud_manual
+    name: 《青云剑典》
+    type: book
+    rarity: rare
+    value: 3800
+    stackable: false
+    description: 内门功法，需内门令牌方可借阅。
+    effects: {teaches_skill: azure_cloud_sword_art, cultivation_speed: 1.25}
+
+  - key: old_sect_chronicle
+    name: 《青云杂记·卷七》
+    type: book
+    rarity: uncommon
+    value: 200
+    stackable: false
+    description: 四百年前的宗门杂记，纸页脆得一翻就掉渣。
+    effects: {reveals_fact: fact_ancient_truce}

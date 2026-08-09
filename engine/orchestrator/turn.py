@@ -1,0 +1,189 @@
+"""Turn-level data structures and observability records (Prompt section 60)."""
+
+from __future__ import annotations
+
+import time
+from dataclasses import dataclass, field
+from typing import Any
+
+from pydantic import BaseModel, ConfigDict, Field
+
+from engine.actions.schema import Action, ActionOutcome, PlayerIntent, RuleResult
+from engine.llm.provider import LLMCallRecord
+from engine.rng.game_rng import RngTrace
+
+
+class TurnRequest(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    session_id: str
+    text: str
+    idempotency_key: str | None = None
+    request_id: str = ""
+    debug: bool = False
+
+
+class Choice(BaseModel):
+    label: str
+    hint: str = ""
+    action_type: str = ""
+
+
+class TurnResult(BaseModel):
+    """Exactly the shape Prompt section 50 specifies, plus turn_id and debug."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    turn_id: str
+    turn_number: int = 0
+    narrative: str = ""
+    state_changes: dict[str, Any] = Field(default_factory=dict)
+    visible_updates: dict[str, Any] = Field(default_factory=dict)
+    choices: list[Choice] = Field(default_factory=list)
+    rejected: dict[str, Any] | None = None
+    degraded: bool = False
+    debug: dict[str, Any] | None = None
+
+
+@dataclass(slots=True)
+class StageTimer:
+    timings: dict[str, int] = field(default_factory=dict)
+    _open: dict[str, float] = field(default_factory=dict)
+
+    def start(self, stage: str) -> None:
+        self._open[stage] = time.perf_counter()
+
+    def stop(self, stage: str) -> None:
+        started = self._open.pop(stage, None)
+        if started is not None:
+            self.timings[stage] = int((time.perf_counter() - started) * 1000)
+
+    def measure(self, stage: str):
+        timer = self
+
+        class _Ctx:
+            def __enter__(self) -> None:
+                timer.start(stage)
+
+            def __exit__(self, *exc: Any) -> None:
+                timer.stop(stage)
+
+        return _Ctx()
+
+
+@dataclass(slots=True)
+class TurnTrace:
+    """Everything the debug panel needs to explain a turn."""
+
+    turn_id: str
+    request_id: str = ""
+    session_id: str = ""
+    world_id: str = ""
+    stage_timings: dict[str, int] = field(default_factory=dict)
+    intent: dict[str, Any] | None = None
+    rule_result: dict[str, Any] | None = None
+    outcome: dict[str, Any] | None = None
+    npc_decisions: list[dict[str, Any]] = field(default_factory=list)
+    director: dict[str, Any] | None = None
+    simulation: dict[str, Any] | None = None
+    proposals: dict[str, Any] = field(default_factory=dict)
+    consistency: list[dict[str, Any]] = field(default_factory=list)
+    state_changes: dict[str, Any] = field(default_factory=dict)
+    memory: dict[str, Any] = field(default_factory=dict)
+    context_snapshots: dict[str, Any] = field(default_factory=dict)
+    llm_calls: list[dict[str, Any]] = field(default_factory=list)
+    rng_traces: list[dict[str, Any]] = field(default_factory=list)
+    token_usage: dict[str, int] = field(default_factory=dict)
+    errors: list[dict[str, Any]] = field(default_factory=list)
+    narrative_style: dict[str, Any] = field(default_factory=dict)
+
+    def as_dict(self) -> dict[str, Any]:
+        return {
+            "turn_id": self.turn_id,
+            "request_id": self.request_id,
+            "session_id": self.session_id,
+            "world_id": self.world_id,
+            "stage_timings": self.stage_timings,
+            "intent": self.intent,
+            "rule_result": self.rule_result,
+            "outcome": self.outcome,
+            "npc_decisions": self.npc_decisions,
+            "director": self.director,
+            "simulation": self.simulation,
+            "proposals": self.proposals,
+            "consistency": self.consistency,
+            "state_changes": self.state_changes,
+            "memory": self.memory,
+            "context_snapshots": self.context_snapshots,
+            "llm_calls": self.llm_calls,
+            "rng_traces": self.rng_traces,
+            "token_usage": self.token_usage,
+            "errors": self.errors,
+            "narrative_style": self.narrative_style,
+        }
+
+
+def record_llm_calls(records: list[LLMCallRecord]) -> list[dict[str, Any]]:
+    return [r.model_dump() for r in records]
+
+
+def record_rng(traces: list[RngTrace]) -> list[dict[str, Any]]:
+    return [t.model_dump() for t in traces]
+
+
+@dataclass(slots=True)
+class OrchestratorPlan:
+    """Which subsystems this turn actually needs (Prompt section 6)."""
+
+    needs_intent_llm: bool = True
+    needs_npcs: bool = True
+    needs_director: bool = True
+    needs_simulation: bool = True
+    needs_narrative: bool = True
+    needs_memory: bool = True
+    reason: str = ""
+
+    @classmethod
+    def for_query(cls, reason: str = "query_action") -> OrchestratorPlan:
+        return cls(
+            needs_intent_llm=False,
+            needs_npcs=False,
+            needs_director=False,
+            needs_simulation=False,
+            needs_narrative=False,
+            needs_memory=False,
+            reason=reason,
+        )
+
+    @classmethod
+    def for_rejection(cls) -> OrchestratorPlan:
+        return cls(
+            needs_npcs=False,
+            needs_director=False,
+            needs_simulation=False,
+            needs_narrative=True,
+            needs_memory=False,
+            reason="rule_rejected",
+        )
+
+    def as_dict(self) -> dict[str, Any]:
+        return {
+            "intent_llm": self.needs_intent_llm,
+            "npcs": self.needs_npcs,
+            "director": self.needs_director,
+            "simulation": self.needs_simulation,
+            "narrative": self.needs_narrative,
+            "memory": self.needs_memory,
+            "reason": self.reason,
+        }
+
+
+def action_summary(
+    intent: PlayerIntent, action: Action, rule_result: RuleResult, outcome: ActionOutcome
+) -> dict[str, Any]:
+    return {
+        "intent": intent.model_dump(mode="json"),
+        "action": action.model_dump(mode="json"),
+        "rule_result": rule_result.model_dump(mode="json"),
+        "outcome": outcome.model_dump(mode="json"),
+    }

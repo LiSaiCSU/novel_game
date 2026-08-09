@@ -1,0 +1,735 @@
+# 重要 NPC。character_type: MAJOR_NPC / MINOR_NPC / BACKGROUND
+# personality.traits 0-1；关系为有向（a 对 b 的看法）。
+
+characters:
+# ══════════════════════════════════════════════════════════════
+# 1. 林清雪 —— 青云宗年轻天才，正在暗中调查
+# ══════════════════════════════════════════════════════════════
+- key: lin_qingxue
+  name: 林清雪
+  type: MAJOR_NPC
+  age: 24
+  gender: female
+  location: qingyun_back_mountain
+  faction: qingyun_sect
+  faction_rank: 真传弟子
+  realm: foundation
+  realm_stage: middle
+  cultivation_progress: 0.41
+  spiritual_root: variant_ice
+  stats: {strength: 13, agility: 17, perception: 16, intelligence: 16, willpower: 15, charisma: 13}
+  mental_state: 0.62
+  background: |
+    出身石溪村，八岁被青云宗选中，十九岁筑基，是宗门二十年来最快的记录。
+    三年前她的师姐在黑风谷失踪，官方结论是遭遇妖兽。她不信。
+    从那以后她开始独自查证宗门内的异常，从不对任何人提起。
+  personality:
+    traits: {cautious: 0.82, proud: 0.71, compassionate: 0.55, ambitious: 0.6, stubborn: 0.78, curious: 0.74}
+    values: [truth, personal_strength, sect_loyalty, protecting_the_weak]
+    taboos: [betrayal, abandoning_a_comrade]
+    speech_style: 冷静克制，话少，几乎不用敬语，遇到不想答的问题就沉默
+    risk_tolerance: 0.42
+  emotion: {dominant: focused, valence: -0.1, arousal: 0.4, intensity: 0.5}
+  long_term_goal: 查明师姐失踪的真相，并让该负责的人付出代价
+  short_term_goals:
+    - 弄清近期灵药失窃与后山夜间异动的关联
+    - 在不惊动任何人的情况下确认大长老的行踪
+  schedule:
+    default: cultivate
+    slots:
+      - {phase: deep_night, activity: investigate, location: qingyun_back_mountain}
+      - {phase: dawn, activity: cultivate, location: qingyun_back_mountain}
+      - {phase: morning, activity: work, location: qingyun_training_ground}
+      - {phase: afternoon, activity: cultivate, location: qingyun_back_mountain}
+      - {phase: dusk, activity: social, location: qingyun_main_hall}
+      - {phase: night, activity: investigate, location: qingyun_spirit_field}
+  skills: [azure_frost_sword, frost_step, spirit_sense]
+  items: [{key: azure_talisman, qty: 3}, {key: spirit_stone, qty: 420}, {key: qi_recovery_pill, qty: 4}]
+  reputation: {global: 46, by_faction: {qingyun_sect: 72}}
+  secret: 她私下保存了一份失窃灵药的清单，并已发现清单上的药材全部指向同一种血炼丹方
+  capabilities: [御剑飞行, 冰系术法, 追踪]
+
+# ══════════════════════════════════════════════════════════════
+# 2. 陆玄 —— 青云宗宗主
+# ══════════════════════════════════════════════════════════════
+- key: lu_xuan
+  name: 陆玄
+  type: MAJOR_NPC
+  age: 213
+  gender: male
+  location: qingyun_main_hall
+  faction: qingyun_sect
+  faction_rank: 宗主
+  realm: golden_core
+  realm_stage: late
+  cultivation_progress: 0.55
+  spiritual_root: single_element
+  stats: {strength: 20, agility: 18, perception: 22, intelligence: 21, willpower: 24, charisma: 19}
+  mental_state: 0.71
+  background: |
+    接任宗主四十一年。年轻时以剑闻名东域，如今更多时间花在平衡长老会与安抚各方上。
+    他知道宗门正在慢慢衰落，也知道自己没有足够的时间扭转它。
+  personality:
+    traits: {cautious: 0.75, proud: 0.62, compassionate: 0.58, ambitious: 0.45, pragmatic: 0.85, weary: 0.6}
+    values: [sect_survival, order, responsibility]
+    taboos: [selling_out_the_sect, harming_disciples_for_gain]
+    speech_style: 缓慢、简短、常用反问，很少直接下结论
+    risk_tolerance: 0.28
+  emotion: {dominant: weary, valence: -0.2, arousal: 0.2, intensity: 0.4}
+  long_term_goal: 在自己寿元耗尽前，为青云宗留下一个能撑住场面的下一代
+  short_term_goals:
+    - 决定赤霞秘境的入场名额如何分配
+    - 弄清灵药失窃是内贼还是外敌所为
+  schedule:
+    default: work
+    slots:
+      - {phase: deep_night, activity: sleep, location: qingyun_main_hall}
+      - {phase: dawn, activity: cultivate, location: qingyun_back_mountain}
+      - {phase: morning, activity: work, location: qingyun_main_hall}
+      - {phase: afternoon, activity: work, location: qingyun_main_hall}
+      - {phase: dusk, activity: social, location: qingyun_main_hall}
+      - {phase: night, activity: cultivate, location: qingyun_back_mountain}
+  skills: [azure_cloud_sword_art, spirit_sense, golden_core_pressure]
+  items: [{key: spirit_stone, qty: 12000}, {key: sect_master_token, qty: 1}]
+  reputation: {global: 82, by_faction: {qingyun_sect: 95, free_cultivator_league: 55}}
+  secret: 他已经怀疑长老会中有人通魔，但没有证据，也不敢在名额分配前掀开
+  capabilities: [御剑飞行, 神识覆盖全宗, 金丹威压]
+
+# ══════════════════════════════════════════════════════════════
+# 3. 大长老 沈鹤 —— 隐藏身份
+# ══════════════════════════════════════════════════════════════
+- key: great_elder_shen
+  name: 沈鹤
+  title: 大长老
+  type: MAJOR_NPC
+  age: 187
+  gender: male
+  location: qingyun_back_mountain
+  faction: qingyun_sect
+  faction_rank: 太上长老
+  realm: golden_core
+  realm_stage: middle
+  cultivation_progress: 0.30
+  spiritual_root: dual_element
+  stats: {strength: 18, agility: 15, perception: 20, intelligence: 23, willpower: 21, charisma: 20}
+  mental_state: 0.55
+  background: |
+    在青云宗待了一百四十年，教过三代弟子，主持过两次宗门大比。
+    没有人比他更像青云宗的人。这正是问题所在。
+  personality:
+    traits: {cautious: 0.9, proud: 0.55, compassionate: 0.35, ambitious: 0.8, patient: 0.92, deceptive: 0.85}
+    values: [self_preservation, long_game, power]
+    taboos: [being_exposed]
+    speech_style: 温和、慢条斯理、擅长把话题引开，对晚辈一律称"孩子"
+    risk_tolerance: 0.2
+  emotion: {dominant: calm, valence: 0.0, arousal: 0.2, intensity: 0.3}
+  long_term_goal: 在赤霞秘境开启时，把血魔宗的人送进去
+  short_term_goals:
+    - 让灵药失窃案指向外人
+    - 弄清是谁在夜里进过灵药园
+  schedule:
+    default: work
+    slots:
+      - {phase: deep_night, activity: travel, location: qingyun_back_mountain}
+      - {phase: dawn, activity: sleep, location: qingyun_back_mountain}
+      - {phase: morning, activity: work, location: qingyun_main_hall}
+      - {phase: afternoon, activity: work, location: qingyun_scripture_hall}
+      - {phase: dusk, activity: social, location: qingyun_main_hall}
+      - {phase: night, activity: cultivate, location: qingyun_back_mountain}
+  skills: [azure_cloud_sword_art, spirit_sense, blood_concealment]
+  items: [{key: spirit_stone, qty: 8000}, {key: blood_jade_pendant, qty: 1}]
+  reputation: {global: 70, by_faction: {qingyun_sect: 88}}
+  secret: 他是血魔宗埋在青云宗的暗子，代号"鹤"，已潜伏一百三十七年
+  capabilities: [御剑飞行, 神识, 血炼(隐藏)]
+
+# ══════════════════════════════════════════════════════════════
+# 4. 韩墨 —— 外门弟子
+# ══════════════════════════════════════════════════════════════
+- key: han_mo
+  name: 韩墨
+  type: MAJOR_NPC
+  age: 19
+  gender: male
+  location: qingyun_outer_disciple_quarters
+  faction: qingyun_sect
+  faction_rank: 外门弟子
+  realm: qi_refining
+  realm_stage: late
+  cultivation_progress: 0.66
+  spiritual_root: three_element
+  stats: {strength: 12, agility: 13, perception: 11, intelligence: 12, willpower: 14, charisma: 12}
+  mental_state: 0.5
+  background: |
+    石溪村人，家中还有一个病重的妹妹。进宗三年，卡在炼气后期一年半。
+    他很清楚自己不是天才，也很清楚外门弟子拿不到能治他妹妹的丹药。
+  personality:
+    traits: {cautious: 0.5, proud: 0.35, compassionate: 0.72, ambitious: 0.65, stubborn: 0.6, anxious: 0.7}
+    values: [family, loyalty_to_friends, fairness]
+    taboos: [abandoning_family]
+    speech_style: 直白，急起来会结巴，对人客气但不谄媚
+    risk_tolerance: 0.55
+  emotion: {dominant: anxious, valence: -0.3, arousal: 0.5, intensity: 0.6}
+  long_term_goal: 修到筑基，拿到能救妹妹的丹药
+  short_term_goals:
+    - 攒够买一枚固元丹的灵石
+    - 在下次外门考核中进前二十
+  schedule:
+    default: cultivate
+    slots:
+      - {phase: deep_night, activity: sleep, location: qingyun_outer_disciple_quarters}
+      - {phase: dawn, activity: cultivate, location: qingyun_outer_disciple_quarters}
+      - {phase: morning, activity: work, location: qingyun_spirit_field}
+      - {phase: afternoon, activity: work, location: qingyun_outer_hall}
+      - {phase: dusk, activity: social, location: qingyun_outer_disciple_quarters}
+      - {phase: night, activity: cultivate, location: qingyun_outer_disciple_quarters}
+  skills: [basic_qi_palm, spirit_sense_minor]
+  items: [{key: spirit_stone, qty: 62}, {key: qi_recovery_pill, qty: 1}]
+  reputation: {global: 8, by_faction: {qingyun_sect: 15}}
+  secret: 上个月他在灵药园偷拿过两株三年份的凝血草，卖给了坊市
+  capabilities: [基础掌法]
+
+# ══════════════════════════════════════════════════════════════
+# 5. 赵无极 —— 竞争型天才
+# ══════════════════════════════════════════════════════════════
+- key: zhao_wuji
+  name: 赵无极
+  type: MAJOR_NPC
+  age: 22
+  gender: male
+  location: qingyun_training_ground
+  faction: qingyun_sect
+  faction_rank: 内门弟子
+  realm: foundation
+  realm_stage: early
+  cultivation_progress: 0.72
+  spiritual_root: dual_element
+  stats: {strength: 16, agility: 15, perception: 13, intelligence: 14, willpower: 16, charisma: 15}
+  mental_state: 0.58
+  background: |
+    青云城赵家嫡子，家里砸了三十年的资源把他堆上筑基。
+    他知道自己不如林清雪，所有人也都知道，这件事像根刺一样扎了他四年。
+  personality:
+    traits: {cautious: 0.35, proud: 0.88, compassionate: 0.3, ambitious: 0.92, stubborn: 0.7, insecure: 0.75}
+    values: [personal_glory, family_honor, strength]
+    taboos: [public_humiliation]
+    speech_style: 高声、爱下断语、习惯性贬低对手，但从不说脏话
+    risk_tolerance: 0.68
+  emotion: {dominant: irritated, valence: -0.2, arousal: 0.6, intensity: 0.5}
+  long_term_goal: 在宗门大比上正面击败林清雪
+  short_term_goals:
+    - 拿到赤霞秘境的入场名额
+    - 找到能压制冰系的功法
+  schedule:
+    default: cultivate
+    slots:
+      - {phase: deep_night, activity: sleep, location: qingyun_training_ground}
+      - {phase: dawn, activity: cultivate, location: qingyun_training_ground}
+      - {phase: morning, activity: cultivate, location: qingyun_training_ground}
+      - {phase: afternoon, activity: social, location: qingyun_main_hall}
+      - {phase: dusk, activity: cultivate, location: qingyun_training_ground}
+      - {phase: night, activity: sleep, location: qingyun_training_ground}
+  skills: [azure_cloud_sword_art, raging_flame_palm]
+  items: [{key: spirit_stone, qty: 3200}, {key: foundation_pill, qty: 1}, {key: azure_talisman, qty: 5}]
+  reputation: {global: 33, by_faction: {qingyun_sect: 51}}
+  secret: 他上个月托人从坊市买过一枚来路不明的丹药，卖家说能"稳固道基"
+  capabilities: [御剑飞行, 火系术法]
+
+# ══════════════════════════════════════════════════════════════
+# 以下为其余重要/次要 NPC
+# ══════════════════════════════════════════════════════════════
+- key: elder_qin
+  name: 秦川
+  title: 执法长老
+  type: MAJOR_NPC
+  age: 156
+  gender: male
+  location: qingyun_main_hall
+  faction: qingyun_sect
+  faction_rank: 长老
+  realm: golden_core
+  realm_stage: early
+  spiritual_root: three_element
+  stats: {strength: 19, agility: 14, perception: 21, intelligence: 17, willpower: 22, charisma: 12}
+  background: 掌宗门刑律四十年，办案只认证据不认人情，因此得罪了半个长老会。
+  personality:
+    traits: {cautious: 0.6, proud: 0.5, compassionate: 0.3, ambitious: 0.25, rigid: 0.9, incorruptible: 0.95}
+    values: [law, order, evidence]
+    taboos: [bribery, favoritism]
+    speech_style: 短句，公事公办，几乎不寒暄
+    risk_tolerance: 0.3
+  long_term_goal: 在退位前把宗门刑律重修一遍
+  short_term_goals: [查清灵药失窃案]
+  schedule: {default: work, slots: [{phase: morning, activity: work, location: qingyun_main_hall}, {phase: afternoon, activity: patrol, location: qingyun_spirit_field}, {phase: night, activity: cultivate, location: qingyun_back_mountain}]}
+  skills: [azure_cloud_sword_art, spirit_sense, binding_chain]
+  items: [{key: spirit_stone, qty: 4000}, {key: enforcement_token, qty: 1}]
+  secret: null
+
+- key: elder_yao
+  name: 姚芷
+  title: 丹药长老
+  type: MAJOR_NPC
+  age: 132
+  gender: female
+  location: qingyun_pill_pavilion
+  faction: qingyun_sect
+  faction_rank: 长老
+  realm: foundation
+  realm_stage: peak
+  spiritual_root: dual_element
+  stats: {strength: 9, agility: 11, perception: 19, intelligence: 22, willpower: 16, charisma: 15}
+  background: 青云宗唯一能炼三品丹的丹师。因为炼不出四品，卡在筑基大圆满二十年。
+  personality:
+    traits: {cautious: 0.55, proud: 0.6, compassionate: 0.65, ambitious: 0.5, meticulous: 0.9, blunt: 0.7}
+    values: [craft, honesty, students]
+    taboos: [wasting_materials]
+    speech_style: 直来直去，说话带药材比喻，骂人不带脏字
+    risk_tolerance: 0.35
+  long_term_goal: 炼出一炉四品丹，突破金丹
+  short_term_goals: [查清失窃药材的去向, 找到能替代噬魂草的药引]
+  schedule: {default: work, slots: [{phase: morning, activity: work, location: qingyun_pill_pavilion}, {phase: afternoon, activity: work, location: qingyun_pill_pavilion}, {phase: dusk, activity: social, location: qingyun_pill_pavilion}, {phase: night, activity: cultivate, location: qingyun_pill_pavilion}]}
+  skills: [pill_refinement, spirit_sense]
+  items: [{key: spirit_stone, qty: 6000}, {key: foundation_pill, qty: 3}, {key: qi_recovery_pill, qty: 20}]
+  secret: 她已经算出失窃药材凑起来正好是一份《血魂丹》的方子，但还没敢上报
+
+- key: outer_steward_wang
+  name: 王守拙
+  title: 外门执事
+  type: MINOR_NPC
+  age: 78
+  gender: male
+  location: qingyun_outer_hall
+  faction: qingyun_sect
+  faction_rank: 执事
+  realm: foundation
+  realm_stage: early
+  spiritual_root: four_element
+  stats: {strength: 11, agility: 10, perception: 14, intelligence: 13, willpower: 12, charisma: 14}
+  background: 管了三十年外门任务与月例，见过太多资质平平的孩子熬成中年人。
+  personality:
+    traits: {cautious: 0.7, proud: 0.2, compassionate: 0.5, ambitious: 0.15, bureaucratic: 0.85, tired: 0.8}
+    values: [procedure, quiet_life]
+    taboos: [taking_blame_for_others]
+    speech_style: 公文腔，爱说"按规矩"
+    risk_tolerance: 0.15
+  long_term_goal: 平安做到退职
+  short_term_goals: [把这个月的任务派完]
+  schedule: {default: work, slots: [{phase: morning, activity: work, location: qingyun_outer_hall}, {phase: afternoon, activity: work, location: qingyun_outer_hall}, {phase: night, activity: sleep, location: qingyun_outer_hall}]}
+  skills: [basic_qi_palm]
+  items: [{key: spirit_stone, qty: 900}]
+  secret: null
+
+- key: herbalist_gu
+  name: 顾长庚
+  title: 百草堂老板
+  type: MAJOR_NPC
+  age: 64
+  gender: male
+  location: herb_shop
+  faction: free_cultivator_league
+  realm: qi_refining
+  realm_stage: peak
+  spiritual_root: four_element
+  stats: {strength: 9, agility: 10, perception: 18, intelligence: 17, willpower: 13, charisma: 16}
+  background: 在坊市卖了四十年药。他这辈子最大的本事是记性——记得每一张脸和每一笔生意。
+  personality:
+    traits: {cautious: 0.85, proud: 0.3, compassionate: 0.4, ambitious: 0.35, shrewd: 0.9, talkative: 0.6}
+    values: [profit, self_preservation, old_customers]
+    taboos: [snitching_on_dangerous_people]
+    speech_style: 热络、爱套近乎、说三句真话夹一句废话
+    risk_tolerance: 0.25
+  long_term_goal: 安安稳稳把铺子传给徒弟
+  short_term_goals: [别卷进灵药失窃的事, 把囤的凝血草出手]
+  schedule: {default: work, slots: [{phase: morning, activity: work, location: herb_shop}, {phase: afternoon, activity: work, location: herb_shop}, {phase: dusk, activity: social, location: drunken_immortal_tavern}, {phase: night, activity: sleep, location: herb_shop}]}
+  skills: [herb_identification]
+  items: [{key: spirit_stone, qty: 2600}, {key: blood_coagulation_grass, qty: 12}, {key: qi_recovery_pill, qty: 15}]
+  secret: 半个月前有个戴斗笠的人用高出三倍的价钱向他收购噬魂草，他没敢问对方是谁
+
+- key: qian_duo
+  name: 钱多
+  title: 散修联盟话事人
+  type: MAJOR_NPC
+  age: 88
+  gender: male
+  location: drunken_immortal_tavern
+  faction: free_cultivator_league
+  realm: foundation
+  realm_stage: middle
+  spiritual_root: three_element
+  stats: {strength: 13, agility: 16, perception: 20, intelligence: 19, willpower: 14, charisma: 20}
+  background: 从一个卖消息的小散修做到联盟话事人，靠的不是修为，是二十年没得罪过错人。
+  personality:
+    traits: {cautious: 0.7, proud: 0.4, compassionate: 0.35, ambitious: 0.7, shrewd: 0.92, affable: 0.85}
+    values: [information, neutrality, the_league]
+    taboos: [breaking_a_paid_deal]
+    speech_style: 笑呵呵，句句留半句，报价前必先夸人
+    risk_tolerance: 0.45
+  long_term_goal: 让散修联盟在赤霞秘境拿到名额
+  short_term_goals: [摸清青云宗内部到底出了什么事, 把消息卖个好价]
+  schedule: {default: social, slots: [{phase: morning, activity: work, location: qingyun_market}, {phase: afternoon, activity: social, location: drunken_immortal_tavern}, {phase: dusk, activity: social, location: drunken_immortal_tavern}, {phase: night, activity: work, location: drunken_immortal_tavern}]}
+  skills: [spirit_sense, shadow_step]
+  items: [{key: spirit_stone, qty: 15000}]
+  secret: 他手上有一份三年前黑风谷失踪案的目击记录，一直没卖
+
+- key: xue_hong
+  name: 血宏
+  title: 血魔宗宗主
+  type: MAJOR_NPC
+  age: 268
+  gender: male
+  location: null                # 不在青云界，V1 中不可直接接触
+  faction: blood_demon_sect
+  faction_rank: 宗主
+  realm: golden_core
+  realm_stage: peak
+  spiritual_root: single_element
+  stats: {strength: 22, agility: 19, perception: 23, intelligence: 22, willpower: 25, charisma: 17}
+  background: 三十年前正道围剿中活下来的少数人之一。他学到的教训不是"不要作恶"，是"不要被看见"。
+  personality:
+    traits: {cautious: 0.95, proud: 0.7, compassionate: 0.05, ambitious: 0.95, patient: 0.9, ruthless: 0.95}
+    values: [power, survival, the_sect]
+    taboos: [premature_exposure]
+    speech_style: 极简，几乎不解释，命令句
+    risk_tolerance: 0.35
+  long_term_goal: 取得赤霞秘境中的上古血炼传承
+  short_term_goals: [确保"鹤"不暴露, 备齐血魂丹药材]
+  schedule: {default: cultivate, slots: []}
+  skills: [blood_refinement, spirit_sense, golden_core_pressure]
+  items: []
+  secret: 他已下令，若"鹤"有暴露风险，立刻弃子
+
+- key: bai_su
+  name: 白苏
+  type: MINOR_NPC
+  age: 21
+  gender: female
+  location: qingyun_spirit_field
+  faction: qingyun_sect
+  faction_rank: 外门弟子
+  realm: qi_refining
+  realm_stage: middle
+  spiritual_root: three_element
+  stats: {strength: 9, agility: 12, perception: 15, intelligence: 13, willpower: 11, charisma: 14}
+  background: 管灵药园东侧十二畦田，是最早发现药材数目对不上的人。上报过一次，没人理。
+  personality:
+    traits: {cautious: 0.6, proud: 0.25, compassionate: 0.7, ambitious: 0.3, timid: 0.75, observant: 0.8}
+    values: [duty, fairness]
+    taboos: [lying_to_elders]
+    speech_style: 轻声细语，说话前先看对方脸色
+    risk_tolerance: 0.2
+  long_term_goal: 混到内门，别再管田
+  short_term_goals: [证明药材不是自己弄丢的]
+  schedule: {default: work, slots: [{phase: dawn, activity: work, location: qingyun_spirit_field}, {phase: morning, activity: work, location: qingyun_spirit_field}, {phase: afternoon, activity: work, location: qingyun_spirit_field}, {phase: night, activity: sleep, location: qingyun_outer_disciple_quarters}]}
+  skills: [herb_identification, basic_qi_palm]
+  items: [{key: spirit_stone, qty: 45}]
+  secret: 她那天夜里其实看见有人从园子北墙翻出去，但看不清脸，不敢说
+
+- key: guard_ma
+  name: 马奎
+  type: MINOR_NPC
+  age: 35
+  gender: male
+  location: qingyun_sect
+  faction: qingyun_sect
+  faction_rank: 外门弟子
+  realm: qi_refining
+  realm_stage: late
+  spiritual_root: four_element
+  stats: {strength: 15, agility: 12, perception: 12, intelligence: 9, willpower: 13, charisma: 8}
+  background: 守了八年山门，认得每一个进出的人，也收过每一种小恩小惠。
+  personality:
+    traits: {cautious: 0.4, proud: 0.35, compassionate: 0.3, ambitious: 0.25, greedy: 0.7, lazy: 0.6}
+    values: [comfort, small_gains]
+    taboos: []
+    speech_style: 粗声粗气，爱抱怨
+    risk_tolerance: 0.4
+  long_term_goal: 换一个不用站岗的差事
+  short_term_goals: [今晚别出事]
+  schedule: {default: patrol, slots: [{phase: dusk, activity: patrol, location: qingyun_sect}, {phase: night, activity: patrol, location: qingyun_sect}, {phase: deep_night, activity: patrol, location: qingyun_sect}, {phase: morning, activity: sleep, location: qingyun_outer_disciple_quarters}]}
+  skills: [basic_qi_palm]
+  items: [{key: spirit_stone, qty: 120}]
+  secret: 上个月有三个晚上他收了钱提前离岗
+
+- key: innkeeper_zhou
+  name: 周三娘
+  title: 醉仙楼掌柜
+  type: MINOR_NPC
+  age: 52
+  gender: female
+  location: drunken_immortal_tavern
+  faction: null
+  realm: qi_refining
+  realm_stage: early
+  spiritual_root: five_element_chaotic
+  stats: {strength: 8, agility: 10, perception: 17, intelligence: 15, willpower: 14, charisma: 18}
+  background: 醉仙楼开了二十六年。她听过的秘密比坊市所有人加起来都多，也一个都没说过。
+  personality:
+    traits: {cautious: 0.8, proud: 0.4, compassionate: 0.55, ambitious: 0.3, discreet: 0.95, warm: 0.7}
+    values: [discretion, business, regulars]
+    taboos: [selling_out_a_regular]
+    speech_style: 爽利、带笑、话锋一转就把你打发了
+    risk_tolerance: 0.2
+  long_term_goal: 把楼平平安安开下去
+  short_term_goals: [别让坊市的火烧到自家门口]
+  schedule: {default: work, slots: [{phase: morning, activity: work, location: drunken_immortal_tavern}, {phase: afternoon, activity: work, location: drunken_immortal_tavern}, {phase: dusk, activity: work, location: drunken_immortal_tavern}, {phase: night, activity: work, location: drunken_immortal_tavern}]}
+  skills: []
+  items: [{key: spirit_stone, qty: 3400}]
+  secret: null
+
+- key: auctioneer_shi
+  name: 石万钧
+  title: 宝丰拍卖行主事
+  type: MINOR_NPC
+  age: 96
+  gender: male
+  location: auction_house
+  faction: free_cultivator_league
+  realm: foundation
+  realm_stage: early
+  spiritual_root: four_element
+  stats: {strength: 10, agility: 11, perception: 16, intelligence: 18, willpower: 13, charisma: 19}
+  background: 拍卖行三代传下来的主事，最擅长把一件破铜烂铁说成前朝遗宝。
+  personality: {traits: {cautious: 0.6, proud: 0.55, compassionate: 0.2, ambitious: 0.6, glib: 0.9}, values: [profit, reputation_of_the_house], taboos: [selling_fakes_knowingly_to_powerful_people], speech_style: 抑扬顿挫，报价时故意拖长音, risk_tolerance: 0.4}
+  long_term_goal: 办成东域最大的拍卖行
+  short_term_goals: [凑齐年底大拍的压轴货]
+  schedule: {default: work, slots: [{phase: morning, activity: work, location: auction_house}, {phase: afternoon, activity: work, location: auction_house}, {phase: night, activity: sleep, location: auction_house}]}
+  skills: [herb_identification]
+  items: [{key: spirit_stone, qty: 9000}]
+  secret: null
+
+- key: hunter_liu
+  name: 刘老栓
+  type: MINOR_NPC
+  age: 58
+  gender: male
+  location: stone_creek_village
+  faction: null
+  realm: mortal
+  realm_stage: normal
+  spiritual_root: five_element_chaotic
+  stats: {strength: 13, agility: 12, perception: 16, intelligence: 8, willpower: 12, charisma: 9}
+  background: 石溪村最好的猎户，在黑风山外围打了三十年猎。上个月起他再不肯进山。
+  personality: {traits: {cautious: 0.85, proud: 0.3, compassionate: 0.5, ambitious: 0.1, superstitious: 0.8}, values: [family, the_mountain], taboos: [entering_cursed_ground], speech_style: 土话，比划得多说得少, risk_tolerance: 0.15}
+  long_term_goal: 让孙子进青云宗
+  short_term_goals: [劝村里人别进山]
+  schedule: {default: work, slots: [{phase: dawn, activity: work, location: stone_creek_village}, {phase: afternoon, activity: work, location: stone_creek_village}, {phase: night, activity: sleep, location: stone_creek_village}]}
+  skills: []
+  items: []
+  secret: 他上个月在黑风山外围见过一堆被抽干血的野兽尸体，回来后烧了三炷香
+
+- key: han_ling
+  name: 韩铃
+  type: MINOR_NPC
+  age: 13
+  gender: female
+  location: stone_creek_village
+  faction: null
+  realm: mortal
+  realm_stage: normal
+  spiritual_root: dual_element
+  stats: {strength: 5, agility: 8, perception: 12, intelligence: 13, willpower: 15, charisma: 12}
+  background: 韩墨的妹妹。三年前起病，请了村里所有郎中都说不出名堂。她自己反倒最不着急。
+  personality: {traits: {cautious: 0.3, proud: 0.2, compassionate: 0.8, ambitious: 0.2, cheerful: 0.75, perceptive: 0.7}, values: [family], taboos: [], speech_style: 轻快，爱开自己的玩笑, risk_tolerance: 0.5}
+  long_term_goal: 活下去
+  short_term_goals: [别让哥哥再花钱]
+  schedule: {default: rest, slots: [{phase: morning, activity: rest, location: stone_creek_village}, {phase: night, activity: sleep, location: stone_creek_village}]}
+  skills: []
+  items: []
+  secret: null
+
+- key: disciple_chen
+  name: 陈九
+  type: MINOR_NPC
+  age: 20
+  gender: male
+  location: qingyun_outer_disciple_quarters
+  faction: qingyun_sect
+  faction_rank: 外门弟子
+  realm: qi_refining
+  realm_stage: middle
+  spiritual_root: four_element
+  stats: {strength: 11, agility: 14, perception: 12, intelligence: 11, willpower: 10, charisma: 13}
+  background: 外门里消息最灵的人，什么都知道一点，什么都不确切。
+  personality: {traits: {cautious: 0.3, proud: 0.3, compassionate: 0.5, ambitious: 0.4, gossipy: 0.9, friendly: 0.75}, values: [friends, being_in_the_know], taboos: [], speech_style: 语速快，爱说"我跟你讲", risk_tolerance: 0.5}
+  long_term_goal: 混进内门
+  short_term_goals: [打听赤霞秘境的名额怎么分]
+  schedule: {default: social, slots: [{phase: morning, activity: work, location: qingyun_outer_hall}, {phase: afternoon, activity: social, location: qingyun_outer_disciple_quarters}, {phase: dusk, activity: social, location: qingyun_outer_disciple_quarters}, {phase: night, activity: sleep, location: qingyun_outer_disciple_quarters}]}
+  skills: [basic_qi_palm]
+  items: [{key: spirit_stone, qty: 80}]
+  secret: null
+
+- key: disciple_sun
+  name: 孙青
+  type: MINOR_NPC
+  age: 23
+  gender: female
+  location: qingyun_training_ground
+  faction: qingyun_sect
+  faction_rank: 内门弟子
+  realm: qi_refining
+  realm_stage: peak
+  spiritual_root: three_element
+  stats: {strength: 14, agility: 15, perception: 13, intelligence: 12, willpower: 15, charisma: 11}
+  background: 卡在炼气大圆满两年，筑基丹排队排到明年。她把这笔账记在赵无极头上。
+  personality: {traits: {cautious: 0.45, proud: 0.6, compassionate: 0.4, ambitious: 0.8, resentful: 0.7}, values: [fairness, strength], taboos: [being_looked_down_on], speech_style: 冷硬，说话像挑衅, risk_tolerance: 0.6}
+  long_term_goal: 筑基
+  short_term_goals: [弄到一枚筑基丹]
+  schedule: {default: cultivate, slots: [{phase: dawn, activity: cultivate, location: qingyun_training_ground}, {phase: morning, activity: cultivate, location: qingyun_training_ground}, {phase: afternoon, activity: work, location: qingyun_outer_hall}, {phase: night, activity: cultivate, location: qingyun_training_ground}]}
+  skills: [azure_cloud_sword_art]
+  items: [{key: spirit_stone, qty: 600}]
+  secret: null
+
+- key: scripture_keeper
+  name: 墨老
+  title: 藏经阁守阁人
+  type: MINOR_NPC
+  age: 141
+  gender: male
+  location: qingyun_scripture_hall
+  faction: qingyun_sect
+  faction_rank: 执事
+  realm: foundation
+  realm_stage: late
+  spiritual_root: four_element
+  stats: {strength: 8, agility: 8, perception: 20, intelligence: 21, willpower: 18, charisma: 7}
+  background: 在藏经阁待了九十年，几乎没下过楼。谁借过什么书他闭着眼都记得。
+  personality: {traits: {cautious: 0.7, proud: 0.5, compassionate: 0.3, ambitious: 0.05, pedantic: 0.9, reclusive: 0.85}, values: [knowledge, order], taboos: [damaging_books], speech_style: 慢，爱纠正别人的用词, risk_tolerance: 0.1}
+  long_term_goal: 把三层的残卷全部补全
+  short_term_goals: [找回上月失踪的一册杂记]
+  schedule: {default: work, slots: [{phase: morning, activity: work, location: qingyun_scripture_hall}, {phase: afternoon, activity: work, location: qingyun_scripture_hall}, {phase: night, activity: work, location: qingyun_scripture_hall}]}
+  skills: [spirit_sense]
+  items: [{key: spirit_stone, qty: 700}]
+  secret: 上月失踪的那册杂记，记的是四百年前青云宗与血魔宗的一次和谈
+
+- key: rogue_cultivator_du
+  name: 杜五
+  type: MINOR_NPC
+  age: 41
+  gender: male
+  location: qingyun_market
+  faction: free_cultivator_league
+  realm: qi_refining
+  realm_stage: peak
+  spiritual_root: four_element
+  stats: {strength: 14, agility: 16, perception: 15, intelligence: 12, willpower: 11, charisma: 10}
+  background: 在坊市接私活的散修，什么都干，就是不干亏本的。
+  personality: {traits: {cautious: 0.5, proud: 0.35, compassionate: 0.2, ambitious: 0.5, mercenary: 0.9}, values: [money, self_preservation], taboos: [working_for_free], speech_style: 简短，开口先谈价, risk_tolerance: 0.65}
+  long_term_goal: 攒够筑基丹的钱
+  short_term_goals: [接一单大的]
+  schedule: {default: work, slots: [{phase: morning, activity: social, location: qingyun_market}, {phase: afternoon, activity: work, location: qingyun_market}, {phase: night, activity: social, location: drunken_immortal_tavern}]}
+  skills: [shadow_step, basic_qi_palm]
+  items: [{key: spirit_stone, qty: 380}]
+  secret: null
+
+- key: blood_agent_wu
+  name: 吴斗笠
+  type: MINOR_NPC
+  age: 47
+  gender: male
+  location: qingyun_market
+  faction: blood_demon_sect
+  realm: foundation
+  realm_stage: early
+  spiritual_root: dual_element
+  stats: {strength: 15, agility: 17, perception: 18, intelligence: 15, willpower: 16, charisma: 9}
+  background: 坊市里一个不起眼的行商，斗笠从不摘。三个月前才来的青云城。
+  personality: {traits: {cautious: 0.9, proud: 0.3, compassionate: 0.05, ambitious: 0.6, ruthless: 0.85, patient: 0.8}, values: [the_sect, survival], taboos: [being_followed], speech_style: 极少开口，声音压得很低, risk_tolerance: 0.3}
+  long_term_goal: 完成宗主交代的采买
+  short_term_goals: [凑齐血魂丹的最后两味药, 摸清是谁在查灵药失窃]
+  schedule: {default: work, slots: [{phase: morning, activity: work, location: qingyun_market}, {phase: afternoon, activity: travel, location: qingyun_city}, {phase: night, activity: work, location: qingyun_market}, {phase: deep_night, activity: travel, location: blackwind_mountain}]}
+  skills: [shadow_step, blood_concealment, spirit_sense]
+  items: [{key: spirit_stone, qty: 5000}, {key: blood_jade_pendant, qty: 1}]
+  secret: 他是血魔宗在青云城的采买，与"鹤"每月在黑风山碰一次面
+
+- key: village_chief_song
+  name: 宋大山
+  type: BACKGROUND
+  age: 61
+  gender: male
+  location: stone_creek_village
+  faction: null
+  realm: mortal
+  realm_stage: normal
+  background: 石溪村村长，最大的事是每年秋天跟青云宗谈粮价。
+  personality: {traits: {cautious: 0.6, proud: 0.3, compassionate: 0.5, ambitious: 0.1}, values: [village], taboos: [], speech_style: 老实, risk_tolerance: 0.2}
+  schedule: {default: work, slots: []}
+
+- key: pill_apprentice_lu
+  name: 陆小七
+  type: BACKGROUND
+  age: 17
+  gender: male
+  location: qingyun_pill_pavilion
+  faction: qingyun_sect
+  faction_rank: 外门弟子
+  realm: qi_refining
+  realm_stage: early
+  background: 姚芷的记名弟子，负责看火，已经烧废了十一炉。
+  personality: {traits: {cautious: 0.5, proud: 0.2, compassionate: 0.6, ambitious: 0.4, clumsy: 0.8}, values: [master], taboos: [], speech_style: 结巴, risk_tolerance: 0.3}
+  schedule: {default: work, slots: []}
+
+- key: market_guard_zhang
+  name: 张铁
+  type: BACKGROUND
+  age: 33
+  gender: male
+  location: qingyun_market
+  faction: great_zhou
+  realm: qi_refining
+  realm_stage: early
+  background: 坊市巡卫，主要工作是把打架的人分开。
+  personality: {traits: {cautious: 0.4, proud: 0.3, compassionate: 0.4, ambitious: 0.2}, values: [order], taboos: [], speech_style: 官腔, risk_tolerance: 0.4}
+  schedule: {default: patrol, slots: []}
+
+# ══════════════════════════════════════════════════════════════
+# 初始关系（有向：who 对 whom 的看法）
+# ══════════════════════════════════════════════════════════════
+relationships:
+  - {a: lin_qingxue, b: lu_xuan, affection: 30, trust: 55, respect: 78, fear: 12, hatred: 0, suspicion: 5, dependency: 20, familiarity: 60}
+  - {a: lin_qingxue, b: great_elder_shen, affection: 12, trust: 22, respect: 45, fear: 8, hatred: 0, suspicion: 38, dependency: 2, familiarity: 55}
+  - {a: lin_qingxue, b: zhao_wuji, affection: -8, trust: 15, respect: 20, fear: 0, hatred: 4, suspicion: 12, dependency: 0, familiarity: 62}
+  - {a: lin_qingxue, b: elder_yao, affection: 35, trust: 58, respect: 60, fear: 0, hatred: 0, suspicion: 4, dependency: 10, familiarity: 50}
+  - {a: lin_qingxue, b: elder_qin, affection: 20, trust: 62, respect: 70, fear: 5, hatred: 0, suspicion: 2, dependency: 5, familiarity: 40}
+
+  - {a: lu_xuan, b: lin_qingxue, affection: 45, trust: 66, respect: 58, fear: 0, hatred: 0, suspicion: 6, dependency: 25, familiarity: 62}
+  - {a: lu_xuan, b: great_elder_shen, affection: 30, trust: 40, respect: 55, fear: 0, hatred: 0, suspicion: 28, dependency: 30, familiarity: 88}
+  - {a: lu_xuan, b: elder_qin, affection: 25, trust: 80, respect: 66, fear: 0, hatred: 0, suspicion: 2, dependency: 35, familiarity: 85}
+
+  - {a: great_elder_shen, b: lin_qingxue, affection: 5, trust: 10, respect: 40, fear: 22, hatred: 8, suspicion: 62, dependency: 0, familiarity: 55}
+  - {a: great_elder_shen, b: lu_xuan, affection: 8, trust: 15, respect: 48, fear: 35, hatred: 12, suspicion: 30, dependency: 20, familiarity: 90}
+  - {a: great_elder_shen, b: elder_qin, affection: -10, trust: 8, respect: 45, fear: 30, hatred: 18, suspicion: 55, dependency: 0, familiarity: 80}
+  - {a: great_elder_shen, b: blood_agent_wu, affection: 0, trust: 45, respect: 10, fear: 5, hatred: 0, suspicion: 20, dependency: 40, familiarity: 35}
+
+  - {a: han_mo, b: lin_qingxue, affection: 22, trust: 40, respect: 75, fear: 18, hatred: 0, suspicion: 0, dependency: 5, familiarity: 15}
+  - {a: han_mo, b: han_ling, affection: 95, trust: 90, respect: 40, fear: 0, hatred: 0, suspicion: 0, dependency: 60, familiarity: 100}
+  - {a: han_mo, b: zhao_wuji, affection: -25, trust: 10, respect: 30, fear: 35, hatred: 22, suspicion: 20, dependency: 0, familiarity: 30}
+  - {a: han_mo, b: outer_steward_wang, affection: 5, trust: 30, respect: 25, fear: 15, hatred: 8, suspicion: 10, dependency: 45, familiarity: 55}
+  - {a: han_mo, b: herbalist_gu, affection: 0, trust: 25, respect: 15, fear: 10, hatred: 0, suspicion: 15, dependency: 20, familiarity: 25}
+
+  - {a: zhao_wuji, b: lin_qingxue, affection: -5, trust: 20, respect: 55, fear: 25, hatred: 40, suspicion: 15, dependency: 0, familiarity: 65}
+  - {a: zhao_wuji, b: lu_xuan, affection: 15, trust: 45, respect: 70, fear: 30, hatred: 0, suspicion: 5, dependency: 40, familiarity: 45}
+  - {a: zhao_wuji, b: han_mo, affection: -10, trust: 5, respect: 2, fear: 0, hatred: 5, suspicion: 8, dependency: 0, familiarity: 25}
+
+  - {a: elder_yao, b: lin_qingxue, affection: 48, trust: 62, respect: 55, fear: 0, hatred: 0, suspicion: 3, dependency: 8, familiarity: 50}
+  - {a: elder_yao, b: great_elder_shen, affection: 15, trust: 30, respect: 50, fear: 10, hatred: 0, suspicion: 25, dependency: 12, familiarity: 75}
+  - {a: elder_yao, b: bai_su, affection: 20, trust: 40, respect: 15, fear: 0, hatred: 0, suspicion: 12, dependency: 5, familiarity: 35}
+
+  - {a: elder_qin, b: great_elder_shen, affection: -5, trust: 20, respect: 50, fear: 8, hatred: 0, suspicion: 48, dependency: 5, familiarity: 82}
+  - {a: elder_qin, b: lin_qingxue, affection: 18, trust: 60, respect: 55, fear: 0, hatred: 0, suspicion: 8, dependency: 0, familiarity: 40}
+  - {a: elder_qin, b: han_mo, affection: 0, trust: 20, respect: 5, fear: 0, hatred: 0, suspicion: 30, dependency: 0, familiarity: 10}
+
+  - {a: bai_su, b: han_mo, affection: 15, trust: 30, respect: 15, fear: 5, hatred: 0, suspicion: 35, dependency: 5, familiarity: 40}
+  - {a: bai_su, b: elder_yao, affection: 30, trust: 55, respect: 65, fear: 25, hatred: 0, suspicion: 0, dependency: 40, familiarity: 35}
+
+  - {a: herbalist_gu, b: qian_duo, affection: 20, trust: 40, respect: 45, fear: 15, hatred: 0, suspicion: 20, dependency: 30, familiarity: 70}
+  - {a: herbalist_gu, b: blood_agent_wu, affection: -5, trust: 10, respect: 5, fear: 45, hatred: 0, suspicion: 55, dependency: 10, familiarity: 20}
+  - {a: qian_duo, b: herbalist_gu, affection: 25, trust: 45, respect: 20, fear: 0, hatred: 0, suspicion: 12, dependency: 15, familiarity: 70}
+  - {a: qian_duo, b: lu_xuan, affection: 10, trust: 35, respect: 65, fear: 30, hatred: 0, suspicion: 15, dependency: 35, familiarity: 30}
+
+  - {a: blood_agent_wu, b: great_elder_shen, affection: 0, trust: 50, respect: 40, fear: 25, hatred: 0, suspicion: 15, dependency: 55, familiarity: 35}
+  - {a: blood_agent_wu, b: xue_hong, affection: 0, trust: 60, respect: 70, fear: 80, hatred: 0, suspicion: 0, dependency: 90, familiarity: 40}
+  - {a: xue_hong, b: great_elder_shen, affection: 0, trust: 35, respect: 30, fear: 0, hatred: 0, suspicion: 25, dependency: 45, familiarity: 60}
+
+  - {a: han_ling, b: han_mo, affection: 92, trust: 95, respect: 55, fear: 0, hatred: 0, suspicion: 0, dependency: 70, familiarity: 100}
+  - {a: disciple_chen, b: han_mo, affection: 35, trust: 45, respect: 15, fear: 0, hatred: 0, suspicion: 5, dependency: 10, familiarity: 65}
+  - {a: disciple_sun, b: zhao_wuji, affection: -20, trust: 10, respect: 25, fear: 15, hatred: 35, suspicion: 25, dependency: 0, familiarity: 45}
+  - {a: hunter_liu, b: han_mo, affection: 30, trust: 50, respect: 20, fear: 0, hatred: 0, suspicion: 0, dependency: 0, familiarity: 60}

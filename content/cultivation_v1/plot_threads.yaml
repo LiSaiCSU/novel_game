@@ -1,0 +1,161 @@
+# World Seeds —— 不是"第一章/第二章"，是世界里已经存在的、正在自行发展的因果。
+# Director 优先推进这些线程，而不是随机造新剧情。
+
+plot_threads:
+  - key: thread_infiltration
+    name: 血魔宗渗透青云宗
+    status: active
+    importance: 0.88
+    stage: 2
+    participants: [great_elder_shen, blood_agent_wu, xue_hong, lin_qingxue, elder_qin]
+    unresolved_questions:
+      - 谁是内奸？
+      - 血魂丹要用来做什么？
+    foreshadowing:
+      - 灵药失窃
+      - 大长老深夜离宗
+      - 坊市有人高价收购噬魂草
+    related_facts: [fact_shen_is_blood_agent, fact_herbs_stolen, fact_stolen_herbs_match_blood_pill, fact_someone_buying_soul_grass]
+    next_beat_hint: 失窃案调查逼近药园夜间目击者
+    escalation_pressure: 0.35        # 每周自然推进的压力
+    dormant_after_minutes: 0
+
+  - key: thread_missing_senior_sister
+    name: 黑风谷失踪案
+    status: active
+    importance: 0.72
+    stage: 1
+    participants: [lin_qingxue, qian_duo, great_elder_shen]
+    unresolved_questions:
+      - 三年前那天黑风谷到底发生了什么？
+      - 目击记录里写了什么？
+    foreshadowing:
+      - 林清雪每月都会独自去一趟黑风山方向
+      - 钱多手里压着一份没卖的东西
+    related_facts: [fact_lin_senior_sister_disappeared, fact_senior_sister_was_killed, fact_qian_duo_has_witness_record]
+    next_beat_hint: 有人愿意出价买那份目击记录
+    escalation_pressure: 0.12
+
+  - key: thread_blackwind_corruption
+    name: 黑风山魔气异变
+    status: active
+    importance: 0.66
+    stage: 1
+    participants: [hunter_liu, lin_qingxue, blood_agent_wu]
+    unresolved_questions:
+      - 魔气从哪来？
+      - 为什么野兽被抽干了血？
+    foreshadowing:
+      - 猎户不肯进山
+      - 山中夜里有红光
+    related_facts: [fact_blackwind_demonic_qi, fact_drained_beast_corpses]
+    next_beat_hint: 魔气扩散到山脚村落
+    escalation_pressure: 0.25
+
+  - key: thread_crimson_realm
+    name: 赤霞秘境开启在即
+    status: active
+    importance: 0.80
+    stage: 1
+    participants: [lu_xuan, zhao_wuji, lin_qingxue, qian_duo, great_elder_shen]
+    unresolved_questions:
+      - 名额怎么分？
+      - 谁会被塞进去？
+    foreshadowing:
+      - 长老会为名额争执
+      - 散修联盟频繁走动
+    related_facts: [fact_crimson_realm_opens_soon]
+    next_beat_hint: 名额分配方案公布
+    escalation_pressure: 0.30
+    scheduled_beats:
+      - {at_minutes_from_start: 129600, beat: 名额初选公布}
+      - {at_minutes_from_start: 259200, beat: 秘境开启}
+
+  - key: thread_han_mo_desperation
+    name: 韩墨的窘境
+    status: active
+    importance: 0.45
+    stage: 1
+    participants: [han_mo, han_ling, herbalist_gu, bai_su]
+    unresolved_questions:
+      - 韩墨会为救妹妹做到哪一步？
+      - 偷药的事会不会被查出来？
+    foreshadowing:
+      - 韩墨最近总在打听固元丹的价钱
+      - 白苏说药材数目对不上
+    related_facts: [fact_han_mo_stole_herbs, fact_bai_su_saw_figure]
+    next_beat_hint: 执法长老开始逐一问话
+    escalation_pressure: 0.20
+
+  - key: thread_zhao_rivalry
+    name: 赵无极的执念
+    status: active
+    importance: 0.40
+    stage: 1
+    participants: [zhao_wuji, lin_qingxue, disciple_sun, rogue_cultivator_du]
+    unresolved_questions:
+      - 那枚来路不明的丹药是什么？
+    foreshadowing:
+      - 赵无极修为最近涨得有点快
+    related_facts: [fact_zhao_bought_shady_pill]
+    next_beat_hint: 赵无极在演武场公开挑战
+    escalation_pressure: 0.15
+
+  - key: thread_sect_decline
+    name: 青云宗的衰落
+    status: dormant
+    importance: 0.55
+    stage: 0
+    participants: [lu_xuan, elder_qin, elder_yao, outer_steward_wang]
+    unresolved_questions:
+      - 宗门还能撑多久？
+    foreshadowing:
+      - 外门月例连续两年没涨
+      - 筑基丹产量逐年下降
+    related_facts: []
+    next_beat_hint: 外门弟子集体抱怨资源分配
+    escalation_pressure: 0.08
+
+# 初始任务（可由 NPC 提供；玩家拒绝后仍可能由别人完成 §41/§42）
+quests:
+  - key: quest_herb_delivery
+    name: 护送灵药
+    giver: outer_steward_wang
+    status: offered
+    goal: {type: escort, item: blood_coagulation_grass, quantity: 20, from: qingyun_spirit_field, to: herb_shop}
+    constraints: {deadline_minutes: 4320, min_realm: qi_refining}
+    rewards: {spirit_stone: 150, faction_reputation: {qingyun_sect: 3}}
+    failure_conditions: [cargo_lost, deadline_passed]
+    world_consequences:
+      on_success: {faction_resource: {qingyun_sect: {spirit_herbs: 0.01}}}
+      on_failure: {faction_resource: {qingyun_sect: {spirit_herbs: -0.02}}, tension: 3}
+      if_player_refuses: {reassign_to: [disciple_chen, rogue_cultivator_du], success_chance: 0.6}
+    plot_thread: null
+
+  - key: quest_night_watch
+    name: 灵药园夜巡
+    giver: elder_yao
+    status: offered
+    goal: {type: guard, location: qingyun_spirit_field, duration_minutes: 720}
+    constraints: {deadline_minutes: 10080, min_realm: qi_refining}
+    rewards: {spirit_stone: 200, item: {qi_recovery_pill: 2}, faction_reputation: {qingyun_sect: 5}}
+    failure_conditions: [theft_occurred_during_watch, abandoned_post]
+    world_consequences:
+      on_success: {reveal_fact_chance: {fact_bai_su_saw_figure: 0.5}}
+      on_failure: {tension: 5, advance_thread: thread_infiltration}
+      if_player_refuses: {reassign_to: [guard_ma, bai_su], success_chance: 0.35}
+    plot_thread: thread_infiltration
+
+  - key: quest_find_medicine
+    name: 韩墨的求助
+    giver: han_mo
+    status: offered
+    goal: {type: acquire, item: solid_origin_pill, quantity: 1, deliver_to: han_mo}
+    constraints: {deadline_minutes: 43200}
+    rewards: {relationship: {han_mo: {trust: 12, affection: 15}}, spirit_stone: 0}
+    failure_conditions: [deadline_passed, han_ling_died]
+    world_consequences:
+      on_success: {advance_thread: thread_han_mo_desperation}
+      on_failure: {character_state: {han_ling: {health: -30}}, advance_thread: thread_han_mo_desperation}
+      if_player_refuses: {reassign_to: [rogue_cultivator_du], success_chance: 0.25}
+    plot_thread: thread_han_mo_desperation

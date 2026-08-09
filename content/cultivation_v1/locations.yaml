@@ -1,0 +1,209 @@
+# 位置树。parent 为 null 即根。travel 是到相邻位置的分钟数（无向图，双向自动补全）。
+
+location_types:
+  - {key: realm,     name: 界}
+  - {key: region,    name: 地区}
+  - {key: city,      name: 城}
+  - {key: sect,      name: 宗门}
+  - {key: mountain,  name: 山}
+  - {key: valley,    name: 谷}
+  - {key: secret_realm, name: 秘境}
+  - {key: village,   name: 村镇}
+  - {key: building,  name: 建筑}
+  - {key: room,      name: 房间}
+  - {key: wilderness, name: 野外}
+
+locations:
+  # ── 根 ────────────────────────────────────────────────────
+  - key: qingyun_realm
+    name: 青云界
+    type: realm
+    parent: null
+    danger: 0
+    spirit_density: 1.0
+    description: 修真界东域一隅，青云山脉横贯其中。
+
+  # ── 青云宗 ────────────────────────────────────────────────
+  - key: qingyun_sect
+    name: 青云宗
+    type: sect
+    parent: qingyun_realm
+    faction: qingyun_sect
+    danger: 0
+    spirit_density: 2.4
+    description: 立宗四百余年的正道大宗，山门盘踞青云主峰，云海终年不散。
+    travel: {qingyun_city: 90, blackwind_mountain: 300, sunset_valley: 260}
+
+  - key: qingyun_outer_disciple_quarters
+    name: 外门弟子居所
+    type: building
+    parent: qingyun_sect
+    faction: qingyun_sect
+    danger: 0
+    spirit_density: 1.6
+    description: 依山而建的一排青瓦石屋，住着三百余名外门弟子。天不亮就有人在院里吐纳。
+    travel: {qingyun_outer_hall: 10, qingyun_spirit_field: 20, qingyun_training_ground: 15, qingyun_sect: 5}
+
+  - key: qingyun_outer_hall
+    name: 外门执事堂
+    type: building
+    parent: qingyun_sect
+    faction: qingyun_sect
+    danger: 0
+    spirit_density: 1.5
+    description: 领取任务与月例灵石的地方，柜台后永远排着队。
+    travel: {qingyun_outer_disciple_quarters: 10, qingyun_pill_pavilion: 15, qingyun_main_hall: 30}
+
+  - key: qingyun_spirit_field
+    name: 灵药园
+    type: building
+    parent: qingyun_sect
+    faction: qingyun_sect
+    danger: 1
+    spirit_density: 2.8
+    description: 三十六畦灵田，围着一圈半旧的聚灵阵。近来夜里总丢东西。
+    travel: {qingyun_outer_disciple_quarters: 20, qingyun_pill_pavilion: 20, qingyun_back_mountain: 40}
+
+  - key: qingyun_training_ground
+    name: 演武场
+    type: building
+    parent: qingyun_sect
+    faction: qingyun_sect
+    danger: 0
+    spirit_density: 1.8
+    description: 青石铺就，边角被剑气削去了许多。宗门大比在此举行。
+    travel: {qingyun_outer_disciple_quarters: 15, qingyun_main_hall: 25}
+
+  - key: qingyun_pill_pavilion
+    name: 丹药阁
+    type: building
+    parent: qingyun_sect
+    faction: qingyun_sect
+    danger: 0
+    spirit_density: 2.2
+    description: 药香常年不散，柜台后是一排贴着朱砂签的药柜。
+    travel: {qingyun_outer_hall: 15, qingyun_spirit_field: 20, qingyun_main_hall: 20}
+
+  - key: qingyun_main_hall
+    name: 青云主殿
+    type: building
+    parent: qingyun_sect
+    faction: qingyun_sect
+    danger: 0
+    spirit_density: 3.2
+    description: 供奉历代宗主灵位。非内门弟子不得擅入。
+    travel: {qingyun_outer_hall: 30, qingyun_training_ground: 25, qingyun_pill_pavilion: 20, qingyun_scripture_hall: 15, qingyun_back_mountain: 50}
+
+  - key: qingyun_scripture_hall
+    name: 藏经阁
+    type: building
+    parent: qingyun_sect
+    faction: qingyun_sect
+    danger: 0
+    spirit_density: 2.6
+    description: 三层木楼，一层对外门开放，二层以上需内门令牌。
+    travel: {qingyun_main_hall: 15}
+
+  - key: qingyun_back_mountain
+    name: 青云后山
+    type: wilderness
+    parent: qingyun_sect
+    faction: qingyun_sect
+    danger: 2
+    spirit_density: 2.0
+    description: 长老们闭关的洞府散布在崖壁上。禁地在更深处，弟子不得靠近。
+    travel: {qingyun_main_hall: 50, qingyun_spirit_field: 40, blackwind_mountain: 200}
+
+  # ── 青云城 ────────────────────────────────────────────────
+  - key: qingyun_city
+    name: 青云城
+    type: city
+    parent: qingyun_realm
+    faction: great_zhou
+    danger: 1
+    spirit_density: 0.9
+    description: 山下最大的凡俗城池，也是方圆千里唯一的修士坊市所在。
+    travel: {qingyun_sect: 90, qingyun_market: 10, stone_creek_village: 120, sunset_valley: 300}
+
+  - key: qingyun_market
+    name: 青云坊市
+    type: building
+    parent: qingyun_city
+    danger: 1
+    spirit_density: 1.2
+    description: 三条街的修士坊市，从灵石到消息什么都卖。散修联盟的人在这里最多。
+    travel: {qingyun_city: 10, herb_shop: 5, drunken_immortal_tavern: 5, auction_house: 8}
+
+  - key: herb_shop
+    name: 百草堂
+    type: building
+    parent: qingyun_market
+    danger: 0
+    spirit_density: 1.1
+    description: 坊市里最老的药铺，柜台油亮，老板记得每一个买过噬魂草的人。
+    travel: {qingyun_market: 5}
+
+  - key: drunken_immortal_tavern
+    name: 醉仙楼
+    type: building
+    parent: qingyun_market
+    danger: 1
+    spirit_density: 1.0
+    description: 二楼靠窗的位置永远留给出得起价钱的人。消息在这里比酒便宜。
+    travel: {qingyun_market: 5}
+
+  - key: auction_house
+    name: 宝丰拍卖行
+    type: building
+    parent: qingyun_market
+    danger: 0
+    spirit_density: 1.3
+    description: 每月十五开一次小拍，年底一次大拍。
+    travel: {qingyun_market: 8}
+
+  # ── 野外 ──────────────────────────────────────────────────
+  - key: blackwind_mountain
+    name: 黑风山
+    type: mountain
+    parent: qingyun_realm
+    danger: 5
+    spirit_density: 1.4
+    description: 妖兽出没的连绵山脉，近月山中魔气异常，连老猎户都不肯进去。
+    travel: {qingyun_sect: 300, qingyun_back_mountain: 200, blackwind_valley: 60, stone_creek_village: 240}
+
+  - key: blackwind_valley
+    name: 黑风谷
+    type: valley
+    parent: blackwind_mountain
+    danger: 7
+    spirit_density: 1.7
+    description: 山腹深处的谷地，终年不见日光，谷底常有腐土味。
+    travel: {blackwind_mountain: 60}
+
+  - key: sunset_valley
+    name: 落霞谷
+    type: valley
+    parent: qingyun_realm
+    danger: 3
+    spirit_density: 2.1
+    description: 灵植繁茂的山谷，日落时整谷被染成赤色。青云宗与散修常在此采药。
+    travel: {qingyun_sect: 260, qingyun_city: 300, crimson_cloud_realm: 180}
+
+  - key: crimson_cloud_realm
+    name: 赤霞秘境
+    type: secret_realm
+    parent: qingyun_realm
+    danger: 8
+    spirit_density: 4.5
+    accessible: false
+    description: 三十年开启一次的上古洞天，入口在落霞谷东壁。据说距下次开启已不足数月。
+    travel: {sunset_valley: 180}
+
+  - key: stone_creek_village
+    name: 石溪村
+    type: village
+    parent: qingyun_realm
+    danger: 2
+    spirit_density: 0.6
+    description: 山脚下三十几户人家的村子，青云宗每年从这里招收根骨尚可的孩子。
+    travel: {qingyun_city: 120, blackwind_mountain: 240}

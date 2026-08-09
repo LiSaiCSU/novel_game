@@ -1,0 +1,134 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>青云界 · AI Narrative World Engine</title>
+<link rel="stylesheet" href="/styles.css">
+</head>
+<body>
+
+<!-- ── 开局 ───────────────────────────────────────────── -->
+<div id="setup">
+  <div class="card">
+    <h1>青云界</h1>
+    <p class="sub">
+      这不是一个"AI 帮你写小说"的程序。<br>
+      世界先存在，剧情是你与它交互之后产生的结果。
+    </p>
+
+    <label for="pName">道号 / 姓名</label>
+    <input id="pName" maxlength="12" placeholder="例如：沈砚" autocomplete="off">
+
+    <label for="pGender">性别</label>
+    <select id="pGender">
+      <option value="male">男</option>
+      <option value="female">女</option>
+      <option value="unspecified">不明</option>
+    </select>
+
+    <label for="pAge">年龄</label>
+    <input id="pAge" type="number" value="18" min="10" max="80">
+
+    <label for="pBackground">出身（可留空）</label>
+    <input id="pBackground" maxlength="40" placeholder="例如：石溪村猎户之子" autocomplete="off">
+
+    <button class="primary" id="startBtn">踏入青云宗外门</button>
+    <div class="err" id="setupErr"></div>
+    <p class="muted" style="margin-top:16px">
+      未配置 LLM 时引擎仍完整运行：规则、NPC 决策、世界模拟全部为确定性实现，
+      叙事退化为事实播报。
+    </p>
+  </div>
+</div>
+
+<!-- ── 主界面 ─────────────────────────────────────────── -->
+<div class="app" id="app" style="display:none">
+
+  <!-- 左：角色信息 -->
+  <aside class="col-left">
+    <section class="panel">
+      <h2>角色</h2>
+      <div class="kv"><span>姓名</span><span id="cName">—</span></div>
+      <div class="kv"><span>境界</span><span id="cRealm">—</span></div>
+      <div class="kv"><span>灵根</span><span id="cRoot">—</span></div>
+
+      <div class="stat" style="margin-top:12px">
+        <div class="label"><span>气血</span><b id="hpText">—</b></div>
+        <div class="bar hp"><i id="hpBar" style="width:0%"></i></div>
+      </div>
+      <div class="stat">
+        <div class="label"><span>灵力</span><b id="mpText">—</b></div>
+        <div class="bar mp"><i id="mpBar" style="width:0%"></i></div>
+      </div>
+      <div class="stat">
+        <div class="label"><span>修为</span><b id="xpText">—</b></div>
+        <div class="bar"><i id="xpBar" style="width:0%"></i></div>
+      </div>
+
+      <div class="kv"><span>伤势</span><span id="cInjury">—</span></div>
+      <div class="kv"><span>心境</span><span id="cMental">—</span></div>
+    </section>
+
+    <section class="panel">
+      <h2>面板</h2>
+      <div class="tabs" id="leftTabs">
+        <button data-tab="inventory" class="active">背包</button>
+        <button data-tab="relationships">人物</button>
+        <button data-tab="quests">任务</button>
+        <button data-tab="history">历史</button>
+      </div>
+      <div id="tabBody" class="muted">加载中……</div>
+    </section>
+  </aside>
+
+  <!-- 中：小说剧情区 -->
+  <main class="col-main">
+    <div id="story"></div>
+  </main>
+
+  <!-- 右：当前场景 -->
+  <aside class="col-right">
+    <section class="panel">
+      <h2>此刻</h2>
+      <div class="kv"><span>时间</span><span id="sTime">—</span></div>
+      <div class="kv"><span>地点</span><span id="sPlace">—</span></div>
+      <div class="kv"><span>凶险</span><span id="sDanger">—</span></div>
+      <div class="kv"><span>张力</span><span id="sTension">—</span></div>
+      <p class="muted" id="sDesc" style="margin:10px 0 0; line-height:1.75"></p>
+    </section>
+
+    <section class="panel">
+      <h2>在场</h2>
+      <div id="sNpcs" class="muted">此处只有你一人。</div>
+    </section>
+  </aside>
+
+  <!-- 底：输入 -->
+  <div class="bottom">
+    <div class="inputRow">
+      <textarea id="playerInput" rows="1"
+        placeholder="你可以输入任何合理行为，例如：我假装喝醉，去药铺套老板的话，问问昨天有没有人买噬魂草。"></textarea>
+      <button class="primary" id="sendBtn">行动</button>
+    </div>
+    <div class="chips" id="choices"></div>
+  </div>
+</div>
+
+<button class="toggleDebug" id="toggleDebug" style="display:none">Debug</button>
+
+<!-- ── Debug Panel ────────────────────────────────────── -->
+<div id="debugPanel">
+  <header>
+    <strong>DEBUG PANEL</strong>
+    <span id="dbgTurn" class="muted"></span>
+    <span class="spacer"></span>
+    <span id="dbgTokens" class="muted"></span>
+    <button class="chip" id="closeDebug">关闭</button>
+  </header>
+  <div id="debugBody"></div>
+</div>
+
+<script type="module" src="/app.js"></script>
+</body>
+</html>

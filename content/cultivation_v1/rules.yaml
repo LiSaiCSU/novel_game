@@ -1,0 +1,267 @@
+# 规则数值。引擎读取这些常量，不硬编码任何数字。
+
+# ── 时间成本（分钟）§33 ───────────────────────────────────────
+time_costs:
+  TALK:          {min: 5,  max: 20}
+  ASK:           {min: 5,  max: 15}
+  CONVERSATION:  {min: 5,  max: 25}
+  OBSERVE:       {min: 5,  max: 15}
+  SEARCH:        {min: 15, max: 60}
+  FOLLOW:        {min: 10, max: 45}
+  HIDE:          {min: 5,  max: 30}
+  MOVE_LOCAL:    {min: 10, max: 60}
+  MOVE_REGIONAL: {min: 240, max: 2880}
+  ATTACK:        {min: 1,  max: 5}
+  DEFEND:        {min: 1,  max: 3}
+  USE_SKILL:     {min: 1,  max: 5}
+  USE_ITEM:      {min: 1,  max: 10}
+  GIVE_ITEM:     {min: 2,  max: 5}
+  BUY:           {min: 10, max: 30}
+  SELL:          {min: 10, max: 30}
+  STEAL:         {min: 5,  max: 20}
+  PICKUP:        {min: 1,  max: 3}
+  DROP:          {min: 1,  max: 2}
+  CULTIVATE:     {min: 120, max: 43200,  default: 240}
+  BREAKTHROUGH:  {min: 360, max: 10080,  default: 1440}
+  REST:          {min: 240, max: 480}
+  WAIT:          {min: 10, max: 120}
+  ACCEPT_QUEST:  {min: 5,  max: 15}
+  REJECT_QUEST:  {min: 2,  max: 5}
+  CUSTOM:        {min: 5,  max: 30}
+  SECLUSION_MAX_MINUTES: 1555200      # 三年上限
+
+# ── 修炼 §34 ────────────────────────────────────────────────
+cultivation:
+  base_xp_per_hour: 10
+  spirit_density_weight: 1.0          # 场所灵气浓度倍率
+  technique_weight: 1.0
+  root_weight: 1.0
+  mental_state_weight: 0.5
+  injury_penalty_per_point: 0.6       # 伤势 0-1
+  diminishing_after_minutes: 4320     # 连续修炼超过三日开始递减
+  diminishing_factor: 0.5
+  max_xp_ratio_per_session: 0.85      # 单次修炼最多推进到下一级所需 xp 的 85%
+  breakthrough_requires_full_xp: true
+
+breakthrough:
+  # chance = base(realm) + technique + pill + foundation + mental - injury - bottleneck
+  technique_bonus_per_grade: 0.04
+  foundation_quality_weight: 0.10     # foundation_quality 0-1
+  injury_penalty_per_point: 0.35
+  min_chance: 0.02
+  max_chance: 0.95
+  failure:
+    health_loss_ratio: {min: 0.10, max: 0.35}
+    injury_gain: {min: 0.05, max: 0.25}
+    mental_state_loss: {min: 0.05, max: 0.20}
+    backlash_death_chance_at_full_injury: 0.15
+  success:
+    mental_state_gain: 0.10
+    reset_bottleneck: true
+
+# ── 战斗 §37 ────────────────────────────────────────────────
+combat:
+  power_formula_weights:
+    realm: 1.0
+    strength: 0.6
+    agility: 0.4
+    skill_power: 1.0
+    equipment: 0.8
+    mastery: 0.5
+  hit_chance:
+    base: 0.75
+    agility_diff_weight: 0.02
+    perception_diff_weight: 0.01
+    min: 0.05
+    max: 0.98
+  damage:
+    base_variance: {min: 0.85, max: 1.20}
+    defend_reduction: 0.45
+    realm_gap_multiplier_per_order: 3.0    # 每差一个大境界，伤害倍率
+    realm_gap_hard_block: 2                # 差 2 个大境界以上：低境界一方伤害趋近 0
+    hard_block_damage_ratio: 0.01
+  flee:
+    base_chance: 0.5
+    agility_diff_weight: 0.03
+    realm_gap_penalty: 0.25
+  spiritual_power_regen_per_hour: 0.08     # 占上限比例
+  health_regen_per_hour: 0.03
+
+# ── 探测/隐匿 §8 DetectionRules ─────────────────────────────
+detection:
+  base: 0.5
+  perception_weight: 0.03
+  agility_weight: 0.02
+  realm_order_weight: 0.15
+  crowd_bonus_per_person: 0.04
+  night_modifier: -0.15
+  min: 0.02
+  max: 0.98
+
+# ── 关系 §14 ────────────────────────────────────────────────
+relationship:
+  dimensions: [affection, trust, respect, fear, hatred, suspicion, dependency, familiarity]
+  ranges:
+    affection:   {min: -100, max: 100, default: 0}
+    trust:       {min: -100, max: 100, default: 0}
+    respect:     {min: -100, max: 100, default: 0}
+    fear:        {min: 0,    max: 100, default: 0}
+    hatred:      {min: 0,    max: 100, default: 0}
+    suspicion:   {min: 0,    max: 100, default: 0}
+    dependency:  {min: 0,    max: 100, default: 0}
+    familiarity: {min: 0,    max: 100, default: 0}
+  max_delta_per_event:
+    trivial: 2
+    minor: 5
+    major: 15
+    life_changing: 40
+  familiarity_gain_per_interaction: 1
+  decay_per_month_without_contact:
+    familiarity: 1
+    affection: 1
+    hatred: 0
+    suspicion: 1
+
+# ── 社交行动 §38 ────────────────────────────────────────────
+social:
+  base_success: 0.25
+  weights:
+    trust: 0.0035          # per point
+    affection: 0.0025
+    respect: 0.0020
+    fear: 0.0015
+    familiarity: 0.0015
+    hatred: -0.0050
+    suspicion: -0.0040
+    charisma: 0.010        # per stat point above 10
+    reputation: 0.0015     # per reputation point
+  request_size_penalty:
+    trivial: 0.0
+    small: 0.10
+    moderate: 0.25
+    large: 0.45
+    extreme: 0.85
+  risk_penalty_weight: 0.5     # 请求让对方承担的风险 0-1
+  value_conflict_penalty: 0.40 # 请求违背对方 values/taboos
+  taboo_hard_refuse: true
+  first_meeting_penalty: 0.20
+  deception_detection:
+    base: 0.35
+    perception_weight: 0.02
+    suspicion_weight: 0.004
+    intelligence_weight: 0.015
+  min: 0.01
+  max: 0.95
+
+# ── 经济 §8 EconomyRules ────────────────────────────────────
+economy:
+  currency_key: spirit_stone
+  currency_name: 灵石
+  buy_markup: 1.0
+  sell_discount: 0.45
+  haggle_max_shift: 0.15
+  reputation_price_weight: 0.0008
+
+# ── 物品/背包 ───────────────────────────────────────────────
+inventory:
+  max_slots: 40
+  max_weight: 0            # 0 = 不启用负重
+
+# ── 信息传播 §40 ────────────────────────────────────────────
+information:
+  spread_chance_per_day:
+    PUBLIC: 0.6
+    LOCAL: 0.25
+    FACTION: 0.15
+    PRIVATE: 0.02
+    SECRET: 0.0
+  confidence_decay_per_hop: 0.25
+  distortion_chance_per_hop: 0.2
+  reputation_gain_scale: 1.0
+
+# ── 记忆 §16 ────────────────────────────────────────────────
+memory:
+  min_importance: 0.3
+  working_memory_turns: 6
+  retrieval_weights:
+    similarity: 0.35
+    importance: 0.25
+    recency: 0.15
+    relationship: 0.15
+    context: 0.10
+  recency_half_life_minutes: 129600      # 三个月
+  decay_floor: 0.15
+  always_remember_event_types:
+    - DEATH
+    - BREAKTHROUGH
+    - BETRAYAL
+    - RESCUE
+    - PROMISE
+    - SECRET_DISCLOSURE
+    - COMBAT_DEFEAT
+    - COMBAT_VICTORY
+    - QUEST_COMPLETED
+    - QUEST_FAILED
+  top_k: 6
+
+# ── 剧情张力 §25 ────────────────────────────────────────────
+narrative:
+  tension_start: 18
+  tension_decay_per_day: 2.0
+  tension_gain_by_importance: 30.0        # tension += importance * this
+  max_consecutive_high_turns: 3
+  high_threshold: 75
+  bands:
+    - {key: calm,     name: 平静, min: 0,  max: 20}
+    - {key: friction, name: 轻微矛盾, min: 20, max: 40}
+    - {key: pressure, name: 压力增加, min: 40, max: 60}
+    - {key: conflict, name: 重大冲突, min: 60, max: 80}
+    - {key: climax,   name: 高潮, min: 80, max: 101}
+
+director:
+  min_interval_turns: 3
+  cooldown_after_event_turns: 4
+  high_importance_override: 0.7
+  max_events_per_day: 2
+  allowed_event_types:
+    - NPC_RETURN
+    - NPC_DEPARTURE
+    - NPC_APPROACH
+    - RUMOR_SPREAD
+    - FACTION_MOVE
+    - QUEST_OFFER
+    - AMBUSH
+    - DISCOVERY
+    - ENVIRONMENT_SHIFT
+    - CONFRONTATION
+    - RESOURCE_CHANGE
+    - FORESHADOWING
+
+# ── 世界模拟 LOD §31 ────────────────────────────────────────
+simulation:
+  lod0_radius: 0                    # 玩家所在地点
+  lod1_radius: 1                    # 相邻地点
+  tick_minutes:
+    lod1: 240
+    lod2: 1440
+    lod3: 10080
+  max_ticks_per_advance: 400
+  faction_drift_per_week:
+    resources: {min: -0.03, max: 0.05}
+    military_power: {min: -0.02, max: 0.03}
+    reputation: {min: -2, max: 2}
+  offline_event_chance_per_week:
+    lod1: 0.30
+    lod2: 0.18
+    lod3: 0.08
+
+# ── 一致性检查 §63 ──────────────────────────────────────────
+consistency:
+  checks: [alive, location, inventory, realm, knowledge, faction, time]
+  strict: true
+
+# ── 声望 §40 ────────────────────────────────────────────────
+reputation:
+  ranges: {min: -100, max: 100}
+  default: 0
+  known_by_default_radius: 1

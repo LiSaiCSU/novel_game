@@ -1,0 +1,120 @@
+# 境界阶梯。引擎只认识 "有序的 realm 列表 + 每个 realm 的若干 stage + 数值系数"。
+# 新增元婴/化神/炼虚/合体/大乘/渡劫/仙人 只需在这里往后追加，无需改一行 Python。
+
+progression_name: 修为
+
+realms:
+  - key: mortal
+    name: 凡人
+    order: 0
+    stages: [{key: normal, name: "", order: 0}]
+    power_coefficient: 1.0
+    max_health: 40
+    max_spiritual_power: 0
+    lifespan_years: 70
+    xp_to_next_stage: 0
+    breakthrough_base_chance: 0.55      # 引气入体
+    description: 未曾引气入体的普通人。
+
+  - key: qi_refining
+    name: 炼气
+    order: 1
+    stages:
+      - {key: early,  name: 初期, order: 0}
+      - {key: middle, name: 中期, order: 1}
+      - {key: late,   name: 后期, order: 2}
+      - {key: peak,   name: 大圆满, order: 3}
+    power_coefficient: 4.0
+    power_per_stage: 1.2
+    max_health: 120
+    max_spiritual_power: 100
+    health_per_stage: 25
+    spiritual_power_per_stage: 30
+    lifespan_years: 120
+    xp_to_next_stage: 1000
+    breakthrough_base_chance: 0.45
+    description: 引气入体，灵力初成。可御物，不可御剑飞行。
+
+  - key: foundation
+    name: 筑基
+    order: 2
+    stages:
+      - {key: early,  name: 初期, order: 0}
+      - {key: middle, name: 中期, order: 1}
+      - {key: late,   name: 后期, order: 2}
+      - {key: peak,   name: 大圆满, order: 3}
+    power_coefficient: 20.0
+    power_per_stage: 6.0
+    max_health: 400
+    max_spiritual_power: 500
+    health_per_stage: 90
+    spiritual_power_per_stage: 140
+    lifespan_years: 220
+    xp_to_next_stage: 6000
+    breakthrough_base_chance: 0.28
+    description: 灵力化液，筑成道基。可御剑飞行，可辟谷。
+
+  - key: golden_core
+    name: 金丹
+    order: 3
+    stages:
+      - {key: early,  name: 初期, order: 0}
+      - {key: middle, name: 中期, order: 1}
+      - {key: late,   name: 后期, order: 2}
+      - {key: peak,   name: 大圆满, order: 3}
+    power_coefficient: 120.0
+    power_per_stage: 35.0
+    max_health: 2000
+    max_spiritual_power: 3000
+    health_per_stage: 450
+    spiritual_power_per_stage: 700
+    lifespan_years: 500
+    xp_to_next_stage: 40000
+    breakthrough_base_chance: 0.12
+    description: 凝液成丹，神识外放。一方势力之柱石。
+
+  # ↓ 架构预留：V1 世界中无人达到，但规则、战力、寿元均已可计算。
+  #   Director / 战斗 / 突破 全部按 order 与系数工作，不需要特判。
+  - key: nascent_soul
+    name: 元婴
+    order: 4
+    stages:
+      - {key: early,  name: 初期, order: 0}
+      - {key: middle, name: 中期, order: 1}
+      - {key: late,   name: 后期, order: 2}
+      - {key: peak,   name: 大圆满, order: 3}
+    power_coefficient: 900.0
+    power_per_stage: 250.0
+    max_health: 12000
+    max_spiritual_power: 20000
+    health_per_stage: 2600
+    spiritual_power_per_stage: 4500
+    lifespan_years: 1200
+    xp_to_next_stage: 300000
+    breakthrough_base_chance: 0.05
+    playable_in_v1: false
+    description: 婴成神显，一念千里。
+
+# 灵根：影响修炼速度与突破基础
+spiritual_roots:
+  - {key: five_element_chaotic, name: 五行杂灵根, speed: 0.55, breakthrough_mod: -0.06, weight: 40}
+  - {key: four_element,         name: 四灵根,     speed: 0.70, breakthrough_mod: -0.03, weight: 25}
+  - {key: three_element,        name: 三灵根,     speed: 0.90, breakthrough_mod: 0.00,  weight: 18}
+  - {key: dual_element,         name: 双灵根,     speed: 1.20, breakthrough_mod: 0.04,  weight: 11}
+  - {key: single_element,       name: 天灵根,     speed: 1.70, breakthrough_mod: 0.10,  weight: 5}
+  - {key: variant_ice,          name: 冰灵根(变异), speed: 1.85, breakthrough_mod: 0.12, weight: 1}
+
+# 心境：影响突破，可被事件改变
+mental_states:
+  - {key: shattered, name: 道心受损, min: 0.0, max: 0.2, breakthrough_mod: -0.20}
+  - {key: troubled,  name: 心绪不宁, min: 0.2, max: 0.45, breakthrough_mod: -0.08}
+  - {key: stable,    name: 平稳,     min: 0.45, max: 0.75, breakthrough_mod: 0.0}
+  - {key: clear,     name: 澄明,     min: 0.75, max: 0.92, breakthrough_mod: 0.06}
+  - {key: epiphany,  name: 顿悟,     min: 0.92, max: 1.01, breakthrough_mod: 0.15}
+
+# 瓶颈：卡关机制。每次失败的突破会加深瓶颈
+bottleneck:
+  gain_on_failure: 0.12
+  max: 0.6
+  penalty_per_point: 0.5       # breakthrough_chance -= bottleneck * penalty_per_point
+  decay_per_month: 0.02

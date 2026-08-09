@@ -1,0 +1,51 @@
+# 世界日历：把 world_minute（自纪元起点的分钟数）翻译成可读时间
+# 引擎只认识 int minute（DECISIONS D-005），一切换算规则在这里
+
+epoch_label: 青云历
+epoch_year: 1
+
+minutes_per_hour: 60
+hours_per_day: 24
+days_per_month: 30
+months_per_year: 12
+
+# 十二时辰
+shichen:
+  - {key: zi,   name: 子时, start_hour: 23, end_hour: 1}
+  - {key: chou, name: 丑时, start_hour: 1,  end_hour: 3}
+  - {key: yin,  name: 寅时, start_hour: 3,  end_hour: 5}
+  - {key: mao,  name: 卯时, start_hour: 5,  end_hour: 7}
+  - {key: chen, name: 辰时, start_hour: 7,  end_hour: 9}
+  - {key: si,   name: 巳时, start_hour: 9,  end_hour: 11}
+  - {key: wu,   name: 午时, start_hour: 11, end_hour: 13}
+  - {key: wei,  name: 未时, start_hour: 13, end_hour: 15}
+  - {key: shen, name: 申时, start_hour: 15, end_hour: 17}
+  - {key: you,  name: 酉时, start_hour: 17, end_hour: 19}
+  - {key: xu,   name: 戌时, start_hour: 19, end_hour: 21}
+  - {key: hai,  name: 亥时, start_hour: 21, end_hour: 23}
+
+day_phases:
+  - {key: deep_night, name: 深夜, start_hour: 0,  end_hour: 5}
+  - {key: dawn,       name: 拂晓, start_hour: 5,  end_hour: 7}
+  - {key: morning,    name: 上午, start_hour: 7,  end_hour: 11}
+  - {key: noon,       name: 正午, start_hour: 11, end_hour: 13}
+  - {key: afternoon,  name: 下午, start_hour: 13, end_hour: 17}
+  - {key: dusk,       name: 黄昏, start_hour: 17, end_hour: 19}
+  - {key: night,      name: 夜里, start_hour: 19, end_hour: 24}
+
+seasons:
+  - {key: spring, name: 春, months: [1, 2, 3]}
+  - {key: summer, name: 夏, months: [4, 5, 6]}
+  - {key: autumn, name: 秋, months: [7, 8, 9]}
+  - {key: winter, name: 冬, months: [10, 11, 12]}
+
+month_names: [正月, 二月, 三月, 四月, 五月, 六月, 七月, 八月, 九月, 十月, 冬月, 腊月]
+
+# 开局世界时间：青云历 412 年 三月 初七 辰时
+start_year: 412
+start_month: 3
+start_day: 7
+start_hour: 8
+start_minute: 0
+
+format: "{epoch_label}{year}年{month_name}{day}日 {shichen}（{phase}）"

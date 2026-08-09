@@ -1,0 +1,121 @@
+key: cultivation_v1
+name: 青云界
+genre: cultivation
+version: "1.0.0"
+engine_min_version: "0.1.0"
+language: zh-CN
+
+world:
+  name: 青云界
+  description: |
+    青云界是修真界东域一隅。青云宗坐镇青云山脉数百年，与山下的青云城互为表里；
+    往北是妖兽横行的黑风山，往南是灵植繁茂的落霞谷，往东是每三十年开启一次的赤霞秘境。
+    近年来血魔宗势力自西南渗透，大周皇朝在凡俗界收拢兵权，散修联盟在青云城暗中壮大。
+    这个世界不为任何人停留。
+  start_location: qingyun_outer_disciple_quarters
+  world_seed_default: "qingyun-0001"
+
+narrative_style:
+  language: 中文
+  person: 第二人称
+  tense: 现在时
+  tone: 克制、写实、有质感的东方玄幻，不追求爽感
+  target_length: 320
+  avoid_phrases:
+    - 嘴角勾起一抹弧度
+    - 嘴角勾起一抹弧线
+    - 眼中闪过一丝异色
+    - 眼中闪过一抹精光
+    - 心中暗道
+    - 心中暗自
+    - 恐怖如斯
+    - 不由得倒吸一口凉气
+    - 空气仿佛凝固
+    - 脸色微微一变
+    - 深藏功与名
+    - 淡淡地说道
+  phrase_repeat_window: 12
+  phrase_repeat_threshold: 2
+  guidance:
+    - 优先写具体动作、环境细节、有信息量的对话
+    - 减少无意义的修辞堆砌与排比
+    - 世界对主角的存在保持冷漠
+    - 允许平淡，允许无事发生
+
+model_preferences:
+  narrative_temperature: 0.85
+  npc_temperature: 0.7
+  director_temperature: 0.6
+
+vocabulary:
+  # 引擎不认识这些词，只有内容包认识；用于 fallback 意图解析与叙事本地化
+  action_aliases:
+    MOVE: [去, 前往, 走向, 回到, 进入, 出发, 赶往, 下山, 上山]
+    TALK: [聊, 交谈, 说话, 攀谈, 打招呼, 寒暄, 找, 问候]
+    ASK: [问, 询问, 打听, 请教, 套话, 打探]
+    OBSERVE: [看, 观察, 打量, 环顾, 查看, 端详, 留意]
+    SEARCH: [搜, 搜索, 搜查, 翻找, 寻找, 探查, 摸索]
+    FOLLOW: [跟, 跟踪, 尾随, 跟着, 追踪]
+    HIDE: [躲, 藏, 隐藏, 潜伏, 屏息, 隐匿]
+    ATTACK: [打, 攻击, 出手, 杀, 击杀, 偷袭, 一掌, 一剑, 斩]
+    DEFEND: [防御, 格挡, 戒备, 护住, 抵挡]
+    USE_ITEM: [用, 使用, 服用, 吃, 服下, 喝, 催动]
+    GIVE_ITEM: [给, 赠送, 送给, 交给, 递给]
+    STEAL: [偷, 窃取, 顺走, 摸走]
+    BUY: [买, 购买, 采购, 换购]
+    SELL: [卖, 出售, 卖掉, 变卖]
+    CULTIVATE: [修炼, 打坐, 运功, 吐纳, 炼气, 闭关]
+    BREAKTHROUGH: [突破, 冲击, 进阶, 结丹, 筑基]
+    USE_SKILL: [施展, 使出, 催动功法, 用功法, 运转]
+    PICKUP: [捡, 拾取, 拿起, 收起]
+    DROP: [丢, 丢弃, 扔掉, 放下]
+    REST: [休息, 睡觉, 歇, 打盹, 疗伤]
+    WAIT: [等, 等待, 等等, 守着]
+    ACCEPT_QUEST: [接, 接受, 答应, 接下, 领取]
+    REJECT_QUEST: [拒绝, 不接, 回绝, 谢绝]
+  method_aliases:
+    deceive: [骗, 欺骗, 撒谎, 谎称, 假装, 佯装, 装作]
+    persuade: [劝, 说服, 劝说, 游说]
+    intimidate: [吓, 威胁, 恐吓, 威逼]
+    bribe: [贿赂, 收买, 打点, 塞钱]
+    flirt: [调戏, 搭讪, 示好, 挑逗]
+    promise: [承诺, 保证, 答应, 立誓]
+    comfort: [安慰, 宽慰, 劝慰]
+    threaten: [威胁, 要挟, 恫吓]
+    indirect_questioning: [套话, 旁敲侧击, 试探, 不动声色地问]
+    negotiate: [谈判, 商量, 讨价还价, 交涉]
+  query_aliases:
+    QUERY_STATUS: [我的状态, 自身状态, 查看状态, 状态, 属性, 我的修为, 看看自己]
+    QUERY_INVENTORY: [背包, 储物袋, 我的东西, 身上有什么, 查看物品, 物品栏]
+    QUERY_RELATIONSHIPS: [人物关系, 我认识谁, 关系表, 认识的人, 人际]
+    QUERY_QUESTS: [我的任务, 任务列表, 在身的差事, 接了什么任务]
+  request_size_hints:
+    extreme: [毕生积蓄, 全部家当, 所有灵石, 全部身家, 传我毕生所学, 把命, 全部给我]
+    large: [送给我, 都给我, 收我为徒, 带我进, 借我, 教我, 让我进, 替我杀]
+    moderate: [帮我, 陪我一起, 告诉我, 带我去, 卖给我]
+    small: [问一句, 打听一下, 看一眼]
+  refusal_words: [不, 不要, 拒绝, 不接, 算了, 免了]
+  # 数字 + 单位（如 "3日"、"12个时辰"）
+  time_units:
+    个时辰: 120
+    时辰: 120
+    炷香: 30
+    刻: 15
+    日: 1440
+    天: 1440
+    个月: 43200
+    月: 43200
+    年: 518400
+  time_words:
+    一炷香: 30
+    半个时辰: 60
+    一个时辰: 120
+    半日: 360
+    一日: 1440
+    三日: 4320
+    七日: 10080
+    一月: 43200
+    三月: 129600
+    半年: 259200
+    一年: 518400
+    三年: 1555200

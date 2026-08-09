@@ -1,0 +1,104 @@
+factions:
+  - key: qingyun_sect
+    name: 青云宗
+    type: sect
+    headquarters: qingyun_sect
+    description: |
+      东域正道大宗，以剑修与丹道立宗。近年因资源紧缩与内门倾轧，气象不如从前。
+    resources:
+      spirit_stones: 480000
+      spirit_herbs: 0.62      # 0-1 储备水平
+      pills: 0.55
+      artifacts: 0.48
+    member_count: 1180
+    territory: [qingyun_sect, qingyun_back_mountain, sunset_valley]
+    military_power: 72
+    reputation: 68
+    leader: lu_xuan
+    alliances: [free_cultivator_league]
+    enemies: [blood_demon_sect]
+    goals:
+      - 稳住东域正道领袖地位
+      - 查清灵药失窃与山中魔气来源
+      - 在赤霞秘境开启前完成新一批筑基弟子培养
+    internal_conflicts:
+      - 长老会对是否与散修联盟深度合作意见相左
+      - 外门资源分配长期不公，弟子怨气积累
+    metadata:
+      ranks: [外门弟子, 内门弟子, 真传弟子, 执事, 长老, 太上长老, 宗主]
+
+  - key: blood_demon_sect
+    name: 血魔宗
+    type: sect
+    headquarters: null
+    description: |
+      西南魔道宗门，行事隐秘，擅血炼与夺舍。三十年前被正道联手重创，
+      近年重新活动，以渗透与经营代替正面冲突。
+    resources:
+      spirit_stones: 260000
+      spirit_herbs: 0.40
+      pills: 0.66
+      artifacts: 0.52
+    member_count: 430
+    territory: []
+    military_power: 61
+    reputation: -74
+    leader: xue_hong
+    alliances: []
+    enemies: [qingyun_sect, great_zhou]
+    goals:
+      - 在东域各正道宗门内埋下暗子
+      - 夺取赤霞秘境中的上古血炼传承
+      - 避免在准备完成前被正道察觉
+    internal_conflicts:
+      - 激进派主张即刻动手，稳健派主张再潜伏十年
+    metadata:
+      operating_style: 渗透优先
+
+  - key: great_zhou
+    name: 大周皇朝
+    type: empire
+    headquarters: qingyun_city
+    description: |
+      凡俗界王朝，名义上统辖包括青云城在内的东部十七州。
+      对修真宗门保持敬而远之的距离，但一直在暗中收拢兵权与灵石税。
+    resources:
+      spirit_stones: 1200000
+      grain: 0.71
+      troops: 0.66
+    member_count: 0
+    territory: [qingyun_city, qingyun_market, stone_creek_village]
+    military_power: 55
+    reputation: 40
+    leader: null
+    alliances: []
+    enemies: [blood_demon_sect]
+    goals:
+      - 维持凡俗秩序，防止修士干政
+      - 提高灵石税收
+    internal_conflicts:
+      - 地方守将与朝廷派来的监察使不睦
+
+  - key: free_cultivator_league
+    name: 散修联盟
+    type: league
+    headquarters: qingyun_market
+    description: |
+      青云坊市中自发形成的散修互助组织，没有统一号令，但消息灵通、人脉极广。
+      表面卖情报与护卫，实际什么生意都做。
+    resources:
+      spirit_stones: 90000
+      information: 0.85
+      artifacts: 0.30
+    member_count: 260
+    territory: [qingyun_market]
+    military_power: 28
+    reputation: 22
+    leader: qian_duo
+    alliances: [qingyun_sect]
+    enemies: []
+    goals:
+      - 争取在赤霞秘境开启时分到入场名额
+      - 不被任何一家大宗门吞并
+    internal_conflicts:
+      - 亲青云宗派与中立派长期争执
