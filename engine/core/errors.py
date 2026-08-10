@@ -80,6 +80,21 @@ class LLMTimeout(LLMError):
     code = "LLM_TIMEOUT"
 
 
+class LLMTruncated(LLMError):
+    """The model hit its output budget before producing any usable content.
+
+    Reasoning models spend the same budget on hidden thought, so a request that
+    is generous for a plain model can come back completely empty. The caller is
+    expected to retry with a larger budget rather than degrade to templates.
+    """
+
+    code = "LLM_TRUNCATED"
+
+    def __init__(self, message: str, budget: int = 0, **context: Any) -> None:
+        super().__init__(message, **context)
+        self.budget = budget
+
+
 class StructuredOutputError(LLMError):
     """The model could not be coerced into the requested schema."""
 

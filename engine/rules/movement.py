@@ -65,9 +65,28 @@ class MovementRules:
         return RuleResult.ok(minutes=minutes, path=path, hops=len(path) - 1)
 
     @staticmethod
-    def resolve_cost(ctx: RuleContext, minutes: int, hops: int) -> int:
-        """Local hops use the short travel band; long routes use the graph cost."""
-        if hops <= 1 and minutes <= int(ctx.rule("time_costs.MOVE_LOCAL.max", 60)):
+    def resolve_cost(
+        ctx: RuleContext,
+        minutes: int,
+        hops: int,
+        *,
+        origin_key: str = "",
+        destination_key: str = "",
+    ) -> int:
+        """Local journeys use the short travel band; leaving the region is a trip.
+
+        "Local" is about geography, not hop count. Walking three doors down
+        inside one sect is three hops and ten minutes of graph cost; charging
+        it the regional floor turned a stroll across the courtyard into half a
+        day, which is very visible now that one turn can contain several moves.
+        """
+        local_max = int(ctx.rule("time_costs.MOVE_LOCAL.max", 60))
+        stays_local = (
+            ctx.state.graph.shares_region(origin_key, destination_key)
+            if origin_key and destination_key
+            else hops <= 1
+        )
+        if stays_local and minutes <= local_max:
             return max(minutes, int(ctx.rule("time_costs.MOVE_LOCAL.min", 10)))
         return max(minutes, int(ctx.rule("time_costs.MOVE_REGIONAL.min", 240)))
 

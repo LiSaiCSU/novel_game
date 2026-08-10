@@ -8,7 +8,7 @@ from engine.contentpack.pack import ContentPack
 from engine.core import mutations as mut
 from engine.core.errors import ConsistencyViolation
 from engine.core.mutations import ChangeSet
-from engine.core.types import Visibility
+from engine.core.types import DirectorEventStatus, Visibility
 from engine.events.builder import EventBuilder, witnesses_for
 from engine.world.consistency import ConsistencyGuard
 from engine.world.state_view import WorldStateView
@@ -115,6 +115,7 @@ def test_guard_blocks_resurrection(guard, state: WorldStateView) -> None:
 def test_guard_blocks_acting_on_a_corpse(guard, state: WorldStateView) -> None:
     dead = state.present_characters[0]
     dead.alive = False
+    assert state.player.location_id is not None
     cs = ChangeSet()
     cs.add(mut.character_move(dead.id, dead.location_id, state.player.location_id, reason="walk"))
     with pytest.raises(ConsistencyViolation):
@@ -140,6 +141,37 @@ def test_death_event_itself_is_allowed(guard, builder: EventBuilder, state: Worl
     cs.add(mut.character_death(victim.id, reason="killed"))
     cs.add_event(builder.build("DEATH", actor_id=victim.id, world_minute=state.world.current_minute))
     assert guard.check(state, cs) == []
+
+
+def test_guard_allows_pre_death_event_but_blocks_same_changeset_post_death_event(
+    guard, builder: EventBuilder, state: WorldStateView
+) -> None:
+    victim = state.present_characters[0]
+    death_minute = state.world.current_minute + 10
+    valid = ChangeSet()
+    valid.add(mut.character_death(victim.id, reason="natural_lifespan"))
+    valid.add_event(
+        builder.build(
+            "NPC_GOAL_ACTION_RESULT",
+            actor_id=victim.id,
+            world_minute=death_minute - 1,
+        )
+    )
+    valid.add_event(builder.build("DEATH", actor_id=victim.id, world_minute=death_minute))
+    assert guard.check(state, valid) == []
+
+    invalid = valid.model_copy(deep=True)
+    invalid.add_event(
+        builder.build(
+            "NPC_GOAL_ACTION_RESULT",
+            actor_id=victim.id,
+            world_minute=death_minute,
+        )
+    )
+    with pytest.raises(ConsistencyViolation) as exc:
+        guard.check(state, invalid)
+    assert exc.value.check == "alive"
+    assert exc.value.context["violations"][0]["death_minute"] == death_minute
 
 
 def test_guard_blocks_teleporting_to_a_nonexistent_place(guard, state: WorldStateView) -> None:
@@ -175,6 +207,28 @@ def test_guard_blocks_time_running_backwards(guard, state: WorldStateView) -> No
     with pytest.raises(ConsistencyViolation) as exc:
         guard.check(state, cs)
     assert exc.value.check == "time"
+
+
+def test_guard_blocks_invalid_npc_goal_plan(guard, state: WorldStateView) -> None:
+    npc = next(c for c in state.present_characters if c.goal_lifecycle is not None)
+    assert npc.goal_lifecycle is not None
+    raw = npc.goal_lifecycle.model_dump(mode="json")
+    raw["steps"][0]["destination_key"] = "place_that_does_not_exist"
+    cs = ChangeSet()
+    cs.add(mut.character_goals(npc.id, {"goal_lifecycle": raw}, reason="bad_plugin"))
+
+    with pytest.raises(ConsistencyViolation) as exc:
+        guard.check(state, cs)
+    assert exc.value.check == "goals"
+
+
+def test_guard_blocks_invalid_director_event_transition(guard, bundle, state) -> None:
+    cs = ChangeSet(director_events=[bundle.director_events[0]])
+    cs.director_events[0].status = DirectorEventStatus.ACTIVE
+
+    with pytest.raises(ConsistencyViolation) as exc:
+        guard.check(state, cs)
+    assert exc.value.check == "director_events"
 
 
 def test_guard_blocks_out_of_range_progress(guard, state: WorldStateView) -> None:

@@ -10,7 +10,7 @@ from typing import Any
 
 from engine.contentpack.pack import ContentPack
 from engine.core.errors import ConsistencyViolation
-from engine.core.models import Character
+from engine.core.models import Character, DirectorEvent, NPCGoalLifecycle
 from engine.core.mutations import ChangeKind, ChangeSet, StateChange
 from engine.world.state_view import WorldStateView
 
@@ -41,7 +41,15 @@ class ConsistencyGuard:
 
         violations: list[dict[str, Any]] = []
         dying: set[str] = {
-            c.target_id for c in change_set.by_kind(ChangeKind.CHARACTER_DEATH)
+            change.target_id
+            for change in change_set.by_kind(ChangeKind.CHARACTER_DEATH)
+        }
+        death_minutes = {
+            event.actor_id: event.world_minute
+            for event in change_set.events
+            if event.event_type == "DEATH"
+            and event.actor_id
+            and event.actor_id in dying
         }
         already_dead: set[str] = {cid for cid, ch in known.items() if not ch.alive}
 
@@ -56,13 +64,17 @@ class ConsistencyGuard:
                 violations += self._check_inventory(change)
             if "time" in self.enabled_checks:
                 violations += self._check_time(change, state)
+            if "goals" in self.enabled_checks:
+                violations += self._check_goals(change, state)
 
         if "alive" in self.enabled_checks:
             for event in change_set.events:
                 participants = set(event.target_ids) | ({event.actor_id} if event.actor_id else set())
-                # A death event legitimately involves the character who just died.
-                participants -= dying
                 for pid in participants:
+                    # The canonical death event itself legitimately names the
+                    # character. Other events must remain strictly earlier.
+                    if event.event_type == "DEATH" and event.actor_id == pid:
+                        continue
                     if pid in already_dead:
                         violations.append(
                             {
@@ -72,9 +84,24 @@ class ConsistencyGuard:
                                 "event_type": event.event_type,
                             }
                         )
+                        continue
+                    death_minute = death_minutes.get(pid)
+                    if death_minute is not None and event.world_minute >= death_minute:
+                        violations.append(
+                            {
+                                "check": "alive",
+                                "message": "a character cannot participate at or after death",
+                                "character_id": pid,
+                                "event_type": event.event_type,
+                                "event_minute": event.world_minute,
+                                "death_minute": death_minute,
+                            }
+                        )
 
         if "knowledge" in self.enabled_checks:
             violations += self._check_knowledge(change_set)
+        if "director_events" in self.enabled_checks:
+            violations += self._check_director_events(change_set)
 
         if violations and self.strict:
             first = violations[0]
@@ -93,6 +120,7 @@ class ConsistencyGuard:
             ChangeKind.CHARACTER_FIELD,
             ChangeKind.CHARACTER_LOCATION,
             ChangeKind.CHARACTER_EMOTION,
+            ChangeKind.CHARACTER_GOALS,
             ChangeKind.SKILL_LEARN,
             ChangeKind.SKILL_USED,
         ):
@@ -213,5 +241,76 @@ class ConsistencyGuard:
             if not change.payload.get("fact_id"):
                 problems.append(
                     {"check": "knowledge", "message": "knowledge change without a fact id"}
+                )
+        return problems
+
+    def _check_goals(
+        self, change: StateChange, state: WorldStateView
+    ) -> list[dict[str, Any]]:
+        if change.kind is not ChangeKind.CHARACTER_GOALS:
+            return []
+        raw = change.payload.get("goal_lifecycle")
+        if raw is None:
+            return []
+        try:
+            lifecycle = NPCGoalLifecycle.model_validate(raw)
+        except ValueError as exc:
+            return [
+                {
+                    "check": "goals",
+                    "message": "invalid NPC goal lifecycle",
+                    "error": str(exc),
+                }
+            ]
+        unknown = [
+            step.destination_key
+            for step in lifecycle.steps
+            if step.destination_key and state.graph.by_key(step.destination_key) is None
+        ]
+        if unknown:
+            return [
+                {
+                    "check": "goals",
+                    "message": "goal plan references an unknown destination",
+                    "destination_keys": unknown,
+                }
+            ]
+        return []
+
+    def _check_director_events(self, change_set: ChangeSet) -> list[dict[str, Any]]:
+        problems: list[dict[str, Any]] = []
+        event_ids = {event.id for event in change_set.events}
+        dedup_keys: set[str] = set()
+        for raw in change_set.director_events:
+            try:
+                record = DirectorEvent.model_validate(raw.model_dump(mode="json"))
+            except ValueError as exc:
+                problems.append(
+                    {
+                        "check": "director_events",
+                        "message": "invalid Director event lifecycle",
+                        "error": str(exc),
+                    }
+                )
+                continue
+            if record.dedup_key in dedup_keys:
+                problems.append(
+                    {
+                        "check": "director_events",
+                        "message": "duplicate Director event in one transaction",
+                        "dedup_key": record.dedup_key,
+                    }
+                )
+            dedup_keys.add(record.dedup_key)
+            if (
+                str(record.status) == "RESOLVED"
+                and record.canonical_event_id not in event_ids
+            ):
+                problems.append(
+                    {
+                        "check": "director_events",
+                        "message": "resolved Director lifecycle lacks its canonical event",
+                        "director_event_id": record.id,
+                    }
                 )
         return problems

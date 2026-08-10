@@ -82,6 +82,7 @@ class Director:
         turns_since_last_event: int,
         last_turn_importance: float,
         rng,
+        unavailable_character_ids: set[str] | None = None,
     ) -> DirectorResult:
         threads = await uow.plot_threads.list_for_world(state.world.id)
         overdue = self._overdue(threads, state.world.current_minute)
@@ -130,7 +131,12 @@ class Director:
         if decision is None:
             decision = self._deterministic(state, threads, overdue, rng)
 
-        validation = await self.validator.validate(uow, state, decision)
+        validation = await self.validator.validate(
+            uow,
+            state,
+            decision,
+            unavailable_character_ids=unavailable_character_ids,
+        )
         if not validation.accepted:
             logger.info("director proposal rejected: %s", validation.rejections)
         return DirectorResult(

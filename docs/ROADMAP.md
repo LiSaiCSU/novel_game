@@ -101,6 +101,32 @@
 
 ## V1 之后（未实现，按优先级）
 
+### 2026-08-09 架构审计增量
+
+- [x] Turn 状态机：`CANONICAL_COMMITTED → NARRATIVE_FAILED/COMPLETED`，canonical
+  事务原子保存恢复胶囊；同幂等键只补叙事，并拒绝同 key 不同输入。
+- [x] 五类 Agent 控制 prompt、通用约束与结构化修复指令全部改为中文。
+- [x] 短 Action Plan + 2—4 个 Action Primitive：完整步骤 schema、结构化条件、逐步投影验证、
+  派生 RNG、Event 因果链与单 ChangeSet 原子提交；规则拒绝丢弃全部前置 proposal，结果失败则保留尝试。
+  无模型 fallback 检出复合输入时要求拆分，不再静默忽略第二行为。
+- [x] Temporal Jump：消除一年静默裁剪；势力随机游走与世界事件按跨度聚合，
+  物化事件有界；跨年更新年龄并按内容包寿命产生 canonical death。
+- [x] 重要 NPC 持久 Goal → Plan → Action → Result 生命周期：角色保存计划版本、步骤游标、
+  下次行动时间与最近结果；Temporal Jump 用有界几何采样跨过重复尝试，每个物化结果写 canonical event；
+  死亡会停止推进，AI 更新目标只能触发经程序构造的新计划版本。
+- [x] Director Event 独立的 PROPOSED/SCHEDULED/ACTIVE/RESOLVED/CANCELLED 生命周期：
+  稳定因果去重键、内容预定 beat、到期重校验、死亡/线程失效取消、每日容量顺延、
+  canonical 冷却与 Narrative 重试不重复激活均已覆盖。
+- [x] post-commit Memory 是 canonical event 的独立可恢复投影：恢复胶囊记录进度，
+  `(owner, event)` 唯一，部分写入整体回滚；AI 摘要和 Narrative 修辞均不能成为持久事实。
+- [x] Rule Plugin v1 标准接口、受限路径/API 装载、修炼 validate/resolve 迁出 Engine，
+  并以非修仙调查插件验证 `CUSTOM` 领域行为和 canonical event proposal。
+- [ ] 完整第二内容包端到端验证；角色 schema 仍有 V1 progression 兼容字段，需先定义通用属性策略。
+- [x] 破坏性长局测试：同一 Temporal Jump 组合覆盖重要 NPC 死亡前 Goal、死亡后
+  Director 取消、错过任务结算与跨多年推进；玩家谎言只能成为话语主张，不能改写
+  `Fact.truth_value` 或凭空授予知识；canonical commit、Memory 部分写入、Director 激活
+  与 Narrative 失败均有幂等恢复回归。
+
 1. **境界扩展**：元婴/化神/炼虚/合体/大乘/渡劫/仙人（只改 `realms.yaml`）
 2. **第二内容包** `content/wuxia_v1/`，验证引擎与内容真正解耦
 3. **Next.js 前端**（需 Node 环境，见 D-002）

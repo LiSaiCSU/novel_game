@@ -131,8 +131,14 @@ async def test_idempotency_header_is_honoured(client) -> None:
     assert state.json()["session"]["turn_number"] == 1
 
 
-async def test_sse_stream_sends_state_before_prose(client) -> None:
-    """Prompt section 49: the world is settled before narration starts."""
+async def test_sse_stream_settles_the_world_before_narrating(client) -> None:
+    """Prompt section 49: the world is settled before narration starts.
+
+    The prose is now streamed as it is written, so "state first" is no longer
+    the observable form of this - the final state carries the chapter's beat
+    and cannot exist before the chapter does. What still must hold is that
+    every committed step is announced before the first character of prose.
+    """
     started = await client.post(
         "/api/game/start", json={"player_name": "沈砚", "world_seed": "api-test-4"}
     )
@@ -144,7 +150,12 @@ async def test_sse_stream_sends_state_before_prose(client) -> None:
         body = ""
         async for chunk in response.aiter_text():
             body += chunk
-    assert body.index("event: state") < body.index("event: narrative")
+
+    assert "event: narrative" in body
+    if "event: progress" in body:
+        assert body.rindex("event: progress") < body.index("event: narrative")
+    # State always precedes the terminator, and the terminator is last.
+    assert body.index("event: state") < body.index("event: done")
     assert body.rstrip().endswith("}") and "event: done" in body
 
 
@@ -193,6 +204,8 @@ async def test_world_inspector(client) -> None:
     assert body["world"]["character_count"] > 10
     assert body["factions"]
     assert body["plot_threads"]
+    assert body["director_events"]
+    assert {event["status"] for event in body["director_events"]} == {"SCHEDULED"}
     assert "band" in body["tension"]
 
 

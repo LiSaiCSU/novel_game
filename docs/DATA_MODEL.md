@@ -72,6 +72,7 @@ personality(JSON)   -- traits/values/taboos/speech_style/risk_tolerance
 values_(JSON)       -- 冗余快捷访问
 background(text)
 long_term_goal, short_term_goal(JSON list)
+goal_lifecycle(JSON) -- Goal 状态、计划版本/步骤、行动游标、下次行动时间、最近 canonical Result
 current_emotion(JSON)   -- {valence,arousal,dominant,intensity,updated_at_minute}
 injuries(JSON)
 schedule(JSON)          -- §32
@@ -82,6 +83,12 @@ alive(bool), death_event_id, created_at, updated_at
 > §12：Character 不得只有一段自然语言 profile —— 上面所有数值字段均为结构化列。
 > `personality` 与 `current_emotion` 严格分离（§13）：前者变化极慢（有 `personality_drift_cap`），
 > 后者每回合可变。
+
+重要 NPC 的 `long_term_goal` 是 Goal，`short_term_goals` 是当前 Plan 的语义步骤；
+`goal_lifecycle` 保存可执行游标。每次离屏行动的结果同时写入 append-only
+`NPC_GOAL_ACTION_RESULT` event，并在生命周期中只缓存 `last_result.event_id`。
+计划步骤全部完成只进入 `REVIEW_REQUIRED`，通用 Engine 不会据此擅自宣告长期目标实现；
+题材领域后果必须由通过标准验证链的 Rule Plugin 提交。
 
 ### relationships
 `id, world_id, character_a_id, character_b_id,
@@ -122,7 +129,12 @@ summary, importance(0-1), emotional_valence(-1..1),
 related_characters(JSON), related_event_id, related_location_id,
 created_at_minute, last_recalled_minute, recall_count, decay(0-1),
 embedding(JSON | vector(N))
+UNIQUE(owner_character_id, related_event_id)  # related_event_id 非空时
 ```
+
+Memory 是 append-only canonical Event 的可重建投影。模型输出只参与
+`should_store / memory_tag / importance / emotional_valence` 分类；`summary` 和 embedding
+输入均取已提交 Event 的确定事实描述，Narrative 从不作为事实来源。
 
 检索得分（不是纯 Top-K）：
 
@@ -145,6 +157,23 @@ visibility(PUBLIC|LOCAL|FACTION|PRIVATE|SECRET), witnesses(JSON),
 created_at
 ```
 **永不 UPDATE / DELETE**（ORM 层加 `__mapper_args__` + 仓储层禁写守卫 + 测试断言）。
+
+### director_events
+```text
+id, world_id, session_id, created_turn_id, created_turn_number, dedup_key(UNIQUE per world),
+decision_type, event_type,
+status(PROPOSED|SCHEDULED|ACTIVE|RESOLVED|CANCELLED),
+source_plot_thread_id/key/stage, participant_keys/ids(JSON), location_id,
+proposal, causal_basis(JSON), narrative_purpose(JSON), urgency, tension_delta,
+proposed_at_minute, scheduled_for_minute, activated/resolved/cancelled_at_minute,
+canonical_event_id, cancellation_reason, history(JSON)
+```
+
+`director_events` 是“候选剧情事件”的可变 canonical 生命周期；真正发生的事实仍只写入
+append-only `events`。即时事件在一个事务内留下
+`PROPOSED → SCHEDULED → ACTIVE → RESOLVED` 历史并关联 `canonical_event_id`；
+未来事件保持 `SCHEDULED`，到期时重新校验人物存活、可达性与线程 stage，失效则
+`CANCELLED`。同一因果 beat 使用不含模型措辞的稳定 `dedup_key`，防止换种说法重复触发。
 
 ### plot_threads / story_arcs（§23）
 `id, world_id, key, name, status(dormant|active|resolved|failed|abandoned),
@@ -175,9 +204,9 @@ character_skills: id, character_id, skill_id, mastery(0-1), learned_at_minute,
 game_sessions: id, world_id, player_character_id, session_seed, status,
                created_at, last_active_at
 turns:         id, session_id, turn_number, player_input, intent(JSON),
-               action(JSON), rule_result(JSON), outcome(JSON),
-               npc_decisions(JSON), director_decision(JSON),
-               state_changes(JSON), world_minute_before, world_minute_after,
+               status(CANONICAL_COMMITTED|NARRATIVE_FAILED|COMPLETED),
+               canonical_payload(JSON), last_error(JSON), result(JSON),
+               world_minute_before, world_minute_after,
                idempotency_key(UNIQUE), created_at
 turn_traces:   id, turn_id, request_id, stage_timings(JSON), llm_calls(JSON),
                rng_traces(JSON), context_snapshots(JSON), errors(JSON),
@@ -186,6 +215,15 @@ narrative_segments: id, session_id, turn_id, kind(scene|chapter_summary|long_ter
                text, world_minute, created_at
 ```
 `narrative_segments` 实现 §45 的 raw transcript / scene summary / chapter summary / long-term history 分层。
+
+`canonical_payload` 是提交后的恢复胶囊，包含已裁决 `ActionOutcome`、已通过守卫的
+`ChangeSet`、提交前快照和已确认 NPC/Director 表达输入。它不是新的事实来源；
+事实仍以 canonical tables 与 append-only events 为准，只用于保证叙事重试不重放行为。
+
+Temporal Jump 中大量同类离线事件不会逐条伪造：代表性 event 的
+`payload.occurrences` 记录其聚合数量，`world_minute` 位于实际 jump 区间内。
+跨年年龄变化写入 character canonical state；自然寿终同时写 `DEATH` event 与
+`characters.alive=false/death_event_id`。
 
 ---
 

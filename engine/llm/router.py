@@ -35,21 +35,28 @@ class ModelRouter:
         LLMRole.EMBEDDING: 0.0,
     }
     _DEFAULT_MAX_TOKENS: ClassVar[dict[LLMRole, int]] = {
-        LLMRole.INTENT: 700,
-        LLMRole.NPC: 900,
-        LLMRole.NPC_MAJOR: 1100,
-        LLMRole.DIRECTOR: 800,
-        LLMRole.NARRATIVE: 1100,
-        LLMRole.MEMORY: 600,
+        LLMRole.INTENT: 1200,
+        LLMRole.NPC: 1200,
+        LLMRole.NPC_MAJOR: 1600,
+        LLMRole.DIRECTOR: 1200,
+        LLMRole.STEWARD: 1600,
+        # A scene, not a status line. This is the single biggest lever on how
+        # the game reads, so it gets room to actually write one.
+        LLMRole.NARRATIVE: 2600,
+        LLMRole.MEMORY: 800,
         LLMRole.EMBEDDING: 8,
     }
 
     def __init__(self, settings: Any) -> None:
+        self._budget_scale = max(
+            0.25, float(getattr(settings, "llm_output_budget_scale", 1.0) or 1.0)
+        )
         self._models: dict[LLMRole, str] = {
             LLMRole.INTENT: getattr(settings, "intent_model", "") or "",
             LLMRole.NPC: getattr(settings, "npc_model", "") or "",
             LLMRole.NPC_MAJOR: getattr(settings, "npc_major_model", "") or "",
             LLMRole.DIRECTOR: getattr(settings, "director_model", "") or "",
+            LLMRole.STEWARD: getattr(settings, "steward_model", "") or "",
             LLMRole.NARRATIVE: getattr(settings, "narrative_model", "") or "",
             LLMRole.MEMORY: getattr(settings, "memory_model", "") or "",
             LLMRole.EMBEDDING: getattr(settings, "embedding_model", "") or "",
@@ -57,6 +64,9 @@ class ModelRouter:
         # A major-NPC model is optional; fall back to the ordinary NPC model.
         if not self._models[LLMRole.NPC_MAJOR]:
             self._models[LLMRole.NPC_MAJOR] = self._models[LLMRole.NPC]
+        # The steward is new; existing deployments should get it for free.
+        if not self._models[LLMRole.STEWARD]:
+            self._models[LLMRole.STEWARD] = self._models[LLMRole.INTENT]
 
     def choose(
         self, role: LLMRole, *, temperature: float | None = None, max_output_tokens: int | None = None
@@ -68,7 +78,7 @@ class ModelRouter:
                 self._DEFAULT_TEMPERATURE.get(role, 0.7) if temperature is None else temperature
             ),
             max_output_tokens=(
-                self._DEFAULT_MAX_TOKENS.get(role, 800)
+                int(self._DEFAULT_MAX_TOKENS.get(role, 800) * self._budget_scale)
                 if max_output_tokens is None
                 else max_output_tokens
             ),

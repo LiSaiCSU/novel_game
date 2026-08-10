@@ -1,5 +1,10 @@
 # 规则数值。引擎读取这些常量，不硬编码任何数字。
 
+# ── 短复合行动 ───────────────────────────────────────────────
+action_plan:
+  # 跨过这一边界需要独立 Turn，让世界模拟在步骤之间真正运行。
+  max_total_minutes: 1440
+
 # ── 时间成本（分钟）§33 ───────────────────────────────────────
 time_costs:
   TALK:          {min: 5,  max: 20}
@@ -28,7 +33,7 @@ time_costs:
   ACCEPT_QUEST:  {min: 5,  max: 15}
   REJECT_QUEST:  {min: 2,  max: 5}
   CUSTOM:        {min: 5,  max: 30}
-  SECLUSION_MAX_MINUTES: 1555200      # 三年上限
+  SECLUSION_MAX_MINUTES: 15552000     # 三十年上限；更长跨度应拆成多个因果可观察阶段
 
 # ── 修炼 §34 ────────────────────────────────────────────────
 cultivation:
@@ -223,6 +228,7 @@ director:
   cooldown_after_event_turns: 4
   high_importance_override: 0.7
   max_events_per_day: 2
+  max_schedule_delay_minutes: 518400  # 最多提前安排一年
   allowed_event_types:
     - NPC_RETURN
     - NPC_DEPARTURE
@@ -237,15 +243,35 @@ director:
     - RESOURCE_CHANGE
     - FORESHADOWING
 
+# ── 自动推进：AI 演到哪里该把笔交还给玩家 ──────────────────
+# 玩家不该为了"走到药铺"这种事逐句下指令。角色自己往下演，
+# 直到真的需要人来拿主意为止。什么算"需要"，由这里定义。
+auto_advance:
+  # 一次输入换来的东西要值得读：宁可多演几步、写长一章，
+  # 也不要让玩家每说一句只往前挪一小格。
+  max_steps: 8              # 一次最多替玩家演几步
+  max_minutes: 1440         # 一次最多推进多少世界时间（一天）
+  # 一步里最多让几个"旁人"动用模型思考。被搭话的对象永远算数，不占额度；
+  # 其余路人走确定性启发式——一章里给每个围观者都做一次心理活动，
+  # 代价是几分钟的等待，换来的却是读者根本不会读的句子。
+  npc_llm_per_step: 2
+  interrupt_importance: 0.45   # 事件重要度到这个值就停下来
+  interrupt_health_loss: 0.08  # 掉了这个比例的气血就停下来
+  hostile_actions: [ATTACK, STEAL]
+  engaging_actions: [GIVE_ITEM, ASK, TALK, CONVERSATION]
+  offer_events: [QUEST_OFFER]
+
 # ── 世界模拟 LOD §31 ────────────────────────────────────────
 simulation:
+  npc_goal_action_interval_minutes: 10080  # 重要 NPC 每周获得一次计划行动机会
   lod0_radius: 0                    # 玩家所在地点
   lod1_radius: 1                    # 相邻地点
   tick_minutes:
     lod1: 240
     lod2: 1440
     lod3: 10080
-  max_ticks_per_advance: 400
+  # Temporal Jump 只物化有限个代表性事件，其余以 occurrences 聚合。
+  max_materialized_events_per_jump: 12
   faction_drift_per_week:
     resources: {min: -0.03, max: 0.05}
     military_power: {min: -0.02, max: 0.03}
@@ -257,7 +283,7 @@ simulation:
 
 # ── 一致性检查 §63 ──────────────────────────────────────────
 consistency:
-  checks: [alive, location, inventory, realm, knowledge, faction, time]
+  checks: [alive, location, inventory, realm, knowledge, faction, time, goals, director_events]
   strict: true
 
 # ── 声望 §40 ────────────────────────────────────────────────

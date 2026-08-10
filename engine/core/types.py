@@ -91,6 +91,27 @@ class CharacterType(StrEnum):
     BACKGROUND = "BACKGROUND"
 
 
+class GoalStatus(StrEnum):
+    """Persistent lifecycle of an important NPC's long-running goal."""
+
+    ACTIVE = "ACTIVE"
+    REVIEW_REQUIRED = "REVIEW_REQUIRED"
+    ACHIEVED = "ACHIEVED"
+    FAILED = "FAILED"
+    CANCELLED = "CANCELLED"
+
+
+class GoalStepStatus(StrEnum):
+    PENDING = "PENDING"
+    SUCCEEDED = "SUCCEEDED"
+    CANCELLED = "CANCELLED"
+
+
+class GoalActionOutcome(StrEnum):
+    SUCCEEDED = "SUCCEEDED"
+    FAILED = "FAILED"
+
+
 class KnowledgeState(StrEnum):
     """Prompt section 15."""
 
@@ -188,6 +209,14 @@ class DirectorDecisionType(StrEnum):
     PLANT_FORESHADOWING = "PLANT_FORESHADOWING"
 
 
+class DirectorEventStatus(StrEnum):
+    PROPOSED = "PROPOSED"
+    SCHEDULED = "SCHEDULED"
+    ACTIVE = "ACTIVE"
+    RESOLVED = "RESOLVED"
+    CANCELLED = "CANCELLED"
+
+
 class Urgency(StrEnum):
     LOW = "low"
     MEDIUM = "medium"
@@ -224,6 +253,8 @@ class LLMRole(StrEnum):
     NPC = "npc"
     NPC_MAJOR = "npc_major"
     DIRECTOR = "director"
+    #: Fills in the world the player reached for but the pack never wrote down.
+    STEWARD = "steward"
     NARRATIVE = "narrative"
     MEMORY = "memory"
     EMBEDDING = "embedding"

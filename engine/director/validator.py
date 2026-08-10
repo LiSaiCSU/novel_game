@@ -14,6 +14,7 @@ from engine.contentpack.pack import ContentPack
 from engine.core.models import Character, PlotThread
 from engine.core.ports import UnitOfWork
 from engine.core.types import DirectorDecisionType, ThreadStatus
+from engine.director.lifecycle import director_event_dedup_key
 from engine.director.tension import TensionModel
 from engine.world.state_view import WorldStateView
 
@@ -32,9 +33,20 @@ class DirectorValidator:
         self.pack = pack
         self.tension = TensionModel(pack)
         self.allowed_event_types = set(pack.rule("director.allowed_event_types", []) or [])
+        self.max_schedule_delay = int(
+            pack.rule("director.max_schedule_delay_minutes", 518_400)
+        )
+        self.max_events_per_day = max(
+            1, int(pack.rule("director.max_events_per_day", 2))
+        )
 
     async def validate(
-        self, uow: UnitOfWork, state: WorldStateView, decision: DirectorDecision
+        self,
+        uow: UnitOfWork,
+        state: WorldStateView,
+        decision: DirectorDecision,
+        *,
+        unavailable_character_ids: set[str] | None = None,
     ) -> ValidationOutcome:
         rejections: list[str] = []
 
@@ -42,8 +54,14 @@ class DirectorValidator:
             return ValidationOutcome(accepted=True, decision=decision)
 
         # -- event type must be on the content pack's whitelist -------------
-        if decision.event_type and decision.event_type not in self.allowed_event_types:
+        if not decision.event_type:
+            rejections.append("missing_event_type")
+        elif decision.event_type not in self.allowed_event_types:
             rejections.append(f"event_type_not_allowed:{decision.event_type}")
+        if decision.schedule_after_minutes > self.max_schedule_delay:
+            rejections.append(
+                f"schedule_delay_too_large:{decision.schedule_after_minutes}"
+            )
 
         # -- participants must exist, be alive, and be able to get here ------
         participants: list[Character] = []
@@ -55,6 +73,9 @@ class DirectorValidator:
             if not character.alive:
                 # Eval 5: the Director may not bring a dead character back.
                 rejections.append(f"dead_participant:{key}")
+                continue
+            if character.id in (unavailable_character_ids or set()):
+                rejections.append(f"participant_dies_this_turn:{key}")
                 continue
             if not self._can_reach(state, character):
                 rejections.append(f"unreachable_participant:{key}")
@@ -87,6 +108,26 @@ class DirectorValidator:
             if await uow.knowledge.get_fact_by_key(state.world.id, basis) is not None:
                 continue
             rejections.append(f"unfounded_causal_basis:{basis[:40]}")
+
+        if not rejections:
+            scheduled = state.world.current_minute + decision.schedule_after_minutes
+            minutes_per_day = state.clock.minutes_per_day
+            day_start = (scheduled // minutes_per_day) * minutes_per_day
+            booked = await uow.director_events.count_booked_between(
+                state.world.id, day_start, day_start + minutes_per_day
+            )
+            if booked >= self.max_events_per_day:
+                rejections.append(f"director_daily_cap_reached:{day_start}")
+
+        if not rejections:
+            dedup_key = director_event_dedup_key(decision, thread)
+            duplicate = await uow.director_events.get_by_dedup_key(
+                state.world.id, dedup_key
+            )
+            if duplicate is not None:
+                rejections.append(
+                    f"duplicate_director_event:{duplicate.id}:{duplicate.status}"
+                )
 
         # -- pacing: no permanent climax --------------------------------------
         if self.tension.must_de_escalate(

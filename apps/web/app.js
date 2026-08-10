@@ -29,7 +29,7 @@ function paragraphs(text) {
     .filter(Boolean);
 }
 
-function appendEntry({ said, prose, rejected, deltas }) {
+function appendEntry({ said, prose, deltas }) {
   const story = $("story");
   const entry = document.createElement("div");
   entry.className = "entry";
@@ -49,13 +49,6 @@ function appendEntry({ said, prose, rejected, deltas }) {
     body.appendChild(node);
   }
   entry.appendChild(body);
-
-  if (rejected) {
-    const el = document.createElement("div");
-    el.className = "rejected";
-    el.textContent = `${rejected.reason_code}${rejected.reason ? " — " + rejected.reason : ""}`;
-    entry.appendChild(el);
-  }
 
   if (deltas && deltas.length) {
     const row = document.createElement("div");
@@ -137,6 +130,19 @@ function renderState(state) {
   const time = state.time || {};
   $("sTime").textContent = time.label || "—";
   $("sPlace").textContent = loc.name || "—";
+
+  // Always-visible clock: which part of the day it is, and what o'clock.
+  if (time.phase_name || time.hour !== undefined) {
+    $("nowPhase").textContent = time.phase_name || "";
+    const hh = String(time.hour ?? 0).padStart(2, "0");
+    const mm = String(time.minute ?? 0).padStart(2, "0");
+    $("nowClock").textContent = `${hh}:${mm}`;
+    const stamp = [time.year && `${time.year}年`, time.month && `${time.month}月`, time.day && `${time.day}日`]
+      .filter(Boolean)
+      .join("");
+    $("nowDate").textContent = time.hour_label ? `${stamp} ${time.hour_label}` : stamp;
+    $("nowPlace").textContent = loc.name || "";
+  }
   $("sDanger").textContent = "★".repeat(Math.min(5, loc.danger_level || 0)) || "—";
   $("sDesc").textContent = loc.description || "";
   if (state.narrative_tension !== undefined) {
@@ -161,22 +167,49 @@ function renderState(state) {
   }
 }
 
-function renderChoices(choices) {
+function chip(text, { primary = false, send = false } = {}) {
+  const el = document.createElement("button");
+  el.className = primary ? "chip primary" : "chip";
+  el.textContent = text;
+  el.onclick = () => {
+    $("playerInput").value = text;
+    if (send) submit();
+    else $("playerInput").focus();
+  };
+  return el;
+}
+
+// The beat is what the scene is waiting on. When it is not waiting on
+// anything, the only thing worth offering is "keep going".
+function renderChoices(choices, beat) {
   const box = $("choices");
   box.innerHTML = "";
-  const templates = { TALK: (l) => `我找${l}说几句`, MOVE: (l) => `我去${l}`, CULTIVATE: () => "我打坐修炼一个时辰" };
-  for (const c of choices || []) {
-    const make = templates[c.action_type];
-    if (!make) continue;
-    const text = make(c.label);
-    const chip = document.createElement("button");
-    chip.className = "chip";
-    chip.textContent = text;
-    chip.onclick = () => {
-      $("playerInput").value = text;
-      $("playerInput").focus();
+
+  if (beat && beat.question) {
+    const q = document.createElement("div");
+    q.className = "beatQuestion";
+    q.textContent = beat.question;
+    box.appendChild(q);
+  }
+
+  const options = (beat && beat.options) || [];
+  for (const o of options) box.appendChild(chip(o.label, { send: true }));
+
+  if (!beat || beat.needs_player === false) {
+    box.appendChild(chip("继续", { primary: true, send: true }));
+  }
+
+  if (!options.length) {
+    const templates = {
+      TALK: (l) => `我找${l}说几句`,
+      MOVE: (l) => `我去${l}`,
+      CULTIVATE: () => "我打坐修炼一个时辰",
     };
-    box.appendChild(chip);
+    for (const c of choices || []) {
+      const make = templates[c.action_type];
+      if (!make) continue;
+      box.appendChild(chip(make(c.label)));
+    }
   }
 }
 
@@ -321,6 +354,7 @@ async function submit() {
     let buffer = "";
     let prose = "";
     let payload = null;
+    const progress = [];
 
     while (true) {
       const { done, value } = await reader.read();
@@ -334,13 +368,24 @@ async function submit() {
         if (!evLine || !dataLine) continue;
         const event = evLine.slice(6).trim();
         const data = JSON.parse(dataLine.slice(5));
-        if (event === "state") {
+        if (event === "progress") {
+          // The chapter is still being played out; show it moving.
+          progress.push(data);
+          body.innerHTML = "";
+          const node = document.createElement("p");
+          node.className = "progress";
+          node.textContent = `故事正在推进…（第 ${data.step} 回合）`;
+          body.appendChild(node);
+        } else if (event === "error") {
+          throw new Error(data.message || "回合失败");
+        } else if (event === "state") {
           payload = data;
           // World state is committed before a single character of prose.
           renderState(data.visible_updates || {});
-          renderChoices(data.choices);
+          renderChoices(data.choices, data.beat);
           if (data.debug) renderDebug(data.debug);
         } else if (event === "narrative") {
+          // First prose chunk replaces the progress placeholder.
           prose += data.delta;
           body.innerHTML = "";
           for (const p of paragraphs(prose)) {
@@ -356,12 +401,10 @@ async function submit() {
     body.classList.remove("cursor");
     if (payload) {
       const entry = body.parentElement;
-      if (payload.rejected) {
-        const el = document.createElement("div");
-        el.className = "rejected";
-        el.textContent = `${payload.rejected.reason_code}${payload.rejected.reason ? " — " + payload.rejected.reason : ""}`;
-        entry.appendChild(el);
-      }
+      // How many turns a chapter covers is bookkeeping, not story. It belongs
+      // in the debug panel, not under the prose.
+      // A refusal is already written into the prose. Reason codes are for the
+      // debug panel, not for the reader.
       const deltas = describeDeltas(payload.state_changes || {});
       if (deltas.length) {
         const row = document.createElement("div");
@@ -437,7 +480,7 @@ $("startBtn").onclick = async () => {
     localStorage.setItem("sessionId", data.session_id);
     localStorage.setItem("worldId", data.world_id);
     localStorage.setItem("playerId", data.player_character_id);
-    await enterGame(data.opening, data.state);
+    await enterGame(data.opening, data.state, data.beat);
   } catch (e) {
     $("setupErr").textContent = e.message;
   } finally {
@@ -445,11 +488,12 @@ $("startBtn").onclick = async () => {
   }
 };
 
-async function enterGame(opening, state) {
+async function enterGame(opening, state, beat) {
   $("setup").style.display = "none";
   $("app").style.display = "grid";
   if (opening) appendEntry({ prose: opening });
   if (state) renderState(state);
+  renderChoices([], beat);
   await refreshState();
   await refreshTab();
   $("playerInput").focus();
@@ -478,3 +522,104 @@ async function enterGame(opening, state) {
     store.sessionId = null;
   }
 })();
+
+// ---------------------------------------------------------------- save / load
+async function refreshSaveList() {
+  const box = $("saveList");
+  try {
+    const saves = await api(`/game/${store.sessionId}/saves`);
+    if (!saves.length) {
+      box.className = "muted";
+      box.textContent = "还没有存档。先点「存档」把当前进度存下来。";
+      return;
+    }
+    box.className = "";
+    box.innerHTML = "";
+    for (const s of saves) {
+      const row = document.createElement("div");
+      row.className = "saveRow";
+      const when = s.created_at ? new Date(s.created_at).toLocaleString() : "";
+      row.innerHTML = `
+        <div class="saveMain">
+          <div class="saveName">${escapeHtml(s.name || "未命名存档")}</div>
+          <div class="saveMeta">${escapeHtml(s.time_label || "")}${
+            s.location_name ? " · " + escapeHtml(s.location_name) : ""
+          } · 第 ${s.turn_number} 回合</div>
+          <div class="saveExcerpt">${escapeHtml(s.excerpt || "")}</div>
+          <div class="saveMeta">${escapeHtml(when)}</div>
+        </div>`;
+      const actions = document.createElement("div");
+      actions.className = "saveActions";
+      const load = document.createElement("button");
+      load.className = "chip primary";
+      load.textContent = "读取";
+      load.onclick = () => loadSave(s.id);
+      const del = document.createElement("button");
+      del.className = "chip";
+      del.textContent = "删除";
+      del.onclick = async () => {
+        if (!confirm(`删除存档「${s.name || "未命名存档"}」？`)) return;
+        await api(`/game/saves/${s.id}`, { method: "DELETE" });
+        await refreshSaveList();
+      };
+      actions.append(load, del);
+      row.appendChild(actions);
+      box.appendChild(row);
+    }
+  } catch (e) {
+    box.className = "err";
+    box.textContent = `读取存档失败：${e.message}`;
+  }
+}
+
+async function loadSave(saveId) {
+  // Loading throws away everything after the save, so it is worth a question.
+  if (!confirm("读取存档会丢弃此后发生的一切，确定吗？")) return;
+  try {
+    await api(`/game/saves/${saveId}/load`, { method: "POST" });
+    $("saveModal").style.display = "none";
+    const opening = await api(`/game/${store.sessionId}/opening`);
+    $("story").innerHTML = "";
+    for (const chapter of opening.chapters) appendEntry({ prose: chapter });
+    renderState(opening.state || {});
+    renderChoices([], opening.beat);
+    await refreshState();
+    await refreshTab();
+  } catch (e) {
+    alert(`读档失败：${e.message}`);
+  }
+}
+
+$("saveBtn").onclick = async () => {
+  const suggested = $("nowPhase").textContent + " " + $("nowPlace").textContent;
+  const name = prompt("给这个存档起个名字：", suggested.trim());
+  if (name === null) return;
+  try {
+    await api(`/game/${store.sessionId}/saves`, {
+      method: "POST",
+      body: JSON.stringify({ name }),
+    });
+    $("saveBtn").textContent = "已存档";
+    setTimeout(() => ($("saveBtn").textContent = "存档"), 1600);
+  } catch (e) {
+    alert(`存档失败：${e.message}`);
+  }
+};
+
+$("loadBtn").onclick = async () => {
+  $("saveModal").style.display = "flex";
+  await refreshSaveList();
+};
+$("closeSaves").onclick = () => ($("saveModal").style.display = "none");
+
+$("restartBtn").onclick = () => {
+  if (!confirm("重新开始会开一局全新的游戏。当前进度仍可通过存档找回，确定吗？")) return;
+  localStorage.removeItem("sessionId");
+  localStorage.removeItem("worldId");
+  localStorage.removeItem("playerId");
+  store.sessionId = null;
+  $("story").innerHTML = "";
+  $("choices").innerHTML = "";
+  $("app").style.display = "none";
+  $("setup").style.display = "flex";
+};

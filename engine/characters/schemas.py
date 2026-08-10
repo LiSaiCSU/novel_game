@@ -73,6 +73,7 @@ class DirectorDecision(BaseModel):
     narrative_purpose: list[str] = Field(default_factory=list)
     urgency: Urgency = Urgency.LOW
     tension_delta: float = 0.0
+    schedule_after_minutes: int = Field(default=0, ge=0)
 
     @field_validator("tension_delta")
     @classmethod

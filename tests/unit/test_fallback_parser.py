@@ -26,6 +26,16 @@ def test_query_inputs_never_touch_the_world(parser, state: WorldStateView) -> No
     assert parser.parse("我的任务", state).action_type is ActionType.QUERY_QUESTS
 
 
+def test_fallback_never_silently_discards_a_second_action(parser, state) -> None:
+    intent = parser.parse("我先环顾四周，然后休息一会儿", state)
+
+    assert intent.action_type is ActionType.CUSTOM
+    assert intent.ambiguity == "multi_action_requires_stepwise_input"
+    # Flagged, but not a dead end: keyword parsing giving up is the engine's
+    # problem to solve downstream, never a turn the player loses.
+    assert not intent.needs_clarification()
+
+
 def test_cultivate_and_duration(parser, state: WorldStateView) -> None:
     intent = parser.parse("我打坐修炼一个时辰", state)
     assert intent.action_type is ActionType.CULTIVATE
@@ -38,6 +48,14 @@ def test_numeric_duration(parser, state: WorldStateView) -> None:
     assert intent.duration_minutes == 30 * 1440
 
 
+def test_decade_duration_is_parsed_without_per_tick_expansion(
+    parser, state: WorldStateView
+) -> None:
+    intent = parser.parse("我闭关修炼三十年", state)
+    assert intent.action_type is ActionType.CULTIVATE
+    assert intent.duration_minutes == 30 * state.clock.minutes_per_year
+
+
 def test_movement_resolves_a_named_location(parser, state: WorldStateView, pack: ContentPack) -> None:
     somewhere = next(
         loc for loc in state.graph.all() if loc.key != state.location_key() and loc.name
@@ -47,10 +65,14 @@ def test_movement_resolves_a_named_location(parser, state: WorldStateView, pack:
     assert intent.location_key == somewhere.key
 
 
-def test_movement_without_a_destination_is_flagged_ambiguous(parser, state: WorldStateView) -> None:
+def test_movement_without_a_destination_goes_to_the_steward(
+    parser, state: WorldStateView
+) -> None:
     intent = parser.parse("我要出发", state)
-    assert intent.ambiguity is not None
-    assert intent.needs_clarification()
+    assert intent.ambiguity == "move_target_unknown"
+    # The line is handed on for interpretation rather than bounced back.
+    assert intent.unresolved_reference == ["我要出发"]
+    assert not intent.needs_clarification()
 
 
 def test_conversation_target_is_matched_by_name(parser, state: WorldStateView) -> None:

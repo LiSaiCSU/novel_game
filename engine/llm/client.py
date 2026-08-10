@@ -12,7 +12,7 @@ from typing import Any, TypeVar
 
 from pydantic import BaseModel
 
-from engine.core.errors import LLMError, StructuredOutputError
+from engine.core.errors import LLMError, LLMTruncated, StructuredOutputError
 from engine.core.logging import get_logger
 from engine.core.types import LLMRole
 from engine.llm.provider import (
@@ -24,7 +24,7 @@ from engine.llm.provider import (
     estimate_tokens,
 )
 from engine.llm.router import ModelChoice, ModelRouter
-from engine.llm.structured import parse_structured, repair_instruction, schema_hint
+from engine.llm.structured import parse_structured, schema_hint
 
 T = TypeVar("T", bound=BaseModel)
 logger = get_logger("llm")
@@ -39,13 +39,19 @@ class LLMClient:
         *,
         max_retries: int = 1,
         max_repairs: int = 2,
+        extra_body: dict[str, Any] | None = None,
+        truncation_retries: int = 2,
     ) -> None:
         self.provider = provider
         self.router = router
         self.registry = registry
         self.max_retries = max_retries
         self.max_repairs = max_repairs
+        self.extra_body = dict(extra_body or {})
+        self.truncation_retries = max(0, truncation_retries)
         self.records: list[LLMCallRecord] = []
+        #: Budget a role has actually been observed to need, learned at runtime.
+        self._budget_floor: dict[LLMRole, int] = {}
 
     # ------------------------------------------------------------------
     @property
@@ -80,12 +86,8 @@ class LLMClient:
             role, temperature=temperature, max_output_tokens=max_output_tokens
         )
         self._require(choice)
-        request = LLMRequest(
-            model=choice.model,
-            messages=[LLMMessage(role="user", content=prompt)],
-            system=system,
-            temperature=choice.temperature,
-            max_output_tokens=choice.max_output_tokens,
+        request = self._request(
+            choice, [LLMMessage(role="user", content=prompt)], system=system
         )
         response = await self._call(request, role, prompt_version, attempts=1)
         return response
@@ -104,12 +106,8 @@ class LLMClient:
             role, temperature=temperature, max_output_tokens=max_output_tokens
         )
         self._require(choice)
-        request = LLMRequest(
-            model=choice.model,
-            messages=[LLMMessage(role="user", content=prompt)],
-            system=system,
-            temperature=choice.temperature,
-            max_output_tokens=choice.max_output_tokens,
+        request = self._request(
+            choice, [LLMMessage(role="user", content=prompt)], system=system
         )
         collected: list[str] = []
         async for chunk in self.provider.stream_text(request):
@@ -154,13 +152,8 @@ class LLMClient:
 
         for attempt in range(self.max_repairs + 1):
             attempts = attempt + 1
-            request = LLMRequest(
-                model=choice.model,
-                messages=list(messages),
-                system=system,
-                temperature=choice.temperature,
-                max_output_tokens=choice.max_output_tokens,
-                json_mode=True,
+            request = self._request(
+                choice, list(messages), system=system, json_mode=True
             )
             try:
                 response = await self._call(
@@ -186,7 +179,14 @@ class LLMClient:
                 messages.append(LLMMessage(role="assistant", content=response.text[:1500]))
                 messages.append(
                     LLMMessage(
-                        role="user", content=repair_instruction(schema, last_error, response.text)
+                        role="user",
+                        content=self.registry.render(
+                            "structured_repair",
+                            "v1",
+                            error=last_error,
+                            previous=response.text[:1200],
+                            schema=schema_hint(schema),
+                        ),
                     )
                 )
                 continue
@@ -237,6 +237,26 @@ class LLMClient:
                 role=str(choice.role),
             )
 
+    def _request(
+        self,
+        choice: ModelChoice,
+        messages: list[LLMMessage],
+        *,
+        system: str | None,
+        json_mode: bool = False,
+    ) -> LLMRequest:
+        return LLMRequest(
+            model=choice.model,
+            messages=messages,
+            system=system,
+            temperature=choice.temperature,
+            max_output_tokens=max(
+                choice.max_output_tokens, self._budget_floor.get(choice.role, 0)
+            ),
+            json_mode=json_mode,
+            extra_body=dict(self.extra_body),
+        )
+
     async def _call(
         self,
         request: LLMRequest,
@@ -246,7 +266,7 @@ class LLMClient:
         attempts: int,
         record: bool = True,
     ) -> LLMResponse:
-        response = await self.provider.generate_text(request)
+        response = await self._call_with_budget_escalation(request, role)
         if record:
             self.records.append(
                 LLMCallRecord(
@@ -263,6 +283,46 @@ class LLMClient:
                 )
             )
         return response
+
+    async def _call_with_budget_escalation(
+        self, request: LLMRequest, role: LLMRole
+    ) -> LLMResponse:
+        """Grow the output budget rather than degrade when nothing comes back.
+
+        An empty answer from a reasoning model means the budget was eaten by
+        hidden thought. Doubling it is almost always the fix, and it is far
+        cheaper than losing the turn to a template.
+
+        What is learned here is remembered per role for the rest of the
+        process. Without that, a repair loop would rediscover the same budget
+        from scratch on every attempt, and the retries would multiply into
+        minutes of wall clock for a single stage.
+        """
+        last: LLMTruncated | None = None
+        for _ in range(self.truncation_retries + 1):
+            try:
+                response = await self.provider.generate_text(request)
+            except LLMTruncated as exc:
+                last = exc
+                request.max_output_tokens *= 2
+                # Raise the floor on failure too, so a repair loop never pays
+                # for the same discovery twice.
+                self._budget_floor[role] = max(
+                    self._budget_floor.get(role, 0), request.max_output_tokens
+                )
+                logger.warning(
+                    "empty response (role=%s), retrying with budget=%s: %s",
+                    role,
+                    request.max_output_tokens,
+                    exc.message,
+                )
+                continue
+            self._budget_floor[role] = max(
+                self._budget_floor.get(role, 0), request.max_output_tokens
+            )
+            return response
+        assert last is not None
+        raise last
 
     def record_degraded(self, role: LLMRole, reason: str) -> None:
         """Note that a subsystem fell back to deterministic logic."""

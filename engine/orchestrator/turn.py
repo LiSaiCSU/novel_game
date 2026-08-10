@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import time
 from dataclasses import dataclass, field
+from enum import StrEnum
 from typing import Any
 
 from pydantic import BaseModel, ConfigDict, Field
@@ -11,6 +12,35 @@ from pydantic import BaseModel, ConfigDict, Field
 from engine.actions.schema import Action, ActionOutcome, PlayerIntent, RuleResult
 from engine.llm.provider import LLMCallRecord
 from engine.rng.game_rng import RngTrace
+
+
+class TurnStatus(StrEnum):
+    """Persisted turn lifecycle.
+
+    A turn becomes recoverable at ``CANONICAL_COMMITTED``: from that point on
+    its action must never be resolved again.  Only presentation work may be
+    retried.
+    """
+
+    CANONICAL_COMMITTED = "CANONICAL_COMMITTED"
+    NARRATIVE_FAILED = "NARRATIVE_FAILED"
+    COMPLETED = "COMPLETED"
+
+
+_TURN_TRANSITIONS: dict[TurnStatus, frozenset[TurnStatus]] = {
+    TurnStatus.CANONICAL_COMMITTED: frozenset(
+        {TurnStatus.NARRATIVE_FAILED, TurnStatus.COMPLETED}
+    ),
+    TurnStatus.NARRATIVE_FAILED: frozenset(
+        {TurnStatus.NARRATIVE_FAILED, TurnStatus.COMPLETED}
+    ),
+    TurnStatus.COMPLETED: frozenset(),
+}
+
+
+def require_turn_transition(before: TurnStatus, after: TurnStatus) -> None:
+    if after not in _TURN_TRANSITIONS[before]:
+        raise ValueError(f"invalid turn status transition: {before} -> {after}")
 
 
 class TurnRequest(BaseModel):
@@ -29,17 +59,42 @@ class Choice(BaseModel):
     action_type: str = ""
 
 
+class StoryBeat(BaseModel):
+    """Where a scene hands control back to the player.
+
+    A text RPG that asks "what do you do?" after every sentence is a command
+    prompt wearing a novel's clothes. The narrator instead plays out whatever
+    does not need a decision, and raises a beat when one genuinely does -
+    someone asked a question, a blade came out, a door opened.
+    """
+
+    model_config = ConfigDict(extra="forbid")
+
+    #: False means the scene can keep running on its own if the player says so.
+    needs_player: bool = True
+    #: In-fiction, e.g. "他等着你回话" - never "please enter a command".
+    question: str = ""
+    options: list[Choice] = Field(default_factory=list)
+
+
 class TurnResult(BaseModel):
     """Exactly the shape Prompt section 50 specifies, plus turn_id and debug."""
 
     model_config = ConfigDict(extra="forbid")
 
     turn_id: str
+    idempotency_key: str = ""
     turn_number: int = 0
+    status: TurnStatus = TurnStatus.COMPLETED
     narrative: str = ""
     state_changes: dict[str, Any] = Field(default_factory=dict)
     visible_updates: dict[str, Any] = Field(default_factory=dict)
     choices: list[Choice] = Field(default_factory=list)
+    beat: StoryBeat | None = None
+    #: Why the story stopped and handed control back (see InterruptReason).
+    interrupt: dict[str, Any] | None = None
+    #: How many adjudicated steps this chapter covers. 1 for a single turn.
+    steps: int = 1
     rejected: dict[str, Any] | None = None
     degraded: bool = False
     debug: dict[str, Any] | None = None

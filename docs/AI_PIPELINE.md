@@ -12,7 +12,7 @@ AI **没有**世界事实的最终决定权。
 | IntentParser | 玩家原文 + 可见场景摘要 + 可用动作词表 | `PlayerIntent`(严格 JSON) | fast | ❌ |
 | NPCAgent | NPCContext（只含该 NPC 知道的信息） | `NPCDecision`(proposal) | medium / strong | ❌ 仅提案 |
 | Director | DirectorContext（世界摘要 + 线程 + 张力） | `DirectorDecision`(proposal) | strong | ❌ 仅提案 |
-| MemoryExtractor | 已结算事件 + 参与者 + 相似记忆 | `MemoryExtraction` | fast | ❌ 仅提案 |
+| MemoryExtractor | 已结算 canonical event + 参与者/见证者 + 相似记忆 | `MemoryExtraction` | fast | ❌ 仅提案；持久摘要由 Event 确定 |
 | NarrativeRenderer | 已提交事实 | 中文小说文本 | medium/strong | ❌ |
 | Embedder | 记忆摘要 | float[] | embedding | ❌ |
 
@@ -22,20 +22,21 @@ AI **没有**世界事实的最终决定权。
 
 ## 2. IntentParser（§21）
 
-职责只有一件事：自然语言 → `Action`。
+职责只有一件事：自然语言 → 单个 `Action` 或短 `ActionPlan` proposal。
 
 必须正确处理：复合行为 / 模糊行为 / 欺骗 / 套话 / 隐瞒 / 观察 / 试探 / 条件行为。
 
 ```jsonc
 {
-  "action_type": "CONVERSATION",
-  "actor_id": "player",
-  "target_id": "npc_shopkeeper_001",
-  "method": "indirect_questioning",
-  "style": "pretend_drunk",
-  "goal": {"type": "obtain_information", "topic": "soul_devouring_grass_purchase"},
-  "secondary_actions": [{"type": "DRINK"}],
-  "condition": {"trigger": "guard_looks_away", "then_action_type": "SNEAK"},
+  "action_type": "GIVE_ITEM",
+  "plan": {
+    "atomic": true,
+    "primitives": [
+      {"primitive_id": "give", "action_type": "GIVE_ITEM", "target_id": "npc_001", "item_key": "letter"},
+      {"primitive_id": "ask", "action_type": "ASK", "target_id": "npc_001",
+       "condition": {"kind": "PREVIOUS_SUCCEEDED", "primitive_id": "give"}}
+    ]
+  },
   "raw_text": "…",
   "confidence": 0.86,
   "ambiguity": null
@@ -43,12 +44,37 @@ AI **没有**世界事实的最终决定权。
 ```
 
 约束：
-- 只能引用**上下文中真实存在**的 `target_id`（解析后做存在性校验，不存在 → `ambiguity` + 请求澄清）。
+- `target_id` 仍必须来自上下文（解析后做存在性校验），但**解析器不负责把关**：
+  绑不上的称呼写进 `unresolved_reference`，交由 S2b 的 `WorldSteward` 辨认或补进世界（D-020）。
+- 意图上下文喂的是**全世界**地点与不在场人物，跨地点行动由寻路与时间规则处理。
 - 不得输出成功/失败、不得描述结果、不得决定 NPC 反应。
-- `confidence < 0.45` 或 `ambiguity != null` → Orchestrator 走澄清分支（不推进世界时间）。
+- 只有 `confidence < 0.3`（完全读不出想做什么）才走澄清分支；该分支不推进世界时间，
+  也**不向玩家展示任何 reason code**，只给一个"世界照旧"的场景与几个可行选项。
+- plan 包含全部步骤而非“主行为 + 装饰字段”，最多 4 步，只接受程序可判定谓词。
+- 每步基于前一步 ChangeSet 的投影状态重新验证；任一步规则拒绝则所有更早 proposal 标记
+  `DISCARDED`，仅提交一次 `REJECTED_ACTION`。合法但结果失败仍是 canonical attempt，条件后续可跳过。
+- plan 事件写 `primitive_id`，后一步 Event 的 `cause_event_ids` 指向前一步 Event。
+- 总耗时超过内容包 `action_plan.max_total_minutes` 时拒绝；长期行为必须拆成 Turn，让 Temporal Jump
+  在步骤之间运行。
 
 Fallback：`engine/actions/fallback_parser.py`，基于内容包别名词表 + 动词模式匹配，
-覆盖 MOVE/TALK/ASK/OBSERVE/SEARCH/CULTIVATE/BREAKTHROUGH/USE_ITEM/ATTACK/REST/WAIT 等。
+覆盖 MOVE/TALK/ASK/OBSERVE/SEARCH/CULTIVATE/BREAKTHROUGH/USE_ITEM/ATTACK/REST/WAIT 等；
+没有模型时若检测到多个行为，不会静默丢弃后续步骤，而是标注 `ambiguity` 并把原句交给下游。
+
+---
+
+## 2b. WorldSteward（D-020）
+
+只在意图存在 `unresolved` 引用时运行。先用确定性方法在**全世界**辨认
+（内容包 `entity_aliases` → 精确名 → 包含匹配，就近优先），确实没有才调用模型创造。
+
+模型只提议*应该存在什么*；**允许存在什么由 `engine/world/steward.py` 钳制**：
+新角色强制 MINOR_NPC、境界 ≤ 玩家 +1 大境界、必须落在已有地点；
+新地点必须挂在已有地点之下、危险度 ≤ 母地点 +1、路程 1—240 分钟；
+单回合上限 2 地点 / 3 人物；key 必须全新。
+
+绑定回意图时有一条纯代码规则：**玩家点名的人不在场、而其所在地已知 → 本回合是赶路**。
+模型对"去找某人聊天"经常只回一个 `TALK`，这属于物理前提，不交给模型判断。
 
 ---
 

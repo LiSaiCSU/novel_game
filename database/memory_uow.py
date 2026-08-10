@@ -19,6 +19,7 @@ from engine.core.models import (
     Character,
     CharacterKnowledge,
     CharacterSkill,
+    DirectorEvent,
     Emotion,
     Event,
     Fact,
@@ -60,6 +61,7 @@ class MemoryStore:
         self.character_skills: dict[tuple[str, str], CharacterSkill] = {}
         self.quests: dict[str, Quest] = {}
         self.events: list[Event] = []
+        self.director_events: dict[str, DirectorEvent] = {}
         self.plot_threads: dict[str, PlotThread] = {}
         self.sessions: dict[str, GameSession] = {}
         self.turns: dict[str, dict[str, Any]] = {}
@@ -93,6 +95,8 @@ class MemoryStore:
             self.quests[quest.id] = quest
         for thread in bundle.plot_threads:
             self.plot_threads[thread.id] = thread
+        for director_event in bundle.director_events:
+            self.director_events[director_event.id] = director_event
         if bundle.session is not None:
             self.sessions[bundle.session.id] = bundle.session
 
@@ -103,6 +107,7 @@ class MemoryStore:
                 "worlds", "locations", "factions", "characters", "relationships",
                 "relationship_changes", "facts", "knowledge", "memories", "items",
                 "inventory", "skills", "character_skills", "quests", "events",
+                "director_events",
                 "plot_threads", "sessions", "turns", "turn_traces", "narrative",
             )
         }
@@ -288,8 +293,27 @@ class _MemoryRepo:
         rows.sort(key=lambda m: m.created_at_minute, reverse=True)
         return rows[:limit]
 
+    async def get_by_event(
+        self, owner_character_id: str, related_event_id: str
+    ) -> Memory | None:
+        return next(
+            (
+                _detach(memory)
+                for memory in self.s.memories.values()
+                if memory.owner_character_id == owner_character_id
+                and memory.related_event_id == related_event_id
+            ),
+            None,
+        )
+
     async def add(self, memory: Memory) -> None:
-        self.s.memories[memory.id] = memory
+        if memory.related_event_id is not None:
+            existing = await self.get_by_event(
+                memory.owner_character_id, memory.related_event_id
+            )
+            if existing is not None:
+                return
+        self.s.memories[memory.id] = memory.model_copy(deep=True)
 
     async def touch(self, memory_id: str, at_minute: int) -> None:
         row = self.s.memories.get(memory_id)
@@ -396,6 +420,79 @@ class _PlotThreadRepo:
         return rows
 
 
+class _DirectorEventRepo:
+    def __init__(self, store: MemoryStore) -> None:
+        self.s = store
+
+    async def get(self, director_event_id: str) -> DirectorEvent | None:
+        row = self.s.director_events.get(director_event_id)
+        return row.model_copy(deep=True) if row else None
+
+    async def get_by_dedup_key(
+        self, world_id: str, dedup_key: str
+    ) -> DirectorEvent | None:
+        row = next(
+            (
+                event
+                for event in self.s.director_events.values()
+                if event.world_id == world_id and event.dedup_key == dedup_key
+            ),
+            None,
+        )
+        return row.model_copy(deep=True) if row else None
+
+    async def list_for_world(
+        self, world_id: str, *, status: str | None = None, limit: int = 100
+    ) -> list[DirectorEvent]:
+        rows = [event for event in self.s.director_events.values() if event.world_id == world_id]
+        if status:
+            rows = [event for event in rows if str(event.status) == status]
+        rows.sort(key=lambda event: event.created_turn_number, reverse=True)
+        return [event.model_copy(deep=True) for event in rows[:limit]]
+
+    async def list_due(self, world_id: str, through_minute: int) -> list[DirectorEvent]:
+        rows = [
+            event
+            for event in self.s.director_events.values()
+            if event.world_id == world_id
+            and str(event.status) == "SCHEDULED"
+            and event.scheduled_for_minute <= through_minute
+        ]
+        rows.sort(key=lambda event: (event.scheduled_for_minute, event.id))
+        return [event.model_copy(deep=True) for event in rows]
+
+    async def last_for_session(self, session_id: str) -> DirectorEvent | None:
+        rows = [
+            event for event in self.s.director_events.values() if event.session_id == session_id
+        ]
+        if not rows:
+            return None
+        row = max(rows, key=lambda event: event.created_turn_number)
+        return row.model_copy(deep=True)
+
+    async def count_resolved_between(
+        self, world_id: str, start_minute: int, end_minute: int
+    ) -> int:
+        return sum(
+            1
+            for event in self.s.director_events.values()
+            if event.world_id == world_id
+            and str(event.status) == "RESOLVED"
+            and start_minute <= event.scheduled_for_minute < end_minute
+        )
+
+    async def count_booked_between(
+        self, world_id: str, start_minute: int, end_minute: int
+    ) -> int:
+        return sum(
+            1
+            for event in self.s.director_events.values()
+            if event.world_id == world_id
+            and str(event.status) in {"SCHEDULED", "ACTIVE", "RESOLVED"}
+            and start_minute <= event.scheduled_for_minute < end_minute
+        )
+
+
 class _SessionRepo:
     def __init__(self, store: MemoryStore) -> None:
         self.s = store
@@ -415,7 +512,9 @@ class _TurnRepo:
         self.s = store
 
     async def record(self, turn: dict[str, Any]) -> None:
-        self.s.turns[str(turn["id"])] = copy.deepcopy(turn)
+        turn_id = str(turn["id"])
+        existing = self.s.turns.get(turn_id, {})
+        self.s.turns[turn_id] = copy.deepcopy({**existing, **turn})
 
     async def get(self, turn_id: str) -> dict[str, Any] | None:
         return self.s.turns.get(turn_id)
@@ -460,6 +559,7 @@ class MemoryUnitOfWork:
         self.quests = _QuestRepo(store)
         self.events = _EventRepo(store)
         self.plot_threads = _PlotThreadRepo(store)
+        self.director_events = _DirectorEventRepo(store)
         self.sessions = _SessionRepo(store)
         self.turns = _TurnRepo(store)
         self._snapshot: dict[str, Any] | None = None
@@ -490,11 +590,19 @@ class MemoryUnitOfWork:
             self.store.relationship_changes.append(rc)
         for memory in change_set.memories:
             self.store.memories[memory.id] = memory
+        for director_event in change_set.director_events:
+            self.store.director_events[director_event.id] = director_event.model_copy(deep=True)
 
     def _apply_one(self, change) -> None:
         s = self.store
         kind = change.kind
-        if kind is ChangeKind.CHARACTER_FIELD:
+        if kind is ChangeKind.CHARACTER_SPAWN:
+            spawned_character = Character.model_validate(change.payload["character"])
+            s.characters[spawned_character.id] = spawned_character
+        elif kind is ChangeKind.LOCATION_SPAWN:
+            spawned_location = Location.model_validate(change.payload["location"])
+            s.locations[spawned_location.id] = spawned_location
+        elif kind is ChangeKind.CHARACTER_FIELD:
             character = s.characters.get(change.target_id)
             if character is None:
                 raise EngineError(f"unknown character {change.target_id}")
@@ -519,6 +627,11 @@ class MemoryUnitOfWork:
                 character.short_term_goals = list(change.payload["short_term_goals"])
             if "long_term_goal" in change.payload:
                 character.long_term_goal = str(change.payload["long_term_goal"])
+            if "goal_lifecycle" in change.payload:
+                from engine.core.models import NPCGoalLifecycle
+
+                raw = change.payload["goal_lifecycle"]
+                character.goal_lifecycle = NPCGoalLifecycle.model_validate(raw) if raw else None
         elif kind is ChangeKind.RELATIONSHIP_DELTA:
             self._apply_relationship(change)
         elif kind is ChangeKind.INVENTORY_ADD:

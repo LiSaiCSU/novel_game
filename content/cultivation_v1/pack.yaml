@@ -4,6 +4,10 @@ genre: cultivation
 version: "1.0.0"
 engine_min_version: "0.1.0"
 language: zh-CN
+rule_plugin:
+  path: rule_plugin.py
+  class: CultivationRulePlugin
+  api_version: "1"
 
 world:
   name: 青云界
@@ -19,8 +23,9 @@ narrative_style:
   language: 中文
   person: 第二人称
   tense: 现在时
-  tone: 克制、写实、有质感的东方玄幻，不追求爽感
-  target_length: 320
+  # 白话、好读、事情说清楚。不是散文比赛，读者要的是故事往前走。
+  tone: 白话直叙的东方玄幻，重人物与对话，少写景，不堆辞藻，不追求爽感
+  target_length: 2000
   avoid_phrases:
     - 嘴角勾起一抹弧度
     - 嘴角勾起一抹弧线
@@ -31,6 +36,17 @@ narrative_style:
     - 恐怖如斯
     - 不由得倒吸一口凉气
     - 空气仿佛凝固
+    # 下面这些是本引擎实测中反复出现的 AI 腔，一律禁用。
+    - 心里微沉
+    - 一时却又抓不住头绪
+    - 总觉得哪里有些不对
+    - 指尖悬在
+    - 目光扫过
+    - 又落回
+    - 风卷着
+    - 喉结动了动
+    - 话咽了回去
+    - 眼神暗了暗
     - 脸色微微一变
     - 深藏功与名
     - 淡淡地说道
@@ -95,6 +111,33 @@ vocabulary:
     moderate: [帮我, 陪我一起, 告诉我, 带我去, 卖给我]
     small: [问一句, 打听一下, 看一眼]
   refusal_words: [不, 不要, 拒绝, 不接, 算了, 免了]
+  plan_connectors: [然后, 接着, 随后, 再, 同时]
+  # 玩家把接下来一小段交给 AI 自行推进的说法（必须整句完全匹配）。
+  continue_words: [继续, 继续。, 往下走, 接着说, 接着往下, 让故事继续, "..."]
+  # 玩家常用的俗称 → 世界中真实存在的 key。世界管家会先查这张表，再考虑造物。
+  entity_aliases:
+    大殿: qingyun_main_hall
+    主殿: qingyun_main_hall
+    正殿: qingyun_main_hall
+    药铺: herb_shop
+    药店: herb_shop
+    酒楼: drunken_immortal_tavern
+    酒馆: drunken_immortal_tavern
+    坊市: qingyun_market
+    executive_hall: qingyun_outer_hall
+    执事堂: qingyun_outer_hall
+    藏书阁: qingyun_scripture_hall
+    后山: qingyun_back_mountain
+    宗门: qingyun_sect
+    山门: qingyun_sect
+  ambiguity_messages:
+    empty_input: 请输入你想做的事。
+    multi_action_requires_stepwise_input: 当前未启用智能解析，请把复合行动拆成多个明确步骤。
+    invalid_action_plan: 复合行动包含无法安全执行的步骤，请拆分或明确条件。
+    move_target_unknown: 请说明你想前往哪个已知地点。
+    conversation_target_unknown: 请说明你想和当前在场的谁交谈。
+    skill_unknown: 请说明你想使用哪项已经掌握的能力。
+    item_unknown: 请说明你想使用哪个实际拥有的物品。
   # 数字 + 单位（如 "3日"、"12个时辰"）
   time_units:
     个时辰: 120
@@ -119,3 +162,5 @@ vocabulary:
     半年: 259200
     一年: 518400
     三年: 1555200
+    十年: 5184000
+    三十年: 15552000

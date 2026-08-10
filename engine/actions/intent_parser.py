@@ -10,9 +10,16 @@ names must exist and be present, or the reference is dropped.
 from __future__ import annotations
 
 from dataclasses import dataclass, field
+from typing import Any
 
 from engine.actions.fallback_parser import FallbackIntentParser
-from engine.actions.schema import Action, PlayerIntent
+from engine.actions.schema import (
+    Action,
+    ActionPlan,
+    ActionPrimitive,
+    ActionPrimitiveIntent,
+    PlayerIntent,
+)
 from engine.contentpack.pack import ContentPack
 from engine.context.builder import ContextBuilder
 from engine.core.errors import LLMError, StructuredOutputError
@@ -24,12 +31,45 @@ from engine.world.state_view import WorldStateView
 logger = get_logger("intent")
 
 
+#: Resolution notes that mean "the world is missing something", as opposed to
+#: notes about a malformed plan. Only these summon the steward.
+_MISSING_ENTITY_PREFIXES = (
+    "target_id_not_present:",
+    "target_key_not_present:",
+    "unknown_location:",
+    "unknown_item:",
+    "move_without_destination",
+)
+
+
 @dataclass(slots=True)
 class ParsedIntent:
     intent: PlayerIntent
     action: Action
+    plan: ActionPlan
     degraded: bool
     resolution_notes: list[str] = field(default_factory=list)
+
+    @property
+    def unresolved(self) -> list[str]:
+        """Everything the player named that the world could not supply."""
+        out = list(self.intent.unresolved_reference)
+        for note in self.resolution_notes:
+            if note.startswith(_MISSING_ENTITY_PREFIXES):
+                _, _, value = note.partition(":")
+                out.append(value or note)
+        # de-duplicate while keeping the order the player said them in
+        seen: set[str] = set()
+        unique: list[str] = []
+        for phrase in out:
+            if phrase and phrase not in seen:
+                seen.add(phrase)
+                unique.append(phrase)
+        return unique
+
+    @property
+    def needs_steward(self) -> bool:
+        return bool(self.unresolved)
 
 
 class IntentParser:
@@ -50,7 +90,14 @@ class IntentParser:
 
     # ------------------------------------------------------------------
     async def parse(
-        self, uow: UnitOfWork, state: WorldStateView, text: str, *, recent_narrative: str = ""
+        self,
+        uow: UnitOfWork,
+        state: WorldStateView,
+        text: str,
+        *,
+        recent_narrative: str = "",
+        world_characters: list[Any] | None = None,
+        pending_beat: str = "",
     ) -> ParsedIntent:
         intent: PlayerIntent | None = None
         degraded = True
@@ -60,7 +107,11 @@ class IntentParser:
         ):
             try:
                 context = await self.context_builder.build_intent_context(
-                    uow, state, recent_narrative=recent_narrative
+                    uow,
+                    state,
+                    recent_narrative=recent_narrative,
+                    world_characters=world_characters or [],
+                    pending_beat=pending_beat,
                 )
                 prompt = self.registry.render(
                     "player_intent",
@@ -82,61 +133,205 @@ class IntentParser:
         if intent is None:
             intent = self.fallback.parse(text, state)
 
-        action, notes = self.resolve(state, intent)
+        action, plan, notes = self.resolve(state, intent)
         return ParsedIntent(
-            intent=intent, action=action, degraded=degraded, resolution_notes=notes
+            intent=intent,
+            action=action,
+            plan=plan,
+            degraded=degraded,
+            resolution_notes=notes,
         )
 
     # ------------------------------------------------------------------
-    def resolve(self, state: WorldStateView, intent: PlayerIntent) -> tuple[Action, list[str]]:
-        """Bind an intent to real entities. Unresolvable references are dropped."""
+    def rebind(
+        self, state: WorldStateView, parsed: ParsedIntent, steward: Any
+    ) -> ParsedIntent:
+        """Re-resolve an intent against a world the steward has just extended.
+
+        The steward may have recognised what the player meant, or created it.
+        Either way the entities exist in ``state`` now, so the ordinary binding
+        pass is all that is needed - no special case downstream.
+        """
+        intent = parsed.intent.model_copy(deep=True)
+        if steward.action_type is not None:
+            # The steward decided last and knew most: it saw where the person
+            # the player named actually is. When they are a valley away, the
+            # honest reading of "go talk to them" is travel, not a failed
+            # conversation with thin air.
+            intent.action_type = steward.action_type
+        if steward.target_id:
+            intent.target_id = steward.target_id
+            intent.target_key = steward.target_key
+        if steward.location_key:
+            intent.location_key = steward.location_key
+        if steward.utterance and not intent.utterance:
+            intent.utterance = steward.utterance
+        # A plan compiled against the old world would re-bind by luck at best.
+        intent.plan = None
+
+        # You cannot talk to someone who is a valley away. Rather than fail the
+        # turn on a physical impossibility, walk there - the conversation is
+        # still waiting on the other side, and the trip is the honest cost of
+        # it. This is decided here rather than trusted to the model, which
+        # tends to answer "go and talk" with a single TALK.
+        destination = intent.location_key
+        if (
+            destination
+            and destination != state.location_key()
+            and intent.target_id
+            and not state.is_present(intent.target_id)
+        ):
+            intent.action_type = ActionType.MOVE
+            intent.target_id = None
+            intent.target_key = None
+
+        action, plan, notes = self.resolve(state, intent)
+        return ParsedIntent(
+            intent=intent,
+            action=action,
+            plan=plan,
+            degraded=parsed.degraded,
+            resolution_notes=[*parsed.resolution_notes, *notes],
+        )
+
+    # ------------------------------------------------------------------
+    def resolve(
+        self, state: WorldStateView, intent: PlayerIntent
+    ) -> tuple[Action, ActionPlan, list[str]]:
+        """Bind every proposed primitive to real entities in the current scene."""
         notes: list[str] = []
+        action = self._bind_action(state, intent, intent.raw_text, notes)
+
+        if intent.plan is None:
+            plan = ActionPlan(
+                primitives=[ActionPrimitive(primitive_id="primary", action=action)]
+            )
+            return action, plan, notes
+
+        primitives: list[ActionPrimitive] = []
+        seen: set[str] = set()
+        invalid = False
+        for proposed in intent.plan.primitives:
+            if proposed.primitive_id in seen:
+                notes.append(f"duplicate_primitive_id:{proposed.primitive_id}")
+                invalid = True
+                continue
+            if (
+                proposed.condition is not None
+                and proposed.condition.primitive_id is not None
+                and proposed.condition.primitive_id not in seen
+            ):
+                notes.append(
+                    f"condition_requires_earlier_primitive:"
+                    f"{proposed.condition.primitive_id}"
+                )
+                invalid = True
+            if proposed.condition is not None:
+                condition = proposed.condition
+                if (
+                    condition.target_id is not None
+                    and not state.is_present(condition.target_id)
+                ):
+                    notes.append(f"condition_target_not_present:{condition.target_id}")
+                    invalid = True
+                if (
+                    condition.item_key is not None
+                    and self.pack.item(condition.item_key) is None
+                ):
+                    notes.append(f"condition_unknown_item:{condition.item_key}")
+                    invalid = True
+                if (
+                    condition.location_key is not None
+                    and state.graph.by_key(condition.location_key) is None
+                ):
+                    notes.append(
+                        f"condition_unknown_location:{condition.location_key}"
+                    )
+                    invalid = True
+            bound = self._bind_action(state, proposed, intent.raw_text, notes)
+            primitives.append(
+                ActionPrimitive(
+                    primitive_id=proposed.primitive_id,
+                    action=bound,
+                    condition=proposed.condition,
+                )
+            )
+            seen.add(proposed.primitive_id)
+
+        if any(p.action.action_type in QUERY_ACTIONS for p in primitives):
+            notes.append("query_action_cannot_be_in_plan")
+            invalid = True
+        if any(
+            p.action.action_type is ActionType.MOVE for p in primitives[:-1]
+        ):
+            notes.append("movement_must_be_last_primitive")
+            invalid = True
+        if invalid or len(primitives) < 2:
+            intent.ambiguity = "invalid_action_plan"
+            fallback = action.model_copy(update={"action_type": ActionType.CUSTOM})
+            return (
+                fallback,
+                ActionPlan(
+                    primitives=[ActionPrimitive(primitive_id="primary", action=fallback)]
+                ),
+                notes,
+            )
+        return primitives[0].action, ActionPlan(primitives=primitives), notes
+
+    def _bind_action(
+        self,
+        state: WorldStateView,
+        proposed: PlayerIntent | ActionPrimitiveIntent,
+        raw_text: str,
+        notes: list[str],
+    ) -> Action:
+        """Resolve one primitive without allowing invented identifiers."""
 
         target_id: str | None = None
-        if intent.target_id:
-            if state.is_present(intent.target_id):
-                target_id = intent.target_id
+        if proposed.target_id:
+            if state.is_present(proposed.target_id):
+                target_id = proposed.target_id
             else:
-                notes.append(f"target_id_not_present:{intent.target_id}")
-        if target_id is None and intent.target_key:
-            character = state.character_by_key(intent.target_key)
+                notes.append(f"target_id_not_present:{proposed.target_id}")
+        if target_id is None and proposed.target_key:
+            character = state.character_by_key(proposed.target_key)
             if character is not None:
                 target_id = character.id
             else:
-                notes.append(f"target_key_not_present:{intent.target_key}")
+                notes.append(f"target_key_not_present:{proposed.target_key}")
 
         target_location_id: str | None = None
-        if intent.location_key:
-            location = state.graph.by_key(intent.location_key)
+        if proposed.location_key:
+            location = state.graph.by_key(proposed.location_key)
             if location is not None:
                 target_location_id = location.id
             else:
-                notes.append(f"unknown_location:{intent.location_key}")
+                notes.append(f"unknown_location:{proposed.location_key}")
 
-        item_key = intent.item_key
+        item_key = proposed.item_key
         if item_key and self.pack.item(item_key) is None:
             notes.append(f"unknown_item:{item_key}")
             item_key = None
 
-        skill_key = intent.skill_key
+        skill_key = proposed.skill_key
         if skill_key and self.pack.skill(skill_key) is None:
             notes.append(f"unknown_skill:{skill_key}")
             skill_key = None
 
         quest_id: str | None = None
-        if intent.quest_key:
-            quest = next((q for q in state.active_quests if q.key == intent.quest_key), None)
+        if proposed.quest_key:
+            quest = next((q for q in state.active_quests if q.key == proposed.quest_key), None)
             if quest is not None:
                 quest_id = quest.id
             else:
-                notes.append(f"unknown_quest:{intent.quest_key}")
+                notes.append(f"unknown_quest:{proposed.quest_key}")
 
-        action_type = intent.action_type
+        action_type = proposed.action_type
         if action_type is ActionType.MOVE and target_location_id is None:
             action_type = ActionType.CUSTOM
             notes.append("move_without_destination")
 
-        action = Action(
+        return Action(
             action_type=action_type,
             actor_id=state.player.id,
             target_id=target_id,
@@ -144,18 +339,16 @@ class IntentParser:
             item_key=item_key,
             skill_key=skill_key,
             quest_id=quest_id,
-            quantity=intent.quantity,
-            duration_minutes=intent.duration_minutes,
-            method=str(intent.method) if intent.method else None,
-            style=intent.style,
-            request_size=intent.request_size,
-            goal=intent.goal,
-            secondary_actions=intent.secondary_actions,
-            condition=intent.condition,
-            utterance=intent.utterance or (intent.raw_text if _is_social(action_type) else None),
-            raw_text=intent.raw_text,
+            quantity=proposed.quantity,
+            duration_minutes=proposed.duration_minutes,
+            method=str(proposed.method) if proposed.method else None,
+            style=proposed.style,
+            request_size=proposed.request_size,
+            goal=proposed.goal,
+            utterance=proposed.utterance or (raw_text if _is_social(action_type) else None),
+            raw_text=raw_text,
+            parameters=dict(proposed.parameters),
         )
-        return action, notes
 
     # ------------------------------------------------------------------
     @staticmethod

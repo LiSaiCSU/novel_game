@@ -96,7 +96,17 @@ class NPCAgent:
         npc: Character,
         situation: NPCSituation,
         available_actions: list[str],
+        *,
+        allow_llm: bool = True,
     ) -> NPCDecisionResult:
+        """Decide what this character does.
+
+        ``allow_llm=False`` forces the deterministic path. A run can cover
+        several steps with several people standing around; asking a model what
+        each bystander thinks about each of them costs minutes of wall clock
+        for lines nobody reads. Bystanders get heuristics; the people the scene
+        is actually about still get the model.
+        """
         state = ctx.state
         context = await self.context_builder.build_npc_context(
             uow,
@@ -107,7 +117,7 @@ class NPCAgent:
             available_actions=available_actions,
         )
 
-        if self.llm is not None and self.registry is not None and self.llm.usable_for(
+        if allow_llm and self.llm is not None and self.registry is not None and self.llm.usable_for(
             self._role(npc)
         ):
             try:

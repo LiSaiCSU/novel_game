@@ -26,7 +26,7 @@
 │ database/       SQLAlchemy 2.x models + repositories(适配器)   │
 │                 + alembic migrations + seeding                │
 ├──────────────────────────────────────────────────────────────┤
-│ content/        YAML 内容包（cultivation_v1 / …）             │
+│ content/        YAML + 受信任、版本化 Rule Plugin             │
 └──────────────────────────────────────────────────────────────┘
 ```
 
@@ -38,6 +38,7 @@
 - engine 内不得出现 `import sqlalchemy` / `import fastapi`
 - engine 内除 `engine/rng/` 外不得出现 `import random` / `numpy.random`
 - engine 内不得出现内容包专有名词（中文实体名硬编码）
+- RuleEngine / ActionResolver 不得包含修炼题材分支；bundled plugin 不得 import 基础设施或随机模块
 
 ---
 
@@ -71,12 +72,10 @@
                         ▼
                  ConsistencyGuard        ← §63：7 类一致性检查
                         ▼
-                 StateTransaction        ← §58：一个回合 = 一个事务
+                 StateTransaction        ← canonical state + EventLog + Turn 原子提交
                         │
-      ┌─────────────────┴─────────────────┐
-      ▼                                   ▼
-   EventLog (append-only)            MemoryExtractor
-      └─────────────────┬─────────────────┘
+                        ▼
+   MemoryExtractor (owner/event 幂等投影；独立事务，可由恢复胶囊重建)
                         ▼
                 NarrativeRenderer        ← 只描述已确定的事实
                         ▼
@@ -88,6 +87,7 @@
 2. 任何 AI 输出在未经 `ProposalValidator` 之前不得转成 `StateChange`（§18/§47）。
 3. `ContextBuilder` 是 NPC 上帝视角的唯一防线（§15/§30）。
 4. 不是每回合都调 LLM。`OrchestratorPlan` 决定本回合需要哪些 AI（§6）。
+5. Memory 的事实文本只来自 canonical Event；AI 分类不能把 Narrative 修辞写回事实层。
 
 ---
 
@@ -97,16 +97,16 @@
 |---|---|---|---|
 | `engine/orchestrator` | 回合编排、事务边界、重试、token 预算、日志 | ✅ | ❌ |
 | `engine/actions` | Action schema、fallback 解析、Action 注册表 | ✅ | ❌ |
-| `engine/rules` | 12 个规则族：validate / resolve / calculate | ✅ | ❌ |
-| `engine/rng` | GameRNG、seed 派生、RngTrace | ✅ | ❌ |
+| `engine/rules` | 通用规则 + RulePlugin 协议/路由 | ✅ | ❌ |
+| `engine/rng` | GameRNG、seed 派生、RngTrace、聚合分布采样 | ✅ | ❌ |
 | `engine/world` | 世界状态视图、WorldClock、位置图 | ✅ | ❌ |
-| `engine/characters` | 角色模型、属性、人格/情绪演化 | ✅ | ❌ |
+| `engine/characters` | 角色模型、人格/情绪与持久 Goal→Plan→Action→Result 生命周期 | ✅ | ❌ |
 | `engine/relationships` | 8 维关系、钳制、变化原因日志 | ✅ | ❌ |
 | `engine/knowledge` | Fact / CharacterKnowledge、信息传播 | ✅ | ❌ |
 | `engine/memory` | 4 层记忆、embedding、复合排序检索 | ✅ | ✅(抽取) |
 | `engine/events` | Event 构造、append-only、因果链 | ✅ | ❌ |
-| `engine/simulation` | LOD 0-3、NPC 日程、势力模拟 | ✅ | ✅(LOD0) |
-| `engine/director` | 剧情线程、张力曲线、事件提案 | 部分 | ✅ |
+| `engine/simulation` | LOD 0-3、Temporal Jump、年龄/寿命、NPC 日程与离屏目标推进、势力模拟 | ✅ | ✅(LOD0) |
+| `engine/director` | 剧情线程、张力曲线、事件提案及持久调度/去重/兑现生命周期 | ✅(状态裁决) | ✅(提案) |
 | `engine/narrative` | 叙事渲染、风格配置、去 AI 味 | ❌ | ✅ |
 | `engine/context` | 逐 Agent 上下文构造 + token 预算 | ✅ | ❌ |
 | `engine/llm` | Provider 抽象、ModelRouter、结构化输出与修复 | ✅ | — |
@@ -144,6 +144,8 @@ DIRECTOR_MODEL NARRATIVE_MODEL   MEMORY_MODEL
 ```text
 content/cultivation_v1/
 ├── pack.yaml         元信息、叙事风格、模型偏好
+├── rule_plugin.py    题材行为 validate / resolve（只返回 proposal）
+├── domain_rules.py   修炼/突破的确定性领域计算
 ├── calendar.yaml     世界日历（分钟↔年月日时辰）
 ├── realms.yaml       境界阶梯 + 突破参数 + 战力系数
 ├── rules.yaml        时间成本/关系钳制/检测/经济/社交等数值
@@ -158,18 +160,33 @@ content/cultivation_v1/
 └── event_templates.yaml
 ```
 
-引擎侧只认 `ContentPack` 的**结构**，不认其**内容**。
-新增 `content/wuxia_v1/` 即可复用全部引擎代码。
+数据型差异只需 YAML。复杂题材规则通过 `pack.yaml::rule_plugin` 声明：
+
+```yaml
+rule_plugin:
+  path: rule_plugin.py
+  class: CultivationRulePlugin
+  api_version: "1"
+```
+
+插件实现 `handled_actions / validate_action / resolve_action`。Engine 只注入只读
+`RuleContext`、已验证 Action、RuleResult 和 EventBuilder；插件只能返回 `ActionOutcome + ChangeSet`
+proposal，最终仍由 ConsistencyGuard 与 Orchestrator 事务提交。插件路径必须位于包目录，API 版本
+必须匹配。它是部署者安装的**受信任服务器代码**，不是面向用户上传的不可信脚本沙箱。
+
+当前非修仙调查插件测试证明同一边界可接管 `CUSTOM` 领域行为，但完整第二内容包尚未完成；
+角色 schema 仍有 V1 progression 兼容字段，不能宣称任意题材无需建模工作即可替换。
 
 ---
 
 ## 6. 一致性与事务（§58/§59/§63）
 
-- 一个玩家回合 = 一个 `TurnTransaction`。失败整体回滚。
+- 一个玩家回合的 canonical changes、事件、session 计数与
+  `Turn(status=CANONICAL_COMMITTED)` = 一个 `TurnTransaction`。提交前失败整体回滚。
 - `ConsistencyGuard` 在 commit 前检查：alive / location / inventory /
   realm / knowledge / faction / time 七类一致性，任一失败 → 回滚并记录 `TurnError`。
 - 幂等：`POST /game/{sid}/action` 接受 `Idempotency-Key`；
-  同 key 重放返回首次结果，不重复推进世界。
+  同 key 重放返回首次结果；若叙事未完成则只恢复叙事，不重复推进世界。
 - 世界级并发：`LockBackend.acquire(f"world:{world_id}")`。
 
 ---

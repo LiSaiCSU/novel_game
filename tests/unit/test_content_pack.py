@@ -81,3 +81,22 @@ def test_validation_rejects_dangling_reference(tmp_path, pack: ContentPack) -> N
 def test_rules_lookup_by_dotted_path(pack: ContentPack) -> None:
     assert isinstance(pack.rule("combat.hit_chance.base"), float)
     assert pack.rule("does.not.exist", "fallback") == "fallback"
+
+
+def test_validation_rejects_invalid_scheduled_director_beat(
+    tmp_path, pack: ContentPack
+) -> None:
+    import shutil
+
+    from engine.contentpack.pack import load_content_pack
+    from engine.core.errors import ContentValidationError
+
+    dest = tmp_path / "broken_schedule"
+    shutil.copytree(pack.root, dest)
+    plot = dest / "plot_threads.yaml"
+    text = plot.read_text(encoding="utf-8")
+    text = text.replace("at_minutes_from_start: 129600", "at_minutes_from_start: -1", 1)
+    plot.write_text(text, encoding="utf-8")
+
+    with pytest.raises(ContentValidationError, match="failed validation"):
+        load_content_pack(tmp_path, "broken_schedule")

@@ -10,12 +10,16 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from typing import Any
 
+from engine.characters.goals import GoalLifecycleService
+from engine.characters.schemas import DirectorDecision
 from engine.contentpack.pack import ContentPack
 from engine.core.ids import PLAYER_KEY, deterministic_id
 from engine.core.models import (
     Character,
     CharacterKnowledge,
     CharacterSkill,
+    DirectorEvent,
+    DirectorEventTransition,
     Emotion,
     Fact,
     Faction,
@@ -36,12 +40,16 @@ from engine.core.models import (
 from engine.core.types import (
     Activity,
     CharacterType,
+    DirectorDecisionType,
+    DirectorEventStatus,
     FactScope,
     KnowledgeSource,
     KnowledgeState,
     QuestStatus,
     ThreadStatus,
+    Urgency,
 )
+from engine.director.lifecycle import director_event_dedup_key
 from engine.world.clock import WorldClock
 
 
@@ -60,6 +68,7 @@ class SeedBundle:
     character_skills: list[CharacterSkill] = field(default_factory=list)
     quests: list[Quest] = field(default_factory=list)
     plot_threads: list[PlotThread] = field(default_factory=list)
+    director_events: list[DirectorEvent] = field(default_factory=list)
     session: GameSession | None = None
 
     def character_by_key(self, key: str) -> Character | None:
@@ -126,6 +135,7 @@ def build_world(
                 player_character_id=pc.id,
                 session_seed=session_seed,
             )
+    _seed_scheduled_director_events(bundle)
     return bundle
 
 
@@ -261,6 +271,7 @@ def _seed_characters(pack: ContentPack, bundle: SeedBundle) -> None:
     world_id = bundle.world.id
     ladder = pack.realms
     start_minute = bundle.world.current_minute
+    goals = GoalLifecycleService(pack)
     for raw in pack.characters:
         key = str(raw["key"])
         realm = str(raw.get("realm", "mortal"))
@@ -319,6 +330,11 @@ def _seed_characters(pack: ContentPack, bundle: SeedBundle) -> None:
             ),
             capabilities=list(raw.get("capabilities", []) or []),
             metadata={"secret": raw.get("secret")} if raw.get("secret") else {},
+        )
+        character.goal_lifecycle = goals.build(
+            character,
+            start_minute,
+            lifecycle_id=_oid(world_id, "npc_goal", key),
         )
         bundle.characters.append(character)
 
@@ -583,3 +599,67 @@ def _seed_plot(pack: ContentPack, bundle: SeedBundle) -> None:
                 plot_thread_key=raw.get("plot_thread"),
             )
         )
+
+
+def _seed_scheduled_director_events(bundle: SeedBundle) -> None:
+    """Materialize content-declared beats as canonical scheduled obligations."""
+    by_character = {character.key: character for character in bundle.characters}
+    for thread in bundle.plot_threads:
+        beats = list(thread.metadata.get("scheduled_beats", []) or [])
+        for index, raw in enumerate(beats):
+            offset = max(0, int(raw.get("at_minutes_from_start", 0)))
+            at_minute = bundle.world.current_minute + offset
+            expected_thread = thread.model_copy(update={"stage": thread.stage + index})
+            basis = f"content_scheduled_beat:{thread.key}:{index + 1}"
+            participant_keys = list(raw.get("participants", []) or [])
+            event_type = str(raw.get("event_type", "FORESHADOWING"))
+            decision = DirectorDecision(
+                decision=DirectorDecisionType.ADVANCE_THREAD,
+                source_plot_thread=thread.key,
+                event_type=event_type,
+                participants=participant_keys,
+                proposal=str(raw.get("beat", thread.next_beat_hint or thread.name)),
+                causal_basis=[basis],
+                narrative_purpose=[f"scheduled:{thread.key}:{index + 1}"],
+                urgency=Urgency.MEDIUM,
+            )
+            participants = [
+                by_character[key] for key in participant_keys if key in by_character
+            ]
+            event_id = _oid(bundle.world.id, "director_event", basis)
+            bundle.director_events.append(
+                DirectorEvent(
+                    id=event_id,
+                    world_id=bundle.world.id,
+                    session_id=bundle.session.id if bundle.session else "",
+                    created_turn_id="seed",
+                    created_turn_number=0,
+                    dedup_key=director_event_dedup_key(decision, expected_thread),
+                    decision_type=decision.decision,
+                    event_type=event_type,
+                    status=DirectorEventStatus.SCHEDULED,
+                    source_plot_thread_id=thread.id,
+                    source_plot_thread_key=thread.key,
+                    source_plot_thread_stage=expected_thread.stage,
+                    participant_keys=[character.key for character in participants],
+                    participant_ids=[character.id for character in participants],
+                    proposal=decision.proposal,
+                    causal_basis=[basis],
+                    narrative_purpose=list(decision.narrative_purpose),
+                    urgency=decision.urgency,
+                    proposed_at_minute=bundle.world.current_minute,
+                    scheduled_for_minute=at_minute,
+                    history=[
+                        DirectorEventTransition(
+                            status=DirectorEventStatus.PROPOSED,
+                            at_minute=bundle.world.current_minute,
+                            reason="content_seed",
+                        ),
+                        DirectorEventTransition(
+                            status=DirectorEventStatus.SCHEDULED,
+                            at_minute=bundle.world.current_minute,
+                            reason="content_schedule",
+                        ),
+                    ],
+                )
+            )

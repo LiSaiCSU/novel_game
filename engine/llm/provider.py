@@ -28,6 +28,10 @@ class LLMRequest:
     max_output_tokens: int = 1024
     json_mode: bool = False
     stop: list[str] = field(default_factory=list)
+    #: Vendor-specific keys merged into the request body verbatim. This is how
+    #: things like a thinking-mode switch reach the endpoint without any vendor
+    #: name appearing in engine code - it always comes from configuration.
+    extra_body: dict[str, Any] = field(default_factory=dict)
 
 
 class LLMUsage(BaseModel):

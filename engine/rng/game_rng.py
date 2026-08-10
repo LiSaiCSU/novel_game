@@ -11,6 +11,7 @@ Rules:
 from __future__ import annotations
 
 import hashlib
+import math
 import random
 from collections.abc import Sequence
 from typing import Any, TypeVar
@@ -86,6 +87,81 @@ class GameRNG:
         value = self._rng.uniform(low, high)
         self._record("uniform", {"low": low, "high": high}, value)
         return value
+
+    def normal(self, mean: float, stddev: float) -> float:
+        """One traceable draw from a normal distribution."""
+        stddev = max(0.0, float(stddev))
+        value = self._rng.gauss(float(mean), stddev) if stddev else float(mean)
+        self._record("normal", {"mean": mean, "stddev": stddev}, value)
+        return value
+
+    def binomial(self, trials: int, probability: float) -> int:
+        """Bounded-cost aggregate Bernoulli sampling.
+
+        Small populations use exact draws. Large populations use bounded-cost
+        Poisson/normal approximations, so a temporal jump over decades consumes
+        one traced aggregate operation rather than one draw per week.
+        """
+        trials = max(0, int(trials))
+        probability = max(0.0, min(1.0, float(probability)))
+        mean = trials * probability
+        inverse_mean = trials * (1.0 - probability)
+        approximate = trials >= 128
+
+        if trials == 0 or probability == 0.0:
+            value = 0
+        elif probability == 1.0:
+            value = trials
+        elif approximate:
+            if mean < 30.0:
+                value = self._poisson_approximation(mean)
+            elif inverse_mean < 30.0:
+                value = trials - self._poisson_approximation(inverse_mean)
+            else:
+                stddev = math.sqrt(trials * probability * (1.0 - probability))
+                value = round(self._rng.gauss(mean, stddev))
+            value = max(0, min(trials, value))
+        else:
+            value = sum(1 for _ in range(trials) if self._rng.random() < probability)
+        self._record(
+            "binomial",
+            {"trials": trials, "p": probability, "approximate": approximate},
+            value,
+        )
+        return value
+
+    def geometric(self, probability: float, max_trials: int) -> int | None:
+        """Sample the first successful trial in bounded constant time.
+
+        ``None`` means that all available trials failed.  Temporal systems use
+        this to jump directly across repeated attempts instead of replaying one
+        attempt per day or week.
+        """
+        probability = max(0.0, min(1.0, float(probability)))
+        max_trials = max(0, int(max_trials))
+        roll = self._rng.random() if probability > 0.0 and max_trials > 0 else 1.0
+        if probability <= 0.0 or max_trials <= 0:
+            value = None
+        elif probability >= 1.0:
+            value = 1
+        else:
+            trial = math.floor(math.log1p(-roll) / math.log1p(-probability)) + 1
+            value = trial if trial <= max_trials else None
+        self._record(
+            "geometric",
+            {"p": probability, "max_trials": max_trials, "roll": roll},
+            value,
+        )
+        return value
+
+    def _poisson_approximation(self, mean: float) -> int:
+        threshold = math.exp(-mean)
+        product = 1.0
+        count = 0
+        while product > threshold:
+            count += 1
+            product *= self._rng.random()
+        return count - 1
 
     def randint(self, low: int, high: int) -> int:
         value = self._rng.randint(low, high)

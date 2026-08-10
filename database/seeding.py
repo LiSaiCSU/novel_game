@@ -41,6 +41,8 @@ async def persist_bundle(session: AsyncSession, bundle: SeedBundle) -> str:
         session.add(m.quest_to_orm(quest))
     for thread in bundle.plot_threads:
         session.add(m.thread_to_orm(thread))
+    for director_event in bundle.director_events:
+        session.add(m.director_event_to_orm(director_event))
     if bundle.session is not None:
         session.add(m.session_to_orm(bundle.session))
 

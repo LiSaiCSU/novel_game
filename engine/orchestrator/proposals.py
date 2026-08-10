@@ -13,6 +13,7 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from typing import Any
 
+from engine.characters.goals import GoalLifecycleService
 from engine.characters.npc_agent import NPCDecisionResult
 from engine.characters.schemas import DirectorDecision, NPCDecision
 from engine.contentpack.pack import ContentPack
@@ -21,6 +22,7 @@ from engine.core.models import Character, Emotion
 from engine.core.mutations import ChangeSet, StateChange
 from engine.core.ports import UnitOfWork
 from engine.core.types import ActionType, ImportanceBand
+from engine.director.lifecycle import DirectorEventLifecycleService
 from engine.relationships.manager import RelationshipManager, band_for_importance
 from engine.world.state_view import WorldStateView
 
@@ -39,6 +41,8 @@ class ProposalValidator:
     def __init__(self, pack: ContentPack, relationships: RelationshipManager) -> None:
         self.pack = pack
         self.relationships = relationships
+        self.goals = GoalLifecycleService(pack)
+        self.director_events = DirectorEventLifecycleService(pack)
         #: Personality is allowed to drift only this far per turn (Prompt section 13).
         self.personality_drift_cap = 0.02
 
@@ -83,7 +87,7 @@ class ProposalValidator:
             report.accepted.append(f"emotion:{result.npc_key}")
 
         if decision.goal_update_proposal:
-            goal_change = self._goal_change(npc, decision)
+            goal_change = self._goal_change(npc, decision, state.world.current_minute)
             if goal_change is not None:
                 change_set.add(goal_change)
                 report.accepted.append(f"goals:{result.npc_key}")
@@ -128,22 +132,27 @@ class ProposalValidator:
         payload["updated_at_minute"] = minute
         return mut.character_emotion(npc.id, payload, reason="npc_decision")
 
-    def _goal_change(self, npc: Character, decision: NPCDecision) -> StateChange | None:
+    def _goal_change(
+        self, npc: Character, decision: NPCDecision, at_minute: int
+    ) -> StateChange | None:
         proposal = decision.goal_update_proposal or {}
         payload: dict[str, object] = {}
+        clean_goals: list[str] = []
         short = proposal.get("short_term_goals")
         if isinstance(short, list):
-            payload["short_term_goals"] = [str(g)[:120] for g in short][:5]
+            clean_goals = [
+                str(goal).strip()[:120] for goal in short if str(goal).strip()
+            ][:5]
+            payload["short_term_goals"] = clean_goals
         # A long-term goal is a character's spine. Changing it needs a major
         # cause, which a single turn's proposal is not, so it is ignored here.
         if not payload:
             return None
-        return StateChange(
-            kind=mut.ChangeKind.CHARACTER_GOALS,
-            target_id=npc.id,
-            payload=payload,
-            reason="npc_goal_update",
+        lifecycle = self.goals.replan(npc, clean_goals, at_minute)
+        payload["goal_lifecycle"] = (
+            lifecycle.model_dump(mode="json") if lifecycle is not None else None
         )
+        return mut.character_goals(npc.id, payload, reason="npc_goal_update")
 
     # ------------------------------------------------------------------
     async def apply_director_decision(
@@ -154,6 +163,9 @@ class ProposalValidator:
         change_set: ChangeSet,
         *,
         event_builder,
+        session_id: str,
+        turn_id: str,
+        turn_number: int,
     ) -> ProposalReport:
         """Turn an accepted Director proposal into a world event and thread nudge."""
         from engine.core.types import DirectorDecisionType
@@ -169,36 +181,33 @@ class ProposalValidator:
             if character is not None and character.alive:
                 participants.append(character)
 
-        event = event_builder.build(
-            decision.event_type or "FORESHADOWING",
-            actor_id=participants[0].id if participants else None,
-            target_ids=[c.id for c in participants[1:]],
-            location_id=state.player.location_id,
-            payload={
-                "summary": decision.proposal,
-                "narrative_purpose": decision.narrative_purpose,
-                "source_plot_thread": decision.source_plot_thread,
-                "urgency": str(decision.urgency),
-            },
-            causes=decision.causal_basis,
-            world_minute=state.world.current_minute,
+        thread = (
+            await uow.plot_threads.get_by_key(state.world.id, decision.source_plot_thread)
+            if decision.source_plot_thread
+            else None
         )
-        change_set.add_event(event)
-        report.accepted.append(f"director_event:{event.event_type}")
-
-        if decision.source_plot_thread:
-            thread = await uow.plot_threads.get_by_key(
-                state.world.id, decision.source_plot_thread
+        record = self.director_events.propose(
+            state,
+            decision,
+            participants,
+            thread,
+            session_id=session_id,
+            turn_id=turn_id,
+            turn_number=turn_number,
+        )
+        if record.scheduled_for_minute > state.world.current_minute:
+            change_set.director_events.append(record)
+            report.accepted.append(f"director_event_scheduled:{record.id}")
+        else:
+            status = await self.director_events.activate(
+                uow,
+                state,
+                record,
+                change_set,
+                event_builder=event_builder,
             )
+            report.accepted.append(f"director_event:{record.event_type}:{status}")
             if thread is not None:
-                payload = {
-                    "last_advanced_minute": state.world.current_minute,
-                    "stage": thread.stage
-                    + (1 if decision.decision is DirectorDecisionType.ADVANCE_THREAD else 0),
-                }
-                change_set.add(
-                    mut.plot_thread_update(thread.id, payload, reason="director_advance")
-                )
                 report.accepted.append(f"thread:{thread.key}")
         return report
 

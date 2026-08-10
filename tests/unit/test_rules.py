@@ -8,15 +8,16 @@ from __future__ import annotations
 
 import pytest
 
+from content.cultivation_v1.domain_rules import CultivationRules
 from engine.actions.schema import Action
 from engine.contentpack.pack import ContentPack
 from engine.core.types import ActionType, ReasonCode, RequestSize
 from engine.rules.base import RuleContext
 from engine.rules.combat import CombatRules, DetectionRules, SkillRules
-from engine.rules.cultivation import CultivationRules
 from engine.rules.economy import EconomyRules, InventoryRules
 from engine.rules.engine import RuleEngine
 from engine.rules.interaction import InteractionRules
+from engine.rules.movement import MovementRules
 from engine.world.state_view import WorldStateView
 
 
@@ -348,3 +349,41 @@ def test_available_actions_never_include_unusable_ones(ctx: RuleContext, engine:
     allowed = engine.available_actions(ctx, ctx.state.player.id)
     assert str(ActionType.OBSERVE) in allowed
     assert str(ActionType.BREAKTHROUGH) not in allowed
+
+
+def test_a_walk_across_the_sect_is_not_charged_as_a_journey(ctx) -> None:
+    """Locality is geography, not hop count (see MovementRules.resolve_cost).
+
+    Three doors down inside one sect is several hops and a few minutes of graph
+    cost. Charging it the regional floor cost half a day - barely visible when
+    a turn held one action, glaring now that a chapter can hold several.
+    """
+    graph = ctx.state.graph
+    origin = "qingyun_outer_disciple_quarters"
+    far_but_inside = "qingyun_scripture_hall"
+    route = graph.path(origin, far_but_inside)
+    assert route is not None
+    path, minutes = route
+    hops = len(path) - 1
+    assert hops > 1, "this test needs a multi-hop route inside one sect"
+    assert graph.shares_region(origin, far_but_inside)
+
+    cost = MovementRules.resolve_cost(
+        ctx, minutes, hops, origin_key=origin, destination_key=far_but_inside
+    )
+    regional_floor = int(ctx.rule("time_costs.MOVE_REGIONAL.min", 240))
+    assert cost < regional_floor
+    assert cost >= int(ctx.rule("time_costs.MOVE_LOCAL.min", 10))
+
+
+def test_leaving_the_region_still_costs_a_journey(ctx) -> None:
+    origin = "qingyun_outer_disciple_quarters"
+    away = "blackwind_mountain"
+    route = ctx.state.graph.path(origin, away)
+    assert route is not None
+    path, minutes = route
+
+    cost = MovementRules.resolve_cost(
+        ctx, minutes, len(path) - 1, origin_key=origin, destination_key=away
+    )
+    assert cost >= int(ctx.rule("time_costs.MOVE_REGIONAL.min", 240))

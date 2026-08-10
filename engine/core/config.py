@@ -45,6 +45,7 @@ class Settings(BaseSettings):
     npc_model: str = ""
     npc_major_model: str = ""
     director_model: str = ""
+    steward_model: str = ""
     narrative_model: str = ""
     memory_model: str = ""
     embedding_model: str = ""
@@ -52,23 +53,38 @@ class Settings(BaseSettings):
     llm_timeout_seconds: float = 60.0
     llm_max_retries: int = 1
     llm_max_repairs: int = 2
+    #: JSON merged verbatim into every request body. Vendor switches such as a
+    #: thinking-mode toggle live here so no vendor name enters engine code.
+    llm_extra_body: str = ""
+    #: Multiplier applied to every role's output budget. Reasoning models bill
+    #: hidden thought against the same budget, so they need a bigger one.
+    llm_output_budget_scale: float = 1.0
+    #: How many times a truncated (empty) response is retried with twice the
+    #: budget before the caller is allowed to degrade.
+    llm_truncation_retries: int = 2
 
     # --- Prompt versions ---------------------------------------------------
     prompt_version_player_intent: str = "v1"
     prompt_version_npc_decision: str = "v1"
     prompt_version_director: str = "v1"
+    prompt_version_world_steward: str = "v1"
+    prompt_version_autopilot: str = "v1"
+    prompt_version_prologue: str = "v1"
+    prompt_version_chapter: str = "v1"
     prompt_version_narrative: str = "v1"
     prompt_version_memory_extractor: str = "v1"
 
     # --- Context budgets ---------------------------------------------------
-    ctx_budget_intent: int = 1200
+    ctx_budget_intent: int = 2600
     ctx_budget_npc: int = 2500
     ctx_budget_director: int = 3000
-    ctx_budget_narrative: int = 3500
+    ctx_budget_narrative: int = 7000
     ctx_budget_memory: int = 1200
 
     # --- Simulation --------------------------------------------------------
-    sim_max_offline_minutes: int = 525_600
+    # 0 delegates the maximum duration to the active content pack.  A positive
+    # value is a deployment safety limit and is rejected, never silently clipped.
+    sim_max_offline_minutes: int = 0
     director_min_interval_turns: int = 3
 
     # --- Embeddings --------------------------------------------------------

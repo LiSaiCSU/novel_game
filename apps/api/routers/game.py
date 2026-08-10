@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import asyncio
 import json
 from typing import Any
 
@@ -11,15 +12,19 @@ from fastapi.responses import StreamingResponse
 from apps.api.deps import orchestrator_dep, pack_dep, settings_dep, uow_dep
 from apps.api.schemas import (
     ActionRequest,
+    CreateSaveRequest,
     HistoryEntry,
     InventoryView,
     MemoryView,
+    OpeningView,
     QuestView,
     RelationshipView,
+    SaveView,
     StartGameRequest,
     StartGameResponse,
 )
 from database.repositories.sql import SqlUnitOfWork
+from database.saves import SaveService
 from database.seeding import persist_bundle
 from engine.contentpack.pack import ContentPack
 from engine.core.config import Settings
@@ -62,16 +67,23 @@ async def start_game(
     assert player is not None
 
     state = await build_world_state(uow, pack, bundle.world.id, player.id)
-    opening = orchestrator.d.narrative.template.query(state, "status")
-    location = state.location
-    intro = "\n\n".join(
-        part for part in [location.description if location else "", opening] if part
-    )
+    prologue = await orchestrator.open_session(uow, bundle.session, state)
+    if not prologue.text:
+        location = state.location
+        prologue.text = "\n\n".join(
+            part
+            for part in [
+                location.description if location else "",
+                orchestrator.d.narrative.template.query(state, "status"),
+            ]
+            if part
+        )
     return StartGameResponse(
         session_id=bundle.session.id,
         world_id=bundle.world.id,
         player_character_id=player.id,
-        opening=intro,
+        opening=prologue.text,
+        beat=prologue.beat,
         state=state.scene_summary(),
     )
 
@@ -91,7 +103,9 @@ async def submit_action(
         debug=body.debug,
     )
     try:
-        return await orchestrator.play_turn(uow, request)
+        # The game is played in runs, not single actions: the character keeps
+        # going until something needs the player (see GameOrchestrator.advance).
+        return await orchestrator.advance(uow, request)
     except ConsistencyViolation as exc:
         raise HTTPException(status_code=500, detail=exc.to_dict()) from exc
     except EngineError as exc:
@@ -110,16 +124,79 @@ async def submit_action_stream(
     Prompt section 49 - the world is fully adjudicated and committed before a
     single character of narrative is streamed.
     """
-    result = await orchestrator.play_turn(
-        uow, TurnRequest(session_id=session_id, text=body.text, debug=body.debug)
-    )
-
     async def events():
+        # A run covers several turns and takes the better part of a minute, so
+        # each committed step is announced as it lands. Without this the client
+        # cannot tell a long chapter from a hung request.
+        queue: asyncio.Queue[tuple[str, Any] | None] = asyncio.Queue()
+
+        async def on_step(index: int, step) -> None:
+            await queue.put(
+                (
+                    "progress",
+                    {
+                        "step": index,
+                        "action": step.action,
+                        "summary": step.outcome.summary_key,
+                        "minutes": step.minutes,
+                    },
+                )
+            )
+
+        async def on_chunk(text: str) -> None:
+            await queue.put(("narrative", {"delta": text}))
+
+        async def run() -> None:
+            try:
+                result = await orchestrator.advance(
+                    uow,
+                    TurnRequest(
+                        session_id=session_id, text=body.text, debug=body.debug
+                    ),
+                    on_step,
+                    on_chunk,
+                )
+                await queue.put(("result", result))
+            except Exception as exc:  # the client is told, the run is not retried
+                await queue.put(("failed", exc))
+            finally:
+                await queue.put(None)
+
+        task = asyncio.create_task(run())
+        result: TurnResult | None = None
+        failure: Exception | None = None
+        streamed = False
+        try:
+            while True:
+                item = await queue.get()
+                if item is None:
+                    break
+                kind, value = item
+                if kind == "progress":
+                    yield _sse("progress", value)
+                elif kind == "narrative":
+                    streamed = True
+                    yield _sse("narrative", value)
+                elif kind == "result":
+                    result = value
+                else:
+                    failure = value
+        finally:
+            await task
+
+        if failure is not None:
+            yield _sse("error", {"message": str(failure)})
+            return
+        assert result is not None
+
         payload = result.model_dump(mode="json")
         narrative = payload.pop("narrative", "")
+        # The prose has already gone out live unless the renderer degraded to
+        # templates, which produce no chunks at all.
+        if not streamed:
+            for index in range(0, len(narrative), 18):
+                yield _sse("narrative", {"delta": narrative[index : index + 18]})
         yield _sse("state", payload)
-        for index in range(0, len(narrative), 18):
-            yield _sse("narrative", {"delta": narrative[index : index + 18]})
         yield _sse("done", {"turn_id": result.turn_id})
 
     return StreamingResponse(
@@ -150,6 +227,9 @@ async def get_history(
     session_id: str, limit: int = 30, uow: SqlUnitOfWork = Depends(uow_dep)
 ) -> list[HistoryEntry]:
     turns = await uow.turns.list_for_session(session_id, limit=limit)
+    # A run commits one turn per step but produces one chapter, stored on the
+    # step the player started. The others would render as blank rows.
+    turns = [t for t in turns if (t.get("result") or {}).get("narrative")]
     return [
         HistoryEntry(
             turn_id=turn["id"],
@@ -272,3 +352,91 @@ async def get_player_memories(
         )
         for m in rows
     ]
+
+
+# ---------------------------------------------------------------- save / load
+@router.post("/{session_id}/saves", response_model=SaveView)
+async def create_save(
+    session_id: str,
+    body: CreateSaveRequest,
+    uow: SqlUnitOfWork = Depends(uow_dep),
+    pack: ContentPack = Depends(pack_dep),
+) -> SaveView:
+    """Freeze the whole world and story at this moment."""
+    session = await uow.sessions.get(session_id)
+    if session is None:
+        raise HTTPException(status_code=404, detail="session not found")
+
+    state = await build_world_state(uow, pack, session.world_id, session.player_character_id)
+    segments = await uow.turns.list_narrative(session_id, limit=1)
+    excerpt = segments[-1].text[-160:] if segments else ""
+
+    header = await SaveService(uow.session).capture(
+        session_id=session_id,
+        world_id=session.world_id,
+        name=body.name,
+        player_name=state.player.name,
+        turn_number=session.turn_number,
+        world_minute=state.world.current_minute,
+        time_label=state.time.label,
+        location_name=state.location.name if state.location else "",
+        excerpt=excerpt,
+    )
+    await uow.commit()
+    return SaveView(**header.as_dict())
+
+
+@router.get("/{session_id}/saves", response_model=list[SaveView])
+async def list_saves(
+    session_id: str, uow: SqlUnitOfWork = Depends(uow_dep)
+) -> list[SaveView]:
+    headers = await SaveService(uow.session).list_for_session(session_id)
+    return [SaveView(**h.as_dict()) for h in headers]
+
+
+@router.post("/saves/{save_id}/load", response_model=SaveView)
+async def load_save(save_id: str, uow: SqlUnitOfWork = Depends(uow_dep)) -> SaveView:
+    """Put the world back. Everything after this point is discarded."""
+    header = await SaveService(uow.session).restore(save_id)
+    if header is None:
+        raise HTTPException(status_code=404, detail="save not found")
+    await uow.commit()
+    return SaveView(**header.as_dict())
+
+
+@router.delete("/saves/{save_id}")
+async def delete_save(save_id: str, uow: SqlUnitOfWork = Depends(uow_dep)) -> dict[str, bool]:
+    deleted = await SaveService(uow.session).delete(save_id)
+    if not deleted:
+        raise HTTPException(status_code=404, detail="save not found")
+    await uow.commit()
+    return {"deleted": True}
+
+
+@router.get("/{session_id}/opening", response_model=OpeningView)
+async def get_opening(
+    session_id: str, uow: SqlUnitOfWork = Depends(uow_dep), pack: ContentPack = Depends(pack_dep)
+) -> OpeningView:
+    """The story so far, for a client rejoining a session after a load."""
+    session = await uow.sessions.get(session_id)
+    if session is None:
+        raise HTTPException(status_code=404, detail="session not found")
+    state = await build_world_state(uow, pack, session.world_id, session.player_character_id)
+    segments = await uow.turns.list_narrative(session_id, limit=30)
+    turns = await uow.turns.list_for_session(session_id, limit=30)
+    beat = next(
+        (
+            (t.get("result") or {}).get("beat")
+            for t in reversed(turns)
+            if (t.get("result") or {}).get("beat")
+        ),
+        None,
+    )
+    return OpeningView(
+        session_id=session_id,
+        world_id=session.world_id,
+        player_character_id=session.player_character_id,
+        chapters=[s.text for s in segments if s.text and s.kind != "beat"],
+        beat=beat,
+        state=state.scene_summary(),
+    )

@@ -8,12 +8,15 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 import yaml
 
 from engine.contentpack.realms import RealmLadder
 from engine.core.errors import ContentPackError, ContentValidationError
+
+if TYPE_CHECKING:
+    from engine.rules.plugin import RulePlugin
 
 _FILES = {
     "pack": "pack.yaml",
@@ -69,6 +72,7 @@ class ContentPack:
     event_types: list[dict[str, Any]]
     offline_templates: list[dict[str, Any]]
     narrative_templates: dict[str, Any] = field(default_factory=dict)
+    rule_plugin: RulePlugin | None = None
 
     # -- convenience --------------------------------------------------------
     @property
@@ -138,6 +142,8 @@ def load_content_pack(content_dir: Path | str, pack_key: str) -> ContentPack:
             raise ContentPackError(f"content pack {pack_key!r} is missing {filename}")
         raw[name] = _load_yaml(path)
 
+    from engine.contentpack.plugin_loader import load_rule_plugin
+
     pack = ContentPack(
         key=pack_key,
         root=root,
@@ -161,6 +167,7 @@ def load_content_pack(content_dir: Path | str, pack_key: str) -> ContentPack:
         event_types=list(raw["event_templates"].get("event_types", [])),
         offline_templates=list(raw["event_templates"].get("offline_templates", [])),
         narrative_templates=raw["narrative_templates"],
+        rule_plugin=load_rule_plugin(root, raw["pack"]),
     )
     validate_content_pack(pack)
     return pack
@@ -177,6 +184,7 @@ def validate_content_pack(pack: ContentPack) -> None:
     skill_keys = {s.get("key") for s in pack.skills}
     fact_keys = {f.get("key") for f in pack.facts}
     thread_keys = {t.get("key") for t in pack.plot_threads}
+    director_event_types = set(pack.rule("director.allowed_event_types", []) or [])
 
     if len(location_keys) != len(pack.locations):
         problems.append("duplicate location keys")
@@ -235,6 +243,23 @@ def validate_content_pack(pack: ContentPack) -> None:
         for fact_key in thread.get("related_facts", []) or []:
             if fact_key not in fact_keys:
                 problems.append(f"plot thread {thread.get('key')} cites unknown fact {fact_key!r}")
+        for beat in thread.get("scheduled_beats", []) or []:
+            offset = beat.get("at_minutes_from_start")
+            if not isinstance(offset, int) or offset < 0:
+                problems.append(
+                    f"plot thread {thread.get('key')} has invalid scheduled beat time {offset!r}"
+                )
+            event_type = beat.get("event_type", "FORESHADOWING")
+            if event_type not in director_event_types:
+                problems.append(
+                    f"plot thread {thread.get('key')} schedules disallowed event {event_type!r}"
+                )
+            for participant in beat.get("participants", []) or []:
+                if participant not in character_keys:
+                    problems.append(
+                        f"plot thread {thread.get('key')} schedules unknown participant "
+                        f"{participant!r}"
+                    )
 
     for quest in pack.quests:
         giver = quest.get("giver")

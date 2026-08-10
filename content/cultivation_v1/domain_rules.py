@@ -1,4 +1,4 @@
-"""CultivationRules (Prompt section 34).
+"""Cultivation-specific progression arithmetic for this content pack.
 
 The whole progression loop is arithmetic over content-pack numbers. The
 narrative model may describe a breakthrough; it may never cause one.

@@ -5,55 +5,39 @@ output_schema: MemoryExtraction
 temperature: 0.3
 max_output_tokens: 600
 ---
-You decide whether an event deserves to become a long-term memory for a
-specific character, and summarise it from THAT character's point of view.
+你负责判断一个已经确定发生的事件是否值得成为特定人物的长期记忆，并从该人物的视角概括它。
 
-Store memories for events like:
+承诺、背叛、救命、侮辱、冲突、礼物、感情事件、共同遇险、重大谈话、秘密披露、创伤、胜利和失败通常值得记忆。普通问候闲聊、无后果的日常移动休息购物、人物没有感知到的事，以及已有近似记忆覆盖的内容，不应存储。
 
-promise, betrayal, rescue, insult, conflict, gift, romantic_event,
-shared_danger, major_conversation, secret_disclosure, trauma, victory, failure
-
-Do NOT store:
-
-- ordinary greetings and small talk
-- routine movement, resting, shopping without consequence
-- anything the character did not perceive
-- anything already covered by an existing near-identical memory
-
----
-
-## MEMORY OWNER
+## 记忆拥有者
 
 {{owner}}
 
-## WHAT HAPPENED (canonical, already resolved)
+## 已确定发生的事实
 
 {{event}}
 
-Participants: {{participants}}
-Location: {{location}}
-World time: {{time_label}}
+参与者：{{participants}}
+地点：{{location}}
+世界时间：{{time_label}}
 
-## WHAT THIS CHARACTER PERCEIVED
+## 此人物实际感知到的内容
 
 {{perceived}}
 
-## EXISTING SIMILAR MEMORIES (avoid duplicates; if one already covers this, set should_store=false)
+## 已有相似记忆（避免重复；已覆盖时令 `should_store=false`）
 
 {{existing_memories}}
 
-## RULES
+## 规则
 
-- `summary` must be written from the owner's first-person perspective, in Chinese,
-  one or two sentences, concrete and specific. No flowery prose.
-- `importance` 0-1: routine 0.0-0.2, notable 0.3-0.5, significant 0.6-0.8,
-  life-defining 0.9-1.0.
-- `emotional_valence` -1 (deeply negative) .. 1 (deeply positive).
-- `facts_learned` may only reference fact keys that appear in the event context.
-- `relationship_implications` deltas must be small unless the cause is major:
-  trivial ±2, minor ±5, major ±15.
+- `summary` 只用于辅助判断，必须使用拥有者的第一人称中文，写一到两句具体事实，不使用小说修辞；引擎最终只会持久化由 Canonical Event 确定性生成的事实描述。
+- `importance` 范围 0—1：日常 0.0—0.2，值得注意 0.3—0.5，重要 0.6—0.8，影响一生 0.9—1.0。
+- `emotional_valence` 范围 -1（强烈负面）到 1（强烈正面）。
+- `facts_learned` 只能引用事件上下文中出现的事实键。
+- `relationship_implications` 的变化量必须与原因相称：琐碎 ±2、次要 ±5、重大 ±15。
 
-## Output schema
+## 输出结构
 
 {{schema}}
 

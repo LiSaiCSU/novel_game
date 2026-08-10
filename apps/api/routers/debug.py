@@ -71,6 +71,7 @@ async def world_inspector(
     characters = await uow.characters.list_for_world(world_id, alive_only=False)
     factions = await uow.factions.list_for_world(world_id)
     threads = await uow.plot_threads.list_for_world(world_id)
+    director_events = await uow.director_events.list_for_world(world_id, limit=40)
     events = await uow.events.list_recent(world_id, limit=40)
     tension = TensionModel(pack)
 
@@ -105,6 +106,19 @@ async def world_inspector(
                 "last_advanced_minute": t.last_advanced_minute,
             }
             for t in threads
+        ],
+        director_events=[
+            {
+                "id": event.id,
+                "status": str(event.status),
+                "event_type": event.event_type,
+                "source_plot_thread": event.source_plot_thread_key,
+                "scheduled_for_minute": event.scheduled_for_minute,
+                "canonical_event_id": event.canonical_event_id,
+                "cancellation_reason": event.cancellation_reason,
+                "history": [transition.model_dump(mode="json") for transition in event.history],
+            }
+            for event in director_events
         ],
         recent_events=[
             EventView(

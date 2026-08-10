@@ -14,6 +14,7 @@ import pytest
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
 ENGINE = REPO_ROOT / "engine"
+CONTENT = REPO_ROOT / "content"
 CJK = re.compile(r"[一-鿿]")
 
 
@@ -140,3 +141,34 @@ def test_engine_never_writes_through_a_repository() -> None:
                     pytest.fail(
                         f"{path.relative_to(REPO_ROOT)} writes through a repository directly"
                     )
+
+
+def test_core_action_router_contains_no_cultivation_domain_branches() -> None:
+    """Pack-specific validation and settlement must stay behind RulePlugin."""
+    routed = [ENGINE / "rules" / "engine.py", ENGINE / "actions" / "resolver.py"]
+    forbidden = ("CultivationRules", "_do_cultivate", "_do_breakthrough")
+    for path in routed:
+        source = path.read_text(encoding="utf-8")
+        found = [token for token in forbidden if token in source]
+        assert not found, f"{path.relative_to(REPO_ROOT)} contains domain routing {found}"
+    assert not (ENGINE / "rules" / "cultivation.py").exists()
+
+
+def test_bundled_rule_plugins_do_not_import_infrastructure_or_random() -> None:
+    """Bundled trusted plugins receive proposals APIs, not persistence handles."""
+    forbidden_roots = {
+        "alembic",
+        "apps",
+        "database",
+        "fastapi",
+        "random",
+        "redis",
+        "sqlalchemy",
+        "starlette",
+    }
+    for path in CONTENT.rglob("*.py"):
+        modules = imported_modules(parse(path))
+        offending = sorted(
+            module for module in modules if module.split(".")[0] in forbidden_roots
+        )
+        assert not offending, f"{path.relative_to(REPO_ROOT)} imports {offending}"

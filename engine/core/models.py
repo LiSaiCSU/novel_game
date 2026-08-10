@@ -8,19 +8,25 @@ from __future__ import annotations
 
 from typing import Any
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict, Field, model_validator
 
 from engine.core.ids import new_id
 from engine.core.types import (
     Activity,
     CharacterType,
+    DirectorDecisionType,
+    DirectorEventStatus,
     FactScope,
+    GoalActionOutcome,
+    GoalStatus,
+    GoalStepStatus,
     KnowledgeSource,
     KnowledgeState,
     MemoryTag,
     MemoryType,
     QuestStatus,
     ThreadStatus,
+    Urgency,
     Visibility,
 )
 
@@ -144,6 +150,73 @@ class Reputation(Base):
     by_region: dict[str, float] = Field(default_factory=dict)
 
 
+class NPCGoalPlanStep(Base):
+    """One code-validatable action in an important NPC's current plan."""
+
+    key: str = Field(min_length=1, max_length=40)
+    description: str = Field(min_length=1, max_length=120)
+    activity: Activity = Activity.WORK
+    destination_key: str | None = None
+    success_chance: float = Field(default=0.65, ge=0.01, le=1.0)
+    status: GoalStepStatus = GoalStepStatus.PENDING
+    attempts: int = Field(default=0, ge=0)
+    completed_at_minute: int | None = None
+
+
+class NPCGoalResult(Base):
+    """Last canonical result; the corresponding Event remains append-only."""
+
+    step_key: str
+    outcome: GoalActionOutcome
+    at_minute: int
+    attempts: int = Field(default=1, ge=1)
+    event_id: str
+    summary: str
+
+
+class NPCGoalLifecycle(Base):
+    """Durable Goal -> Plan -> Action -> Result state for a major NPC."""
+
+    id: str = Field(default_factory=new_id)
+    goal: str = Field(min_length=1, max_length=240)
+    status: GoalStatus = GoalStatus.ACTIVE
+    revision: int = Field(default=1, ge=1)
+    steps: list[NPCGoalPlanStep] = Field(default_factory=list, max_length=5)
+    current_step: int = Field(default=0, ge=0)
+    next_action_minute: int = Field(default=0, ge=0)
+    action_interval_minutes: int = Field(default=1440, ge=1)
+    actions_attempted: int = Field(default=0, ge=0)
+    created_at_minute: int = Field(default=0, ge=0)
+    updated_at_minute: int = Field(default=0, ge=0)
+    last_result: NPCGoalResult | None = None
+
+    @property
+    def current_plan_step(self) -> NPCGoalPlanStep | None:
+        if self.status is not GoalStatus.ACTIVE or self.current_step >= len(self.steps):
+            return None
+        return self.steps[self.current_step]
+
+    @model_validator(mode="after")
+    def _validate_plan_cursor(self) -> NPCGoalLifecycle:
+        if self.current_step > len(self.steps):
+            raise ValueError("goal plan cursor exceeds step count")
+        if self.status is GoalStatus.ACTIVE and self.current_step >= len(self.steps):
+            raise ValueError("active goal requires a pending plan step")
+        if self.status is GoalStatus.REVIEW_REQUIRED and self.current_step != len(self.steps):
+            raise ValueError("review-required goal must have completed its plan")
+        if any(
+            step.status is not GoalStepStatus.SUCCEEDED
+            for step in self.steps[: self.current_step]
+        ):
+            raise ValueError("completed plan prefix contains a non-successful step")
+        if any(
+            step.status is GoalStepStatus.SUCCEEDED
+            for step in self.steps[self.current_step :]
+        ):
+            raise ValueError("future plan step is already marked successful")
+        return self
+
+
 class Character(Base):
     id: str = Field(default_factory=new_id)
     world_id: str = ""
@@ -183,6 +256,7 @@ class Character(Base):
     background: str = ""
     long_term_goal: str = ""
     short_term_goals: list[str] = Field(default_factory=list)
+    goal_lifecycle: NPCGoalLifecycle | None = None
     current_emotion: Emotion = Field(default_factory=Emotion)
     injuries: float = 0.0
     schedule: Schedule = Field(default_factory=Schedule)
@@ -392,6 +466,95 @@ class Event(Base):
     importance: float = 0.1
     visibility: Visibility = Visibility.LOCAL
     witnesses: list[str] = Field(default_factory=list)
+
+
+class DirectorEventTransition(Base):
+    status: DirectorEventStatus
+    at_minute: int = Field(ge=0)
+    reason: str = ""
+
+
+class DirectorEvent(Base):
+    """Durable lifecycle around an AI Director proposal.
+
+    The append-only :class:`Event` is created only when this record becomes
+    ACTIVE. Instantaneous events then become RESOLVED in the same transaction.
+    """
+
+    id: str = Field(default_factory=new_id)
+    world_id: str
+    session_id: str
+    created_turn_id: str
+    created_turn_number: int = Field(ge=0)
+    dedup_key: str = Field(min_length=1, max_length=64)
+    decision_type: DirectorDecisionType
+    event_type: str = Field(min_length=1, max_length=120)
+    status: DirectorEventStatus = DirectorEventStatus.PROPOSED
+    source_plot_thread_id: str | None = None
+    source_plot_thread_key: str | None = None
+    source_plot_thread_stage: int | None = Field(default=None, ge=0)
+    participant_keys: list[str] = Field(default_factory=list)
+    participant_ids: list[str] = Field(default_factory=list)
+    location_id: str | None = None
+    proposal: str = Field(default="", max_length=500)
+    causal_basis: list[str] = Field(default_factory=list)
+    narrative_purpose: list[str] = Field(default_factory=list)
+    urgency: Urgency = Urgency.LOW
+    tension_delta: float = 0.0
+    proposed_at_minute: int = Field(ge=0)
+    scheduled_for_minute: int = Field(ge=0)
+    activated_at_minute: int | None = Field(default=None, ge=0)
+    resolved_at_minute: int | None = Field(default=None, ge=0)
+    cancelled_at_minute: int | None = Field(default=None, ge=0)
+    canonical_event_id: str | None = None
+    cancellation_reason: str = ""
+    history: list[DirectorEventTransition] = Field(default_factory=list)
+
+    @model_validator(mode="after")
+    def _validate_lifecycle(self) -> DirectorEvent:
+        if not self.history or self.history[0].status is not DirectorEventStatus.PROPOSED:
+            raise ValueError("director event history must begin with PROPOSED")
+        if self.history[-1].status is not self.status:
+            raise ValueError("director event status must match its latest transition")
+        if len(self.participant_keys) != len(self.participant_ids):
+            raise ValueError("director event participant keys and ids must align")
+        if self.scheduled_for_minute < self.proposed_at_minute:
+            raise ValueError("director event cannot be scheduled before it was proposed")
+        allowed = {
+            DirectorEventStatus.PROPOSED: {
+                DirectorEventStatus.SCHEDULED,
+                DirectorEventStatus.CANCELLED,
+            },
+            DirectorEventStatus.SCHEDULED: {
+                DirectorEventStatus.SCHEDULED,
+                DirectorEventStatus.ACTIVE,
+                DirectorEventStatus.CANCELLED,
+            },
+            DirectorEventStatus.ACTIVE: {
+                DirectorEventStatus.RESOLVED,
+                DirectorEventStatus.CANCELLED,
+            },
+            DirectorEventStatus.RESOLVED: set(),
+            DirectorEventStatus.CANCELLED: set(),
+        }
+        for before, after in zip(self.history, self.history[1:], strict=False):
+            if after.status not in allowed[before.status]:
+                raise ValueError(
+                    f"invalid director event transition {before.status}->{after.status}"
+                )
+            if after.at_minute < before.at_minute:
+                raise ValueError("director event transition time moved backwards")
+        if self.status is DirectorEventStatus.RESOLVED and not self.canonical_event_id:
+            raise ValueError("resolved director event requires a canonical event")
+        if self.status is DirectorEventStatus.RESOLVED and (
+            self.activated_at_minute is None or self.resolved_at_minute is None
+        ):
+            raise ValueError("resolved director event requires activation and resolution times")
+        if self.status is DirectorEventStatus.CANCELLED and not self.cancellation_reason:
+            raise ValueError("cancelled director event requires a reason")
+        if self.status is DirectorEventStatus.CANCELLED and self.cancelled_at_minute is None:
+            raise ValueError("cancelled director event requires a cancellation time")
+        return self
 
 
 class PlotThread(Base):

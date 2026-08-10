@@ -22,6 +22,7 @@ if str(REPO_ROOT) not in sys.path:
 
 from database.base import Base  # noqa: E402
 from database.models import orm  # noqa: E402,F401  (import registers the tables)
+from database.session import prepare_database_path  # noqa: E402
 from engine.core.config import get_settings  # noqa: E402
 
 config = context.config
@@ -29,7 +30,9 @@ if config.config_file_name is not None:
     fileConfig(config.config_file_name)
 
 target_metadata = Base.metadata
-config.set_main_option("sqlalchemy.url", get_settings().database_url)
+database_url = get_settings().database_url
+prepare_database_path(database_url)
+config.set_main_option("sqlalchemy.url", database_url)
 
 
 def run_migrations_offline() -> None:

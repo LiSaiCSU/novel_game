@@ -168,10 +168,10 @@ class ContextBuilder:
             "location": state.location.name if state.location else "-",
             "time_label": state.time.label,
             "atmosphere": state.location.description if state.location else "-",
-            "visible_characters": ", ".join(
-                f"{c.display_name}" for c in state.present_characters if c.alive
-            )
-            or "-",
+            # Names alone are not enough to write a person. Without rank and
+            # manner the narrator guesses, and an outer-sect disciple ends up
+            # described as a servant - which readers notice immediately.
+            "visible_characters": self.people_for_narrative(state),
             "recent_narrative": recent_narrative or "-",
             "player_action": player_action,
             "resolved_result": resolved_result,
@@ -202,6 +202,9 @@ class ContextBuilder:
         recent = await uow.events.list_recent(world.id, limit=25)
         important = [e for e in recent if e.importance >= 0.3][-10:]
         quests = await uow.quests.list_for_world(world.id)
+        scheduled_director = await uow.director_events.list_for_world(
+            world.id, status="SCHEDULED", limit=20
+        )
         outstanding = [
             q for q in quests if str(q.status) in ("offered", "active")
         ]
@@ -223,6 +226,11 @@ class ContextBuilder:
             "recent_events": self._events(important, with_ids=True),
             "outstanding": self._bullets(
                 [f"{q.key}: {q.name} ({q.status})" for q in outstanding]
+                + [
+                    f"director:{event.event_type} @{event.scheduled_for_minute} "
+                    f"thread={event.source_plot_thread_key or '-'}"
+                    for event in scheduled_director
+                ]
             ),
             "event_types": ", ".join(
                 str(t) for t in (self.pack.rule("director.allowed_event_types", []) or [])
@@ -238,10 +246,16 @@ class ContextBuilder:
     # Intent
     # ==================================================================
     async def build_intent_context(
-        self, uow: UnitOfWork, state: WorldStateView, *, recent_narrative: str
+        self,
+        uow: UnitOfWork,
+        state: WorldStateView,
+        *,
+        recent_narrative: str,
+        world_characters: list[Character] | None = None,
+        pending_beat: str = "",
     ) -> BuiltContext:
+        world_characters = world_characters or []
         ladder = self.pack.realms
-        nearby = state.graph.neighbours(state.location_key())
         sections = {
             "location": state.location.name if state.location else "-",
             "time_label": state.time.label,
@@ -249,23 +263,84 @@ class ContextBuilder:
                 f"{state.player.name} / {ladder.display(state.player.realm, state.player.realm_stage)}"
             ),
             "present_characters": self._present_for_intent(state),
-            "known_locations": ", ".join(
-                f"{state.graph.by_key(k).name}[{k}]"  # type: ignore[union-attr]
-                for k in nearby
-                if state.graph.by_key(k)
-            )
-            or "-",
+            # The whole map, not just the doorstep. Naming a place the player
+            # has heard of is not a parse error, it is a travel plan - and the
+            # movement rules already know how to route there.
+            "known_locations": self._location_index(state),
+            "elsewhere_characters": self._elsewhere_for_intent(state, world_characters),
             "inventory_keys": ", ".join(sorted({r.item_key for r in state.inventory})) or "-",
             "skill_keys": ", ".join(sorted({r.skill_key for r in state.known_skills})) or "-",
-            "recent_narrative": recent_narrative[-800:] or "-",
+            # The player is almost always answering the end of the last
+            # chapter, so it has to survive intact - a truncated tail loses the
+            # very hook they are reaching for.
+            "recent_narrative": recent_narrative[-2500:] or "-",
+            "pending_beat": pending_beat or "-",
         }
         built = BuiltContext(sections=sections)
-        self._enforce_budget(built, self.budget("intent", 1200), ("recent_narrative",))
+        self._enforce_budget(
+            built,
+            self.budget("intent", 2600),
+            ("elsewhere_characters", "known_locations", "recent_narrative"),
+        )
         return built
+
+    def _location_index(self, state: WorldStateView) -> str:
+        """Every location in the world, with the reachable ones marked.
+
+        Annotations stay language-neutral: the engine ships no prose, and the
+        prompt that consumes this explains the notation.
+        """
+        here = state.location_key()
+        neighbours = state.graph.neighbours(here)
+        rows: list[str] = []
+        for loc in state.graph.all():
+            if loc.key == here:
+                rows.append(f"- {loc.name}[{loc.key}] (HERE)")
+            elif loc.key in neighbours:
+                rows.append(f"- {loc.name}[{loc.key}] ({neighbours[loc.key]}min)")
+            elif loc.accessible:
+                rows.append(f"- {loc.name}[{loc.key}]")
+        return "\n".join(rows) or "-"
+
+    def _elsewhere_for_intent(
+        self, state: WorldStateView, world_characters: list[Character]
+    ) -> str:
+        """People who exist but are not here - naming them is a plan, not an error."""
+        present = {c.id for c in state.present_characters} | {state.player.id}
+        rows = [
+            f"- {c.display_name}[{c.key}] (at {c.location_key or '?'})"
+            for c in world_characters
+            if c.alive and c.id not in present
+        ]
+        return "\n".join(rows) or "-"
 
     # ==================================================================
     # Memory extraction
     # ==================================================================
+    def people_for_narrative(self, state: WorldStateView) -> str:
+        """Who is here, in enough detail to write them consistently."""
+        rows: list[str] = []
+        for c in state.present_characters:
+            if not c.alive:
+                continue
+            bits = [
+                c.display_name,
+                c.gender,
+                self.pack.realms.display(c.realm, c.realm_stage),
+            ]
+            if c.faction_rank:
+                bits.append(c.faction_rank)
+            row = " / ".join(b for b in bits if b)
+            if c.personality.speech_style:
+                row += f" | {c.personality.speech_style}"
+            rel = state.relationship_with(c.id)
+            if rel is not None:
+                dims = ", ".join(f"{k}={v}" for k, v in rel.as_dict().items() if v)
+                if dims:
+                    row += f" | {dims}"
+            rows.append(f"- {row}")
+        return "\n".join(rows) or "-"
+
     async def build_memory_context(
         self,
         uow: UnitOfWork,

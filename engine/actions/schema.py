@@ -6,9 +6,10 @@ converted into one of these before the world will look at it.
 
 from __future__ import annotations
 
-from typing import Any
+from enum import StrEnum
+from typing import Any, Literal
 
-from pydantic import BaseModel, ConfigDict, Field, field_validator
+from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 
 from engine.core.types import ActionType, ReasonCode, RequestSize, SocialMethod
 
@@ -23,28 +24,74 @@ class ActionGoal(BaseModel):
     details: str | None = None
 
 
-class SecondaryAction(BaseModel):
-    model_config = ConfigDict(extra="allow")
-
-    type: str
-    target_id: str | None = None
-    details: str | None = None
+class PredicateKind(StrEnum):
+    PREVIOUS_SUCCEEDED = "PREVIOUS_SUCCEEDED"
+    HAS_ITEM = "HAS_ITEM"
+    TARGET_PRESENT = "TARGET_PRESENT"
+    AT_LOCATION = "AT_LOCATION"
 
 
 class ActionCondition(BaseModel):
-    """Supports "if the guard turns away, I climb through the window"."""
+    """A predicate Code can evaluate; free-form trigger prose is not executable."""
 
-    model_config = ConfigDict(extra="allow")
+    model_config = ConfigDict(extra="forbid")
 
-    trigger: str
-    then_action_type: ActionType | None = None
-    then_target_id: str | None = None
+    kind: PredicateKind
+    primitive_id: str | None = None
+    item_key: str | None = None
+    target_id: str | None = None
+    location_key: str | None = None
+
+    @model_validator(mode="after")
+    def _required_operand(self) -> ActionCondition:
+        required = {
+            PredicateKind.PREVIOUS_SUCCEEDED: self.primitive_id,
+            PredicateKind.HAS_ITEM: self.item_key,
+            PredicateKind.TARGET_PRESENT: self.target_id,
+            PredicateKind.AT_LOCATION: self.location_key,
+        }
+        if not required[self.kind]:
+            raise ValueError(f"{self.kind} requires its matching operand")
+        return self
+
+
+class ActionPrimitiveIntent(BaseModel):
+    """One fully structured step proposed by the intent model."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    primitive_id: str = Field(pattern=r"^[a-z][a-z0-9_]*$", max_length=40)
+    action_type: ActionType
+    target_id: str | None = None
+    target_key: str | None = None
+    location_key: str | None = None
+    item_key: str | None = None
+    skill_key: str | None = None
+    quest_key: str | None = None
+    quantity: int = Field(default=1, ge=1)
+    duration_minutes: int | None = Field(default=None, ge=0)
+    method: SocialMethod | str | None = None
+    style: str | None = None
+    request_size: RequestSize = RequestSize.TRIVIAL
+    goal: ActionGoal = Field(default_factory=ActionGoal)
+    condition: ActionCondition | None = None
+    utterance: str | None = None
+    parameters: dict[str, Any] = Field(default_factory=dict)
+
+
+class ActionPlanIntent(BaseModel):
+    """A short, tightly coupled plan. Long temporal work remains separate turns."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    atomic: Literal[True] = True
+    primitives: list[ActionPrimitiveIntent] = Field(min_length=2, max_length=4)
 
 
 class PlayerIntent(BaseModel):
     """The Intent Parser's only output. It decides nothing about outcomes."""
 
-    model_config = ConfigDict(extra="ignore")
+    model_config = ConfigDict(extra="forbid")
 
     action_type: ActionType = ActionType.CUSTOM
     actor_id: str = "player"
@@ -60,12 +107,25 @@ class PlayerIntent(BaseModel):
     style: str | None = None
     request_size: RequestSize = RequestSize.TRIVIAL
     goal: ActionGoal = Field(default_factory=ActionGoal)
-    secondary_actions: list[SecondaryAction] = Field(default_factory=list)
-    condition: ActionCondition | None = None
+    plan: ActionPlanIntent | None = None
     utterance: str | None = None
+    parameters: dict[str, Any] = Field(default_factory=dict)
     raw_text: str = ""
     confidence: float = 1.0
     ambiguity: str | None = None
+    #: Names the player used that the world does not have yet. These are the
+    #: steward's work list, not a reason to reject the turn.
+    unresolved_reference: list[str] = Field(default_factory=list, max_length=4)
+
+    @field_validator("unresolved_reference", mode="before")
+    @classmethod
+    def _one_or_many(cls, value: Any) -> Any:
+        """Models reach for a bare string here often enough to just accept it."""
+        if value is None:
+            return []
+        if isinstance(value, str):
+            return [value] if value.strip() else []
+        return value
 
     @field_validator("confidence")
     @classmethod
@@ -77,8 +137,14 @@ class PlayerIntent(BaseModel):
     def _positive_quantity(cls, value: int) -> int:
         return max(1, int(value))
 
-    def needs_clarification(self, threshold: float = 0.45) -> bool:
-        return self.ambiguity is not None or self.confidence < threshold
+    def needs_clarification(self, threshold: float = 0.3) -> bool:
+        """Only truly unreadable input. Anything legible is the world's problem.
+
+        This used to trip on any unbound reference, which turned every creative
+        line into a wasted turn. Unbound references now route to the steward
+        instead; the bar here is 'we cannot tell what was even attempted'.
+        """
+        return self.confidence < threshold
 
 
 class Action(BaseModel):
@@ -99,8 +165,6 @@ class Action(BaseModel):
     style: str | None = None
     request_size: RequestSize = RequestSize.TRIVIAL
     goal: ActionGoal = Field(default_factory=ActionGoal)
-    secondary_actions: list[SecondaryAction] = Field(default_factory=list)
-    condition: ActionCondition | None = None
     utterance: str | None = None
     raw_text: str = ""
     parameters: dict[str, Any] = Field(default_factory=dict)
@@ -109,6 +173,23 @@ class Action(BaseModel):
         from engine.core.types import SOCIAL_ACTIONS
 
         return self.action_type in SOCIAL_ACTIONS
+
+
+class ActionPrimitive(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    primitive_id: str = Field(pattern=r"^[a-z][a-z0-9_]*$", max_length=40)
+    action: Action
+    condition: ActionCondition | None = None
+
+
+class ActionPlan(BaseModel):
+    """Engine-facing atomic proposal compiled from one player utterance."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    atomic: Literal[True] = True
+    primitives: list[ActionPrimitive] = Field(min_length=1, max_length=4)
 
 
 class RuleResult(BaseModel):

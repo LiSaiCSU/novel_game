@@ -12,6 +12,7 @@ from database.models.orm import (
     CharacterKnowledgeORM,
     CharacterORM,
     CharacterSkillORM,
+    DirectorEventORM,
     EventORM,
     FactionORM,
     FactORM,
@@ -32,6 +33,8 @@ from engine.core.models import (
     Character,
     CharacterKnowledge,
     CharacterSkill,
+    DirectorEvent,
+    DirectorEventTransition,
     Emotion,
     Event,
     Fact,
@@ -42,6 +45,7 @@ from engine.core.models import (
     Location,
     Memory,
     NarrativeSegment,
+    NPCGoalLifecycle,
     Personality,
     PlotThread,
     Quest,
@@ -54,6 +58,8 @@ from engine.core.models import (
 )
 from engine.core.types import (
     CharacterType,
+    DirectorDecisionType,
+    DirectorEventStatus,
     FactScope,
     KnowledgeSource,
     KnowledgeState,
@@ -61,6 +67,7 @@ from engine.core.types import (
     MemoryType,
     QuestStatus,
     ThreadStatus,
+    Urgency,
     Visibility,
 )
 
@@ -228,6 +235,9 @@ def character_to_domain(row: CharacterORM) -> Character:
         character_type=CharacterType(row.character_type),
         personality=Personality(**(row.personality or {})),
         short_term_goals=list(row.short_term_goals or []),
+        goal_lifecycle=(
+            NPCGoalLifecycle(**row.goal_lifecycle) if row.goal_lifecycle else None
+        ),
         current_emotion=Emotion(**(row.current_emotion or {})),
         schedule=Schedule(**(row.schedule or {})),
         reputation=Reputation(**(row.reputation or {})),
@@ -245,6 +255,9 @@ def character_to_orm(model: Character) -> CharacterORM:
         character_type=str(model.character_type),
         personality=model.personality.model_dump(),
         short_term_goals=model.short_term_goals,
+        goal_lifecycle=(
+            model.goal_lifecycle.model_dump(mode="json") if model.goal_lifecycle else {}
+        ),
         current_emotion=model.current_emotion.model_dump(),
         schedule=model.schedule.model_dump(mode="json"),
         reputation=model.reputation.model_dump(),
@@ -551,6 +564,44 @@ def event_to_orm(model: Event) -> EventORM:
     data = model.model_dump(mode="json")
     data["visibility"] = str(model.visibility)
     return EventORM(**data)
+
+
+def director_event_to_domain(row: DirectorEventORM) -> DirectorEvent:
+    return DirectorEvent(
+        id=row.id,
+        world_id=row.world_id,
+        session_id=row.session_id,
+        created_turn_id=row.created_turn_id,
+        created_turn_number=row.created_turn_number,
+        dedup_key=row.dedup_key,
+        decision_type=DirectorDecisionType(row.decision_type),
+        event_type=row.event_type,
+        status=DirectorEventStatus(row.status),
+        source_plot_thread_id=row.source_plot_thread_id,
+        source_plot_thread_key=row.source_plot_thread_key,
+        source_plot_thread_stage=row.source_plot_thread_stage,
+        participant_keys=list(row.participant_keys or []),
+        participant_ids=list(row.participant_ids or []),
+        location_id=row.location_id,
+        proposal=row.proposal,
+        causal_basis=list(row.causal_basis or []),
+        narrative_purpose=list(row.narrative_purpose or []),
+        urgency=Urgency(row.urgency),
+        tension_delta=row.tension_delta,
+        proposed_at_minute=row.proposed_at_minute,
+        scheduled_for_minute=row.scheduled_for_minute,
+        activated_at_minute=row.activated_at_minute,
+        resolved_at_minute=row.resolved_at_minute,
+        cancelled_at_minute=row.cancelled_at_minute,
+        canonical_event_id=row.canonical_event_id,
+        cancellation_reason=row.cancellation_reason,
+        history=[DirectorEventTransition(**item) for item in (row.history or [])],
+    )
+
+
+def director_event_to_orm(model: DirectorEvent) -> DirectorEventORM:
+    data = model.model_dump(mode="json")
+    return DirectorEventORM(**data)
 
 
 def thread_to_domain(row: PlotThreadORM) -> PlotThread:

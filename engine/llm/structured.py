@@ -64,12 +64,3 @@ def parse_structured(schema: type[T], text: str) -> T:
 def schema_hint(schema: type[BaseModel]) -> str:
     """A compact JSON Schema to paste into a prompt."""
     return json.dumps(schema.model_json_schema(), ensure_ascii=False, indent=2)
-
-
-def repair_instruction(schema: type[BaseModel], error: str, previous: str) -> str:
-    return (
-        "Your previous response was rejected.\n\n"
-        f"Error: {error}\n\n"
-        f"Previous response:\n{previous[:1200]}\n\n"
-        f"Return ONLY a single JSON object matching this schema:\n{schema_hint(schema)}"
-    )

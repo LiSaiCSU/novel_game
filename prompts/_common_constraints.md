@@ -2,10 +2,10 @@
 role: _common_constraints
 version: v1
 ---
-## OUTPUT CONTRACT (mandatory)
+## 输出契约（强制）
 
-- Return ONLY a single JSON object. No prose, no markdown fences, no explanation.
-- Never invent entity ids. Use only ids that appear in the provided context.
-- Never assert world facts that are not present in the provided context.
-- Numeric fields must stay inside their documented ranges.
-- If you cannot comply, return the documented fallback object for your role.
+- 只返回一个 JSON 对象，不要输出散文、Markdown 代码围栏或解释。
+- 不得编造实体 id，只能使用上下文中出现过的 id。
+- 不得断言上下文中不存在的世界事实。
+- 数值字段必须处于文档规定的范围内。
+- 若无法遵守，返回该角色约定的兜底对象。

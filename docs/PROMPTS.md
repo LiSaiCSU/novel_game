@@ -3,6 +3,9 @@
 所有 prompt 以文件形式版本化保存在 `prompts/`，由 `prompts/registry.py` 加载。
 代码中**不内联 prompt 正文**。
 
+所有面向 LLM 的控制说明使用中文；JSON 字段名、枚举值与实体 key 保持机器协议原文。
+结构化输出失败后的 repair instruction 同样使用中文，避免修复轮次把英文语气带入后续输出。
+
 ## 文件清单
 
 | 文件 | role | 输出 schema | 默认 temperature |
@@ -12,6 +15,7 @@
 | `prompts/director_v1.md` | `director` | `DirectorDecision` | 0.6 |
 | `prompts/narrative_v1.md` | `narrative` | free text | 0.85 |
 | `prompts/memory_v1.md` | `memory_extractor` | `MemoryExtraction` | 0.3 |
+| `prompts/structured_repair_v1.md` | `structured_repair` | 目标 schema | 0.0 |
 
 ## Front-matter 规范
 
@@ -56,8 +60,8 @@ max_output_tokens: 900
 `prompts/_common_constraints.md`：
 
 ```text
-- Return ONLY a single JSON object. No prose, no markdown fences, no explanation.
-- Never invent entity ids. Use only ids present in the provided context.
-- Never assert world facts that are not in the provided context.
-- If you cannot comply, return the documented fallback object.
+- 只返回一个 JSON 对象，不要输出散文、Markdown 代码围栏或解释。
+- 不得编造实体 id，只能使用上下文中出现过的 id。
+- 不得断言上下文中不存在的世界事实。
+- 若无法遵守，返回该角色约定的兜底对象。
 ```

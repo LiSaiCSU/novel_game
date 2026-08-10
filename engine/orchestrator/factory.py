@@ -2,9 +2,11 @@
 
 from __future__ import annotations
 
+import json
 from pathlib import Path
 from typing import Any
 
+from engine.actions.autopilot import Autopilot
 from engine.actions.intent_parser import IntentParser
 from engine.characters.npc_agent import NPCAgent
 from engine.contentpack.pack import ContentPack, load_content_pack
@@ -19,13 +21,31 @@ from engine.llm.router import ModelRouter
 from engine.memory.embeddings import build_embedder
 from engine.memory.extractor import MemoryExtractor
 from engine.memory.retrieval import MemoryRetriever
+from engine.narrative.chapter import ChapterRenderer
+from engine.narrative.prologue import Prologue
 from engine.narrative.renderer import NarrativeRenderer
+from engine.orchestrator.interrupt import InterruptDetector
 from engine.orchestrator.orchestrator import GameOrchestrator, OrchestratorDeps
 from engine.relationships.manager import RelationshipManager
 from engine.rules.engine import RuleEngine
 from engine.simulation.schedules import ScheduleService
 from engine.simulation.simulator import WorldSimulator
 from engine.world.consistency import ConsistencyGuard
+from engine.world.steward import WorldSteward
+
+
+def _extra_body(settings: Settings) -> dict[str, Any]:
+    """Vendor request-body switches, parsed from configuration only."""
+    raw = (getattr(settings, "llm_extra_body", "") or "").strip()
+    if not raw:
+        return {}
+    try:
+        parsed = json.loads(raw)
+    except json.JSONDecodeError as exc:
+        raise ValueError(f"LLM_EXTRA_BODY is not valid JSON: {exc}") from exc
+    if not isinstance(parsed, dict):
+        raise ValueError("LLM_EXTRA_BODY must be a JSON object")
+    return parsed
 
 
 def build_orchestrator(
@@ -49,6 +69,8 @@ def build_orchestrator(
         registry,
         max_retries=settings.llm_max_retries,
         max_repairs=settings.llm_max_repairs,
+        extra_body=_extra_body(settings),
+        truncation_retries=settings.llm_truncation_retries,
     )
 
     embedder = build_embedder(settings)
@@ -66,6 +88,14 @@ def build_orchestrator(
             "narrative": settings.ctx_budget_narrative,
             "memory": settings.ctx_budget_memory,
         },
+    )
+
+    narrative = NarrativeRenderer(
+        pack,
+        context_builder,
+        llm,
+        registry,
+        prompt_version=settings.prompt_version_narrative,
     )
 
     deps = OrchestratorDeps(
@@ -102,13 +132,16 @@ def build_orchestrator(
             knowledge,
             max_offline_minutes=settings.sim_max_offline_minutes,
         ),
-        narrative=NarrativeRenderer(
+        narrative=narrative,
+        chapter=ChapterRenderer(
             pack,
             context_builder,
+            narrative,
             llm,
             registry,
-            prompt_version=settings.prompt_version_narrative,
+            prompt_version=settings.prompt_version_chapter,
         ),
+        interrupts=InterruptDetector(pack),
         memory=MemoryExtractor(
             pack,
             context_builder,
@@ -119,6 +152,19 @@ def build_orchestrator(
         ),
         relationships=RelationshipManager(pack),
         guard=ConsistencyGuard(pack),
+        steward=WorldSteward(
+            pack, llm, registry, prompt_version=settings.prompt_version_world_steward
+        ),
+        autopilot=Autopilot(
+            pack, llm, registry, prompt_version=settings.prompt_version_autopilot
+        ),
+        prologue=Prologue(
+            pack,
+            context_builder,
+            llm,
+            registry,
+            prompt_version=settings.prompt_version_prologue,
+        ),
         llm=llm,
         locks=InMemoryLockBackend(),
         idempotency=InMemoryIdempotencyStore(),

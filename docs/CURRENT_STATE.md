@@ -73,10 +73,10 @@ game/
 
 | 项目 | 状态 |
 |---|---|
-| 测试 | `374 passed`（`python -m pytest tests -q`，耗时约 13s） |
+| 测试 | V1 基线 `374 passed`；长期一致性、Rule Plugin、Action Plan 与首次安装审计后 `452 passed` |
 | Lint | `ruff check .` → All checks passed |
-| 类型 | `mypy engine database apps prompts` → no issues in 93 source files |
-| 迁移 | `alembic upgrade head` → 21 张表 |
+| 类型 | `mypy .` → no issues in 103 source files |
+| 迁移 | `alembic upgrade head` → 22 张表 |
 | 内容包 | `cultivation_v1`：13 个 YAML，26 个角色（含玩家）、22 个地点、4 个势力、16 条世界事实、7 条剧情线程、3 个初始任务 |
 | API | 全部 §50 端点 + SSE + Debug + Inspector，已对运行中的服务实测通过 |
 | 前端 | 三栏 UI + 流式叙事 + Debug Panel，由 FastAPI 托管，实测可加载 |
@@ -85,9 +85,9 @@ game/
 测试分布：
 
 ```text
-tests/unit/          307   规则、RNG、时钟、内容包、关系、事件、一致性、
-                           意图解析、知识隔离、架构纯净度守卫
-tests/integration/    50   完整回合（内存后端）、SQL 后端、API（含 SSE、幂等）
+tests/unit/          388   规则、RNG、时钟、Action Plan、内容包/Rule Plugin、关系、事件、一致性、
+                           NPC/Director 生命周期、Memory 事实来源/幂等、意图解析、知识隔离、架构守卫
+tests/integration/    47   完整回合（内存/SQL）、API、Action Plan（含 SSE、幂等与 post-commit 恢复）
 tests/evals/          17   §62 五个场景 + 节奏约束 + 结构化输出纪律
 ```
 

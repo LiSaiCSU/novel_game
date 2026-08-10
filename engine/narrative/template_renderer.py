@@ -126,9 +126,10 @@ class TemplateNarrativeRenderer:
             "neutral": "default",
         }
         key = mapping.get(speech_intent, "default")
+        # Deliberately no `action_label`: an internal enum has no business in
+        # the prose, and a missing placeholder is dropped silently.
         return _safe_format(
-            table.get(key, table.get("default", "")),
-            {"name": npc.display_name, "action_label": speech_intent},
+            table.get(key, table.get("default", "")), {"name": npc.display_name}
         )
 
     # ------------------------------------------------------------------

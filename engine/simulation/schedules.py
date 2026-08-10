@@ -44,6 +44,11 @@ class ScheduleService:
         """Important characters may abandon the routine for their own agenda."""
         if character.character_type is not CharacterType.MAJOR_NPC:
             return None
+        lifecycle = character.goal_lifecycle
+        if lifecycle is not None and lifecycle.current_plan_step is not None:
+            destination = lifecycle.current_plan_step.destination_key
+            if destination and graph.by_key(destination) is not None:
+                return destination
         if not character.short_term_goals:
             return None
         # Goal-directed movement is expressed in content as a schedule slot with

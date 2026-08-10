@@ -84,6 +84,18 @@
 
   <!-- 中：小说剧情区 -->
   <main class="col-main">
+    <!-- 始终可见：现在是什么时候、人在哪里 -->
+    <div class="nowBar" id="nowBar">
+      <span class="phase" id="nowPhase">—</span>
+      <span class="clock" id="nowClock">—</span>
+      <span class="sep">·</span>
+      <span class="date" id="nowDate">—</span>
+      <span class="spacer"></span>
+      <span class="place" id="nowPlace">—</span>
+      <button class="barBtn" id="saveBtn" title="把此刻的世界与故事存下来">存档</button>
+      <button class="barBtn" id="loadBtn" title="回到某个存档">读档</button>
+      <button class="barBtn" id="restartBtn" title="重新开一局">重开</button>
+    </div>
     <div id="story"></div>
   </main>
 
@@ -112,6 +124,18 @@
       <button class="primary" id="sendBtn">行动</button>
     </div>
     <div class="chips" id="choices"></div>
+  </div>
+</div>
+
+<!-- ── 读档 ───────────────────────────────────────────── -->
+<div id="saveModal" class="modal" style="display:none">
+  <div class="modalCard">
+    <header>
+      <strong id="saveModalTitle">读档</strong>
+      <span class="spacer"></span>
+      <button class="chip" id="closeSaves">关闭</button>
+    </header>
+    <div id="saveList" class="muted">加载中……</div>
   </div>
 </div>
 

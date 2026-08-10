@@ -17,6 +17,7 @@ from database.models.orm import (
     CharacterKnowledgeORM,
     CharacterORM,
     CharacterSkillORM,
+    DirectorEventORM,
     EventORM,
     FactionORM,
     FactORM,
@@ -41,6 +42,7 @@ from engine.core.models import (
     Character,
     CharacterKnowledge,
     CharacterSkill,
+    DirectorEvent,
     Event,
     Fact,
     Faction,
@@ -255,7 +257,24 @@ class SqlMemoryRepo(_Repo):
         stmt = stmt.order_by(MemoryORM.created_at_minute.desc()).limit(limit)
         return [m.memory_to_domain(r) for r in await self._scalars(stmt)]
 
+    async def get_by_event(
+        self, owner_character_id: str, related_event_id: str
+    ) -> Memory | None:
+        row = await self._one(
+            sa.select(MemoryORM).where(
+                MemoryORM.owner_character_id == owner_character_id,
+                MemoryORM.related_event_id == related_event_id,
+            )
+        )
+        return m.memory_to_domain(row) if row else None
+
     async def add(self, memory: Memory) -> None:
+        if memory.related_event_id is not None:
+            existing = await self.get_by_event(
+                memory.owner_character_id, memory.related_event_id
+            )
+            if existing is not None:
+                return
         self.s.add(m.memory_to_orm(memory))
 
     async def touch(self, memory_id: str, at_minute: int) -> None:
@@ -390,6 +409,87 @@ class SqlPlotThreadRepo(_Repo):
         return [m.thread_to_domain(r) for r in await self._scalars(stmt)]
 
 
+class SqlDirectorEventRepo(_Repo):
+    async def get(self, director_event_id: str) -> DirectorEvent | None:
+        row = await self.s.get(DirectorEventORM, director_event_id)
+        return m.director_event_to_domain(row) if row else None
+
+    async def get_by_dedup_key(
+        self, world_id: str, dedup_key: str
+    ) -> DirectorEvent | None:
+        row = await self._one(
+            sa.select(DirectorEventORM).where(
+                DirectorEventORM.world_id == world_id,
+                DirectorEventORM.dedup_key == dedup_key,
+            )
+        )
+        return m.director_event_to_domain(row) if row else None
+
+    async def list_for_world(
+        self, world_id: str, *, status: str | None = None, limit: int = 100
+    ) -> list[DirectorEvent]:
+        stmt = (
+            sa.select(DirectorEventORM)
+            .where(DirectorEventORM.world_id == world_id)
+            .order_by(DirectorEventORM.created_turn_number.desc())
+            .limit(limit)
+        )
+        if status:
+            stmt = stmt.where(DirectorEventORM.status == status)
+        return [m.director_event_to_domain(row) for row in await self._scalars(stmt)]
+
+    async def list_due(self, world_id: str, through_minute: int) -> list[DirectorEvent]:
+        rows = await self._scalars(
+            sa.select(DirectorEventORM)
+            .where(
+                DirectorEventORM.world_id == world_id,
+                DirectorEventORM.status == "SCHEDULED",
+                DirectorEventORM.scheduled_for_minute <= through_minute,
+            )
+            .order_by(DirectorEventORM.scheduled_for_minute, DirectorEventORM.id)
+        )
+        return [m.director_event_to_domain(row) for row in rows]
+
+    async def last_for_session(self, session_id: str) -> DirectorEvent | None:
+        row = await self._one(
+            sa.select(DirectorEventORM)
+            .where(DirectorEventORM.session_id == session_id)
+            .order_by(DirectorEventORM.created_turn_number.desc())
+            .limit(1)
+        )
+        return m.director_event_to_domain(row) if row else None
+
+    async def count_resolved_between(
+        self, world_id: str, start_minute: int, end_minute: int
+    ) -> int:
+        value = await self.s.scalar(
+            sa.select(sa.func.count())
+            .select_from(DirectorEventORM)
+            .where(
+                DirectorEventORM.world_id == world_id,
+                DirectorEventORM.status == "RESOLVED",
+                DirectorEventORM.scheduled_for_minute >= start_minute,
+                DirectorEventORM.scheduled_for_minute < end_minute,
+            )
+        )
+        return int(value or 0)
+
+    async def count_booked_between(
+        self, world_id: str, start_minute: int, end_minute: int
+    ) -> int:
+        value = await self.s.scalar(
+            sa.select(sa.func.count())
+            .select_from(DirectorEventORM)
+            .where(
+                DirectorEventORM.world_id == world_id,
+                DirectorEventORM.status.in_(["SCHEDULED", "ACTIVE", "RESOLVED"]),
+                DirectorEventORM.scheduled_for_minute >= start_minute,
+                DirectorEventORM.scheduled_for_minute < end_minute,
+            )
+        )
+        return int(value or 0)
+
+
 class SqlSessionRepo(_Repo):
     async def get(self, session_id: str) -> GameSession | None:
         row = await self.s.get(GameSessionORM, session_id)
@@ -412,18 +512,29 @@ class SqlSessionRepo(_Repo):
 
 class SqlTurnRepo(_Repo):
     async def record(self, turn: dict[str, Any]) -> None:
-        self.s.add(
-            TurnORM(
-                id=str(turn["id"]),
+        turn_id = str(turn["id"])
+        row = await self.s.get(TurnORM, turn_id)
+        if row is None:
+            row = TurnORM(
+                id=turn_id,
                 session_id=str(turn["session_id"]),
                 turn_number=int(turn.get("turn_number", 0)),
                 player_input=str(turn.get("player_input", "")),
                 idempotency_key=turn.get("idempotency_key"),
+                status=str(turn.get("status", "CANONICAL_COMMITTED")),
                 world_minute_before=int(turn.get("world_minute_before", 0)),
                 world_minute_after=int(turn.get("world_minute_after", 0)),
+                canonical_payload=turn.get("canonical_payload", {}),
+                last_error=turn.get("last_error", {}),
                 result=turn.get("result", {}),
             )
-        )
+            self.s.add(row)
+            return
+        row.status = str(turn.get("status", row.status))
+        row.world_minute_after = int(turn.get("world_minute_after", row.world_minute_after))
+        row.canonical_payload = turn.get("canonical_payload", row.canonical_payload)
+        row.last_error = turn.get("last_error", row.last_error)
+        row.result = turn.get("result", row.result)
 
     async def get(self, turn_id: str) -> dict[str, Any] | None:
         row = await self.s.get(TurnORM, turn_id)
@@ -455,15 +566,23 @@ class SqlTurnRepo(_Repo):
         return [m.narrative_to_domain(r) for r in reversed(list(rows))]
 
     async def save_trace(self, trace: dict[str, Any]) -> None:
-        self.s.add(
-            TurnTraceORM(
-                turn_id=str(trace["turn_id"]),
-                request_id=str(trace.get("request_id", "")),
-                session_id=str(trace.get("session_id", "")),
-                world_id=str(trace.get("world_id", "")),
-                payload=trace,
+        turn_id = str(trace["turn_id"])
+        row = await self.s.get(TurnTraceORM, turn_id)
+        if row is None:
+            self.s.add(
+                TurnTraceORM(
+                    turn_id=turn_id,
+                    request_id=str(trace.get("request_id", "")),
+                    session_id=str(trace.get("session_id", "")),
+                    world_id=str(trace.get("world_id", "")),
+                    payload=trace,
+                )
             )
-        )
+            return
+        row.request_id = str(trace.get("request_id", row.request_id))
+        row.session_id = str(trace.get("session_id", row.session_id))
+        row.world_id = str(trace.get("world_id", row.world_id))
+        row.payload = trace
 
     async def get_trace(self, turn_id: str) -> dict[str, Any] | None:
         row = await self.s.get(TurnTraceORM, turn_id)
@@ -477,8 +596,11 @@ def _turn_to_dict(row: TurnORM) -> dict[str, Any]:
         "turn_number": row.turn_number,
         "player_input": row.player_input,
         "idempotency_key": row.idempotency_key,
+        "status": row.status,
         "world_minute_before": row.world_minute_before,
         "world_minute_after": row.world_minute_after,
+        "canonical_payload": row.canonical_payload or {},
+        "last_error": row.last_error or {},
         "result": row.result or {},
     }
 
@@ -501,6 +623,7 @@ class SqlUnitOfWork:
         self.quests = SqlQuestRepo(session)
         self.events = SqlEventRepo(session)
         self.plot_threads = SqlPlotThreadRepo(session)
+        self.director_events = SqlDirectorEventRepo(session)
         self.sessions = SqlSessionRepo(session)
         self.turns = SqlTurnRepo(session)
 
@@ -527,12 +650,33 @@ class SqlUnitOfWork:
             self.session.add(m.relationship_change_to_orm(rc))
         for memory in change_set.memories:
             self.session.add(m.memory_to_orm(memory))
+        for director_event in change_set.director_events:
+            await self._upsert_director_event(director_event)
         await self.session.flush()
+
+    async def _upsert_director_event(self, director_event: DirectorEvent) -> None:
+        row = await self.session.get(DirectorEventORM, director_event.id)
+        incoming = m.director_event_to_orm(director_event)
+        if row is None:
+            self.session.add(incoming)
+            return
+        for column in DirectorEventORM.__table__.columns:
+            if column.name in {"id", "created_at", "updated_at"}:
+                continue
+            setattr(row, column.name, getattr(incoming, column.name))
 
     async def _apply_one(self, change) -> None:
         s = self.session
         kind = change.kind
-        if kind is ChangeKind.CHARACTER_FIELD:
+        if kind is ChangeKind.CHARACTER_SPAWN:
+            spawned_character = Character.model_validate(change.payload["character"])
+            if await s.get(CharacterORM, spawned_character.id) is None:
+                s.add(m.character_to_orm(spawned_character))
+        elif kind is ChangeKind.LOCATION_SPAWN:
+            spawned_location = Location.model_validate(change.payload["location"])
+            if await s.get(LocationORM, spawned_location.id) is None:
+                s.add(m.location_to_orm(spawned_location))
+        elif kind is ChangeKind.CHARACTER_FIELD:
             row = await s.get(CharacterORM, change.target_id)
             if row is None:
                 raise EngineError(f"unknown character {change.target_id}")
@@ -560,6 +704,8 @@ class SqlUnitOfWork:
                     row.short_term_goals = list(change.payload["short_term_goals"])
                 if "long_term_goal" in change.payload:
                     row.long_term_goal = str(change.payload["long_term_goal"])
+                if "goal_lifecycle" in change.payload:
+                    row.goal_lifecycle = dict(change.payload["goal_lifecycle"] or {})
         elif kind is ChangeKind.RELATIONSHIP_DELTA:
             await self._apply_relationship(change)
         elif kind is ChangeKind.INVENTORY_ADD:

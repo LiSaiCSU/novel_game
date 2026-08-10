@@ -26,8 +26,22 @@ from engine.core.config import get_settings  # noqa: E402
 from engine.orchestrator.factory import build_orchestrator  # noqa: E402
 from engine.orchestrator.turn import TurnRequest  # noqa: E402
 from engine.world.seeder import PlayerSpec, build_world  # noqa: E402
+from engine.world.state_view import build_world_state  # noqa: E402
 
 RULE = "-" * 68
+
+
+def _print_beat(beat) -> None:
+    """Show what the scene is waiting on, if it is waiting on anything."""
+    if beat is None:
+        return
+    if beat.question:
+        print(f"\n  {beat.question}")
+    options = [o.label for o in beat.options if o.label]
+    if options:
+        print("  " + "   ".join(f"[{o}]" for o in options))
+    elif not beat.needs_player:
+        print("  [继续]")
 
 
 async def run(args: argparse.Namespace) -> int:
@@ -47,8 +61,12 @@ async def run(args: argparse.Namespace) -> int:
     print(RULE)
     print(f"{pack.name}  |  pack={pack.key}  provider={settings.llm_provider}")
     print(RULE)
-    location = next(loc for loc in bundle.locations if loc.id == bundle.characters[-1].location_id)
-    print(location.description.strip())
+    state = await build_world_state(
+        uow, pack, bundle.world.id, bundle.session.player_character_id
+    )
+    prologue = await orchestrator.open_session(uow, bundle.session, state)
+    print(prologue.text.strip() or (state.location.description if state.location else ""))
+    _print_beat(prologue.beat)
     print(RULE)
 
     last_debug = None
@@ -72,14 +90,13 @@ async def run(args: argparse.Namespace) -> int:
             print(json.dumps(last_debug, ensure_ascii=False, indent=2)[:6000] if last_debug else "(no trace yet)")
             continue
 
-        result = await orchestrator.play_turn(
+        result = await orchestrator.advance(
             uow, TurnRequest(session_id=session_id, text=text, debug=True)
         )
         last_debug = result.debug
         print()
         print(result.narrative)
-        if result.rejected:
-            print(f"[{result.rejected['reason_code']}] {result.rejected['reason']}")
+        _print_beat(result.beat)
         changes = result.state_changes or {}
         if changes.get("character"):
             print(f"  变化: {json.dumps(changes['character'], ensure_ascii=False)}")

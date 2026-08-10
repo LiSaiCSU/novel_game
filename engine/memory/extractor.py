@@ -117,6 +117,12 @@ class MemoryExtractor:
         description = self._describe(event, cast)
         participants = [c for c in cast if c.id == event.actor_id or c.id in event.target_ids]
 
+        # Memory is a rebuildable projection of a canonical Event.  Checking
+        # this before any model or embedding call makes recovery cheap as well
+        # as idempotent; the database constraint is the final concurrency guard.
+        if await uow.memories.get_by_event(owner.id, event.id) is not None:
+            return None, False
+
         extraction: MemoryExtraction | None = None
         degraded = True
         if self.llm is not None and self.registry is not None and self.llm.usable_for(LLMRole.MEMORY):
@@ -149,16 +155,19 @@ class MemoryExtractor:
         if extraction is None:
             extraction = self._heuristic(event, description)
 
-        if not extraction.should_store or not extraction.summary.strip():
+        if not extraction.should_store:
             return None, degraded
 
-        embedding = await self.embedder.embed(extraction.summary)
+        # The model may classify and score the memory, but it cannot author a
+        # new long-term fact.  Persist and embed only the canonical description
+        # derived from the committed event, never the proposed prose summary.
+        embedding = await self.embedder.embed(description)
         memory = Memory(
             world_id=state.world.id,
             owner_character_id=owner.id,
             memory_type=self._layer(extraction, owner, participants),
             memory_tag=extraction.memory_type,
-            summary=extraction.summary.strip(),
+            summary=description,
             importance=max(0.0, min(1.0, extraction.importance)),
             emotional_valence=extraction.emotional_valence,
             related_characters=[c.id for c in participants if c.id != owner.id],

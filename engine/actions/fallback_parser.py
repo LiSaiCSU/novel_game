@@ -30,6 +30,7 @@ class FallbackIntentParser:
         self._time_units: dict[str, int] = vocab.get("time_units", {}) or {}
         self._size_hints: dict[str, list[str]] = vocab.get("request_size_hints", {}) or {}
         self._refusals: list[str] = vocab.get("refusal_words", []) or []
+        self._plan_connectors: list[str] = vocab.get("plan_connectors", []) or []
 
     # ------------------------------------------------------------------
     def parse(self, text: str, state: WorldStateView) -> PlayerIntent:
@@ -39,6 +40,12 @@ class FallbackIntentParser:
             intent.action_type = ActionType.CUSTOM
             intent.confidence = 0.0
             intent.ambiguity = "empty_input"
+            return intent
+
+        if self._contains_multiple_actions(raw):
+            intent.action_type = ActionType.CUSTOM
+            intent.confidence = 0.3
+            intent.ambiguity = "multi_action_requires_stepwise_input"
             return intent
 
         query = self._match_query(raw)
@@ -77,13 +84,17 @@ class FallbackIntentParser:
         intent.confidence = score
 
         # Disambiguate a few overlaps the keyword table cannot settle alone.
+        # Keyword matching cannot say *which* noun it failed on, so the raw line
+        # goes to the steward - it reads the sentence anyway.
         if action_type is ActionType.MOVE and not location_key:
             intent.action_type = ActionType.CUSTOM
             intent.confidence = min(intent.confidence, 0.4)
             intent.ambiguity = "move_target_unknown"
+            intent.unresolved_reference = [raw]
         if action_type in (ActionType.TALK, ActionType.ASK) and intent.target_id is None:
             intent.confidence = min(intent.confidence, 0.4)
             intent.ambiguity = "conversation_target_unknown"
+            intent.unresolved_reference = [raw]
         if action_type is ActionType.USE_SKILL and not skill_key:
             intent.confidence = min(intent.confidence, 0.4)
             intent.ambiguity = "skill_unknown"
@@ -112,6 +123,17 @@ class FallbackIntentParser:
                         continue
         return best[0] if best else None
 
+    def _contains_multiple_actions(self, text: str) -> bool:
+        connectors = [word for word in self._plan_connectors if word and word in text]
+        if not connectors:
+            return False
+        pattern = "|".join(
+            re.escape(word) for word in sorted(connectors, key=len, reverse=True)
+        )
+        clauses = [clause.strip() for clause in re.split(pattern, text) if clause.strip()]
+        matched = [self._match_action(clause)[0] for clause in clauses]
+        return sum(action is not ActionType.CUSTOM for action in matched) >= 2
+
     def _match_action(self, text: str) -> tuple[ActionType, float]:
         best_type = ActionType.CUSTOM
         best_len = 0
@@ -124,7 +146,9 @@ class FallbackIntentParser:
                 if alias and alias in text and len(alias) > best_len:
                     best_type, best_len = candidate, len(alias)
         if best_len == 0:
-            return ActionType.CUSTOM, 0.35
+            # Not one recognised word. Without a model there is nothing here to
+            # act on, and guessing would be worse than letting the scene rest.
+            return ActionType.CUSTOM, 0.2
         # longer keyword match -> more confident, capped well below an LLM's
         return best_type, min(0.9, 0.55 + 0.1 * best_len)
 

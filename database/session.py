@@ -18,7 +18,8 @@ _engine: AsyncEngine | None = None
 _sessionmaker: async_sessionmaker[AsyncSession] | None = None
 
 
-def _prepare_sqlite_path(url: str) -> None:
+def prepare_database_path(url: str) -> None:
+    """Create the parent directory required by a file-backed SQLite URL."""
     if not url.startswith("sqlite"):
         return
     _, _, path = url.partition("///")
@@ -29,7 +30,7 @@ def _prepare_sqlite_path(url: str) -> None:
 
 def create_engine(settings: Settings | None = None) -> AsyncEngine:
     settings = settings or get_settings()
-    _prepare_sqlite_path(settings.database_url)
+    prepare_database_path(settings.database_url)
     return create_async_engine(
         settings.database_url,
         echo=settings.database_echo,

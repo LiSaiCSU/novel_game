@@ -200,7 +200,7 @@ class KnowledgeService:
             per_day = float(spread_cfg.get(str(visibility), 0.0))
             if per_day <= 0:
                 continue
-            chance = 1.0 - (1.0 - per_day) ** min(days_elapsed, 30.0)
+            chance = 1.0 - (1.0 - per_day) ** days_elapsed
             knowers = {row.character_id for row in await uow.knowledge.list_knowers(fact.id)}
             if not knowers:
                 continue

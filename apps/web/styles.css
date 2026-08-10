@@ -219,6 +219,39 @@ button.primary:disabled { opacity: .5; cursor: not-allowed; }
   border-radius: 999px; cursor: pointer; color: var(--ink-soft);
 }
 .chip:hover { border-color: var(--accent); color: var(--accent); }
+.chip.primary { border-color: var(--accent); color: var(--accent); }
+
+/* always-visible clock above the story */
+.nowBar {
+  position: sticky; top: 0; z-index: 5;
+  display: flex; align-items: baseline; gap: 8px;
+  padding: 10px 4px 12px;
+  margin-bottom: 6px;
+  background: var(--bg);
+  border-bottom: 1px solid var(--line);
+  font-size: 12.5px; color: var(--ink-soft);
+}
+.nowBar .phase { font-size: 14px; color: var(--ink); letter-spacing: .06em; }
+.nowBar .clock { font-variant-numeric: tabular-nums; color: var(--accent); }
+.nowBar .sep { opacity: .4; }
+.nowBar .spacer { flex: 1; }
+.nowBar .place { opacity: .8; }
+
+/* shown while a chapter is still being played out */
+.prose p.progress { color: var(--ink-soft); opacity: .6; font-style: italic; }
+
+/* "the story ran on for a while" - quiet, never competing with the prose */
+.runNote {
+  margin-top: 8px; font-size: 11.5px; letter-spacing: .04em;
+  color: var(--ink-soft); opacity: .55;
+}
+
+/* What the scene is waiting on, in the story's own voice. */
+.beatQuestion {
+  flex-basis: 100%;
+  font-size: 13px; color: var(--ink); opacity: .85;
+  margin-bottom: 2px;
+}
 
 .tabs { display: flex; gap: 4px; margin-bottom: 10px; flex-wrap: wrap; }
 .tabs button {
@@ -297,3 +330,38 @@ details.dbg > div { padding: 10px; }
   }
   #story { min-height: 55vh; }
 }
+
+/* save / load / restart, tucked into the clock bar */
+.nowBar .barBtn {
+  font-size: 11.5px; padding: 3px 9px; margin-left: 6px;
+  background: transparent; border: 1px solid var(--line);
+  border-radius: 999px; cursor: pointer; color: var(--ink-soft);
+}
+.nowBar .barBtn:hover { border-color: var(--accent); color: var(--accent); }
+
+.modal {
+  position: fixed; inset: 0; z-index: 50;
+  background: rgba(0,0,0,.45);
+  display: flex; align-items: center; justify-content: center;
+}
+.modalCard {
+  width: min(560px, 92vw); max-height: 76vh; overflow-y: auto;
+  background: var(--panel); border: 1px solid var(--line);
+  border-radius: 10px; padding: 16px;
+}
+.modalCard header { display: flex; align-items: center; gap: 8px; margin-bottom: 12px; }
+.modalCard header .spacer { flex: 1; }
+
+.saveRow {
+  display: flex; gap: 10px; align-items: flex-start;
+  padding: 10px 0; border-bottom: 1px solid var(--line);
+}
+.saveRow:last-child { border-bottom: none; }
+.saveMain { flex: 1; min-width: 0; }
+.saveName { font-size: 14px; color: var(--ink); }
+.saveMeta { font-size: 11.5px; color: var(--ink-soft); opacity: .7; margin-top: 2px; }
+.saveExcerpt {
+  font-size: 12px; color: var(--ink-soft); margin-top: 4px; line-height: 1.6;
+  display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
+}
+.saveActions { display: flex; flex-direction: column; gap: 6px; }

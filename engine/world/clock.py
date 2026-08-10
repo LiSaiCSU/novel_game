@@ -33,6 +33,8 @@ class WorldTime:
             "month": self.month,
             "day": self.day,
             "hour": self.hour,
+            #: The UI shows a wall clock, so the minute has to reach it too.
+            "minute": self.minute,
             "phase": self.phase_key,
             "phase_name": self.phase_name,
             "hour_label": self.hour_label,

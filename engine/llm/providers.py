@@ -12,7 +12,7 @@ import json
 from collections.abc import AsyncIterator
 from typing import Any
 
-from engine.core.errors import LLMError, LLMTimeout
+from engine.core.errors import LLMError, LLMTimeout, LLMTruncated
 from engine.llm.provider import (
     LLMRequest,
     LLMResponse,
@@ -155,6 +155,7 @@ class AnthropicProvider(_HTTPProviderBase):
             payload["system"] = request.system
         if request.stop:
             payload["stop_sequences"] = request.stop
+        payload.update(request.extra_body)
 
         data = await self._post(f"{self.base_url}/v1/messages", self._headers(), payload)
         blocks = data.get("content", []) or []
@@ -231,6 +232,7 @@ class OpenAIProvider(_HTTPProviderBase):
             payload["stop"] = request.stop
         if stream:
             payload["stream"] = True
+        payload.update(request.extra_body)
         return payload
 
     async def generate_text(self, request: LLMRequest) -> LLMResponse:
@@ -239,10 +241,26 @@ class OpenAIProvider(_HTTPProviderBase):
             f"{self.base_url}/chat/completions", self._headers(), self._payload(request)
         )
         choices = data.get("choices", []) or []
-        text = (choices[0].get("message", {}) or {}).get("content", "") if choices else ""
+        message = (choices[0].get("message", {}) or {}) if choices else {}
+        text = message.get("content") or ""
+        finish_reason = str(choices[0].get("finish_reason", "stop")) if choices else "stop"
         usage = data.get("usage", {}) or {}
+
+        # A reasoning model spends `max_tokens` on hidden thought first, so a
+        # budget that looks generous can return an empty answer. That is a
+        # retryable budget problem, not a reason to degrade the whole turn.
+        if not text.strip():
+            reasoned = bool(message.get("reasoning_content"))
+            raise LLMTruncated(
+                f"{self.name} returned no content"
+                + (" (output budget consumed by reasoning)" if reasoned else "")
+                + f" [finish_reason={finish_reason}]",
+                budget=request.max_output_tokens,
+                model=request.model,
+            )
+
         return LLMResponse(
-            text=text or "",
+            text=text,
             model=data.get("model", request.model),
             provider=self.name,
             usage=LLMUsage(
@@ -250,7 +268,7 @@ class OpenAIProvider(_HTTPProviderBase):
                 completion_tokens=int(usage.get("completion_tokens", 0)),
             ),
             latency_ms=watch.elapsed_ms,
-            finish_reason=str(choices[0].get("finish_reason", "stop")) if choices else "stop",
+            finish_reason=finish_reason,
         )
 
     async def stream_text(self, request: LLMRequest) -> AsyncIterator[str]:

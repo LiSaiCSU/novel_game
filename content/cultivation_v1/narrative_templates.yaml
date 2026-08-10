@@ -4,6 +4,10 @@
 
 # NPC 上下文中表达"相信的程度"的措辞。
 # 注意：这里只表达该 NPC 的主观确信度，绝不表达客观真假。
+npc_goal_action:
+  succeeded: "{character}推进了计划：{step}"
+  failed: "{character}尝试推进计划但尚未成功：{step}"
+
 knowledge_hedges:
   KNOWN: "我确知："
   BELIEVED: "我相信："
@@ -86,6 +90,8 @@ action:
   REJECT_QUEST: "你摇头拒绝。"
   USE_SKILL: "你催动{skill}。{effect_note}"
   CUSTOM: "你做了想做的事。"
+  # Nothing was attempted - the scene simply holds. Never an accusation.
+  idle: "你停在原地，念头转了几转，终究没有落到实处。周围的一切照旧。"
   DEFAULT: "事情就这样发生了。"
 
 notes:
@@ -106,11 +112,13 @@ npc:
   approaches: "{name}朝你这边过来。"
   attacks: "{name}向你出手。"
   observes: "{name}打量着你。"
-  default: "{name}{action_label}。"
+  # 兜底句绝不能把内部标签拼进正文（旧版会写出"韩墨neutral。"）。
+  default: "{name}没有多说什么。"
 
 world_event:
   prefix: "与此同时，"
   default: "{description}"
+  natural_death: "{name}寿数已尽，离开了人世。"
 
 duration:
   minute: "{n}刻"

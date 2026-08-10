@@ -71,3 +71,28 @@ def test_chance_bounds() -> None:
     rng = GameRNG("bounds")
     assert all(rng.chance(1.0) for _ in range(20))
     assert not any(rng.chance(0.0) for _ in range(20))
+
+
+def test_aggregate_distributions_are_deterministic_and_single_trace() -> None:
+    first = GameRNG("temporal-jump")
+    second = GameRNG("temporal-jump")
+    assert first.binomial(52_000, 0.08) == second.binomial(52_000, 0.08)
+    assert first.normal(100.0, 4.0) == second.normal(100.0, 4.0)
+    assert [trace.method for trace in first.traces] == ["binomial", "normal"]
+    assert first.traces[0].args["approximate"] is True
+
+
+def test_binomial_respects_exact_bounds() -> None:
+    rng = GameRNG("binomial-bounds")
+    assert rng.binomial(1_000_000, 0.0) == 0
+    assert rng.binomial(1_000_000, 1.0) == 1_000_000
+
+
+def test_geometric_jump_is_bounded_replayable_and_traced_once() -> None:
+    first = GameRNG("goal-retries")
+    second = GameRNG("goal-retries")
+    assert first.geometric(0.2, 100_000) == second.geometric(0.2, 100_000)
+    assert first.geometric(1.0, 100_000) == 1
+    assert first.geometric(0.0, 100_000) is None
+    assert first.geometric(0.5, 0) is None
+    assert [trace.method for trace in first.traces] == ["geometric"] * 4

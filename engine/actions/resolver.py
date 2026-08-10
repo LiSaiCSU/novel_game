@@ -18,7 +18,6 @@ from engine.events.builder import EventBuilder, witnesses_for
 from engine.relationships.manager import RelationshipManager
 from engine.rules.base import RuleContext, clamp, time_cost
 from engine.rules.combat import CombatRules, DetectionRules
-from engine.rules.cultivation import CultivationRules
 from engine.rules.economy import EconomyRules
 from engine.rules.movement import MovementRules
 
@@ -35,6 +34,10 @@ class ActionResolver:
         changes = ChangeSet()
         if not rule_result.allowed:
             return self._rejected(ctx, action, rule_result, changes), changes
+
+        plugin = ctx.pack.rule_plugin
+        if plugin is not None and action.action_type in plugin.handled_actions:
+            return plugin.resolve_action(ctx, action, rule_result, self.events)
 
         handler = getattr(self, f"_do_{action.action_type.lower()}", None)
         if handler is None:
@@ -129,11 +132,15 @@ class ActionResolver:
     ) -> tuple[ActionOutcome, ChangeSet]:
         actor = self._actor(ctx, action)
         result = MovementRules.validate_action(ctx, action)
-        minutes = MovementRules.resolve_cost(
-            ctx, int(result.details.get("minutes", 0)), int(result.details.get("hops", 1))
-        )
         destination = ctx.state.graph.by_id(action.target_location_id)
         origin = ctx.state.graph.by_id(actor.location_id)
+        minutes = MovementRules.resolve_cost(
+            ctx,
+            int(result.details.get("minutes", 0)),
+            int(result.details.get("hops", 1)),
+            origin_key=origin.key if origin else "",
+            destination_key=destination.key if destination else "",
+        )
         if destination is None:
             return self._finish(
                 ctx,
@@ -352,190 +359,6 @@ class ActionResolver:
             importance=ctx.pack.event_importance("CONVERSATION"),
             event_type="CONVERSATION",
         )
-
-    # ------------------------------------------------------------------
-    # Cultivation
-    # ------------------------------------------------------------------
-    def _do_cultivate(
-        self, ctx: RuleContext, action: Action, changes: ChangeSet
-    ) -> tuple[ActionOutcome, ChangeSet]:
-        actor = self._actor(ctx, action)
-        minutes = action.duration_minutes or int(ctx.rule("time_costs.CULTIVATE.default", 240))
-        gain = CultivationRules.calculate_gain(ctx, actor, minutes)
-        if gain.xp_ratio > 0:
-            changes.add(
-                mut.character_field(
-                    actor.id,
-                    "cultivation_progress",
-                    round(gain.progress_before, 6),
-                    round(gain.progress_after, 6),
-                    reason="cultivation",
-                )
-            )
-        regen = float(ctx.rule("combat.spiritual_power_regen_per_hour", 0.08)) * (minutes / 60.0)
-        new_sp = min(actor.max_spiritual_power, int(actor.spiritual_power + actor.max_spiritual_power * regen))
-        if new_sp != actor.spiritual_power:
-            changes.add(
-                mut.character_field(
-                    actor.id, "spiritual_power", actor.spiritual_power, new_sp, reason="cultivation"
-                )
-            )
-        return self._finish(
-            ctx,
-            action,
-            changes,
-            success=True,
-            summary_key="CULTIVATE",
-            minutes=minutes,
-            facts={
-                "minutes": minutes,
-                "progress_before": round(gain.progress_before, 4),
-                "progress_after": round(gain.progress_after, 4),
-                "gain": round(gain.xp_ratio, 4),
-                "diminished": gain.diminished,
-                "breakdown": gain.breakdown,
-                "ready_for_breakthrough": gain.progress_after >= 0.999,
-            },
-            importance=ctx.pack.event_importance("CULTIVATION_SESSION"),
-            event_type="CULTIVATION_SESSION",
-        )
-
-    def _do_breakthrough(
-        self, ctx: RuleContext, action: Action, changes: ChangeSet
-    ) -> tuple[ActionOutcome, ChangeSet]:
-        actor = self._actor(ctx, action)
-        ladder = ctx.pack.realms
-        minutes = action.duration_minutes or int(ctx.rule("time_costs.BREAKTHROUGH.default", 1440))
-
-        pill_bonus = float(action.parameters.get("pill_bonus", 0.0))
-        odds = CultivationRules.calculate_breakthrough(ctx, actor, pill_bonus=pill_bonus)
-        succeeded = ctx.rng.chance(odds.chance)
-
-        before = {
-            "realm": actor.realm,
-            "realm_stage": actor.realm_stage,
-            "display": ladder.display(actor.realm, actor.realm_stage),
-        }
-
-        if succeeded:
-            new_max_hp = ladder.max_health(odds.to_realm, odds.to_stage)
-            new_max_sp = ladder.max_spiritual_power(odds.to_realm, odds.to_stage)
-            changes.extend(
-                [
-                    mut.character_field(actor.id, "realm", actor.realm, odds.to_realm, reason="breakthrough"),
-                    mut.character_field(
-                        actor.id, "realm_stage", actor.realm_stage, odds.to_stage, reason="breakthrough"
-                    ),
-                    mut.character_field(
-                        actor.id, "cultivation_progress", actor.cultivation_progress, 0.0, reason="breakthrough"
-                    ),
-                    mut.character_field(actor.id, "max_health", actor.max_health, new_max_hp, reason="breakthrough"),
-                    mut.character_field(actor.id, "health", actor.health, new_max_hp, reason="breakthrough"),
-                    mut.character_field(
-                        actor.id, "max_spiritual_power", actor.max_spiritual_power, new_max_sp, reason="breakthrough"
-                    ),
-                    mut.character_field(
-                        actor.id, "spiritual_power", actor.spiritual_power, new_max_sp, reason="breakthrough"
-                    ),
-                    mut.character_field(actor.id, "bottleneck", actor.bottleneck, 0.0, reason="breakthrough"),
-                    mut.character_field(
-                        actor.id,
-                        "mental_state",
-                        actor.mental_state,
-                        round(clamp(actor.mental_state + float(ctx.rule("breakthrough.success.mental_state_gain", 0.1)), 0.0, 1.0), 4),
-                        reason="breakthrough",
-                    ),
-                ]
-            )
-            after = {
-                "realm": odds.to_realm,
-                "realm_stage": odds.to_stage,
-                "display": ladder.display(odds.to_realm, odds.to_stage),
-            }
-            facts = {
-                "success": True,
-                "chance": round(odds.chance, 4),
-                "breakdown": odds.breakdown,
-                "realm_before": before["display"],
-                "realm_after": after["display"],
-            }
-            changes.add_event(
-                self.events.build(
-                    "BREAKTHROUGH",
-                    actor_id=actor.id,
-                    location_id=actor.location_id,
-                    before=before,
-                    after=after,
-                    causes=[f"cultivation:{minutes}m"] + ([f"pill_bonus:{pill_bonus}"] if pill_bonus else []),
-                    payload=facts,
-                    world_minute=ctx.now,
-                    rng_seed=ctx.rng.seed_hex,
-                    importance=ctx.pack.event_importance("BREAKTHROUGH"),
-                    witnesses=witnesses_for(
-                        Visibility(ctx.pack.event_visibility("BREAKTHROUGH")),
-                        ctx.state.present_characters,
-                        actor.id,
-                    ),
-                )
-            )
-            return ActionOutcome(
-                action_type=action.action_type,
-                success=True,
-                summary_key="BREAKTHROUGH_SUCCESS",
-                time_cost_minutes=minutes,
-                facts=facts,
-                importance=ctx.pack.event_importance("BREAKTHROUGH"),
-            ), changes
-
-        penalties = CultivationRules.failure_penalties(ctx, actor)
-        health_loss = int(actor.max_health * penalties["health_loss_ratio"])
-        new_health = max(1, actor.health - health_loss)
-        new_injuries = round(clamp(actor.injuries + penalties["injury_gain"], 0.0, 1.0), 4)
-        new_mental = round(clamp(actor.mental_state - penalties["mental_state_loss"], 0.0, 1.0), 4)
-        bottleneck_cap = float((ladder.bottleneck or {}).get("max", 0.6))
-        new_bottleneck = round(clamp(actor.bottleneck + penalties["bottleneck_gain"], 0.0, bottleneck_cap), 4)
-
-        changes.extend(
-            [
-                mut.character_field(actor.id, "health", actor.health, new_health, reason="breakthrough_failed"),
-                mut.character_field(actor.id, "injuries", actor.injuries, new_injuries, reason="breakthrough_failed"),
-                mut.character_field(actor.id, "mental_state", actor.mental_state, new_mental, reason="breakthrough_failed"),
-                mut.character_field(actor.id, "bottleneck", actor.bottleneck, new_bottleneck, reason="breakthrough_failed"),
-            ]
-        )
-        died = ctx.rng.chance(penalties["death_chance"]) if penalties["death_chance"] > 0 else False
-        if died:
-            changes.add(mut.character_death(actor.id, reason="cultivation_backlash"))
-
-        facts = {
-            "success": False,
-            "chance": round(odds.chance, 4),
-            "breakdown": odds.breakdown,
-            "health_loss": health_loss,
-            "injuries": new_injuries,
-            "died": died,
-        }
-        changes.add_event(
-            self.events.build(
-                "BREAKTHROUGH_FAILED",
-                actor_id=actor.id,
-                location_id=actor.location_id,
-                before=before,
-                after=before,
-                payload=facts,
-                world_minute=ctx.now,
-                rng_seed=ctx.rng.seed_hex,
-                importance=ctx.pack.event_importance("BREAKTHROUGH_FAILED"),
-            )
-        )
-        return ActionOutcome(
-            action_type=action.action_type,
-            success=False,
-            summary_key="BREAKTHROUGH_FAILED",
-            time_cost_minutes=minutes,
-            facts=facts,
-            importance=ctx.pack.event_importance("BREAKTHROUGH_FAILED"),
-        ), changes
 
     # ------------------------------------------------------------------
     # Combat

@@ -125,6 +125,7 @@ class CharacterORM(TimestampMixin, Base):
     background: Mapped[str] = mapped_column(sa.Text, default="")
     long_term_goal: Mapped[str] = mapped_column(sa.Text, default="")
     short_term_goals: Mapped[list[str]] = mapped_column(JSONType, default=list)
+    goal_lifecycle: Mapped[dict[str, Any]] = mapped_column(JSONType, default=dict)
     current_emotion: Mapped[dict[str, Any]] = mapped_column(JSONType, default=dict)
     injuries: Mapped[float] = mapped_column(sa.Float, default=0.0)
     schedule: Mapped[dict[str, Any]] = mapped_column(JSONType, default=dict)
@@ -217,6 +218,11 @@ class CharacterKnowledgeORM(Base):
 class MemoryORM(Base):
     __tablename__ = "memories"
     __table_args__ = (
+        sa.UniqueConstraint(
+            "owner_character_id",
+            "related_event_id",
+            name="uq_memory_owner_event",
+        ),
         sa.Index("idx_memories_owner_importance", "owner_character_id", "importance"),
     )
 
@@ -354,6 +360,44 @@ class EventORM(Base):
     created_at: Mapped[datetime] = mapped_column(sa.DateTime(timezone=True), default=utcnow)
 
 
+class DirectorEventORM(TimestampMixin, Base):
+    __tablename__ = "director_events"
+    __table_args__ = (
+        sa.UniqueConstraint("world_id", "dedup_key", name="uq_director_event_world_dedup"),
+        sa.Index("idx_director_events_due", "world_id", "status", "scheduled_for_minute"),
+        sa.Index("idx_director_events_session_turn", "session_id", "created_turn_number"),
+    )
+
+    id: Mapped[str] = mapped_column(sa.String(36), primary_key=True)
+    world_id: Mapped[str] = mapped_column(sa.String(36), index=True)
+    session_id: Mapped[str] = mapped_column(sa.String(36), index=True)
+    created_turn_id: Mapped[str] = mapped_column(sa.String(36), index=True)
+    created_turn_number: Mapped[int] = mapped_column(sa.Integer)
+    dedup_key: Mapped[str] = mapped_column(sa.String(64))
+    decision_type: Mapped[str] = mapped_column(sa.String(40))
+    event_type: Mapped[str] = mapped_column(sa.String(120))
+    status: Mapped[str] = mapped_column(sa.String(40), index=True)
+    source_plot_thread_id: Mapped[str | None] = mapped_column(sa.String(36), nullable=True)
+    source_plot_thread_key: Mapped[str | None] = mapped_column(sa.String(120), nullable=True)
+    source_plot_thread_stage: Mapped[int | None] = mapped_column(sa.Integer, nullable=True)
+    participant_keys: Mapped[list[str]] = mapped_column(JSONType, default=list)
+    participant_ids: Mapped[list[str]] = mapped_column(JSONType, default=list)
+    location_id: Mapped[str | None] = mapped_column(sa.String(36), nullable=True)
+    proposal: Mapped[str] = mapped_column(sa.Text, default="")
+    causal_basis: Mapped[list[str]] = mapped_column(JSONType, default=list)
+    narrative_purpose: Mapped[list[str]] = mapped_column(JSONType, default=list)
+    urgency: Mapped[str] = mapped_column(sa.String(40), default="low")
+    tension_delta: Mapped[float] = mapped_column(sa.Float, default=0.0)
+    proposed_at_minute: Mapped[int] = mapped_column(sa.BigInteger)
+    scheduled_for_minute: Mapped[int] = mapped_column(sa.BigInteger, index=True)
+    activated_at_minute: Mapped[int | None] = mapped_column(sa.BigInteger, nullable=True)
+    resolved_at_minute: Mapped[int | None] = mapped_column(sa.BigInteger, nullable=True)
+    cancelled_at_minute: Mapped[int | None] = mapped_column(sa.BigInteger, nullable=True)
+    canonical_event_id: Mapped[str | None] = mapped_column(sa.String(36), nullable=True)
+    cancellation_reason: Mapped[str] = mapped_column(sa.Text, default="")
+    history: Mapped[list[dict[str, Any]]] = mapped_column(JSONType, default=list)
+
+
 class PlotThreadORM(Base):
     __tablename__ = "plot_threads"
     __table_args__ = (sa.UniqueConstraint("world_id", "key", name="uq_thread_world_key"),)
@@ -398,8 +442,13 @@ class TurnORM(Base):
     turn_number: Mapped[int] = mapped_column(sa.Integer, default=0)
     player_input: Mapped[str] = mapped_column(sa.Text, default="")
     idempotency_key: Mapped[str | None] = mapped_column(sa.String(120), nullable=True)
+    status: Mapped[str] = mapped_column(
+        sa.String(40), default="CANONICAL_COMMITTED", index=True
+    )
     world_minute_before: Mapped[int] = mapped_column(sa.BigInteger, default=0)
     world_minute_after: Mapped[int] = mapped_column(sa.BigInteger, default=0)
+    canonical_payload: Mapped[dict[str, Any]] = mapped_column(JSONType, default=dict)
+    last_error: Mapped[dict[str, Any]] = mapped_column(JSONType, default=dict)
     result: Mapped[dict[str, Any]] = mapped_column(JSONType, default=dict)
     created_at: Mapped[datetime] = mapped_column(sa.DateTime(timezone=True), default=utcnow)
 
@@ -424,4 +473,30 @@ class NarrativeSegmentORM(Base):
     kind: Mapped[str] = mapped_column(sa.String(40), default="scene")
     text: Mapped[str] = mapped_column(sa.Text, default="")
     world_minute: Mapped[int] = mapped_column(sa.BigInteger, default=0)
+    created_at: Mapped[datetime] = mapped_column(sa.DateTime(timezone=True), default=utcnow)
+
+
+class SaveSlotORM(Base):
+    """A restore point: the entire world and story, frozen.
+
+    Rewinding by reversing state changes would mean unwinding an append-only
+    event log, memories, and prose - so a save is simply a complete copy of
+    every row belonging to the session. This world is small enough that the
+    honest approach is also the cheap one.
+    """
+
+    __tablename__ = "save_slots"
+
+    id: Mapped[str] = mapped_column(sa.String(36), primary_key=True)
+    session_id: Mapped[str] = mapped_column(sa.String(36), index=True)
+    world_id: Mapped[str] = mapped_column(sa.String(36), index=True)
+    name: Mapped[str] = mapped_column(sa.String(80), default="")
+    #: Shown in the save list so the player can tell their saves apart.
+    player_name: Mapped[str] = mapped_column(sa.String(80), default="")
+    turn_number: Mapped[int] = mapped_column(sa.Integer, default=0)
+    world_minute: Mapped[int] = mapped_column(sa.BigInteger, default=0)
+    time_label: Mapped[str] = mapped_column(sa.String(120), default="")
+    location_name: Mapped[str] = mapped_column(sa.String(120), default="")
+    excerpt: Mapped[str] = mapped_column(sa.Text, default="")
+    payload: Mapped[dict[str, Any]] = mapped_column(JSONType, default=dict)
     created_at: Mapped[datetime] = mapped_column(sa.DateTime(timezone=True), default=utcnow)

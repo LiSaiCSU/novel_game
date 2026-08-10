@@ -9,7 +9,6 @@ from engine.actions.schema import Action, RuleResult
 from engine.core.types import QUERY_ACTIONS, ActionType, ReasonCode
 from engine.rules.base import RuleContext
 from engine.rules.combat import CombatRules, DetectionRules, SkillRules
-from engine.rules.cultivation import CultivationRules
 from engine.rules.economy import EconomyRules, InventoryRules
 from engine.rules.interaction import FactionRules, InteractionRules
 from engine.rules.movement import LocationRules, MovementRules, TimeRules
@@ -21,7 +20,6 @@ class RuleEngine:
     movement = MovementRules
     location = LocationRules
     time = TimeRules
-    cultivation = CultivationRules
     combat = CombatRules
     skills = SkillRules
     detection = DetectionRules
@@ -43,6 +41,10 @@ class RuleEngine:
         duration_check = TimeRules.validate_duration(ctx, action.duration_minutes)
         if not duration_check.allowed:
             return duration_check
+
+        plugin = ctx.pack.rule_plugin
+        if plugin is not None and action.action_type in plugin.handled_actions:
+            return plugin.validate_action(ctx, action)
 
         if at is ActionType.MOVE:
             return MovementRules.validate_action(ctx, action)
@@ -97,13 +99,6 @@ class RuleEngine:
             return EconomyRules.validate_purchase(
                 ctx, state.inventory, action.item_key, action.quantity, price
             )
-
-        if at is ActionType.CULTIVATE:
-            minutes = action.duration_minutes or int(ctx.rule("time_costs.CULTIVATE.default", 240))
-            return CultivationRules.validate_cultivate(ctx, actor, minutes)
-
-        if at is ActionType.BREAKTHROUGH:
-            return CultivationRules.validate_breakthrough(ctx, actor)
 
         if at is ActionType.STEAL:
             target = state.character_by_id(action.target_id)

@@ -6,31 +6,75 @@ prose about facts; it cannot create, kill, reward, promote or reveal anything.
 
 from __future__ import annotations
 
+import json
 from collections.abc import AsyncIterator
 from dataclasses import dataclass, field
+
+from pydantic import ValidationError
 
 from engine.actions.schema import ActionOutcome
 from engine.contentpack.pack import ContentPack
 from engine.context.builder import ContextBuilder
-from engine.core.errors import LLMError
+from engine.core.errors import LLMError, StructuredOutputError
 from engine.core.logging import get_logger
 from engine.core.models import Character
 from engine.core.ports import UnitOfWork
 from engine.core.types import LLMRole
+from engine.llm.structured import extract_json
 from engine.narrative.style import NarrativeStyle, StyleReport
 from engine.narrative.template_renderer import TemplateNarrativeRenderer
+from engine.orchestrator.turn import StoryBeat
 from engine.world.state_view import WorldStateView
 
 logger = get_logger("narrative")
+
+
+#: The narrator writes prose, then this marker, then a compact JSON beat. One
+#: call produces both, and the prose stays streamable up to the marker.
+BEAT_MARKER = "---BEAT---"
 
 
 @dataclass(slots=True)
 class NarrativeResult:
     text: str
     degraded: bool
+    beat: StoryBeat | None = None
     style_report: StyleReport | None = None
     prompt_tokens: int = 0
     debug: dict[str, object] = field(default_factory=dict)
+
+
+def split_beat(raw: str) -> tuple[str, StoryBeat | None]:
+    """Separate scene prose from the trailing beat block.
+
+    A missing or malformed block is not an error: the caller falls back to the
+    deterministic choices, and the player still gets their scene.
+    """
+    prose, marker, tail = raw.partition(BEAT_MARKER)
+    prose = prose.strip()
+    if not marker:
+        return prose, None
+    try:
+        payload = extract_json(tail)
+        beat = StoryBeat.model_validate(
+            {
+                "needs_player": bool(payload.get("needs_player", True)),
+                "question": str(payload.get("question", "")).strip(),
+                "options": [
+                    {"label": str(o)[:40]} if isinstance(o, str) else
+                    {
+                        "label": str(o.get("label", ""))[:40],
+                        "hint": str(o.get("hint", ""))[:120],
+                    }
+                    for o in (payload.get("options") or [])[:4]
+                ],
+            }
+        )
+    except (StructuredOutputError, ValidationError, AttributeError, TypeError) as exc:
+        logger.warning("narrative beat block unusable: %s", exc)
+        return prose, None
+    beat.options = [o for o in beat.options if o.label]
+    return prose, beat
 
 
 class NarrativeRenderer:
@@ -93,20 +137,23 @@ class NarrativeRenderer:
             self.llm.record_degraded(LLMRole.NARRATIVE, str(exc))
             return NarrativeResult(text=fallback, degraded=True)
 
-        if not text:
+        prose, beat = split_beat(text)
+        if not prose:
             return NarrativeResult(text=fallback, degraded=True)
 
-        report = self.style.review(text, self._known_entities(state))
-        self.style.observe(text)
+        report = self.style.review(prose, self._known_entities(state))
+        self.style.observe(prose)
         return NarrativeResult(
-            text=text,
+            text=prose,
             degraded=False,
+            beat=beat,
             style_report=report,
             prompt_tokens=response.usage.prompt_tokens,
             debug={
                 "overused": report.overused,
                 "unknown_entities": report.unknown_entities,
                 "length": report.length,
+                "beat": beat.model_dump(mode="json") if beat else None,
             },
         )
 
@@ -180,16 +227,12 @@ class NarrativeRenderer:
 
     def _resolved(self, outcome: ActionOutcome) -> str:
         """The canonical result, stated flatly so the model cannot reinterpret it."""
-        lines = [
-            f"action: {outcome.action_type}",
-            f"succeeded: {outcome.success}",
-            f"time cost (minutes): {outcome.time_cost_minutes}",
-        ]
-        for key, value in outcome.facts.items():
-            if key in ("breakdown", "path"):
-                continue
-            lines.append(f"{key}: {value}")
-        return "\n".join(lines)
+        payload = outcome.model_dump(mode="json", exclude={"events"})
+        facts = dict(payload.get("facts") or {})
+        facts.pop("breakdown", None)
+        facts.pop("path", None)
+        payload["facts"] = facts
+        return json.dumps(payload, ensure_ascii=False, indent=2)
 
     def _known_entities(self, state: WorldStateView) -> set[str]:
         names: set[str] = {state.player.name}

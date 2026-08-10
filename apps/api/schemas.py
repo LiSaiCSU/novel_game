@@ -6,6 +6,8 @@ from typing import Any
 
 from pydantic import BaseModel, Field
 
+from engine.orchestrator.turn import StoryBeat
+
 
 class CreateWorldRequest(BaseModel):
     name: str | None = None
@@ -72,6 +74,7 @@ class StartGameResponse(BaseModel):
     world_id: str
     player_character_id: str
     opening: str
+    beat: StoryBeat | None = None
     state: dict[str, Any]
 
 
@@ -144,5 +147,36 @@ class InspectorView(BaseModel):
     characters: list[CharacterSummary]
     factions: list[dict[str, Any]]
     plot_threads: list[dict[str, Any]]
+    director_events: list[dict[str, Any]]
     recent_events: list[EventView]
     tension: dict[str, Any]
+
+
+class CreateSaveRequest(BaseModel):
+    name: str = ""
+
+
+class SaveView(BaseModel):
+    """One restore point, as the save list shows it."""
+
+    id: str
+    session_id: str
+    world_id: str
+    name: str = ""
+    player_name: str = ""
+    turn_number: int = 0
+    time_label: str = ""
+    location_name: str = ""
+    excerpt: str = ""
+    created_at: str | None = None
+
+
+class OpeningView(BaseModel):
+    """The story so far - what a client needs to rejoin a loaded session."""
+
+    session_id: str
+    world_id: str
+    player_character_id: str
+    chapters: list[str] = Field(default_factory=list)
+    beat: StoryBeat | None = None
+    state: dict[str, Any] = Field(default_factory=dict)

@@ -16,10 +16,16 @@ from typing import Any
 
 from pydantic import BaseModel, ConfigDict, Field
 
-from engine.core.models import Event, Memory, RelationshipChange
+from engine.core.models import DirectorEvent, Event, Memory, RelationshipChange
 
 
 class ChangeKind(StrEnum):
+    #: The world gaining a part it did not have. A content pack cannot enumerate
+    #: everything a player will reach for, so the world is allowed to grow -
+    #: but only through this change, in the same transaction as everything else,
+    #: which is what keeps the new part as real and as permanent as the rest.
+    CHARACTER_SPAWN = "CHARACTER_SPAWN"
+    LOCATION_SPAWN = "LOCATION_SPAWN"
     CHARACTER_FIELD = "CHARACTER_FIELD"
     CHARACTER_LOCATION = "CHARACTER_LOCATION"
     CHARACTER_DEATH = "CHARACTER_DEATH"
@@ -68,6 +74,7 @@ class ChangeSet(BaseModel):
     events: list[Event] = Field(default_factory=list)
     relationship_changes: list[RelationshipChange] = Field(default_factory=list)
     memories: list[Memory] = Field(default_factory=list)
+    director_events: list[DirectorEvent] = Field(default_factory=list)
 
     def add(self, change: StateChange) -> None:
         self.changes.append(change)
@@ -79,7 +86,13 @@ class ChangeSet(BaseModel):
         self.events.append(event)
 
     def is_empty(self) -> bool:
-        return not (self.changes or self.events or self.relationship_changes or self.memories)
+        return not (
+            self.changes
+            or self.events
+            or self.relationship_changes
+            or self.memories
+            or self.director_events
+        )
 
     def by_kind(self, kind: ChangeKind) -> list[StateChange]:
         return [c for c in self.changes if c.kind is kind]
@@ -93,12 +106,33 @@ class ChangeSet(BaseModel):
             "events": [e.event_type for e in self.events],
             "relationship_changes": len(self.relationship_changes),
             "memories": len(self.memories),
+            "director_events": len(self.director_events),
         }
 
 
 # ---------------------------------------------------------------------------
 # Constructors. These are the *only* sanctioned way to build a StateChange.
 # ---------------------------------------------------------------------------
+def character_spawn(character: Any, reason: str = "") -> StateChange:
+    """Bring a character into existence. ``character`` is a Character model."""
+    return StateChange(
+        kind=ChangeKind.CHARACTER_SPAWN,
+        target_id=character.id,
+        payload={"character": character.model_dump(mode="json")},
+        reason=reason,
+    )
+
+
+def location_spawn(location: Any, reason: str = "") -> StateChange:
+    """Bring a location into existence. ``location`` is a Location model."""
+    return StateChange(
+        kind=ChangeKind.LOCATION_SPAWN,
+        target_id=location.id,
+        payload={"location": location.model_dump(mode="json")},
+        reason=reason,
+    )
+
+
 def character_field(
     character_id: str, field: str, before: Any, after: Any, reason: str = ""
 ) -> StateChange:
@@ -140,6 +174,17 @@ def character_emotion(character_id: str, emotion: dict[str, Any], reason: str = 
         kind=ChangeKind.CHARACTER_EMOTION,
         target_id=character_id,
         payload=emotion,
+        reason=reason,
+    )
+
+
+def character_goals(
+    character_id: str, payload: dict[str, Any], reason: str = ""
+) -> StateChange:
+    return StateChange(
+        kind=ChangeKind.CHARACTER_GOALS,
+        target_id=character_id,
+        payload=payload,
         reason=reason,
     )
 
