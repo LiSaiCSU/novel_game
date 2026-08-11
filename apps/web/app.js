@@ -3,6 +3,18 @@
 // only coupling, so a Next.js port later needs no backend change.
 
 const $ = (id) => document.getElementById(id);
+
+// `100vh` includes the area behind mobile browser chrome on some engines and
+// behaves inconsistently when the virtual keyboard opens.  Keep the app bound
+// to the actually visible viewport; CSS still supplies a 100dvh fallback.
+function syncViewportHeight() {
+  const height = globalThis.visualViewport?.height || globalThis.innerHeight;
+  if (height) document.documentElement.style.setProperty("--app-height", `${height}px`);
+}
+syncViewportHeight();
+globalThis.addEventListener("resize", syncViewportHeight, { passive: true });
+globalThis.visualViewport?.addEventListener("resize", syncViewportHeight, { passive: true });
+
 const api = (path, options) =>
   fetch(`/api${path}`, {
     headers: { "Content-Type": "application/json" },
@@ -65,6 +77,22 @@ function newIdempotencyKey() {
   }
   return `${Date.now()}-${Math.random().toString(16).slice(2)}`;
 }
+
+function focusPlayerInputIfDesktop() {
+  if (globalThis.matchMedia("(min-width: 721px)").matches) $("playerInput").focus();
+}
+
+function setMobileInfo(open) {
+  $("app").classList.toggle("mobile-info-open", open);
+  $("openMobileInfo").setAttribute("aria-expanded", String(open));
+}
+
+$("openMobileInfo").onclick = () => setMobileInfo(true);
+$("closeMobileInfo").onclick = () => setMobileInfo(false);
+$("mobileInfoBackdrop").onclick = () => setMobileInfo(false);
+document.addEventListener("keydown", (event) => {
+  if (event.key === "Escape") setMobileInfo(false);
+});
 
 // ---------------------------------------------------------------- rendering
 function paragraphs(text) {
@@ -501,7 +529,7 @@ async function submit() {
   } finally {
     store.busy = false;
     $("sendBtn").disabled = false;
-    input.focus();
+    focusPlayerInputIfDesktop();
   }
 }
 
@@ -569,7 +597,7 @@ async function enterGame(opening, state, beat) {
   renderChoices([], beat);
   await refreshState();
   await refreshTab();
-  $("playerInput").focus();
+  focusPlayerInputIfDesktop();
 }
 
 (async function boot() {
@@ -696,6 +724,7 @@ $("restartBtn").onclick = () => {
   $("story").innerHTML = "";
   $("choices").innerHTML = "";
   $("app").style.display = "none";
+  setMobileInfo(false);
   $("setup").style.display = "flex";
 };
 

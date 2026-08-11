@@ -2,7 +2,9 @@
 <html lang="zh-CN">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, interactive-widget=resizes-content">
+<meta name="theme-color" content="#f4f1ea" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#16171a" media="(prefers-color-scheme: dark)">
 <title>七日血契 · AI Narrative World Engine</title>
 <link rel="stylesheet" href="/styles.css">
 </head>
@@ -55,8 +57,13 @@
 <!-- ── 主界面 ─────────────────────────────────────────── -->
 <div class="app" id="app" style="display:none">
 
-  <!-- 左：角色信息 -->
-  <aside class="col-left">
+  <div class="mobileInfoHeader" id="mobileInfo" aria-label="角色与场景信息">
+    <strong>角色与场景</strong>
+    <button class="chip" id="closeMobileInfo" type="button">关闭</button>
+  </div>
+
+    <!-- 左：角色信息 -->
+    <aside class="col-left">
     <section class="panel">
       <h2>角色</h2>
       <div class="kv"><span>姓名</span><span id="cName">—</span></div>
@@ -90,7 +97,7 @@
       </div>
       <div id="tabBody" class="muted">加载中……</div>
     </section>
-  </aside>
+    </aside>
 
   <!-- 中：小说剧情区 -->
   <main class="col-main">
@@ -102,16 +109,20 @@
       <span class="date" id="nowDate">—</span>
       <span class="spacer"></span>
       <span class="place" id="nowPlace">—</span>
-      <button class="barBtn" id="saveBtn" title="把此刻的世界与故事存下来">存档</button>
-      <button class="barBtn" id="loadBtn" title="回到某个存档">读档</button>
-      <button class="barBtn" id="restartBtn" title="重新开一局">重开</button>
+      <div class="barActions">
+        <button class="barBtn mobileInfoBtn" id="openMobileInfo" type="button"
+          aria-controls="mobileInfo" aria-expanded="false">信息</button>
+        <button class="barBtn" id="saveBtn" title="把此刻的世界与故事存下来">存档</button>
+        <button class="barBtn" id="loadBtn" title="回到某个存档">读档</button>
+        <button class="barBtn" id="restartBtn" title="重新开一局">重开</button>
+      </div>
     </div>
     <div id="story"></div>
     <button id="jumpLatest" style="display:none">↓ 回到最新</button>
   </main>
 
-  <!-- 右：当前场景 -->
-  <aside class="col-right">
+    <!-- 右：当前场景 -->
+    <aside class="col-right">
     <section class="panel">
       <h2>此刻</h2>
       <div class="kv"><span>时间</span><span id="sTime">—</span></div>
@@ -124,7 +135,7 @@
       <h2>在场</h2>
       <div id="sNpcs" class="muted">此处只有你一人。</div>
     </section>
-  </aside>
+    </aside>
 
   <!-- 底：输入 -->
   <div class="bottom">
@@ -137,12 +148,16 @@
     </div>
     <div class="inputRow">
       <textarea id="playerInput" rows="1"
-        placeholder="输入任何合理行动，例如：我先把残页拓印一份，再拿原件试探她知道多少。"></textarea>
+        enterkeyhint="send"
+        placeholder="输入行动，例如：去藏经阁查名册"></textarea>
       <button class="primary" id="sendBtn">行动</button>
     </div>
     <div class="chips" id="choices"></div>
   </div>
 </div>
+
+<button id="mobileInfoBackdrop" class="mobileInfoBackdrop" type="button"
+  aria-label="关闭角色与场景信息" tabindex="-1"></button>
 
 <!-- ── 读档 ───────────────────────────────────────────── -->
 <div id="saveModal" class="modal" style="display:none">
