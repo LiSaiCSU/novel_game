@@ -50,6 +50,7 @@ from engine.narrative.renderer import NarrativeRenderer, NarrativeResult
 from engine.orchestrator.interrupt import Interrupt, InterruptDetector, InterruptReason
 from engine.orchestrator.proposals import ProposalValidator
 from engine.orchestrator.turn import (
+    DEFAULT_NARRATIVE_CHARS,
     Choice,
     OrchestratorPlan,
     StageTimer,
@@ -141,7 +142,12 @@ class GameOrchestrator:
 
     # ==================================================================
     async def open_session(
-        self, uow: UnitOfWork, session: GameSession, state: WorldStateView
+        self,
+        uow: UnitOfWork,
+        session: GameSession,
+        state: WorldStateView,
+        *,
+        max_chars: int = DEFAULT_NARRATIVE_CHARS,
     ) -> PrologueResult:
         """Write the first chapter and give the character something to want.
 
@@ -150,7 +156,12 @@ class GameOrchestrator:
         """
         if self.d.prologue is None:
             return PrologueResult(text="", degraded=True)
-        result = await self.d.prologue.write(uow, state)
+        if max_chars == DEFAULT_NARRATIVE_CHARS:
+            # Keep the long-standing two-argument seam convenient for tests
+            # and third-party prologue implementations.
+            result = await self.d.prologue.write(uow, state)
+        else:
+            result = await self.d.prologue.write(uow, state, max_chars=max_chars)
 
         # The opening chapter has to be *recorded*, not just returned. The
         # player's first move is an answer to it, and until this was written
@@ -242,10 +253,15 @@ class GameOrchestrator:
         if request.idempotency_key:
             existing = await uow.turns.get_by_idempotency_key(request.idempotency_key)
             if existing is not None:
+                self._require_same_idempotent_request(request, existing)
                 stored_result = existing.get("result") or {}
                 if stored_result:
                     logger.info("replaying completed run for idempotency key")
                     return TurnResult(**stored_result)
+                # Canonical state already exists.  Even if a prior process
+                # died before closing the whole chapter, the safe recovery is
+                # presentation-only; never execute the player's action again.
+                return await self._resume_or_replay(uow, request, session, existing)
 
         budget = self._advance_budget()
         steps: list[ChapterStep] = []
@@ -350,6 +366,7 @@ class GameOrchestrator:
                 recent_narrative=await self._recent_narrative(uow, session.id),
                 arc=arc,
                 on_chunk=on_chunk,
+                max_chars=request.narrative_max_chars,
             )
         return await self._close_run(
             uow,
@@ -699,6 +716,7 @@ class GameOrchestrator:
                     ),
                     "trace": trace.as_dict(),
                     "debug_requested": request.debug,
+                    "narrative_max_chars": request.narrative_max_chars,
                     "memory_projection": {
                         "status": (
                             "PENDING"
@@ -764,11 +782,7 @@ class GameOrchestrator:
         """Replay a completed result or resume presentation after commit."""
         if stored.get("session_id") != request.session_id:
             raise EngineError("idempotency key belongs to another session")
-        if stored.get("player_input") != request.text:
-            raise EngineError(
-                "idempotency key was already used for different input",
-                turn_id=stored.get("id"),
-            )
+        self._require_same_idempotent_request(request, stored)
 
         status = TurnStatus(stored.get("status", TurnStatus.COMPLETED))
         if status is TurnStatus.COMPLETED:
@@ -819,6 +833,9 @@ class GameOrchestrator:
                 npc_lines=list(payload.get("npc_lines") or []),
                 world_lines=list(payload.get("world_lines") or []),
                 recent_narrative=str(payload.get("recent_narrative") or ""),
+                max_chars=int(
+                    payload.get("narrative_max_chars", DEFAULT_NARRATIVE_CHARS)
+                ),
             )
             after_status = TurnStatus.COMPLETED
             trace.narrative_style = narrative.debug
@@ -898,6 +915,27 @@ class GameOrchestrator:
         await uow.turns.save_trace(trace.as_dict())
         await uow.commit()
         return result
+
+    def _require_same_idempotent_request(
+        self, request: TurnRequest, stored: dict[str, Any]
+    ) -> None:
+        """An idempotency key identifies the full request, not just its text."""
+        if stored.get("player_input") != request.text:
+            raise EngineError(
+                "idempotency key was already used for different input",
+                turn_id=stored.get("id"),
+            )
+        payload = dict(stored.get("canonical_payload") or {})
+        stored_chars = int(
+            payload.get("narrative_max_chars", DEFAULT_NARRATIVE_CHARS)
+        )
+        if stored_chars != request.narrative_max_chars:
+            raise EngineError(
+                "idempotency key was already used with a different narrative length",
+                turn_id=stored.get("id"),
+                stored_narrative_max_chars=stored_chars,
+                requested_narrative_max_chars=request.narrative_max_chars,
+            )
 
     async def _ensure_memory_projection(
         self,
@@ -1208,16 +1246,31 @@ class GameOrchestrator:
                 after.location.name if after.location else None,
             ]
 
+        # Item keys are engine plumbing; the player is shown the item's name.
         inventory: dict[str, list[dict[str, Any]]] = {"added": [], "removed": []}
         for change in change_set.changes:
-            if change.kind is mut.ChangeKind.INVENTORY_ADD:
-                inventory["added"].append(change.payload)
-            elif change.kind is mut.ChangeKind.INVENTORY_REMOVE:
-                inventory["removed"].append(change.payload)
+            if change.kind not in (
+                mut.ChangeKind.INVENTORY_ADD,
+                mut.ChangeKind.INVENTORY_REMOVE,
+            ):
+                continue
+            entry = {
+                **change.payload,
+                "name": after.item_name(str(change.payload.get("item_key", ""))),
+            }
+            bucket = (
+                "added" if change.kind is mut.ChangeKind.INVENTORY_ADD else "removed"
+            )
+            inventory[bucket].append(entry)
 
         relationships = [
             {
                 "with": change.payload.get("other_id"),
+                "with_name": (
+                    c.display_name
+                    if (c := after.character_by_id(change.payload.get("other_id")))
+                    else ""
+                ),
                 "deltas": change.payload.get("deltas"),
                 "reason": change.reason,
             }
@@ -1303,8 +1356,13 @@ class GameOrchestrator:
         present_before = list(before.present_characters)
 
         turn_id = str(uuid.uuid4())
+        # For a player-led step ``text`` is the request.  For a bare
+        # "continue" the first step is forced by the autopilot, but the row
+        # carrying the run's idempotency key must still preserve the original
+        # request identity so a retry can validate and replay it.
+        stored_text = text or (request.text if idempotency_key else "")
         step_request = request.model_copy(
-            update={"text": text, "idempotency_key": idempotency_key}
+            update={"text": stored_text, "idempotency_key": idempotency_key}
         )
         result = await self._run(
             uow,
@@ -1322,6 +1380,10 @@ class GameOrchestrator:
 
         stored = await uow.turns.get(turn_id)
         assert stored is not None
+        # A multi-step chapter postpones prose, not canonical projections.
+        # Every step may create events known to an NPC, so project those
+        # memories before the run can mark the turn complete.
+        stored = await self._ensure_memory_projection(uow, session, stored, timer=timer)
         payload = dict(stored.get("canonical_payload") or {})
         outcome = ActionOutcome.model_validate(payload["outcome"])
         change_set = ChangeSet.model_validate(payload["change_set"])

@@ -27,6 +27,17 @@ items:
     description: 修真界通行的硬通货，一枚下品灵石够外门弟子过三天。
     effects: {}
 
+  - key: blood_roster_fragment
+    name: 血名册残页
+    type: misc
+    rarity: epic
+    value: 0
+    stackable: false
+    description: |
+      半张被血浸过的薄绢，第一行写着持有者的名字，背面残留赤霞秘境的阵纹。
+      它既是有人栽赃的证物，也是追查血祭阵眼的第一条线索。
+    effects: {reveals_fact: fact_player_named_as_sacrifice, quest_item: true}
+
   - key: qi_recovery_pill
     name: 回气丹
     type: pill

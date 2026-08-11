@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>青云界 · AI Narrative World Engine</title>
+<title>七日血契 · AI Narrative World Engine</title>
 <link rel="stylesheet" href="/styles.css">
 </head>
 <body>
@@ -11,10 +11,10 @@
 <!-- ── 开局 ───────────────────────────────────────────── -->
 <div id="setup">
   <div class="card">
-    <h1>青云界</h1>
+    <h1>七日血契</h1>
     <p class="sub">
-      这不是一个"AI 帮你写小说"的程序。<br>
-      世界先存在，剧情是你与它交互之后产生的结果。
+      你的名字出现在血祭名册第一行。七日后秘境开启，名册上的人都会死。<br>
+      查出栽赃者、选择是否信任搭档，或者走出自己的活路。
     </p>
 
     <label for="pName">道号 / 姓名</label>
@@ -24,14 +24,24 @@
     <select id="pGender">
       <option value="male">男</option>
       <option value="female">女</option>
-      <option value="unspecified">不明</option>
     </select>
 
     <label for="pAge">年龄</label>
-    <input id="pAge" type="number" value="18" min="10" max="80">
+    <input id="pAge" type="number" value="18" min="18" max="80">
 
     <label for="pBackground">出身（可留空）</label>
     <input id="pBackground" maxlength="40" placeholder="例如：石溪村猎户之子" autocomplete="off">
+
+    <div class="lengthControl setupLength">
+      <label for="setupLengthRange">单次剧情长度上限</label>
+      <div class="lengthInputs">
+        <input id="setupLengthRange" type="range" min="400" max="4000" step="100" value="1800">
+        <input id="setupLengthMax" type="number" min="400" max="4000" step="100" value="1800"
+          aria-label="单次剧情最大字数">
+        <span>字</span>
+      </div>
+      <small>建议 1200—2200 字；越长生成越慢。它只控制叙事，不改变世界结果。</small>
+    </div>
 
     <button class="primary" id="startBtn">踏入青云宗外门</button>
     <div class="err" id="setupErr"></div>
@@ -97,6 +107,7 @@
       <button class="barBtn" id="restartBtn" title="重新开一局">重开</button>
     </div>
     <div id="story"></div>
+    <button id="jumpLatest" style="display:none">↓ 回到最新</button>
   </main>
 
   <!-- 右：当前场景 -->
@@ -106,7 +117,6 @@
       <div class="kv"><span>时间</span><span id="sTime">—</span></div>
       <div class="kv"><span>地点</span><span id="sPlace">—</span></div>
       <div class="kv"><span>凶险</span><span id="sDanger">—</span></div>
-      <div class="kv"><span>张力</span><span id="sTension">—</span></div>
       <p class="muted" id="sDesc" style="margin:10px 0 0; line-height:1.75"></p>
     </section>
 
@@ -118,9 +128,16 @@
 
   <!-- 底：输入 -->
   <div class="bottom">
+    <div class="lengthControl compactLength">
+      <label for="turnLengthRange">剧情上限</label>
+      <input id="turnLengthRange" type="range" min="400" max="4000" step="100" value="1800">
+      <input id="turnLengthMax" type="number" min="400" max="4000" step="100" value="1800"
+        aria-label="本回合剧情最大字数">
+      <span>字</span>
+    </div>
     <div class="inputRow">
       <textarea id="playerInput" rows="1"
-        placeholder="你可以输入任何合理行为，例如：我假装喝醉，去药铺套老板的话，问问昨天有没有人买噬魂草。"></textarea>
+        placeholder="输入任何合理行动，例如：我先把残页拓印一份，再拿原件试探她知道多少。"></textarea>
       <button class="primary" id="sendBtn">行动</button>
     </div>
     <div class="chips" id="choices"></div>

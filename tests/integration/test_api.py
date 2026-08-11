@@ -99,6 +99,54 @@ async def test_start_game_then_act(client) -> None:
     assert history.json()[0]["player_input"] == "我环顾四周"
 
 
+async def test_start_requires_an_adult_and_selects_the_gendered_lead(client) -> None:
+    underage = await client.post(
+        "/api/game/start",
+        json={"player_name": "未成年", "gender": "male", "age": 17},
+    )
+    assert underage.status_code == 422
+
+    started = await client.post(
+        "/api/game/start",
+        json={
+            "player_name": "云枝",
+            "gender": "female",
+            "age": 23,
+            "world_seed": "female-lead-api",
+            "narrative_max_chars": 1200,
+        },
+    )
+    assert started.status_code == 200, started.text
+    assert any(
+        character["name"] == "赵无极"
+        for character in started.json()["state"]["present_characters"]
+    )
+    relationships = (
+        await client.get(f"/api/game/{started.json()['session_id']}/relationships")
+    ).json()
+    lead = next(row for row in relationships if row["with_key"] == "zhao_wuji")
+    assert "co_protagonist" in lead["tags"]
+
+
+async def test_api_validates_narrative_length_limits(client) -> None:
+    too_short = await client.post(
+        "/api/game/start",
+        json={"player_name": "沈砚", "narrative_max_chars": 399},
+    )
+    assert too_short.status_code == 422
+
+    started = await client.post(
+        "/api/game/start",
+        json={"player_name": "沈砚", "world_seed": "length-api"},
+    )
+    session_id = started.json()["session_id"]
+    too_long = await client.post(
+        f"/api/game/{session_id}/action",
+        json={"text": "继续", "narrative_max_chars": 4001},
+    )
+    assert too_long.status_code == 422
+
+
 async def test_action_response_shape_matches_the_contract(client) -> None:
     started = await client.post(
         "/api/game/start", json={"player_name": "沈砚", "world_seed": "api-test-2"}
@@ -157,6 +205,27 @@ async def test_sse_stream_settles_the_world_before_narrating(client) -> None:
     # State always precedes the terminator, and the terminator is last.
     assert body.index("event: state") < body.index("event: done")
     assert body.rstrip().endswith("}") and "event: done" in body
+
+
+async def test_sse_idempotency_header_replays_without_advancing_twice(client) -> None:
+    started = await client.post(
+        "/api/game/start", json={"player_name": "沈砚", "world_seed": "sse-idem"}
+    )
+    session_id = started.json()["session_id"]
+    headers = {"Idempotency-Key": "sse-header-key"}
+    first = await client.post(
+        f"/api/game/{session_id}/action/stream",
+        json={"text": "我环顾四周"},
+        headers=headers,
+    )
+    second = await client.post(
+        f"/api/game/{session_id}/action/stream",
+        json={"text": "我环顾四周"},
+        headers=headers,
+    )
+    assert first.status_code == second.status_code == 200
+    state = await client.get(f"/api/game/{session_id}/state")
+    assert state.json()["session"]["turn_number"] == 1
 
 
 async def test_inventory_relationships_and_quests(client) -> None:

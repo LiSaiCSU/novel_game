@@ -165,6 +165,10 @@ class ContextBuilder:
             "tense": str(style.get("tense", "")),
             "target_length": str(style.get("target_length", 300)),
             "tone": str(style.get("tone", "")),
+            "relationship_focus": self._story_focus(state),
+            "relationship_boundaries": (
+                str(self.pack.story.get("relationship_boundaries", "")) or "-"
+            ),
             "location": state.location.name if state.location else "-",
             "time_label": state.time.label,
             "atmosphere": state.location.description if state.location else "-",
@@ -221,6 +225,7 @@ class ContextBuilder:
                 f"{state.player.name} / {ladder.display(state.player.realm, state.player.realm_stage)} "
                 f"/ {state.location.name if state.location else '-'}"
             ),
+            "story_focus": self._story_focus(state),
             "major_characters": self._major_characters(majors, ladder),
             "plot_threads": self._threads(threads),
             "recent_events": self._events(important, with_ids=True),
@@ -241,6 +246,38 @@ class ContextBuilder:
             built, self.budget("director", 3000), ("recent_events", "major_characters")
         )
         return built
+
+    async def visible_player_facts(
+        self, uow: UnitOfWork, state: WorldStateView
+    ) -> str:
+        """Render only facts canonically known or believed by the player."""
+        beliefs = await self.knowledge.beliefs_of(uow, state.player.id)
+        return self._beliefs(beliefs, self.knowledge.hedges())
+
+    def _story_focus(self, state: WorldStateView) -> str:
+        story = self.pack.story
+        profile = self.pack.vocabulary.get("profile_labels", {}) or {}
+        lead_key = str(state.player.metadata.get("story_lead_key", ""))
+        lead = state.character_by_key(lead_key)
+        raw = self.pack.character(lead_key) if lead_key else None
+        if lead is not None:
+            lead_text = (
+                f"{profile.get('story_lead', 'story_lead')}: {lead.display_name}"
+                f" ({lead.key}, {lead.age}{profile.get('age_suffix', '')})"
+            )
+        elif raw is not None:
+            lead_text = (
+                f"{profile.get('story_lead', 'story_lead')}: {raw.get('name', lead_key)}"
+                f" ({lead_key}, {raw.get('age', '-')}{profile.get('age_suffix', '')}; "
+                f"{profile.get('absent', 'absent')})"
+            )
+        else:
+            lead_text = str(profile.get("no_story_lead", "-"))
+        return "\n".join(
+            part
+            for part in (str(story.get("premise", "")).strip(), lead_text)
+            if part
+        ) or "-"
 
     # ==================================================================
     # Intent
@@ -325,7 +362,9 @@ class ContextBuilder:
                 continue
             bits = [
                 c.display_name,
-                c.gender,
+                (self.pack.vocabulary.get("profile_labels", {}) or {}).get(
+                    c.gender, c.gender
+                ),
                 self.pack.realms.display(c.realm, c.realm_stage),
             ]
             if c.faction_rank:
@@ -335,7 +374,10 @@ class ContextBuilder:
                 row += f" | {c.personality.speech_style}"
             rel = state.relationship_with(c.id)
             if rel is not None:
-                dims = ", ".join(f"{k}={v}" for k, v in rel.as_dict().items() if v)
+                labels = self.pack.vocabulary.get("relationship_labels", {}) or {}
+                dims = ", ".join(
+                    f"{labels.get(k, k)}={v}" for k, v in rel.as_dict().items() if v
+                )
                 if dims:
                     row += f" | {dims}"
             rows.append(f"- {row}")

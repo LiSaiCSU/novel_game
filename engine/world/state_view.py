@@ -79,6 +79,17 @@ class WorldStateView:
     def location_key(self) -> str:
         return self.location.key if self.location else ""
 
+    def faction_name(self, faction_key: str | None) -> str:
+        """A faction's readable name. Keys are for the engine, not the reader."""
+        if not faction_key:
+            return ""
+        faction = self.factions.get(faction_key)
+        return faction.name if faction else faction_key
+
+    def item_name(self, item_key: str) -> str:
+        item = self.pack.item(item_key) or {}
+        return str(item.get("name") or item_key)
+
     def scene_summary(self) -> dict[str, Any]:
         return {
             "location": {
@@ -94,7 +105,9 @@ class WorldStateView:
                     "key": c.key,
                     "name": c.display_name,
                     "realm": self.pack.realms.display(c.realm, c.realm_stage),
-                    "faction": c.faction_key,
+                    # The player reads this. Internal keys never leave here.
+                    "faction": self.faction_name(c.faction_key),
+                    "title": c.faction_rank or "",
                 }
                 for c in self.present_characters
             ],

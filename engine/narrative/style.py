@@ -17,6 +17,11 @@ from collections import deque
 from dataclasses import dataclass, field
 
 from engine.contentpack.pack import ContentPack
+from engine.orchestrator.turn import (
+    DEFAULT_NARRATIVE_CHARS,
+    MAX_NARRATIVE_CHARS,
+    MIN_NARRATIVE_CHARS,
+)
 
 # A run of 2-4 CJK characters: the shape a proper noun usually takes.
 # Built from code points so the engine source itself carries no world text.
@@ -93,12 +98,45 @@ class NarrativeStyle:
         report.needs_rewrite = len(report.overused) >= 2
         return report
 
-    def as_prompt_vars(self) -> dict[str, str]:
+    def as_prompt_vars(self, max_chars: int | None = None) -> dict[str, str]:
+        ceiling = max(
+            MIN_NARRATIVE_CHARS,
+            min(MAX_NARRATIVE_CHARS, int(max_chars or self.target_length)),
+        )
+        # Aim a little below the hard ceiling so the model has room to finish
+        # a sentence and append the machine-readable BEAT block.
+        target = max(MIN_NARRATIVE_CHARS, min(ceiling, int(ceiling * 0.85)))
         return {
             "language": self.language,
             "person": self.person,
             "tense": self.tense,
             "tone": self.tone,
-            "target_length": str(self.target_length),
+            "target_length": str(target),
+            "max_length": str(ceiling),
             "avoid_phrases": self.avoid_list(),
         }
+
+    @staticmethod
+    def output_token_budget(max_chars: int, declared: int | None) -> int:
+        """Translate a Chinese-character ceiling into a conservative token cap."""
+        ceiling = max(MIN_NARRATIVE_CHARS, min(MAX_NARRATIVE_CHARS, int(max_chars)))
+        calculated = max(900, int(ceiling * 1.4) + 400)
+        return min(calculated, declared) if declared else calculated
+
+    @staticmethod
+    def enforce_max_chars(text: str, max_chars: int) -> str:
+        """Keep generated prose under the user ceiling at a natural boundary."""
+        ceiling = max(
+            MIN_NARRATIVE_CHARS,
+            min(MAX_NARRATIVE_CHARS, int(max_chars or DEFAULT_NARRATIVE_CHARS)),
+        )
+        if len(text) <= ceiling:
+            return text.strip()
+        clipped = text[:ceiling]
+        # Streaming callers retain this much tail, so choosing a boundary in
+        # this window never requires retracting text already shown to a reader.
+        floor = max(0, ceiling - 180)
+        boundary = max(clipped.rfind(mark) for mark in ("。", "！", "？", "\n"))
+        if boundary >= floor:
+            clipped = clipped[: boundary + 1]
+        return clipped.rstrip()

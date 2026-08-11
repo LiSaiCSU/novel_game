@@ -312,19 +312,90 @@ class CompatibleProvider(OpenAIProvider):
         return bool(self.base_url)
 
 
+class ProviderPool:
+    """Distribute concurrent calls across equivalent API credentials.
+
+    A pool does not make dependent stages of one turn parallel.  It prevents
+    independent requests (including different players/roles) from all hitting
+    the same per-key concurrency or rate limit.
+    """
+
+    name = "pool"
+
+    def __init__(self, providers: list[Any]) -> None:
+        if not providers:
+            raise ValueError("ProviderPool requires at least one provider")
+        self.providers = providers
+        self.name = f"{getattr(providers[0], 'name', 'http')}-pool"
+        self._next = 0
+
+    @property
+    def available(self) -> bool:
+        return any(bool(getattr(provider, "available", False)) for provider in self.providers)
+
+    def _take(self) -> Any:
+        # There is no await between reading and incrementing, so this is safe
+        # under asyncio's cooperative scheduler without a lock.
+        provider = self.providers[self._next % len(self.providers)]
+        self._next += 1
+        return provider
+
+    async def generate_text(self, request: LLMRequest) -> LLMResponse:
+        return await self._take().generate_text(request)
+
+    async def stream_text(self, request: LLMRequest) -> AsyncIterator[str]:
+        provider = self._take()
+        async for chunk in provider.stream_text(request):
+            yield chunk
+
+
+def _split_api_keys(raw: str) -> list[str]:
+    """Parse a simple key pool while preserving first-seen order."""
+    keys: list[str] = []
+    for part in raw.replace("\r", "\n").replace(";", ",").replace("\n", ",").split(","):
+        key = part.strip()
+        if key and key not in keys:
+            keys.append(key)
+    return keys
+
+
+def _keys(settings: Any, legacy_name: str) -> list[str]:
+    pooled = _split_api_keys(getattr(settings, "llm_api_keys", "") or "")
+    single = (getattr(settings, "llm_api_key", "") or "").strip()
+    if single and single not in pooled:
+        pooled.append(single)
+    if pooled:
+        return pooled
+    legacy = (getattr(settings, legacy_name, "") or "").strip()
+    return [legacy] if legacy else []
+
+
+def _pool(providers: list[Any]) -> Any:
+    return providers[0] if len(providers) == 1 else ProviderPool(providers)
+
+
 def build_provider(settings: Any) -> Any:
     """Factory driven purely by configuration."""
     kind = (getattr(settings, "llm_provider", "null") or "null").lower()
     timeout = float(getattr(settings, "llm_timeout_seconds", 60.0))
     if kind == "anthropic":
-        return AnthropicProvider(
-            settings.anthropic_api_key, settings.anthropic_base_url, timeout
-        )
+        keys = _keys(settings, "anthropic_api_key")
+        base_url = getattr(settings, "llm_base_url", "") or settings.anthropic_base_url
+        return _pool([AnthropicProvider(key, base_url, timeout) for key in keys]) if keys else NullProvider()
     if kind == "openai":
-        return OpenAIProvider(settings.openai_api_key, settings.openai_base_url, timeout)
+        keys = _keys(settings, "openai_api_key")
+        base_url = getattr(settings, "llm_base_url", "") or settings.openai_base_url
+        return _pool([OpenAIProvider(key, base_url, timeout) for key in keys]) if keys else NullProvider()
     if kind == "compatible":
-        return CompatibleProvider(
-            settings.compatible_api_key, settings.compatible_base_url, timeout
+        keys = _keys(settings, "compatible_api_key")
+        base_url = getattr(settings, "llm_base_url", "") or settings.compatible_base_url
+        # Local OpenAI-compatible servers often require no credential.
+        if base_url and not keys:
+            keys = [""]
+        return (
+            _pool([CompatibleProvider(key, base_url, timeout) for key in keys])
+            if keys
+            else NullProvider()
         )
     if kind == "scripted":
         return ScriptedProvider()

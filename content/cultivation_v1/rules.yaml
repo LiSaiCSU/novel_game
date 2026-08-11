@@ -224,10 +224,12 @@ narrative:
     - {key: climax,   name: 高潮, min: 80, max: 101}
 
 director:
-  min_interval_turns: 3
-  cooldown_after_event_turns: 4
-  high_importance_override: 0.7
-  max_events_per_day: 2
+  # 这是一部连载小说，不是模拟器：宁可事多，不可平淡。
+  # 主角连着两三步顺风顺水，读者就走了。
+  min_interval_turns: 1
+  cooldown_after_event_turns: 1
+  high_importance_override: 0.5
+  max_events_per_day: 6
   max_schedule_delay_minutes: 518400  # 最多提前安排一年
   allowed_event_types:
     - NPC_RETURN
@@ -263,7 +265,7 @@ auto_advance:
 
 # ── 世界模拟 LOD §31 ────────────────────────────────────────
 simulation:
-  npc_goal_action_interval_minutes: 10080  # 重要 NPC 每周获得一次计划行动机会
+  npc_goal_action_interval_minutes: 1440   # 重要 NPC 每日获得一次计划行动机会；长跨度仍聚合计算
   lod0_radius: 0                    # 玩家所在地点
   lod1_radius: 1                    # 相邻地点
   tick_minutes:

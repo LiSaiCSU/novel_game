@@ -67,37 +67,37 @@ game/
 
 ---
 
-## 5. V1 完成后的实际状态（2026-08-09）
+## 5. 当前实际状态（2026-08-10）
 
 全部 10 个 Phase 已实现、运行并通过验证。以下为**实测**结果，非计划：
 
 | 项目 | 状态 |
 |---|---|
-| 测试 | V1 基线 `374 passed`；长期一致性、Rule Plugin、Action Plan 与首次安装审计后 `452 passed` |
+| 测试 | `527 passed`（unit 446 / integration 64 / evals 17） |
 | Lint | `ruff check .` → All checks passed |
-| 类型 | `mypy .` → no issues in 103 source files |
+| 类型 | `mypy .` → no issues in 109 source files |
 | 迁移 | `alembic upgrade head` → 22 张表 |
-| 内容包 | `cultivation_v1`：13 个 YAML，26 个角色（含玩家）、22 个地点、4 个势力、16 条世界事实、7 条剧情线程、3 个初始任务 |
+| 内容包 | `cultivation_v1`《七日血契》：26 个角色（含玩家）、20 个地点、4 个势力、21 条世界事实、4 条剧情线程、3 个初始任务、4 个 canonical 倒计时事件 |
 | API | 全部 §50 端点 + SSE + Debug + Inspector，已对运行中的服务实测通过 |
-| 前端 | 三栏 UI + 流式叙事 + Debug Panel，由 FastAPI 托管，实测可加载 |
+| 前端 | 三栏 UI + 流式叙事 + Debug Panel + 400—4000 字长度双向控件，由 FastAPI 托管 |
 | LLM | 未配置（`LLM_PROVIDER=null`），全链路走确定性 fallback；接入模型只需改 `.env` |
 
 测试分布：
 
 ```text
-tests/unit/          388   规则、RNG、时钟、Action Plan、内容包/Rule Plugin、关系、事件、一致性、
+tests/unit/          446   规则、RNG、时钟、Action Plan、内容包/Rule Plugin、关系、事件、一致性、
                            NPC/Director 生命周期、Memory 事实来源/幂等、意图解析、知识隔离、架构守卫
-tests/integration/    47   完整回合（内存/SQL）、API、Action Plan（含 SSE、幂等与 post-commit 恢复）
+tests/integration/    64   完整回合（内存/SQL）、API、Action Plan（含 SSE、幂等与 post-commit 恢复）
 tests/evals/          17   §62 五个场景 + 节奏约束 + 结构化输出纪律
 ```
 
 ### 已知限制
 
-1. **未接过真实模型**：所有 LLM 路径以 `ScriptedProvider` / `NullProvider` 验证。
+1. **本轮未做真实模型文风 A/B**：所有关键 LLM 契约以 `ScriptedProvider` / `NullProvider` 验证；
    Prompt 本身的措辞质量需要真实 A/B 才能评估。
 2. **pgvector 未实机验证**：向量列在 PostgreSQL 分支的 DDL 已写好但只在 SQLite
    上跑过；首次部署 Postgres 时需要执行 `CREATE EXTENSION vector` 并补一条迁移
    把 `memories.embedding` 从 JSON 改为 `vector(N)` + ivfflat 索引。
-3. **前端非 Next.js**：见 D-002。宿主机无 Node，无法构建或运行。
+3. **前端非 Next.js**：见 D-002。当前零构建 SPA 保持 REST/SSE 解耦，可直接由 FastAPI 托管。
 4. **单进程锁**：`InMemoryLockBackend` 只在单进程内正确；多 worker 部署需切 Redis。
-5. **世界规模为 V1 纵切**：22 个地点、26 个角色。背景 NPC 模板已就绪但尚未批量生成。
+5. **世界规模为 V1 纵切**：20 个地点、26 个角色。背景 NPC 模板已就绪但尚未批量生成。

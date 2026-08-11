@@ -33,6 +33,14 @@ class Settings(BaseSettings):
 
     # --- LLM ---------------------------------------------------------------
     llm_provider: str = "null"
+    # Unified configuration for the common case.  One model can serve every
+    # text role, while the role-specific fields below remain optional
+    # overrides.  LLM_API_KEYS accepts comma/newline separated keys and is
+    # used as a round-robin pool for concurrent requests.
+    llm_api_key: str = ""
+    llm_api_keys: str = ""
+    llm_base_url: str = ""
+    llm_model: str = ""
     anthropic_api_key: str = ""
     anthropic_base_url: str = ""
     openai_api_key: str = ""

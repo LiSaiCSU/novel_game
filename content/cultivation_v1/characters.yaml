@@ -684,6 +684,12 @@ characters:
 # 初始关系（有向：who 对 whom 的看法）
 # ══════════════════════════════════════════════════════════════
 relationships:
+  # 本局主线搭档。条件由通用引擎按玩家性别应用；未选定时不强塞感情线。
+  - {a: player, b: lin_qingxue, when_player_gender: male, tags: [co_protagonist, romance_candidate], affection: 3, trust: -5, respect: 8, fear: 0, hatred: 0, suspicion: 20, dependency: 8, familiarity: 10}
+  - {a: lin_qingxue, b: player, when_player_gender: male, tags: [co_protagonist, romance_candidate], affection: 0, trust: -8, respect: 5, fear: 0, hatred: 0, suspicion: 28, dependency: 10, familiarity: 10}
+  - {a: player, b: zhao_wuji, when_player_gender: female, tags: [co_protagonist, romance_candidate], affection: -3, trust: -8, respect: 10, fear: 0, hatred: 0, suspicion: 22, dependency: 8, familiarity: 14}
+  - {a: zhao_wuji, b: player, when_player_gender: female, tags: [co_protagonist, romance_candidate], affection: -6, trust: -10, respect: 9, fear: 0, hatred: 0, suspicion: 26, dependency: 10, familiarity: 14}
+
   - {a: lin_qingxue, b: lu_xuan, affection: 30, trust: 55, respect: 78, fear: 12, hatred: 0, suspicion: 5, dependency: 20, familiarity: 60}
   - {a: lin_qingxue, b: great_elder_shen, affection: 12, trust: 22, respect: 45, fear: 8, hatred: 0, suspicion: 38, dependency: 2, familiarity: 55}
   - {a: lin_qingxue, b: zhao_wuji, affection: -8, trust: 15, respect: 20, fear: 0, hatred: 4, suspicion: 12, dependency: 0, familiarity: 62}

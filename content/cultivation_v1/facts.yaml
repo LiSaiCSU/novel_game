@@ -3,6 +3,63 @@
 # 关键：truth_value 永远不会进入 NPC 上下文。NPC 只看到 initial_knowledge 中属于自己的那条。
 
 facts:
+  - key: fact_crimson_realm_opens_in_seven_days
+    statement: 赤霞秘境将在七日后提前开启
+    truth_value: true
+    scope: WORLD
+    sensitivity: 0.1
+    related: [crimson_cloud_realm, qingyun_sect, blood_demon_sect]
+    initial_knowledge:
+      player: {state: KNOWN, confidence: 1.0, source: DOCUMENT}
+      lin_qingxue: {state: KNOWN, confidence: 1.0, source: DOCUMENT}
+      zhao_wuji: {state: KNOWN, confidence: 1.0, source: DOCUMENT}
+      lu_xuan: {state: KNOWN, confidence: 1.0, source: SEED}
+      great_elder_shen: {state: KNOWN, confidence: 1.0, source: SEED}
+      elder_qin: {state: KNOWN, confidence: 1.0, source: SEED}
+      xue_hong: {state: KNOWN, confidence: 1.0, source: SEED}
+      blood_agent_wu: {state: KNOWN, confidence: 1.0, source: TOLD_BY}
+
+  - key: fact_player_named_as_sacrifice
+    statement: 玩家持有的血名册残页第一行写着玩家的名字，背面带有赤霞秘境阵纹
+    truth_value: true
+    scope: PERSONAL
+    sensitivity: 0.9
+    subject: player
+    related: [player, great_elder_shen, blood_agent_wu, crimson_cloud_realm]
+    initial_knowledge:
+      player: {state: KNOWN, confidence: 1.0, source: WITNESSED}
+      great_elder_shen: {state: KNOWN, confidence: 1.0, source: SEED}
+      blood_agent_wu: {state: KNOWN, confidence: 1.0, source: WITNESSED}
+      lin_qingxue: {state: SUSPECTED, confidence: 0.65, source: INFERRED}
+      zhao_wuji: {state: SUSPECTED, confidence: 0.55, source: INFERRED}
+
+  - key: fact_enforcement_search_order
+    statement: 执法堂已收到搜查玩家住处并追缴血名册残页的命令
+    truth_value: true
+    scope: FACTION
+    sensitivity: 0.65
+    related: [player, elder_qin, great_elder_shen, guard_ma]
+    initial_knowledge:
+      player: {state: KNOWN, confidence: 0.9, source: TOLD_BY}
+      elder_qin: {state: KNOWN, confidence: 1.0, source: DOCUMENT}
+      great_elder_shen: {state: KNOWN, confidence: 1.0, source: DOCUMENT}
+      guard_ma: {state: KNOWN, confidence: 1.0, source: TOLD_BY}
+      lin_qingxue: {state: BELIEVED, confidence: 0.85, source: TOLD_BY}
+      zhao_wuji: {state: BELIEVED, confidence: 0.75, source: RUMOR}
+
+  - key: fact_roster_is_array_key
+    statement: 血名册并非普通名单，而是启动赤霞秘境血祭阵的分片阵契
+    truth_value: true
+    scope: WORLD
+    sensitivity: 1.0
+    related: [crimson_cloud_realm, great_elder_shen, xue_hong]
+    initial_knowledge:
+      great_elder_shen: {state: KNOWN, confidence: 1.0, source: SEED}
+      xue_hong: {state: KNOWN, confidence: 1.0, source: SEED}
+      blood_agent_wu: {state: BELIEVED, confidence: 0.8, source: TOLD_BY}
+      lin_qingxue: {state: SUSPECTED, confidence: 0.45, source: INFERRED}
+      zhao_wuji: {state: SUSPECTED, confidence: 0.35, source: INFERRED}
+
   - key: fact_shen_is_blood_agent
     statement: 大长老沈鹤是血魔宗埋在青云宗的卧底
     truth_value: true
@@ -86,7 +143,7 @@ facts:
       blood_agent_wu: {state: KNOWN, confidence: 1.0, source: WITNESSED}
 
   - key: fact_crimson_realm_opens_soon
-    statement: 赤霞秘境将在数月后开启
+    statement: 宗门原本以为赤霞秘境还要数月才会开启
     truth_value: true
     scope: WORLD
     sensitivity: 0.0
@@ -150,6 +207,18 @@ facts:
     initial_knowledge:
       zhao_wuji: {state: KNOWN, confidence: 1.0, source: WITNESSED}
       rogue_cultivator_du: {state: KNOWN, confidence: 1.0, source: WITNESSED}
+
+  - key: fact_zhao_pill_is_array_seal
+    statement: 赵无极买到的丹药内藏着血祭阵的一枚活人封印，靠近血名册会发热
+    truth_value: true
+    scope: PERSONAL
+    sensitivity: 0.95
+    subject: zhao_wuji
+    related: [zhao_wuji, great_elder_shen, blood_agent_wu, crimson_cloud_realm]
+    initial_knowledge:
+      great_elder_shen: {state: KNOWN, confidence: 1.0, source: SEED}
+      blood_agent_wu: {state: KNOWN, confidence: 0.9, source: TOLD_BY}
+      zhao_wuji: {state: SUSPECTED, confidence: 0.45, source: INFERRED}
 
   - key: fact_guard_ma_took_bribes
     statement: 马奎收钱在夜里提前离岗过

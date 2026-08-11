@@ -28,7 +28,11 @@ def _decision(participant_key: str, *, delay: int = 0) -> DirectorDecision:
 
 
 def test_content_scheduled_beats_are_seeded_as_canonical_lifecycles(bundle) -> None:
-    assert len(bundle.director_events) == 2
+    declared = sum(
+        len(thread.metadata.get("scheduled_beats", []) or [])
+        for thread in bundle.plot_threads
+    )
+    assert len(bundle.director_events) == declared == 4
     assert all(event.status is DirectorEventStatus.SCHEDULED for event in bundle.director_events)
     assert all(
         [transition.status for transition in event.history]
@@ -161,26 +165,28 @@ async def test_due_event_is_cancelled_if_participant_died(
 async def test_temporal_jump_resolves_sequential_content_beats_without_ticks(
     pack, uow, state
 ) -> None:
-    thread = await uow.plot_threads.get_by_key(state.world.id, "thread_crimson_realm")
+    thread = await uow.plot_threads.get_by_key(
+        state.world.id, "thread_seven_day_blood_contract"
+    )
     assert thread is not None
     changes = ChangeSet()
     simulator = WorldSimulator(pack, ScheduleService(pack), KnowledgeService(pack))
     report = await simulator.advance(
         uow,
         state,
-        259_200,
+        10_080,
         changes,
         rng=GameRNG("scheduled-beats"),
         event_builder=EventBuilder(pack, state.world.id, "jump-turn"),
     )
 
-    assert report.director_events_resolved == 2
+    assert report.director_events_resolved == 4
     assert report.director_events_cancelled == 0
     assert report.director_tension_delta == 0.0  # seeded beats do not force tension
     resolved = [
         event for event in changes.director_events if event.status is DirectorEventStatus.RESOLVED
     ]
-    assert len(resolved) == 2
+    assert len(resolved) == 4
     assert all(
         len(event.history) == 4 and event.canonical_event_id
         for event in resolved
@@ -191,16 +197,22 @@ async def test_temporal_jump_resolves_sequential_content_beats_without_ticks(
         if change.target_id == thread.id
     ]
     assert [change.payload["stage"] for change in thread_changes] == [
-        thread.stage + 1,
-        thread.stage + 2,
+        thread.stage + offset for offset in range(1, 5)
     ]
 
 
 async def test_due_events_over_daily_cap_are_rescheduled_without_day_ticks(
-    pack, uow, state, session_id
+    pack, uow, state, store, session_id
 ) -> None:
     participant = state.present_characters[0]
     service = DirectorEventLifecycleService(pack)
+    # Pin the cap here rather than inheriting the pack's. This test is about
+    # the overflow mechanism, not about how eventful the shipped world is -
+    # tuning the content pack should never make it silently stop testing it.
+    service.max_events_per_day = 2
+    # This test owns its schedule; shipped story obligations are covered by
+    # the preceding tests and must not affect the aggregate report here.
+    store.director_events.clear()
     scheduled = []
     for index in range(3):
         decision = _decision(participant.key, delay=60)

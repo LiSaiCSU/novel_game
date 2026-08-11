@@ -1,6 +1,6 @@
 # AI Narrative World Engine
 
-一个 **AI 原生开放世界文字 RPG 引擎**。第一个内容包是修仙 / 玄幻的《青云界》。
+一个 **AI 原生开放世界文字 RPG 引擎**。当前修仙内容包是快节奏悬疑冒险《七日血契》。
 
 > 世界先存在，剧情是玩家与世界交互之后产生的结果。
 >
@@ -23,8 +23,8 @@ conda create -n game python=3.12 -y
 conda activate game
 pip install -e ".[dev,postgres,redis,llm]"      # 或 pip install -r 见 pyproject
 
-# 2. 配置
-cp .env.example .env            # 默认 LLM_PROVIDER=null，无需任何 API Key 即可运行
+# 2. 配置（PowerShell）
+Copy-Item .env.example .env     # 默认 LLM_PROVIDER=null，无需任何 API Key 即可运行
 
 # 3. 建表
 python -m alembic upgrade head
@@ -37,21 +37,37 @@ python -m uvicorn apps.api.main:app --reload
 #   → http://127.0.0.1:8000
 ```
 
+浏览器必须打开 `.env` 中 `API_PORT` 对应的端口。例如 `API_PORT=8012` 时访问
+`http://127.0.0.1:8012`，不要固定使用 8000。若看到 `ERR_EMPTY_RESPONSE`，先确认运行
+uvicorn 的终端没有退出或报错，再访问同一端口的 `/api/health`；它应返回
+`{"status":"ok"}`。如果该端口已被其他程序占用，请更换 `API_PORT` 后重启 uvicorn。
+
 不配置任何 LLM 也能完整游玩：意图解析、NPC 决策、剧情导演、叙事全部有确定性
-实现兜底（见 `docs/DECISIONS.md` D-007）。想接入模型，只需在 `.env` 里填
-`LLM_PROVIDER` 与各角色的模型名——**代码中不出现任何模型名**。
+实现兜底（见 `docs/DECISIONS.md` D-007）。通常只需在 `.env` 填统一的 API 地址、
+密钥和默认模型；所有文字角色会沿用 `LLM_MODEL`：
 
 ```dotenv
-LLM_PROVIDER=anthropic
-ANTHROPIC_API_KEY=sk-...
-INTENT_MODEL=...
-NPC_MODEL=...
-NPC_MAJOR_MODEL=...
-DIRECTOR_MODEL=...
-STEWARD_MODEL=...          # 留空则沿用 INTENT_MODEL
-NARRATIVE_MODEL=...
-MEMORY_MODEL=...
+LLM_PROVIDER=compatible
+LLM_API_KEY=替换成你的密钥
+LLM_BASE_URL=https://example.com/v1
+LLM_MODEL=替换成模型名
 ```
+
+有多个同服务的 Key 时，把 `LLM_API_KEY` 换成逗号分隔的 `LLM_API_KEYS`。请求会轮询
+分配到 Key 池，能提高多玩家、多会话或多个独立角色请求的并发吞吐，并绕开单 Key 的并发
+上限；同一回合的意图、裁决和叙事互相依赖，因此多个 Key 不会把这些阶段变成并行执行。
+
+```dotenv
+LLM_PROVIDER=compatible
+LLM_API_KEYS=key-1,key-2,key-3
+LLM_BASE_URL=https://example.com/v1
+LLM_MODEL=默认模型名
+```
+
+如果某个角色需要不同模型，只填写对应的覆盖项，例如 `NARRATIVE_MODEL=更强的写作模型`；
+`INTENT_MODEL`、`NPC_MODEL`、`NPC_MAJOR_MODEL`、`DIRECTOR_MODEL`、`STEWARD_MODEL` 和
+`MEMORY_MODEL` 都是可选项。旧的 `COMPATIBLE_API_KEY`、`OPENAI_API_KEY`、
+`ANTHROPIC_API_KEY` 及各角色模型配置仍然兼容。修改 `.env` 后需要重启 uvicorn。
 
 ### 用推理模型时先关掉思考模式
 
@@ -77,7 +93,8 @@ LLM_EXTRA_BODY={"thinking":{"type":"disabled"}}
 
 一次输入不是一个动作，是一段故事：玩家说一句话，角色会**接着这句话**把该做的事做完——
 赶路、打听、把答应的差事办完——直到出现只有玩家能回答的事才停下来（`advance()`），
-整段写成一章 1500—2500 字的小说。
+整段写成一章小说。网页中的滑杆与最大值输入可把单次正文上限设为 400—4000 字（默认 1800）；
+上限会参与模型 token 预算，并由程序在中文句末再次钳制，只影响表达长度，不改变已提交的世界结果。
 
 因此这三件事被当作硬要求，而不是锦上添花：
 
@@ -154,11 +171,13 @@ LLM_EXTRA_BODY={"thinking":{"type":"disabled"}}
 | 玩家不必逐句下指令 | `Autopilot` 一次规划数步，代角色把该做的事做完 | `tests/integration/test_advance.py` |
 | 该停的时候一定会停 | `InterruptDetector` 按已提交事实判定，不问模型 | `tests/unit/test_interrupt.py` |
 | 玩家说的话不会被覆盖 | 规划以玩家原话为第一原则，纯「继续」才用角色目标 | `tests/integration/test_advance.py` |
-| 开局就知道自己的来历 | 第一章交代出身、家里出的事、怎么进的宗门 | `prompts/prologue_v1.md` |
+| 开局立刻进入主线 | 血名册、七日倒计时与搜查令先作为物品/Fact 落库，序章只能复述玩家已知事实 | `tests/unit/test_story_setup.py` |
 | 人物前后不会判若两人 | 在场人物带身份/性别/说话方式进入叙事上下文 | `prompts/chapter_v1.md` |
 | 读档能真正回到那一刻 | 存档是整份世界拷贝，连读过的章节一起还原 | `tests/integration/test_database.py` |
 | 合并叙事不合并审计 | 每一步仍是独立提交、独立留痕的 Turn | `tests/integration/test_advance.py` |
 | 玩家上来知道自己是谁、能干什么 | `Prologue` 写开局并写入 `short_term_goals` | `tests/unit/test_story_beat.py` |
+| 男女玩家都有共同主角 | 男性玩家匹配林清雪、女性玩家匹配赵无极；关系、位置和标签进入 canonical state | `tests/unit/test_story_setup.py` |
+| 成年关系不污染主线 | 玩家年龄至少 18；允许克制、非露骨且基于同意的关系张力，玩家可拒绝 | `content/cultivation_v1/pack.yaml` |
 
 | 承诺 | 实现 | 验证 |
 |---|---|---|

@@ -23,7 +23,7 @@ from engine.core.types import LLMRole
 from engine.llm.structured import extract_json
 from engine.narrative.style import NarrativeStyle, StyleReport
 from engine.narrative.template_renderer import TemplateNarrativeRenderer
-from engine.orchestrator.turn import StoryBeat
+from engine.orchestrator.turn import DEFAULT_NARRATIVE_CHARS, StoryBeat
 from engine.world.state_view import WorldStateView
 
 logger = get_logger("narrative")
@@ -106,6 +106,7 @@ class NarrativeRenderer:
         world_lines: list[str],
         recent_narrative: str,
         npc_decisions_summary: str = "",
+        max_chars: int = DEFAULT_NARRATIVE_CHARS,
     ) -> NarrativeResult:
         fallback = self.template.render(
             state, outcome, npc_lines=npc_lines, world_lines=world_lines
@@ -127,9 +128,16 @@ class NarrativeRenderer:
                 npc_decisions_summary=npc_decisions_summary or "\n".join(npc_lines),
                 world_lines=world_lines,
                 recent_narrative=recent_narrative,
+                max_chars=max_chars,
             )
             response = await self.llm.generate_text(
-                LLMRole.NARRATIVE, prompt, prompt_version=self.prompt_version
+                LLMRole.NARRATIVE,
+                prompt,
+                prompt_version=self.prompt_version,
+                max_output_tokens=self.style.output_token_budget(
+                    max_chars,
+                    self.registry.get("narrative", self.prompt_version).max_output_tokens,
+                ),
             )
             text = response.text.strip()
         except LLMError as exc:
@@ -138,6 +146,7 @@ class NarrativeRenderer:
             return NarrativeResult(text=fallback, degraded=True)
 
         prose, beat = split_beat(text)
+        prose = self.style.enforce_max_chars(prose, max_chars)
         if not prose:
             return NarrativeResult(text=fallback, degraded=True)
 
@@ -168,6 +177,7 @@ class NarrativeRenderer:
         npc_lines: list[str],
         world_lines: list[str],
         recent_narrative: str,
+        max_chars: int = DEFAULT_NARRATIVE_CHARS,
     ) -> AsyncIterator[str]:
         """Streaming is presentation only - the world was committed before this."""
         if not (self.llm and self.registry and self.llm.usable_for(LLMRole.NARRATIVE)):
@@ -183,11 +193,18 @@ class NarrativeRenderer:
             npc_decisions_summary="\n".join(npc_lines),
             world_lines=world_lines,
             recent_narrative=recent_narrative,
+            max_chars=max_chars,
         )
         collected: list[str] = []
         try:
             async for chunk in self.llm.stream_text(
-                LLMRole.NARRATIVE, prompt, prompt_version=self.prompt_version
+                LLMRole.NARRATIVE,
+                prompt,
+                prompt_version=self.prompt_version,
+                max_output_tokens=self.style.output_token_budget(
+                    max_chars,
+                    self.registry.get("narrative", self.prompt_version).max_output_tokens,
+                ),
             ):
                 collected.append(chunk)
                 yield chunk
@@ -211,6 +228,7 @@ class NarrativeRenderer:
         npc_decisions_summary: str,
         world_lines: list[str],
         recent_narrative: str,
+        max_chars: int,
     ) -> str:
         context = await self.context_builder.build_narrative_context(
             uow,
@@ -222,7 +240,7 @@ class NarrativeRenderer:
             recent_narrative=recent_narrative,
         )
         sections = dict(context.sections)
-        sections.update(self.style.as_prompt_vars())
+        sections.update(self.style.as_prompt_vars(max_chars))
         return self.registry.render("narrative", self.prompt_version, **sections)
 
     def _resolved(self, outcome: ActionOutcome) -> str:

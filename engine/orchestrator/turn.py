@@ -13,6 +13,14 @@ from engine.actions.schema import Action, ActionOutcome, PlayerIntent, RuleResul
 from engine.llm.provider import LLMCallRecord
 from engine.rng.game_rng import RngTrace
 
+# Narrative length is a presentation preference, but once a canonical turn is
+# committed the preference belongs to that request.  A retry may rewrite the
+# prose; it may not silently turn the same idempotent request into a different
+# chapter contract.
+MIN_NARRATIVE_CHARS = 400
+DEFAULT_NARRATIVE_CHARS = 1800
+MAX_NARRATIVE_CHARS = 4000
+
 
 class TurnStatus(StrEnum):
     """Persisted turn lifecycle.
@@ -51,6 +59,11 @@ class TurnRequest(BaseModel):
     idempotency_key: str | None = None
     request_id: str = ""
     debug: bool = False
+    narrative_max_chars: int = Field(
+        default=DEFAULT_NARRATIVE_CHARS,
+        ge=MIN_NARRATIVE_CHARS,
+        le=MAX_NARRATIVE_CHARS,
+    )
 
 
 class Choice(BaseModel):

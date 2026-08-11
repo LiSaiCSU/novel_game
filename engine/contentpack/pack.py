@@ -88,6 +88,11 @@ class ContentPack:
         return dict(self.meta.get("narrative_style", {}))
 
     @property
+    def story(self) -> dict[str, Any]:
+        """Optional story-facing configuration, kept out of the engine core."""
+        return dict(self.meta.get("story", {}))
+
+    @property
     def vocabulary(self) -> dict[str, Any]:
         return dict(self.meta.get("vocabulary", {}))
 
@@ -186,6 +191,21 @@ def validate_content_pack(pack: ContentPack) -> None:
     thread_keys = {t.get("key") for t in pack.plot_threads}
     director_event_types = set(pack.rule("director.allowed_event_types", []) or [])
 
+    for gender, lead_key in (pack.story.get("lead_by_player_gender", {}) or {}).items():
+        if gender not in {"male", "female"}:
+            problems.append(f"story lead mapping has unsupported player gender {gender!r}")
+        if lead_key not in character_keys:
+            problems.append(f"story lead mapping references unknown character {lead_key!r}")
+    for lead_key in (pack.story.get("lead_goals", {}) or {}):
+        if lead_key not in character_keys:
+            problems.append(f"story lead goal references unknown character {lead_key!r}")
+    opening_location = pack.story.get("opening_location")
+    if opening_location and opening_location not in location_keys:
+        problems.append(f"story opening_location is unknown: {opening_location!r}")
+    for entry in pack.story.get("starter_items", []) or []:
+        if entry.get("key") not in item_keys:
+            problems.append(f"story starter item is unknown: {entry.get('key')!r}")
+
     if len(location_keys) != len(pack.locations):
         problems.append("duplicate location keys")
     if len(character_keys) != len(pack.characters):
@@ -226,17 +246,20 @@ def validate_content_pack(pack: ContentPack) -> None:
 
     for rel in pack.seed_relationships:
         for side in ("a", "b"):
-            if rel.get(side) not in character_keys:
+            if rel.get(side) not in character_keys | {"player"}:
                 problems.append(f"relationship references unknown character {rel.get(side)!r}")
+        condition = rel.get("when_player_gender")
+        if condition is not None and condition not in {"male", "female"}:
+            problems.append(f"relationship has unsupported player gender {condition!r}")
 
     for f in pack.facts:
         for holder in (f.get("initial_knowledge") or {}):
-            if holder not in character_keys:
+            if holder not in character_keys | {"player"}:
                 problems.append(f"fact {f.get('key')} grants knowledge to unknown {holder!r}")
 
     for thread in pack.plot_threads:
         for participant in thread.get("participants", []) or []:
-            if participant not in character_keys:
+            if participant not in character_keys | {"player"}:
                 problems.append(
                     f"plot thread {thread.get('key')} names unknown participant {participant!r}"
                 )
@@ -255,7 +278,7 @@ def validate_content_pack(pack: ContentPack) -> None:
                     f"plot thread {thread.get('key')} schedules disallowed event {event_type!r}"
                 )
             for participant in beat.get("participants", []) or []:
-                if participant not in character_keys:
+                if participant not in character_keys | {"player"}:
                     problems.append(
                         f"plot thread {thread.get('key')} schedules unknown participant "
                         f"{participant!r}"

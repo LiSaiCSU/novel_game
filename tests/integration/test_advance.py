@@ -118,6 +118,27 @@ async def test_a_bare_continue_leaves_the_planner_to_its_own_judgement(
     assert orchestrator.d.autopilot.player_input == ""
 
 
+async def test_a_bare_continue_with_an_idempotency_key_replays_the_same_run(
+    orchestrator, uow, bundle
+) -> None:
+    orchestrator.d.autopilot = _ScriptedAutopilot(
+        orchestrator,
+        [AutopilotChoice(action_type=ActionType.OBSERVE, reason="看看四周")],
+    )
+    request = TurnRequest(
+        session_id=bundle.session.id,
+        text="继续",
+        idempotency_key="continue-run-key",
+        narrative_max_chars=1200,
+    )
+
+    first = await orchestrator.advance(uow, request)
+    second = await orchestrator.advance(uow, request)
+
+    assert second.turn_id == first.turn_id
+    assert second.narrative == first.narrative
+
+
 async def test_the_run_is_recorded_as_one_chapter_not_one_segment_per_step(
     orchestrator, uow, bundle
 ) -> None:
@@ -151,6 +172,11 @@ async def test_every_step_of_a_run_is_a_committed_turn(
     turns = await uow.turns.list_for_session(bundle.session.id, limit=50)
     assert len(turns) == result.steps
     assert all(t["status"] == str(TurnStatus.COMPLETED) for t in turns)
+    assert all(
+        (t.get("canonical_payload") or {}).get("memory_projection", {}).get("status")
+        in {"COMPLETED", "NOT_REQUIRED"}
+        for t in turns
+    )
 
 
 async def test_the_run_stops_at_the_first_thing_that_needs_the_player(
@@ -221,6 +247,42 @@ async def test_a_retried_request_replays_instead_of_acting_again(
     assert first.turn_id == second.turn_id
     assert first.narrative == second.narrative
     assert store.worlds[bundle.world.id].current_minute == minute
+
+
+async def test_advance_rejects_reusing_a_key_for_different_input_or_length(
+    orchestrator, uow, bundle
+) -> None:
+    from engine.core.errors import EngineError
+
+    await orchestrator.advance(
+        uow,
+        TurnRequest(
+            session_id=bundle.session.id,
+            text="我环顾四周",
+            idempotency_key="advance-request-identity",
+            narrative_max_chars=1200,
+        ),
+    )
+    with pytest.raises(EngineError, match="different input"):
+        await orchestrator.advance(
+            uow,
+            TurnRequest(
+                session_id=bundle.session.id,
+                text="我打坐修炼",
+                idempotency_key="advance-request-identity",
+                narrative_max_chars=1200,
+            ),
+        )
+    with pytest.raises(EngineError, match="different narrative length"):
+        await orchestrator.advance(
+            uow,
+            TurnRequest(
+                session_id=bundle.session.id,
+                text="我环顾四周",
+                idempotency_key="advance-request-identity",
+                narrative_max_chars=1800,
+            ),
+        )
 
 
 async def test_the_opening_chapter_is_recorded_so_the_first_move_can_answer_it(

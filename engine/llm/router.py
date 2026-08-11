@@ -51,14 +51,15 @@ class ModelRouter:
         self._budget_scale = max(
             0.25, float(getattr(settings, "llm_output_budget_scale", 1.0) or 1.0)
         )
+        default_model = getattr(settings, "llm_model", "") or ""
         self._models: dict[LLMRole, str] = {
-            LLMRole.INTENT: getattr(settings, "intent_model", "") or "",
-            LLMRole.NPC: getattr(settings, "npc_model", "") or "",
-            LLMRole.NPC_MAJOR: getattr(settings, "npc_major_model", "") or "",
-            LLMRole.DIRECTOR: getattr(settings, "director_model", "") or "",
-            LLMRole.STEWARD: getattr(settings, "steward_model", "") or "",
-            LLMRole.NARRATIVE: getattr(settings, "narrative_model", "") or "",
-            LLMRole.MEMORY: getattr(settings, "memory_model", "") or "",
+            LLMRole.INTENT: getattr(settings, "intent_model", "") or default_model,
+            LLMRole.NPC: getattr(settings, "npc_model", "") or default_model,
+            LLMRole.NPC_MAJOR: getattr(settings, "npc_major_model", "") or default_model,
+            LLMRole.DIRECTOR: getattr(settings, "director_model", "") or default_model,
+            LLMRole.STEWARD: getattr(settings, "steward_model", "") or default_model,
+            LLMRole.NARRATIVE: getattr(settings, "narrative_model", "") or default_model,
+            LLMRole.MEMORY: getattr(settings, "memory_model", "") or default_model,
             LLMRole.EMBEDDING: getattr(settings, "embedding_model", "") or "",
         }
         # A major-NPC model is optional; fall back to the ordinary NPC model.

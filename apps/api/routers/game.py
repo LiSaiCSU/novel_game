@@ -37,6 +37,10 @@ from engine.world.state_view import build_world_state
 
 router = APIRouter(prefix="/game", tags=["game"])
 
+#: How often the action stream emits a comment while it has nothing to say.
+#: Short enough to survive the usual 30-60s idle timeouts in between.
+HEARTBEAT_SECONDS = 10.0
+
 
 @router.post("/start", response_model=StartGameResponse)
 async def start_game(
@@ -67,7 +71,9 @@ async def start_game(
     assert player is not None
 
     state = await build_world_state(uow, pack, bundle.world.id, player.id)
-    prologue = await orchestrator.open_session(uow, bundle.session, state)
+    prologue = await orchestrator.open_session(
+        uow, bundle.session, state, max_chars=body.narrative_max_chars
+    )
     if not prologue.text:
         location = state.location
         prologue.text = "\n\n".join(
@@ -101,6 +107,7 @@ async def submit_action(
         text=body.text,
         idempotency_key=body.idempotency_key or idempotency_key,
         debug=body.debug,
+        narrative_max_chars=body.narrative_max_chars,
     )
     try:
         # The game is played in runs, not single actions: the character keeps
@@ -118,6 +125,7 @@ async def submit_action_stream(
     body: ActionRequest,
     uow: SqlUnitOfWork = Depends(uow_dep),
     orchestrator: GameOrchestrator = Depends(orchestrator_dep),
+    idempotency_key: str | None = Header(default=None, alias="Idempotency-Key"),
 ) -> StreamingResponse:
     """SSE: state first, prose second.
 
@@ -151,7 +159,11 @@ async def submit_action_stream(
                 result = await orchestrator.advance(
                     uow,
                     TurnRequest(
-                        session_id=session_id, text=body.text, debug=body.debug
+                        session_id=session_id,
+                        text=body.text,
+                        idempotency_key=body.idempotency_key or idempotency_key,
+                        debug=body.debug,
+                        narrative_max_chars=body.narrative_max_chars,
                     ),
                     on_step,
                     on_chunk,
@@ -166,9 +178,18 @@ async def submit_action_stream(
         result: TurnResult | None = None
         failure: Exception | None = None
         streamed = False
+        # Bytes immediately, then a heartbeat while the world is being played
+        # out. A chapter can take well over a minute, and the first ~30s of it
+        # are silent; an idle connection that long is exactly what proxies and
+        # browsers drop, which the player sees as "Failed to fetch".
+        yield _sse("open", {"session_id": session_id})
         try:
             while True:
-                item = await queue.get()
+                try:
+                    item = await asyncio.wait_for(queue.get(), timeout=HEARTBEAT_SECONDS)
+                except TimeoutError:
+                    yield ": keep-alive\n\n"
+                    continue
                 if item is None:
                     break
                 kind, value = item
@@ -280,16 +301,23 @@ async def get_session_relationships(
 
 
 @router.get("/{session_id}/quests", response_model=list[QuestView])
-async def get_quests(session_id: str, uow: SqlUnitOfWork = Depends(uow_dep)) -> list[QuestView]:
+async def get_quests(
+    session_id: str,
+    uow: SqlUnitOfWork = Depends(uow_dep),
+    pack: ContentPack = Depends(pack_dep),
+) -> list[QuestView]:
     session = await uow.sessions.get(session_id)
     if session is None:
         raise HTTPException(status_code=404, detail="session not found")
     quests = await uow.quests.list_for_world(session.world_id)
+    labels = pack.vocabulary.get("status_labels", {}) or {}
     return [
         QuestView(
             key=q.key,
             name=q.name,
             status=str(q.status),
+            # The panel shows this one; the raw status stays for the debug view.
+            status_label=labels.get(str(q.status), str(q.status)),
             giver=q.giver_character_key,
             goal=q.goal,
             expires_at_minute=q.expires_at_minute,
@@ -309,6 +337,7 @@ async def _relationships_for(uow: SqlUnitOfWork, character_id: str) -> list[Rela
                 with_key=other.key if other else "",
                 with_name=other.display_name if other else "",
                 dimensions=rel.as_dict(),
+                tags=rel.tags,
                 last_interaction_minute=rel.last_interaction_minute,
                 interaction_count=rel.interaction_count,
             )

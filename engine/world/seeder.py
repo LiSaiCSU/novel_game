@@ -122,6 +122,7 @@ def build_world(
     _seed_characters(pack, bundle)
     if player is not None:
         _seed_player(pack, bundle, player)
+        _seed_story_focus(pack, bundle)
     _seed_relationships(pack, bundle)
     _seed_facts(pack, bundle)
     _seed_plot(pack, bundle)
@@ -329,7 +330,10 @@ def _seed_characters(pack: ContentPack, bundle: SeedBundle) -> None:
                 by_faction={k: float(v) for k, v in (rep_raw.get("by_faction") or {}).items()},
             ),
             capabilities=list(raw.get("capabilities", []) or []),
-            metadata={"secret": raw.get("secret")} if raw.get("secret") else {},
+            metadata={
+                **dict(raw.get("metadata", {}) or {}),
+                **({"secret": raw.get("secret")} if raw.get("secret") else {}),
+            },
         )
         character.goal_lifecycle = goals.build(
             character,
@@ -436,6 +440,54 @@ def _default_player_realm(pack: ContentPack) -> str:
     return pack.realms.realms[0].key
 
 
+def _seed_story_focus(pack: ContentPack, bundle: SeedBundle) -> None:
+    """Bind this playthrough's co-protagonist in canonical state.
+
+    Content chooses the candidates; the generic engine only applies the
+    declared mapping.  Keeping the choice on both characters means later NPC
+    planning and narrative context do not have to rediscover it from prose.
+    """
+    player = bundle.character_by_key(PLAYER_KEY)
+    if player is None or player.age < 18:
+        return
+    story = pack.story
+    lead_key = (story.get("lead_by_player_gender", {}) or {}).get(player.gender)
+    lead = bundle.character_by_key(str(lead_key)) if lead_key else None
+    if lead is None or lead.age < 18:
+        return
+
+    player.metadata = {
+        **player.metadata,
+        "story_title": str(story.get("title", "")),
+        "story_lead_key": lead.key,
+        "mature_romance": True,
+    }
+    lead.metadata = {
+        **lead.metadata,
+        "story_role": "co_protagonist",
+        "paired_player_id": player.id,
+    }
+    goal_spec = (story.get("lead_goals", {}) or {}).get(lead.key, {}) or {}
+    if goal_spec:
+        lead.long_term_goal = str(goal_spec.get("long_term", lead.long_term_goal))
+        declared_steps = [
+            str(step).strip()
+            for step in (goal_spec.get("short_term", []) or [])
+            if str(step).strip()
+        ]
+        if declared_steps:
+            lead.short_term_goals = declared_steps
+        lead.goal_lifecycle = GoalLifecycleService(pack).build(
+            lead, bundle.world.current_minute
+        )
+
+    opening_key = str(story.get("opening_location", ""))
+    opening = next((loc for loc in bundle.locations if loc.key == opening_key), None)
+    if opening is not None:
+        lead.location_key = opening.key
+        lead.location_id = opening.id
+
+
 def _default_player_faction(pack: ContentPack, start_location_key: str) -> str | None:
     loc = pack.location(start_location_key)
     if loc and loc.get("faction"):
@@ -473,6 +525,11 @@ def _starter_items(pack: ContentPack) -> list[tuple[str, int]]:
         if item.get("type") == "armor" and item.get("rarity") == "common":
             out.append((str(item["key"]), 1))
             break
+    for entry in pack.story.get("starter_items", []) or []:
+        key = str(entry.get("key", ""))
+        quantity = max(1, int(entry.get("quantity", 1)))
+        if key and pack.item(key) and all(existing != key for existing, _ in out):
+            out.append((key, quantity))
     return out
 
 
@@ -491,7 +548,13 @@ def _starter_skills(pack: ContentPack, realm: str, stage: str) -> list[str]:
 def _seed_relationships(pack: ContentPack, bundle: SeedBundle) -> None:
     world_id = bundle.world.id
     by_key = {c.key: c for c in bundle.characters}
+    player = by_key.get(PLAYER_KEY)
     for raw in pack.seed_relationships:
+        required_gender = raw.get("when_player_gender")
+        if required_gender is not None and (
+            player is None or player.gender != str(required_gender)
+        ):
+            continue
         a, b = by_key.get(str(raw.get("a"))), by_key.get(str(raw.get("b")))
         if a is None or b is None:
             continue
@@ -509,6 +572,7 @@ def _seed_relationships(pack: ContentPack, bundle: SeedBundle) -> None:
                 suspicion=int(raw.get("suspicion", 0)),
                 dependency=int(raw.get("dependency", 0)),
                 familiarity=int(raw.get("familiarity", 0)),
+                tags=list(raw.get("tags", []) or []),
                 last_interaction_minute=bundle.world.current_minute,
                 interaction_count=1,
             )

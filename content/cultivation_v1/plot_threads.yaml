@@ -1,161 +1,124 @@
-# World Seeds —— 不是"第一章/第二章"，是世界里已经存在的、正在自行发展的因果。
-# Director 优先推进这些线程，而不是随机造新剧情。
+# 七日倒计时不是章节脚本，而是已经存在并会独立推进的世界因果。
+# 玩家可以追、逃、撒谎、闭关或离开；线程仍会按事件生命周期继续发展。
 
 plot_threads:
-  - key: thread_infiltration
-    name: 血魔宗渗透青云宗
+  - key: thread_seven_day_blood_contract
+    name: 七日血契
     status: active
-    importance: 0.88
+    importance: 0.99
+    stage: 1
+    participants: [player, great_elder_shen, blood_agent_wu, xue_hong, lin_qingxue, zhao_wuji]
+    unresolved_questions:
+      - 谁把血名册残页塞进玩家住处？
+      - 名册上还有哪些人，血祭阵眼藏在哪里？
+      - 第七日秘境开启时，谁会被献祭？
+    foreshadowing:
+      - 残页背面的阵纹与赤霞秘境石门一致
+      - 赵无极的来路不明丹药靠近残页会发热
+      - 林清雪保存的失窃药材清单正好能炼制血祭阵液
+    related_facts: [fact_crimson_realm_opens_in_seven_days, fact_player_named_as_sacrifice, fact_roster_is_array_key, fact_stolen_herbs_match_blood_pill, fact_zhao_pill_is_array_seal]
+    next_beat_hint: 执法堂将搜查玩家住处；选定搭档先一步要求查看残页，并提出一笔互不信任的合作
+    escalation_pressure: 0.95
+    scheduled_beats:
+      - {at_minutes_from_start: 1440, event_type: FACTION_MOVE, beat: 宗门封锁山门并按血名册残页搜捕嫌疑人}
+      - {at_minutes_from_start: 4320, event_type: ENVIRONMENT_SHIFT, beat: 赤霞秘境裂隙扩大，血祭阵第一次自行抽取附近生灵的气血}
+      - {at_minutes_from_start: 8640, event_type: CONFRONTATION, beat: 内奸开始清除知情者并争夺所有阵契分片}
+      - {at_minutes_from_start: 10080, event_type: ENVIRONMENT_SHIFT, beat: 赤霞秘境开启，仍未破坏的血祭阵进入最终阶段}
+
+  - key: thread_framed_and_hunted
+    name: 被栽赃的第一祭品
+    status: active
+    importance: 0.96
+    stage: 1
+    participants: [player, elder_qin, great_elder_shen, guard_ma, blood_agent_wu]
+    unresolved_questions:
+      - 执法堂会相信证据还是相信玩家？
+      - 栽赃者怎样进入了外门住处？
+      - 玩家若逃走，谁会因此获利？
+    foreshadowing:
+      - 守夜记录缺了一页
+      - 马奎曾收钱提前离岗
+      - 有人比执法堂更急着拿回残页
+    related_facts: [fact_player_named_as_sacrifice, fact_enforcement_search_order, fact_guard_ma_took_bribes, fact_shen_is_blood_agent]
+    next_beat_hint: 执法弟子的脚步已经到院门外；交出、藏匿、公开或带走残页都会产生不同后果
+    escalation_pressure: 0.82
+
+  - key: thread_dangerous_alliance
+    name: 互不信任的同盟
+    status: active
+    importance: 0.92
+    stage: 0
+    participants: [player, lin_qingxue, zhao_wuji]
+    unresolved_questions:
+      - 玩家与本局搭档会先建立信任，还是先利用对方？
+      - 两人谁会先交出自己掌握的关键线索？
+      - 共同危机结束后，这段关系还剩下什么？
+    foreshadowing:
+      - 搭档知道的线索足以证明残页不只是赃物
+      - 双方各有无法单独突破的阻碍
+      - 信任只能由共同承担后果建立
+    related_facts: [fact_player_named_as_sacrifice, fact_stolen_herbs_match_blood_pill, fact_zhao_pill_is_array_seal, fact_lin_senior_sister_disappeared]
+    next_beat_hint: 搭档提出交换线索，但要求玩家先做一个会承担实际风险的选择
+    escalation_pressure: 0.68
+
+  - key: thread_infiltration
+    name: 青云宗内奸
+    status: active
+    importance: 0.90
     stage: 2
     participants: [great_elder_shen, blood_agent_wu, xue_hong, lin_qingxue, elder_qin]
     unresolved_questions:
-      - 谁是内奸？
-      - 血魂丹要用来做什么？
+      - 大长老如何操纵血祭而不暴露身份？
+      - 林清雪师姐的死与血名册有什么关系？
+      - 哪些宗门命令已经被内奸篡改？
     foreshadowing:
-      - 灵药失窃
-      - 大长老深夜离宗
-      - 坊市有人高价收购噬魂草
-    related_facts: [fact_shen_is_blood_agent, fact_herbs_stolen, fact_stolen_herbs_match_blood_pill, fact_someone_buying_soul_grass]
-    next_beat_hint: 失窃案调查逼近药园夜间目击者
-    escalation_pressure: 0.35        # 每周自然推进的压力
-    dormant_after_minutes: 0
+      - 失窃药材能炼成血祭阵液
+      - 三年前黑风谷案的目击记录仍未销毁
+      - 大长老的人正在回收所有旧案证据
+    related_facts: [fact_shen_is_blood_agent, fact_herbs_stolen, fact_stolen_herbs_match_blood_pill, fact_senior_sister_was_killed, fact_qian_duo_has_witness_record]
+    next_beat_hint: 内奸派人同时追查血名册残页与三年前的目击记录
+    escalation_pressure: 0.55
 
-  - key: thread_missing_senior_sister
-    name: 黑风谷失踪案
-    status: active
-    importance: 0.72
-    stage: 1
-    participants: [lin_qingxue, qian_duo, great_elder_shen]
-    unresolved_questions:
-      - 三年前那天黑风谷到底发生了什么？
-      - 目击记录里写了什么？
-    foreshadowing:
-      - 林清雪每月都会独自去一趟黑风山方向
-      - 钱多手里压着一份没卖的东西
-    related_facts: [fact_lin_senior_sister_disappeared, fact_senior_sister_was_killed, fact_qian_duo_has_witness_record]
-    next_beat_hint: 有人愿意出价买那份目击记录
-    escalation_pressure: 0.12
-
-  - key: thread_blackwind_corruption
-    name: 黑风山魔气异变
-    status: active
-    importance: 0.66
-    stage: 1
-    participants: [hunter_liu, lin_qingxue, blood_agent_wu]
-    unresolved_questions:
-      - 魔气从哪来？
-      - 为什么野兽被抽干了血？
-    foreshadowing:
-      - 猎户不肯进山
-      - 山中夜里有红光
-    related_facts: [fact_blackwind_demonic_qi, fact_drained_beast_corpses]
-    next_beat_hint: 魔气扩散到山脚村落
-    escalation_pressure: 0.25
-
-  - key: thread_crimson_realm
-    name: 赤霞秘境开启在即
-    status: active
-    importance: 0.80
-    stage: 1
-    participants: [lu_xuan, zhao_wuji, lin_qingxue, qian_duo, great_elder_shen]
-    unresolved_questions:
-      - 名额怎么分？
-      - 谁会被塞进去？
-    foreshadowing:
-      - 长老会为名额争执
-      - 散修联盟频繁走动
-    related_facts: [fact_crimson_realm_opens_soon]
-    next_beat_hint: 名额分配方案公布
-    escalation_pressure: 0.30
-    scheduled_beats:
-      - {at_minutes_from_start: 129600, beat: 名额初选公布}
-      - {at_minutes_from_start: 259200, beat: 秘境开启}
-
-  - key: thread_han_mo_desperation
-    name: 韩墨的窘境
-    status: active
-    importance: 0.45
-    stage: 1
-    participants: [han_mo, han_ling, herbalist_gu, bai_su]
-    unresolved_questions:
-      - 韩墨会为救妹妹做到哪一步？
-      - 偷药的事会不会被查出来？
-    foreshadowing:
-      - 韩墨最近总在打听固元丹的价钱
-      - 白苏说药材数目对不上
-    related_facts: [fact_han_mo_stole_herbs, fact_bai_su_saw_figure]
-    next_beat_hint: 执法长老开始逐一问话
-    escalation_pressure: 0.20
-
-  - key: thread_zhao_rivalry
-    name: 赵无极的执念
-    status: active
-    importance: 0.40
-    stage: 1
-    participants: [zhao_wuji, lin_qingxue, disciple_sun, rogue_cultivator_du]
-    unresolved_questions:
-      - 那枚来路不明的丹药是什么？
-    foreshadowing:
-      - 赵无极修为最近涨得有点快
-    related_facts: [fact_zhao_bought_shady_pill]
-    next_beat_hint: 赵无极在演武场公开挑战
-    escalation_pressure: 0.15
-
-  - key: thread_sect_decline
-    name: 青云宗的衰落
-    status: dormant
-    importance: 0.55
-    stage: 0
-    participants: [lu_xuan, elder_qin, elder_yao, outer_steward_wang]
-    unresolved_questions:
-      - 宗门还能撑多久？
-    foreshadowing:
-      - 外门月例连续两年没涨
-      - 筑基丹产量逐年下降
-    related_facts: []
-    next_beat_hint: 外门弟子集体抱怨资源分配
-    escalation_pressure: 0.08
-
-# 初始任务（可由 NPC 提供；玩家拒绝后仍可能由别人完成 §41/§42）
+# 都与主线交叉；玩家拒绝后仍可被 NPC 接手，结果继续改变世界。
 quests:
-  - key: quest_herb_delivery
-    name: 护送灵药
-    giver: outer_steward_wang
+  - key: quest_clear_the_room
+    name: 洗清血名册嫌疑
+    giver: elder_qin
     status: offered
-    goal: {type: escort, item: blood_coagulation_grass, quantity: 20, from: qingyun_spirit_field, to: herb_shop}
-    constraints: {deadline_minutes: 4320, min_realm: qi_refining}
-    rewards: {spirit_stone: 150, faction_reputation: {qingyun_sect: 3}}
-    failure_conditions: [cargo_lost, deadline_passed]
+    goal: {type: investigate, evidence: blood_roster_fragment, locations: [qingyun_outer_disciple_quarters, qingyun_outer_hall]}
+    constraints: {deadline_minutes: 2880, min_realm: qi_refining}
+    rewards: {spirit_stone: 180, faction_reputation: {qingyun_sect: 8}}
+    failure_conditions: [evidence_destroyed, deadline_passed]
     world_consequences:
-      on_success: {faction_resource: {qingyun_sect: {spirit_herbs: 0.01}}}
-      on_failure: {faction_resource: {qingyun_sect: {spirit_herbs: -0.02}}, tension: 3}
-      if_player_refuses: {reassign_to: [disciple_chen, rogue_cultivator_du], success_chance: 0.6}
-    plot_thread: null
+      on_success: {advance_thread: thread_framed_and_hunted, reveal_fact_chance: {fact_guard_ma_took_bribes: 0.8}}
+      on_failure: {tension: 8, advance_thread: thread_framed_and_hunted}
+      if_player_refuses: {reassign_to: [guard_ma, disciple_chen], success_chance: 0.25}
+    plot_thread: thread_framed_and_hunted
 
-  - key: quest_night_watch
-    name: 灵药园夜巡
-    giver: elder_yao
+  - key: quest_recover_roster
+    name: 夺回血名册原卷
+    giver: lin_qingxue
     status: offered
-    goal: {type: guard, location: qingyun_spirit_field, duration_minutes: 720}
+    goal: {type: recover, item: blood_roster_fragment, from: qingyun_back_mountain}
+    constraints: {deadline_minutes: 7200, min_realm: qi_refining}
+    rewards: {relationship: {lin_qingxue: {trust: 12, respect: 8}}, item: {qi_recovery_pill: 2}}
+    failure_conditions: [deadline_passed, roster_taken_by_enemy]
+    world_consequences:
+      on_success: {advance_thread: thread_seven_day_blood_contract}
+      on_failure: {tension: 12, advance_thread: thread_infiltration}
+      if_player_refuses: {reassign_to: [lin_qingxue, qian_duo], success_chance: 0.45}
+    plot_thread: thread_seven_day_blood_contract
+
+  - key: quest_break_array_eye
+    name: 第七日前破坏阵眼
+    giver: zhao_wuji
+    status: offered
+    goal: {type: sabotage, location: crimson_cloud_realm, target: blood_sacrifice_array}
     constraints: {deadline_minutes: 10080, min_realm: qi_refining}
-    rewards: {spirit_stone: 200, item: {qi_recovery_pill: 2}, faction_reputation: {qingyun_sect: 5}}
-    failure_conditions: [theft_occurred_during_watch, abandoned_post]
+    rewards: {relationship: {zhao_wuji: {trust: 15, respect: 10}}, faction_reputation: {qingyun_sect: 12}}
+    failure_conditions: [deadline_passed, array_activated]
     world_consequences:
-      on_success: {reveal_fact_chance: {fact_bai_su_saw_figure: 0.5}}
-      on_failure: {tension: 5, advance_thread: thread_infiltration}
-      if_player_refuses: {reassign_to: [guard_ma, bai_su], success_chance: 0.35}
-    plot_thread: thread_infiltration
-
-  - key: quest_find_medicine
-    name: 韩墨的求助
-    giver: han_mo
-    status: offered
-    goal: {type: acquire, item: solid_origin_pill, quantity: 1, deliver_to: han_mo}
-    constraints: {deadline_minutes: 43200}
-    rewards: {relationship: {han_mo: {trust: 12, affection: 15}}, spirit_stone: 0}
-    failure_conditions: [deadline_passed, han_ling_died]
-    world_consequences:
-      on_success: {advance_thread: thread_han_mo_desperation}
-      on_failure: {character_state: {han_ling: {health: -30}}, advance_thread: thread_han_mo_desperation}
-      if_player_refuses: {reassign_to: [rogue_cultivator_du], success_chance: 0.25}
-    plot_thread: thread_han_mo_desperation
+      on_success: {advance_thread: thread_seven_day_blood_contract}
+      on_failure: {tension: 20, advance_thread: thread_seven_day_blood_contract}
+      if_player_refuses: {reassign_to: [zhao_wuji, lin_qingxue], success_chance: 0.3}
+    plot_thread: thread_seven_day_blood_contract

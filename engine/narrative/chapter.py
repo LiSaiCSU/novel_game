@@ -28,7 +28,7 @@ from engine.core.ports import UnitOfWork
 from engine.core.types import LLMRole
 from engine.narrative.renderer import BEAT_MARKER, NarrativeRenderer, split_beat
 from engine.orchestrator.interrupt import Interrupt
-from engine.orchestrator.turn import StoryBeat
+from engine.orchestrator.turn import DEFAULT_NARRATIVE_CHARS, StoryBeat
 from engine.world.state_view import WorldStateView
 
 logger = get_logger("chapter")
@@ -108,6 +108,7 @@ class ChapterRenderer:
         recent_narrative: str,
         arc: str = "",
         on_chunk: ChunkListener | None = None,
+        max_chars: int = DEFAULT_NARRATIVE_CHARS,
     ) -> ChapterResult:
         fallback = self._fallback(state, steps)
         if not steps:
@@ -134,7 +135,7 @@ class ChapterRenderer:
                 recent_narrative=recent_narrative,
             )
             sections = dict(context.sections)
-            sections.update(self.renderer.style.as_prompt_vars())
+            sections.update(self.renderer.style.as_prompt_vars(max_chars))
             sections.update(
                 {
                     "beat_marker": BEAT_MARKER,
@@ -146,13 +147,14 @@ class ChapterRenderer:
                 }
             )
             prompt = self.registry.render("chapter", self.prompt_version, **sections)
-            raw = await self._generate(prompt, on_chunk)
+            raw = await self._generate(prompt, on_chunk, max_chars)
         except LLMError as exc:
             logger.warning("chapter generation failed, using templates: %s", exc)
             self.llm.record_degraded(LLMRole.NARRATIVE, str(exc))
             return ChapterResult(text=fallback, degraded=True)
 
         prose, beat = split_beat(raw)
+        prose = self.renderer.style.enforce_max_chars(prose, max_chars)
         if not prose:
             return ChapterResult(text=fallback, degraded=True)
 
@@ -178,7 +180,9 @@ class ChapterRenderer:
         except Exception:  # a missing template surfaces at render time
             return None
 
-    async def _generate(self, prompt: str, on_chunk: ChunkListener | None) -> str:
+    async def _generate(
+        self, prompt: str, on_chunk: ChunkListener | None, max_chars: int
+    ) -> str:
         """Produce the chapter, streaming the prose when someone is watching.
 
         The beat block is machine-readable bookkeeping, so it is withheld: only
@@ -188,7 +192,9 @@ class ChapterRenderer:
         # A chapter is 1500-2500 characters; the router's per-role default is
         # sized for a single scene and would truncate it. The budget the
         # prompt file declares for itself is the one that applies here.
-        budget = self._declared_budget()
+        budget = self.renderer.style.output_token_budget(
+            max_chars, self._declared_budget()
+        )
         if on_chunk is None:
             response = await self.llm.generate_text(
                 LLMRole.NARRATIVE,
@@ -200,6 +206,8 @@ class ChapterRenderer:
 
         collected: list[str] = []
         emitted = 0
+        ceiling = int(self.renderer.style.as_prompt_vars(max_chars)["max_length"])
+        stream_limit = max(0, ceiling - 180)
         async for chunk in self.llm.stream_text(
             LLMRole.NARRATIVE,
             prompt,
@@ -210,10 +218,16 @@ class ChapterRenderer:
             full = "".join(collected)
             head, marker, _ = full.partition(BEAT_MARKER)
             safe = head if marker else full[: max(0, len(full) - len(BEAT_MARKER))]
+            safe = safe[:stream_limit]
             if len(safe) > emitted:
                 await on_chunk(safe[emitted:])
                 emitted = len(safe)
-        return "".join(collected)
+        raw = "".join(collected)
+        prose, _ = split_beat(raw)
+        final_prose = self.renderer.style.enforce_max_chars(prose, max_chars)
+        if len(final_prose) > emitted:
+            await on_chunk(final_prose[emitted:])
+        return raw
 
     def _elapsed(self, state: WorldStateView, steps: list[ChapterStep]) -> str:
         total = sum(step.minutes for step in steps)

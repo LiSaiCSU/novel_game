@@ -6,7 +6,12 @@ from typing import Any
 
 from pydantic import BaseModel, Field
 
-from engine.orchestrator.turn import StoryBeat
+from engine.orchestrator.turn import (
+    DEFAULT_NARRATIVE_CHARS,
+    MAX_NARRATIVE_CHARS,
+    MIN_NARRATIVE_CHARS,
+    StoryBeat,
+)
 
 
 class CreateWorldRequest(BaseModel):
@@ -32,7 +37,7 @@ class CreateCharacterRequest(BaseModel):
     world_id: str
     name: str
     gender: str = "unspecified"
-    age: int = 18
+    age: int = Field(default=18, ge=18, le=80)
     background: str = ""
     spiritual_root: str | None = None
     stats: dict[str, int] = Field(default_factory=dict)
@@ -63,10 +68,15 @@ class StartGameRequest(BaseModel):
     world_id: str | None = None
     player_name: str = ""
     gender: str = "unspecified"
-    age: int = 18
+    age: int = Field(default=18, ge=18, le=80)
     background: str = ""
     world_seed: str | None = None
     session_seed: str = "session-1"
+    narrative_max_chars: int = Field(
+        default=DEFAULT_NARRATIVE_CHARS,
+        ge=MIN_NARRATIVE_CHARS,
+        le=MAX_NARRATIVE_CHARS,
+    )
 
 
 class StartGameResponse(BaseModel):
@@ -82,6 +92,11 @@ class ActionRequest(BaseModel):
     text: str
     idempotency_key: str | None = None
     debug: bool = False
+    narrative_max_chars: int = Field(
+        default=DEFAULT_NARRATIVE_CHARS,
+        ge=MIN_NARRATIVE_CHARS,
+        le=MAX_NARRATIVE_CHARS,
+    )
 
 
 class RelationshipView(BaseModel):
@@ -89,6 +104,7 @@ class RelationshipView(BaseModel):
     with_key: str
     with_name: str
     dimensions: dict[str, int]
+    tags: list[str] = Field(default_factory=list)
     last_interaction_minute: int
     interaction_count: int
 
@@ -118,6 +134,7 @@ class QuestView(BaseModel):
     key: str
     name: str
     status: str
+    status_label: str = ""
     giver: str | None = None
     goal: dict[str, Any] = Field(default_factory=dict)
     expires_at_minute: int | None = None

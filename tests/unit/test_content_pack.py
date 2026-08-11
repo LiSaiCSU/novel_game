@@ -11,6 +11,17 @@ def test_pack_loads(pack: ContentPack) -> None:
     assert pack.key == "cultivation_v1"
     assert pack.name
     assert pack.locations and pack.characters and pack.items and pack.skills
+    assert pack.story["title"] == "七日血契"
+    assert pack.item("blood_roster_fragment") is not None
+
+
+def test_story_leads_are_declared_adults(pack: ContentPack) -> None:
+    leads = pack.story["lead_by_player_gender"]
+    assert set(leads) == {"male", "female"}
+    for lead_key in leads.values():
+        lead = pack.character(lead_key)
+        assert lead is not None
+        assert int(lead["age"]) >= 18
 
 
 def test_realm_ladder_is_ordered(pack: ContentPack) -> None:
@@ -95,7 +106,7 @@ def test_validation_rejects_invalid_scheduled_director_beat(
     shutil.copytree(pack.root, dest)
     plot = dest / "plot_threads.yaml"
     text = plot.read_text(encoding="utf-8")
-    text = text.replace("at_minutes_from_start: 129600", "at_minutes_from_start: -1", 1)
+    text = text.replace("at_minutes_from_start: 1440", "at_minutes_from_start: -1", 1)
     plot.write_text(text, encoding="utf-8")
 
     with pytest.raises(ContentValidationError, match="failed validation"):

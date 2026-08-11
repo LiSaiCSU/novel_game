@@ -26,7 +26,9 @@ def secret_fact(pack):
     candidates = [
         f
         for f in pack.facts
-        if f.get("sensitivity", 0) >= 0.9 and len(f.get("initial_knowledge") or {}) >= 2
+        if f.get("sensitivity", 0) >= 0.9
+        and len(f.get("initial_knowledge") or {}) >= 2
+        and PLAYER_KEY not in (f.get("initial_knowledge") or {})
     ]
     assert candidates, "content pack must define at least one high-sensitivity secret"
     return candidates[0]

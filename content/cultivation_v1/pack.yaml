@@ -1,5 +1,5 @@
 key: cultivation_v1
-name: 青云界
+name: 七日血契
 genre: cultivation
 version: "1.0.0"
 engine_min_version: "0.1.0"
@@ -10,22 +10,53 @@ rule_plugin:
   api_version: "1"
 
 world:
-  name: 青云界
+  name: 青云界·七日血契
   description: |
     青云界是修真界东域一隅。青云宗坐镇青云山脉数百年，与山下的青云城互为表里；
     往北是妖兽横行的黑风山，往南是灵植繁茂的落霞谷，往东是每三十年开启一次的赤霞秘境。
-    近年来血魔宗势力自西南渗透，大周皇朝在凡俗界收拢兵权，散修联盟在青云城暗中壮大。
-    这个世界不为任何人停留。
+    如今秘境异动，七日后就会提前开启。有人把本该争抢的入境名额改成了一份血祭名单，
+    又把名单残页塞进一名外门弟子的住处。血魔宗、宗门内奸和想活下去的人都在抢同一条线索；
+    玩家若不在七日内洗清嫌疑并毁掉阵眼，就会成为秘境开门时的第一份祭品。
   start_location: qingyun_outer_disciple_quarters
   world_seed_default: "qingyun-0001"
+
+story:
+  title: 七日血契
+  opening_location: qingyun_outer_disciple_quarters
+  premise: |
+    赤霞秘境将在七日后提前开启。玩家醒来时，床边多了一张以血书写的祭品名册残页，
+    第一行就是玩家的名字；执法堂已经在赶来的路上。另一半线索掌握在本局选定的成年搭档手中。
+    两人互不信任，却只有合作才能查出栽赃者、夺回原卷并在第七日之前破坏血祭阵眼。
+  lead_by_player_gender:
+    male: lin_qingxue
+    female: zhao_wuji
+  lead_goals:
+    lin_qingxue:
+      long_term: 七日内查清血名册与师姐遇害的关联，毁掉血祭阵并保护共同查案的人
+      short_term:
+        - 判断玩家是否值得交换失窃药材清单
+        - 在执法堂收走残页前确认背面阵纹
+        - 找到血祭阵眼所在位置
+    zhao_wuji:
+      long_term: 七日内摆脱体内阵印，查出利用自己的人并与共同查案的人毁掉血祭阵
+      short_term:
+        - 确认来路不明的丹药是否会回应血名册
+        - 判断玩家是诱饵还是能合作的人
+        - 在阵印被激活前找到解除办法
+  starter_items:
+    - {key: blood_roster_fragment, quantity: 1}
+  relationship_boundaries: |
+    感情线只发生在成年、具备自主意愿的玩家与成年搭档之间。允许危险后的靠近、试探、暧昧对话、
+    克制的亲吻或淡出处理，但不得露骨描写性行为或身体部位，不得把胁迫、控制或权力压迫包装成浪漫。
+    玩家可以拒绝感情发展；关系变化必须由共同选择、实际行动和已提交事件支撑，并同时推进主线。
 
 narrative_style:
   language: 中文
   person: 第二人称
   tense: 现在时
   # 白话、好读、事情说清楚。不是散文比赛，读者要的是故事往前走。
-  tone: 白话直叙的东方玄幻，重人物与对话，少写景，不堆辞藻，不追求爽感
-  target_length: 2000
+  tone: 快节奏悬疑冒险式东方玄幻，白话直叙，强冲突、强目标、有克制的成年人情感张力
+  target_length: 1800
   avoid_phrases:
     - 嘴角勾起一抹弧度
     - 嘴角勾起一抹弧线
@@ -53,10 +84,11 @@ narrative_style:
   phrase_repeat_window: 12
   phrase_repeat_threshold: 2
   guidance:
-    - 优先写具体动作、环境细节、有信息量的对话
-    - 减少无意义的修辞堆砌与排比
-    - 世界对主角的存在保持冷漠
-    - 允许平淡，允许无事发生
+    - 每个场景至少推进目标、线索、冲突、关系或不可逆后果中的一项
+    - 优先写具体动作和有信息量的短对话，环境只写影响行动的部分
+    - 主角可以失败，但失败必须改变局势并产生可追踪的后果
+    - 感情张力必须服务共同危机与人物选择，禁止突然爱上、无因吃醋和无关主线的暧昧注水
+    - 不机械追求反转；转折必须来自既有动机、线索或已经发生的事件
 
 model_preferences:
   narrative_temperature: 0.85
@@ -64,6 +96,26 @@ model_preferences:
   director_temperature: 0.6
 
 vocabulary:
+  profile_labels:
+    age_suffix: 岁
+    realm: 境界
+    root: 灵根
+    faction: 阵营
+    male: 男
+    female: 女
+    unspecified: 未指定
+    story_lead: 本局共同主角
+    no_story_lead: 本局未指定感情搭档
+    absent: 当前不在场
+  relationship_labels:
+    affection: 好感
+    trust: 信任
+    respect: 尊重
+    fear: 畏惧
+    hatred: 仇恨
+    suspicion: 怀疑
+    dependency: 依赖
+    familiarity: 熟悉
   # 引擎不认识这些词，只有内容包认识；用于 fallback 意图解析与叙事本地化
   action_aliases:
     MOVE: [去, 前往, 走向, 回到, 进入, 出发, 赶往, 下山, 上山]
@@ -130,6 +182,15 @@ vocabulary:
     后山: qingyun_back_mountain
     宗门: qingyun_sect
     山门: qingyun_sect
+  # 界面上给玩家看的中文标签。引擎内部一律用英文 key，出屏之前在这里翻译。
+  status_labels:
+    offered: 待接
+    active: 进行中
+    completed: 已完成
+    failed: 失败
+    expired: 已过期
+    taken_by_other: 被人抢先
+    rejected: 已拒绝
   ambiguity_messages:
     empty_input: 请输入你想做的事。
     multi_action_requires_stepwise_input: 当前未启用智能解析，请把复合行动拆成多个明确步骤。

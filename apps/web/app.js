@@ -12,14 +12,59 @@ const api = (path, options) =>
     return r.json();
   });
 
+const MIN_NARRATIVE_CHARS = 400;
+const MAX_NARRATIVE_CHARS = 4000;
+const DEFAULT_NARRATIVE_CHARS = 1800;
+
+function clampNarrativeLength(value) {
+  const parsed = Number(value);
+  if (!Number.isFinite(parsed)) return DEFAULT_NARRATIVE_CHARS;
+  return Math.round(
+    Math.max(MIN_NARRATIVE_CHARS, Math.min(MAX_NARRATIVE_CHARS, parsed)) / 100
+  ) * 100;
+}
+
 const store = {
   sessionId: localStorage.getItem("sessionId") || null,
   worldId: localStorage.getItem("worldId") || null,
   playerId: localStorage.getItem("playerId") || null,
+  narrativeMaxChars: clampNarrativeLength(
+    localStorage.getItem("narrativeMaxChars") || DEFAULT_NARRATIVE_CHARS
+  ),
   debugMode: false,
   lastDebug: null,
   busy: false,
+  //: Whether the story pane should keep following new text.
+  follow: true,
 };
+
+function syncNarrativeLength(value) {
+  store.narrativeMaxChars = clampNarrativeLength(value);
+  localStorage.setItem("narrativeMaxChars", String(store.narrativeMaxChars));
+  for (const id of [
+    "setupLengthRange",
+    "setupLengthMax",
+    "turnLengthRange",
+    "turnLengthMax",
+  ]) {
+    if ($(id)) $(id).value = String(store.narrativeMaxChars);
+  }
+}
+
+for (const id of ["setupLengthRange", "turnLengthRange"]) {
+  $(id).addEventListener("input", (event) => syncNarrativeLength(event.target.value));
+}
+for (const id of ["setupLengthMax", "turnLengthMax"]) {
+  $(id).addEventListener("change", (event) => syncNarrativeLength(event.target.value));
+}
+syncNarrativeLength(store.narrativeMaxChars);
+
+function newIdempotencyKey() {
+  if (globalThis.crypto && typeof globalThis.crypto.randomUUID === "function") {
+    return globalThis.crypto.randomUUID();
+  }
+  return `${Date.now()}-${Math.random().toString(16).slice(2)}`;
+}
 
 // ---------------------------------------------------------------- rendering
 function paragraphs(text) {
@@ -63,8 +108,22 @@ function appendEntry({ said, prose, deltas }) {
   }
 
   story.appendChild(entry);
-  story.scrollTop = story.scrollHeight;
+  followIfAtBottom(story);
   return body;
+}
+
+// Auto-scroll is a courtesy, not a right. A chapter streams for a minute; if
+// the reader has scrolled up to re-read something, yanking them back to the
+// bottom on every chunk makes the text unreadable. So: follow only while they
+// are already at the bottom, and stop the moment they scroll away.
+const NEAR_BOTTOM_PX = 80;
+
+function isNearBottom(el) {
+  return el.scrollHeight - el.scrollTop - el.clientHeight <= NEAR_BOTTOM_PX;
+}
+
+function followIfAtBottom(el) {
+  if (store.follow) el.scrollTop = el.scrollHeight;
 }
 
 function describeDeltas(sc) {
@@ -94,10 +153,10 @@ function describeDeltas(sc) {
     }
   }
   for (const item of (sc.inventory || {}).added || []) {
-    out.push({ dir: "up", text: `获得 ${item.item_key} ×${item.quantity}` });
+    out.push({ dir: "up", text: `获得 ${item.name || item.item_key} ×${item.quantity}` });
   }
   for (const item of (sc.inventory || {}).removed || []) {
-    out.push({ dir: "down", text: `失去 ${item.item_key} ×${item.quantity}` });
+    out.push({ dir: "down", text: `失去 ${item.name || item.item_key} ×${item.quantity}` });
   }
   const minutes = sc.world_minute;
   if (Array.isArray(minutes) && minutes[1] > minutes[0]) {
@@ -145,9 +204,7 @@ function renderState(state) {
   }
   $("sDanger").textContent = "★".repeat(Math.min(5, loc.danger_level || 0)) || "—";
   $("sDesc").textContent = loc.description || "";
-  if (state.narrative_tension !== undefined) {
-    $("sTension").textContent = state.narrative_tension;
-  }
+  // narrative_tension is a director dial, not something a reader should see.
 
   const npcs = state.present_characters || [];
   const box = $("sNpcs");
@@ -160,7 +217,7 @@ function renderState(state) {
       .map(
         (c) => `<div class="npc">
           <div class="name">${escapeHtml(c.name)}</div>
-          <div class="meta">${escapeHtml(c.realm || "")}${c.faction ? " · " + escapeHtml(c.faction) : ""}</div>
+          <div class="meta">${escapeHtml(c.realm || "")}${c.title ? " · " + escapeHtml(c.title) : ""}${c.faction ? " · " + escapeHtml(c.faction) : ""}</div>
         </div>`
       )
       .join("");
@@ -235,11 +292,14 @@ const tabRenderers = {
     if (!rows.length) return `<p class="muted">你还没有真正认识什么人。</p>`;
     return rows
       .map((r) => {
+        const role = (r.tags || []).includes("co_protagonist")
+          ? '<span class="tag leadTag">共同主角</span>'
+          : "";
         const dims = Object.entries(r.dimensions)
           .filter(([, v]) => v)
           .map(([k, v]) => `<span class="tag">${k} ${v}</span>`)
           .join("");
-        return `<div class="npc"><div class="name">${escapeHtml(r.with_name)}</div><div>${dims || '<span class="muted">初见</span>'}</div></div>`;
+        return `<div class="npc"><div class="name">${escapeHtml(r.with_name)} ${role}</div><div>${dims || '<span class="muted">初见</span>'}</div></div>`;
       })
       .join("");
   },
@@ -249,7 +309,7 @@ const tabRenderers = {
     if (!open.length) return `<p class="muted">你眼下没有接下任何差事。</p>`;
     return open
       .map(
-        (r) => `<div class="kv"><span>${escapeHtml(r.name)}</span><span class="tag">${r.status}</span></div>`
+        (r) => `<div class="kv"><span>${escapeHtml(r.name)}</span><span class="tag">${escapeHtml(r.status_label || r.status)}</span></div>`
       )
       .join("");
   },
@@ -340,12 +400,18 @@ async function submit() {
 
   const body = appendEntry({ said: text, prose: "" });
   body.classList.add("cursor");
+  const idempotencyKey = newIdempotencyKey();
 
   try {
     const response = await fetch(`/api/game/${store.sessionId}/action/stream`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ text, debug: true }),
+      body: JSON.stringify({
+        text,
+        debug: true,
+        idempotency_key: idempotencyKey,
+        narrative_max_chars: store.narrativeMaxChars,
+      }),
     });
     if (!response.ok) throw new Error(await response.text());
 
@@ -393,7 +459,7 @@ async function submit() {
             node.textContent = p;
             body.appendChild(node);
           }
-          $("story").scrollTop = $("story").scrollHeight;
+          followIfAtBottom($("story"));
         }
       }
     }
@@ -422,10 +488,16 @@ async function submit() {
     await refreshState();
   } catch (e) {
     body.classList.remove("cursor");
-    const el = document.createElement("div");
-    el.className = "rejected";
-    el.textContent = `请求失败：${e.message}`;
-    body.parentElement.appendChild(el);
+    // The world is committed before any prose is streamed, so a dropped
+    // connection loses the telling, never the turn. Recover the chapter from
+    // the server instead of leaving the player staring at an error.
+    const recovered = await recoverAfterDroppedStream();
+    if (!recovered) {
+      const el = document.createElement("div");
+      el.className = "rejected";
+      el.textContent = `连接中断：${e.message}。你的进度已保存，可以直接继续。`;
+      body.parentElement.appendChild(el);
+    }
   } finally {
     store.busy = false;
     $("sendBtn").disabled = false;
@@ -472,6 +544,7 @@ $("startBtn").onclick = async () => {
         age: Number($("pAge").value) || 18,
         background: $("pBackground").value.trim(),
         world_seed: `web-${Date.now()}`,
+        narrative_max_chars: store.narrativeMaxChars,
       }),
     });
     store.sessionId = data.session_id;
@@ -518,7 +591,9 @@ async function enterGame(opening, state, beat) {
     }
   } catch {
     // stale session: fall back to the setup screen
-    localStorage.clear();
+    localStorage.removeItem("sessionId");
+    localStorage.removeItem("worldId");
+    localStorage.removeItem("playerId");
     store.sessionId = null;
   }
 })();
@@ -623,3 +698,43 @@ $("restartBtn").onclick = () => {
   $("app").style.display = "none";
   $("setup").style.display = "flex";
 };
+
+// ---------------------------------------------------------------- scrolling
+// The reader decides whether the view follows the text.
+(function wireScrollFollow() {
+  const story = $("story");
+  const jump = $("jumpLatest");
+
+  story.addEventListener("scroll", () => {
+    store.follow = isNearBottom(story);
+    jump.style.display = store.follow ? "none" : "block";
+  });
+
+  jump.onclick = () => {
+    store.follow = true;
+    jump.style.display = "none";
+    story.scrollTop = story.scrollHeight;
+  };
+})();
+
+// A dropped stream costs the prose, not the progress: the run is committed
+// before a single character is sent. Pull the finished chapter back down.
+async function recoverAfterDroppedStream() {
+  for (const waitMs of [1500, 4000, 8000]) {
+    await new Promise((r) => setTimeout(r, waitMs));
+    try {
+      const opening = await api(`/game/${store.sessionId}/opening`);
+      if (!opening.chapters || !opening.chapters.length) continue;
+      $("story").innerHTML = "";
+      for (const chapter of opening.chapters) appendEntry({ prose: chapter });
+      renderState(opening.state || {});
+      renderChoices([], opening.beat);
+      await refreshState();
+      await refreshTab();
+      return true;
+    } catch {
+      /* the run may still be finishing; try again */
+    }
+  }
+  return false;
+}
