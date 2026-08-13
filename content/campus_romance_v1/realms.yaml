@@ -1,0 +1,16 @@
+progression_name: 校园阶段
+realms:
+  - key: student
+    name: 大学生
+    order: 0
+    stages: [{key: enrolled, name: 在读, order: 0}]
+    power_coefficient: 1.0
+    max_health: 100
+    max_spiritual_power: 0
+    lifespan_years: 85
+    xp_to_next_stage: 0
+    breakthrough_base_chance: 0
+    description: 春日坂大学在读学生。
+spiritual_roots: [{key: undeclared, name: 未定专业, speed: 1.0, breakthrough_mod: 0, weight: 1}]
+mental_states: [{key: stable, name: 平稳, min: 0, max: 1.01, breakthrough_mod: 0}]
+bottleneck: {gain_on_failure: 0, max: 0, penalty_per_point: 0, decay_per_month: 0}

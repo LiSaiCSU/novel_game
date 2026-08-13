@@ -40,6 +40,11 @@ max_output_tokens: 2600
 成年人关系边界：
 {{relationship_boundaries}}
 
+玩家已经明确表达的关系选择：
+{{relationship_consent}}
+
+关系选择语义：accepted 只表示愿意探索恋爱关系，每一步亲密仍需当下同意；rejected 表示明确拒绝恋爱；undecided 表示尚未选择，绝不能替玩家同意。
+
 只有已裁定互动才能推动关系。允许克制的暧昧和非露骨亲密，不得替玩家同意关系、突然爱上或把胁迫写成浪漫。
 
 禁止或近期使用过多的短语（均不得使用）：

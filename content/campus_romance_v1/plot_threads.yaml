@@ -1,0 +1,110 @@
+plot_threads:
+  - key: thread_save_moonview
+    name: 月见馆存续计划
+    status: active
+    importance: 0.99
+    stage: 0
+    participants: [player, haruto, ren, sora, akira, reina]
+    unresolved_questions: [修缮资金从哪里来, 安全报告能否及时通过, 最终演出能否证明礼堂价值]
+    foreshadowing: [屋顶漏水范围比报价写得小, 消防照片并非现场, 校友愿意在公开旧账后捐款]
+    related_facts: [fact_hall_closes_in_twelve_weeks, fact_report_photo_wrong]
+    next_beat_hint: 第一次企划会要求玩家选择加入调查、筹款、视觉或演出小组
+    escalation_pressure: 0.65
+    scheduled_beats:
+      - {at_minutes_from_start: 1440, event_type: QUEST_OFFER, beat: 企划组正式分工}
+      - {at_minutes_from_start: 20160, event_type: ENVIRONMENT_SHIFT, beat: 春雨加剧礼堂漏水}
+      - {at_minutes_from_start: 60480, event_type: CONFRONTATION, beat: 设施委员会进行中期审查}
+      - {at_minutes_from_start: 120960, event_type: CONFRONTATION, beat: 校庆最终演出与存续表决同日举行}
+  - key: thread_unfinished_letter
+    name: 未完成的信
+    status: active
+    importance: 0.88
+    stage: 0
+    participants: [player, ren, emiko, yuna]
+    unresolved_questions: [写信人是谁, 最后一页在哪里, 是否应公开信件内容]
+    foreshadowing: [邮戳日期与旧账缺页同周, 咖啡店明信片出现相同笔迹, 舞台背板夹层有纸张声]
+    related_facts: [fact_letter_exists, fact_letter_recipient_alive]
+    next_beat_hint: 莲提醒私人信件不该直接成为宣传素材
+    escalation_pressure: 0.42
+    scheduled_beats:
+      - {at_minutes_from_start: 10080, event_type: DISCOVERY, beat: 档案中发现同笔迹的节目单批注}
+      - {at_minutes_from_start: 30240, event_type: DISCOVERY, beat: 咖啡店老板认出信封样式}
+      - {at_minutes_from_start: 70560, event_type: SECRET_DISCLOSURE, beat: 收件人的身份被确认}
+      - {at_minutes_from_start: 110880, event_type: CONFRONTATION, beat: 是否公开信件成为最终选择}
+  - key: thread_missing_budget
+    name: 消失的修缮款
+    status: active
+    importance: 0.9
+    stage: 0
+    participants: [player, ren, reina, naoki, mika, kota]
+    unresolved_questions: [三笔款项去了哪里, 当前报价是否也被操纵, 谁要求暂缓公开]
+    foreshadowing: [复印件页码不连续, 布景报价高于市场价, 消防照片拍摄时间错误]
+    related_facts: [fact_missing_funds, fact_report_photo_wrong, fact_sponsor_condition]
+    next_beat_hint: 玲奈愿意开放一小时档案权限，但要求所有查阅留下记录
+    escalation_pressure: 0.58
+    scheduled_beats:
+      - {at_minutes_from_start: 7200, event_type: DISCOVERY, beat: 旧账页码缺口被确认}
+      - {at_minutes_from_start: 24480, event_type: RUMOR_SPREAD, beat: 校园论坛出现挪用资金传言}
+      - {at_minutes_from_start: 56160, event_type: CONFRONTATION, beat: 赞助商要求停止调查}
+      - {at_minutes_from_start: 90720, event_type: SECRET_DISCLOSURE, beat: 资金实际用于紧急安置受灾学生}
+  - key: thread_haruto_choice
+    name: 春人的两座城市
+    status: active
+    importance: 0.72
+    stage: 0
+    participants: [player, haruto, reina]
+    unresolved_questions: [春人会不会去东京, 他是否把留下等同于负责, 玩家能否支持而不替他决定]
+    foreshadowing: [他避开毕业后的话题, 文件夹里露出事务所信封, 测绘方案可由低年级接手]
+    related_facts: [fact_haruto_offer]
+    next_beat_hint: 春人需要有人审核一份没有署名的职业选择清单
+    escalation_pressure: 0.32
+    scheduled_beats:
+      - {at_minutes_from_start: 17280, event_type: FORESHADOWING, beat: 东京事务所来电}
+      - {at_minutes_from_start: 46080, event_type: SECRET_DISCLOSURE, beat: 春人说明录用通知}
+      - {at_minutes_from_start: 80640, event_type: CONFRONTATION, beat: 签约期限与审查会冲突}
+      - {at_minutes_from_start: 115200, event_type: PROMISE, beat: 春人作出由自己承担后果的选择}
+  - key: thread_creative_independence
+    name: 不被流量买走的舞台
+    status: active
+    importance: 0.7
+    stage: 0
+    participants: [player, sora, naoki, emiko]
+    unresolved_questions: [是否接受附带条件的赞助, 谁拥有信件故事的表达权, 宣传能否不消费隐私]
+    foreshadowing: [赞助合同附件字体更小, 匿名账号旧帖被翻出, 剧本中的原话未获授权]
+    related_facts: [fact_sponsor_condition, fact_letter_exists]
+    next_beat_hint: 空把两版海报放到玩家面前，一版安全，一版诚实
+    escalation_pressure: 0.38
+    scheduled_beats:
+      - {at_minutes_from_start: 12960, event_type: QUEST_OFFER, beat: 选择宣传主题}
+      - {at_minutes_from_start: 37440, event_type: CONFRONTATION, beat: 赞助商提出删改条件}
+      - {at_minutes_from_start: 74880, event_type: RUMOR_SPREAD, beat: 匿名旧帖身份被猜测}
+      - {at_minutes_from_start: 105120, event_type: PROMISE, beat: 团队确定公开表达边界}
+  - key: thread_akira_stage
+    name: 再次坐到琴前
+    status: active
+    importance: 0.68
+    stage: 0
+    participants: [player, akira, ayame, kota]
+    unresolved_questions: [彰是否愿意打开复诊信, 最终演出需不需要他独奏, 音乐之外的道路是什么]
+    foreshadowing: [他用左手试音, 医院信封未拆, 编曲刻意避开独奏段]
+    related_facts: [fact_akira_recovery]
+    next_beat_hint: 旧钢琴需要两个人配合才能重新调平
+    escalation_pressure: 0.3
+    scheduled_beats:
+      - {at_minutes_from_start: 11520, event_type: FORESHADOWING, beat: 排练时手伤旧事被提起}
+      - {at_minutes_from_start: 41760, event_type: SECRET_DISCLOSURE, beat: 彰承认没有打开复诊信}
+      - {at_minutes_from_start: 77760, event_type: CONFRONTATION, beat: 独奏提案引发压力}
+      - {at_minutes_from_start: 116640, event_type: PROMISE, beat: 彰选择适合自己的舞台位置}
+quests:
+  - {key: quest_join_committee, name: 参加第一次企划会, giver: yuna, status: offered, goal: {type: visit, location: festival_office}, constraints: {deadline_minutes: 2880}, rewards: {relationship: {yuna: {trust: 3}}}, failure_conditions: [deadline_passed], world_consequences: {on_success: {advance_thread: thread_save_moonview}, on_failure: {tension: 2}}, plot_thread: thread_save_moonview}
+  - {key: quest_inspect_roof, name: 完成礼堂现场记录, giver: haruto, status: offered, goal: {type: investigate, location: moonview_hall}, constraints: {deadline_minutes: 10080}, rewards: {relationship: {haruto: {trust: 5, respect: 4}}}, failure_conditions: [deadline_passed], world_consequences: {on_success: {advance_thread: thread_save_moonview}}, plot_thread: thread_save_moonview}
+  - {key: quest_archive_pages, name: 核对缺失账页, giver: ren, status: offered, goal: {type: investigate, location: archive_room}, constraints: {deadline_minutes: 20160}, rewards: {item: {archive_copy: 1}}, failure_conditions: [deadline_passed], world_consequences: {on_success: {advance_thread: thread_missing_budget}}, plot_thread: thread_missing_budget}
+  - {key: quest_letter_handwriting, name: 寻找相同笔迹, giver: emiko, status: offered, goal: {type: investigate, locations: [university_library, slope_cafe]}, constraints: {deadline_minutes: 30240}, rewards: {relationship: {ren: {trust: 4}}}, failure_conditions: [evidence_destroyed], world_consequences: {on_success: {advance_thread: thread_unfinished_letter}}, plot_thread: thread_unfinished_letter}
+  - {key: quest_repair_piano, name: 调平旧钢琴, giver: akira, status: offered, goal: {type: repair, location: rehearsal_room}, constraints: {deadline_minutes: 40320}, rewards: {relationship: {akira: {trust: 6, affection: 3}}}, failure_conditions: [deadline_passed], world_consequences: {on_success: {advance_thread: thread_akira_stage}}, plot_thread: thread_akira_stage}
+  - {key: quest_visual_theme, name: 确定校庆主视觉, giver: sora, status: offered, goal: {type: choose, options: [safe, honest]}, constraints: {deadline_minutes: 34560}, rewards: {relationship: {sora: {respect: 5}}}, failure_conditions: [deadline_passed], world_consequences: {on_success: {advance_thread: thread_creative_independence}}, plot_thread: thread_creative_independence}
+  - {key: quest_recruit_volunteers, name: 招募志愿者, giver: daichi, status: offered, goal: {type: recruit, count: 20}, constraints: {deadline_minutes: 50400}, rewards: {faction_reputation: {festival_committee: 6}}, failure_conditions: [deadline_passed], world_consequences: {on_success: {advance_thread: thread_save_moonview}}, plot_thread: thread_save_moonview}
+  - {key: quest_audit_quote, name: 复核舞美报价, giver: mika, status: offered, goal: {type: compare, location: art_studio}, constraints: {deadline_minutes: 56160}, rewards: {relationship: {mika: {trust: 5}}}, failure_conditions: [deadline_passed], world_consequences: {on_success: {advance_thread: thread_missing_budget}}, plot_thread: thread_missing_budget}
+  - {key: quest_sponsor_terms, name: 审阅赞助条款, giver: naoki, status: offered, goal: {type: decide, options: [accept, renegotiate, refuse]}, constraints: {deadline_minutes: 60480}, rewards: {faction_reputation: {festival_committee: 5}}, failure_conditions: [deadline_passed], world_consequences: {on_success: {advance_thread: thread_creative_independence}}, plot_thread: thread_creative_independence}
+  - {key: quest_fire_report, name: 重做线路检查, giver: kota, status: offered, goal: {type: investigate, location: moonview_hall}, constraints: {deadline_minutes: 70560}, rewards: {relationship: {kota: {trust: 6}}}, failure_conditions: [deadline_passed], world_consequences: {on_success: {advance_thread: thread_missing_budget}}, plot_thread: thread_missing_budget}
+  - {key: quest_consent_script, name: 确认剧本授权, giver: emiko, status: offered, goal: {type: consent_review}, constraints: {deadline_minutes: 90720}, rewards: {relationship: {emiko: {respect: 7}}}, failure_conditions: [privacy_breached], world_consequences: {on_success: {advance_thread: thread_unfinished_letter}}, plot_thread: thread_unfinished_letter}
+  - {key: quest_final_performance, name: 完成月见馆最终演出, giver: haruto, status: offered, goal: {type: event, location: moonview_hall}, constraints: {deadline_minutes: 120960}, rewards: {faction_reputation: {festival_committee: 20}}, failure_conditions: [deadline_passed, unsafe_venue], world_consequences: {on_success: {advance_thread: thread_save_moonview}, on_failure: {tension: 20}}, plot_thread: thread_save_moonview}

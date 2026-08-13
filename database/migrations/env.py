@@ -21,7 +21,7 @@ if str(REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(REPO_ROOT))
 
 from database.base import Base  # noqa: E402
-from database.models import orm  # noqa: E402,F401  (import registers the tables)
+from database.models import orm, platform  # noqa: E402,F401  (import registers the tables)
 from database.session import prepare_database_path  # noqa: E402
 from engine.core.config import get_settings  # noqa: E402
 

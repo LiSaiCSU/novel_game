@@ -24,6 +24,7 @@ from engine.actions.planner import ActionPlanExecutor
 from engine.actions.resolver import ActionResolver
 from engine.actions.schema import Action, ActionOutcome, PlayerIntent, RuleResult
 from engine.characters.npc_agent import NPCAgent, NPCSituation
+from engine.contentpack.declarative_runtime import apply_declarative_rules
 from engine.contentpack.pack import ContentPack
 from engine.context.builder import ContextBuilder
 from engine.core import mutations as mut
@@ -669,6 +670,10 @@ class GameOrchestrator:
                         reason="turn",
                     )
                 )
+
+            applied_rules = apply_declarative_rules(d.pack, state, action, outcome, change_set)
+            if applied_rules:
+                trace.proposals["declarative_rules"] = {"applied": applied_rules}
 
         # -- S10 guard ------------------------------------------------------
         with timer.measure("guard"):

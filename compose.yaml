@@ -1,0 +1,116 @@
+name: narrative-platform
+
+services:
+  postgres:
+    image: postgres:17-alpine
+    environment:
+      POSTGRES_DB: narrative
+      POSTGRES_USER: narrative
+      POSTGRES_PASSWORD: local-only-password
+    ports: ["5432:5432"]
+    volumes: ["postgres-data:/var/lib/postgresql/data"]
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U narrative -d narrative"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+
+  redis:
+    image: redis:7-alpine
+    command: ["redis-server", "--appendonly", "yes"]
+    ports: ["6379:6379"]
+    volumes: ["redis-data:/data"]
+
+  minio:
+    image: minio/minio:latest
+    command: server /data --console-address :9001
+    environment:
+      MINIO_ROOT_USER: narrative
+      MINIO_ROOT_PASSWORD: local-only-minio-password
+    ports: ["9000:9000", "9001:9001"]
+    volumes: ["object-data:/data"]
+
+  mailpit:
+    image: axllent/mailpit:latest
+    ports: ["1025:1025", "8025:8025"]
+
+  clamav:
+    image: clamav/clamav:stable
+    volumes: ["clamav-data:/var/lib/clamav"]
+    healthcheck:
+      test: ["CMD", "clamdscan", "--ping", "1"]
+      interval: 15s
+      timeout: 10s
+      retries: 20
+      start_period: 60s
+
+  minio-init:
+    image: minio/mc:latest
+    entrypoint: ["/bin/sh", "-c"]
+    command: ["mc alias set local http://minio:9000 narrative local-only-minio-password && mc mb --ignore-existing local/narrative-assets"]
+    depends_on:
+      minio:
+        condition: service_started
+
+  migrate:
+    build: .
+    command: ["alembic", "upgrade", "head"]
+    environment: &api-env
+      APP_ENV: dev
+      DATABASE_URL: postgresql+asyncpg://narrative:local-only-password@postgres:5432/narrative
+      REDIS_URL: redis://redis:6379/0
+      CONTENT_DIR: /app/content
+      PUBLIC_APP_URL: http://localhost:3000
+      CORS_ORIGINS: http://localhost:3000
+      AUTH_PEPPER: local-compose-change-me
+      CREDENTIAL_ENCRYPTION_KEY: local-compose-change-me-too
+      SMTP_HOST: mailpit
+      SMTP_PORT: 1025
+      OBJECT_STORE_BACKEND: s3
+      CLAMAV_HOST: clamav
+      S3_ENDPOINT_URL: http://minio:9000
+      S3_BUCKET: narrative-assets
+      S3_ACCESS_KEY: narrative
+      S3_SECRET_KEY: local-only-minio-password
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  api:
+    build: .
+    environment: *api-env
+    ports: ["8000:8000"]
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+      redis:
+        condition: service_started
+      minio:
+        condition: service_started
+      minio-init:
+        condition: service_completed_successfully
+      clamav:
+        condition: service_healthy
+
+  worker:
+    build: .
+    command: ["python", "-m", "apps.worker.main"]
+    environment: *api-env
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+      redis:
+        condition: service_started
+
+  web:
+    build: ./apps/web-next
+    environment:
+      API_ORIGIN: http://api:8000
+    ports: ["3000:3000"]
+    depends_on: [api]
+
+volumes:
+  postgres-data:
+  redis-data:
+  object-data:
+  clamav-data:

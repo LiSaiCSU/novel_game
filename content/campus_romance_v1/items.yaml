@@ -1,0 +1,8 @@
+item_types: [{key: document, name: 文件}, {key: token, name: 证件}, {key: gift, name: 礼物}, {key: tool, name: 工具}, {key: currency, name: 货币}]
+rarities: [{key: common, name: 普通, value_multiplier: 1}, {key: meaningful, name: 纪念, value_multiplier: 1}, {key: key_item, name: 关键, value_multiplier: 1}]
+items:
+  - {key: yen, name: 日元, type: currency, rarity: common, value: 1, stackable: true, description: 日常开销使用的货币。, effects: {}}
+  - {key: unfinished_letter, name: 未完成的信, type: document, rarity: key_item, value: 0, stackable: false, description: 二十年前寄往月见馆的信，最后一页与落款都不见了。, effects: {reveals_fact: fact_letter_exists, quest_item: true}}
+  - {key: student_card, name: 学生证, type: token, rarity: common, value: 0, stackable: false, description: 春日坂大学的学生身份证明。, effects: {}}
+  - {key: archive_copy, name: 旧账册复印件, type: document, rarity: key_item, value: 0, stackable: false, description: 标记出三笔去向不明的修缮款。, effects: {reveals_fact: fact_missing_funds}}
+  - {key: rehearsal_key, name: 排练室钥匙, type: token, rarity: key_item, value: 0, stackable: false, description: 月见馆排练室的备用钥匙。, effects: {}}

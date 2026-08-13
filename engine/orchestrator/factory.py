@@ -12,7 +12,12 @@ from engine.characters.npc_agent import NPCAgent
 from engine.contentpack.pack import ContentPack, load_content_pack
 from engine.context.builder import ContextBuilder
 from engine.core.config import Settings, get_settings
-from engine.core.locks import InMemoryIdempotencyStore, InMemoryLockBackend
+from engine.core.locks import (
+    IdempotencyStore,
+    InMemoryIdempotencyStore,
+    InMemoryLockBackend,
+    LockBackend,
+)
 from engine.director.director import Director
 from engine.knowledge.service import KnowledgeService
 from engine.llm.client import LLMClient
@@ -54,6 +59,8 @@ def build_orchestrator(
     pack: ContentPack | None = None,
     provider: Any | None = None,
     registry: Any | None = None,
+    lock_backend: LockBackend | None = None,
+    idempotency_store: IdempotencyStore | None = None,
 ) -> GameOrchestrator:
     settings = settings or get_settings()
     pack = pack or load_content_pack(settings.content_path, settings.content_pack)
@@ -166,8 +173,8 @@ def build_orchestrator(
             prompt_version=settings.prompt_version_prologue,
         ),
         llm=llm,
-        locks=InMemoryLockBackend(),
-        idempotency=InMemoryIdempotencyStore(),
+        locks=lock_backend or InMemoryLockBackend(),
+        idempotency=idempotency_store or InMemoryIdempotencyStore(),
         debug_mode=settings.debug_mode,
     )
     return GameOrchestrator(deps)

@@ -1,0 +1,5 @@
+templates:
+  query_status: "你站在{location_name}。现在是{time_label}。"
+  query_inventory: "你带着开学时的随身物品。"
+  query_relationships: "你正在慢慢认识企划组的人。"
+  query_quests: "月见馆的期限正在逼近。"

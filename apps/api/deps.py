@@ -28,13 +28,12 @@ def pack_dep(settings: Settings = Depends(settings_dep)) -> ContentPack:
     return _load_pack(str(settings.content_path), settings.content_pack)
 
 
-@lru_cache(maxsize=1)
-def _orchestrator() -> GameOrchestrator:
-    return build_orchestrator()
-
-
-def orchestrator_dep() -> GameOrchestrator:
-    return _orchestrator()
+def orchestrator_dep(
+    settings: Settings = Depends(settings_dep),
+    pack: ContentPack = Depends(pack_dep),
+) -> GameOrchestrator:
+    """Build a request-scoped legacy runtime so call records never cross users."""
+    return build_orchestrator(settings=settings, pack=pack)
 
 
 async def uow_dep() -> AsyncIterator[SqlUnitOfWork]:

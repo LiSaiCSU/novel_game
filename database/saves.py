@@ -156,6 +156,8 @@ class SaveService:
         time_label: str = "",
         location_name: str = "",
         excerpt: str = "",
+        user_id: str | None = None,
+        playthrough_id: str | None = None,
     ) -> SaveHeader:
         payload: dict[str, list[dict[str, Any]]] = {}
 
@@ -185,6 +187,8 @@ class SaveService:
 
         slot = SaveSlotORM(
             id=new_id(),
+            user_id=user_id,
+            playthrough_id=playthrough_id,
             session_id=session_id,
             world_id=world_id,
             name=name.strip()[:80],

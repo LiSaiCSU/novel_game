@@ -123,6 +123,7 @@ class ContextBuilder:
             "condition": self._condition(npc),
             "known_facts": self._beliefs(beliefs, hedges),
             "relationships": self._relationships(relationships),
+            "player_relationship_consent": self._relationship_consent(state, npc.key),
             "memories": self._memories(scored),
             "location": state.location.name if state.location else "-",
             "time_label": state.time.label,
@@ -169,6 +170,7 @@ class ContextBuilder:
             "relationship_boundaries": (
                 str(self.pack.story.get("relationship_boundaries", "")) or "-"
             ),
+            "relationship_consent": self._relationship_consent(state),
             "location": state.location.name if state.location else "-",
             "time_label": state.time.label,
             "atmosphere": state.location.description if state.location else "-",
@@ -278,6 +280,24 @@ class ContextBuilder:
             for part in (str(story.get("premise", "")).strip(), lead_text)
             if part
         ) or "-"
+
+    def _relationship_consent(
+        self, state: WorldStateView, lead_key: str | None = None
+    ) -> str:
+        choices = state.player.properties.get("romance_consent", {}) or {}
+        keys = [lead_key] if lead_key else sorted(str(key) for key in choices)
+        valid = {"accepted", "rejected", "undecided"}
+        rows: list[str] = []
+        for key in keys:
+            if not key:
+                continue
+            decision = str(choices.get(key, "undecided"))
+            if decision not in valid:
+                decision = "undecided"
+            raw = self.pack.character(key) or {}
+            name = str(raw.get("name") or key)
+            rows.append(f"- {name}[{key}]: {decision}")
+        return "\n".join(rows) or "-"
 
     # ==================================================================
     # Intent

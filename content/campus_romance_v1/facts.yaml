@@ -1,0 +1,60 @@
+facts:
+  - key: fact_letter_exists
+    statement: 玩家收到一封二十年前寄往月见馆但从未完成的信
+    truth_value: true
+    scope: PERSONAL
+    sensitivity: 0.7
+    subject: player
+    related: [player, moonview_hall, ren, emiko]
+    initial_knowledge: {player: {state: KNOWN, confidence: 1, source: DOCUMENT}, yuna: {state: KNOWN, confidence: 0.9, source: WITNESSED}}
+  - key: fact_hall_closes_in_twelve_weeks
+    statement: 如果校庆前无法提交安全与运营方案，月见馆将在十二周后永久关闭
+    truth_value: true
+    scope: WORLD
+    sensitivity: 0.1
+    related: [moonview_hall, festival_committee, university_board]
+    initial_knowledge: {player: {state: KNOWN, confidence: 1, source: DOCUMENT}, haruto: {state: KNOWN, confidence: 1, source: DOCUMENT}, ren: {state: KNOWN, confidence: 1, source: DOCUMENT}, sora: {state: KNOWN, confidence: 1, source: DOCUMENT}, akira: {state: KNOWN, confidence: 1, source: DOCUMENT}, reina: {state: KNOWN, confidence: 1, source: DOCUMENT}}
+  - key: fact_missing_funds
+    statement: 二十年前月见馆三笔修缮款的收款凭证缺失
+    truth_value: true
+    scope: WORLD
+    sensitivity: 0.9
+    related: [moonview_hall, ren, reina]
+    initial_knowledge: {ren: {state: KNOWN, confidence: 0.95, source: DOCUMENT}, reina: {state: SUSPECTED, confidence: 0.6, source: INFERRED}}
+  - key: fact_report_photo_wrong
+    statement: 最新消防报告中的线路照片来自另一栋教学楼
+    truth_value: true
+    scope: FACTION
+    sensitivity: 0.8
+    related: [moonview_hall, kota, university_board]
+    initial_knowledge: {kota: {state: KNOWN, confidence: 0.9, source: DOCUMENT}}
+  - key: fact_sponsor_condition
+    statement: 最大赞助商要求删除关于旧账和未完成信的展览内容
+    truth_value: true
+    scope: PERSONAL
+    sensitivity: 0.8
+    related: [naoki, sora, festival_committee]
+    initial_knowledge: {naoki: {state: KNOWN, confidence: 1, source: DOCUMENT}, sora: {state: SUSPECTED, confidence: 0.5, source: INFERRED}}
+  - key: fact_haruto_offer
+    statement: 春人已收到东京建筑事务所的正式录用通知
+    truth_value: true
+    scope: PERSONAL
+    sensitivity: 0.9
+    subject: haruto
+    related: [haruto]
+    initial_knowledge: {haruto: {state: KNOWN, confidence: 1, source: DOCUMENT}}
+  - key: fact_akira_recovery
+    statement: 彰的手伤可以通过循序康复恢复大部分演奏能力
+    truth_value: true
+    scope: PERSONAL
+    sensitivity: 0.9
+    subject: akira
+    related: [akira]
+    initial_knowledge: {akira: {state: SUSPECTED, confidence: 0.5, source: DOCUMENT}}
+  - key: fact_letter_recipient_alive
+    statement: 未完成信可能的收件人仍住在春日坂附近
+    truth_value: true
+    scope: PERSONAL
+    sensitivity: 1.0
+    related: [emiko, ren, slope_cafe]
+    initial_knowledge: {emiko: {state: KNOWN, confidence: 0.85, source: DOCUMENT}, ren: {state: SUSPECTED, confidence: 0.45, source: INFERRED}}

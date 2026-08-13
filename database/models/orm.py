@@ -21,6 +21,8 @@ class WorldORM(TimestampMixin, Base):
     calendar_config: Mapped[dict[str, Any]] = mapped_column(JSONType, default=dict)
     world_seed: Mapped[str] = mapped_column(sa.String(120), default="seed")
     content_pack: Mapped[str] = mapped_column(sa.String(120), default="")
+    release_id: Mapped[str | None] = mapped_column(sa.String(36), nullable=True, index=True)
+    playthrough_id: Mapped[str | None] = mapped_column(sa.String(36), nullable=True, index=True)
     rule_version: Mapped[str] = mapped_column(sa.String(40), default="1.0.0")
     narrative_tension: Mapped[float] = mapped_column(sa.Float, default=20.0)
     tension_history: Mapped[list[float]] = mapped_column(JSONType, default=list)
@@ -134,6 +136,10 @@ class CharacterORM(TimestampMixin, Base):
     alive: Mapped[bool] = mapped_column(sa.Boolean, default=True, index=True)
     death_event_id: Mapped[str | None] = mapped_column(sa.String(36), nullable=True)
     capabilities: Mapped[list[str]] = mapped_column(JSONType, default=list)
+    attributes: Mapped[dict[str, Any]] = mapped_column(JSONType, default=dict)
+    resources: Mapped[dict[str, Any]] = mapped_column(JSONType, default=dict)
+    progressions: Mapped[dict[str, Any]] = mapped_column(JSONType, default=dict)
+    properties: Mapped[dict[str, Any]] = mapped_column(JSONType, default=dict)
     character_metadata: Mapped[dict[str, Any]] = mapped_column(JSONType, default=dict)
 
 
@@ -155,6 +161,7 @@ class RelationshipORM(Base):
     suspicion: Mapped[int] = mapped_column(sa.Integer, default=0)
     dependency: Mapped[int] = mapped_column(sa.Integer, default=0)
     familiarity: Mapped[int] = mapped_column(sa.Integer, default=0)
+    boundaries: Mapped[int] = mapped_column(sa.Integer, default=50)
     last_interaction_minute: Mapped[int] = mapped_column(sa.BigInteger, default=0)
     interaction_count: Mapped[int] = mapped_column(sa.Integer, default=0)
     tags: Mapped[list[str]] = mapped_column(JSONType, default=list)
@@ -428,6 +435,7 @@ class GameSessionORM(TimestampMixin, Base):
     session_seed: Mapped[str] = mapped_column(sa.String(120), default="session")
     status: Mapped[str] = mapped_column(sa.String(40), default="active")
     turn_number: Mapped[int] = mapped_column(sa.Integer, default=0)
+    playthrough_id: Mapped[str | None] = mapped_column(sa.String(36), nullable=True, index=True)
 
 
 class TurnORM(Base):
@@ -488,6 +496,8 @@ class SaveSlotORM(Base):
     __tablename__ = "save_slots"
 
     id: Mapped[str] = mapped_column(sa.String(36), primary_key=True)
+    user_id: Mapped[str | None] = mapped_column(sa.String(36), nullable=True, index=True)
+    playthrough_id: Mapped[str | None] = mapped_column(sa.String(36), nullable=True, index=True)
     session_id: Mapped[str] = mapped_column(sa.String(36), index=True)
     world_id: Mapped[str] = mapped_column(sa.String(36), index=True)
     name: Mapped[str] = mapped_column(sa.String(80), default="")

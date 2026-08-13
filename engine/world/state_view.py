@@ -123,6 +123,10 @@ class WorldStateView:
                 "cultivation_progress": round(self.player.cultivation_progress, 4),
                 "injuries": round(self.player.injuries, 3),
                 "mental_state": round(self.player.mental_state, 3),
+                "attributes": self.player.attributes,
+                "resources": self.player.resources,
+                "progressions": self.player.progressions,
+                "properties": self.player.properties,
             },
         }
 

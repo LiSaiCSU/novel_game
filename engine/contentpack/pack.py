@@ -33,9 +33,10 @@ _FILES = {
     "plot_threads": "plot_threads.yaml",
     "event_templates": "event_templates.yaml",
     "narrative_templates": "narrative_templates.yaml",
+    "declarative_rules": "declarative_rules.yaml",
 }
 
-_OPTIONAL = {"narrative_templates", "npc_templates", "event_templates"}
+_OPTIONAL = {"narrative_templates", "npc_templates", "event_templates", "declarative_rules"}
 
 
 def _load_yaml(path: Path) -> dict[str, Any]:
@@ -72,6 +73,7 @@ class ContentPack:
     event_types: list[dict[str, Any]]
     offline_templates: list[dict[str, Any]]
     narrative_templates: dict[str, Any] = field(default_factory=dict)
+    declarative_rules: list[dict[str, Any]] = field(default_factory=list)
     rule_plugin: RulePlugin | None = None
 
     # -- convenience --------------------------------------------------------
@@ -172,6 +174,7 @@ def load_content_pack(content_dir: Path | str, pack_key: str) -> ContentPack:
         event_types=list(raw["event_templates"].get("event_types", [])),
         offline_templates=list(raw["event_templates"].get("offline_templates", [])),
         narrative_templates=raw["narrative_templates"],
+        declarative_rules=list(raw["declarative_rules"].get("rules", [])),
         rule_plugin=load_rule_plugin(root, raw["pack"]),
     )
     validate_content_pack(pack)

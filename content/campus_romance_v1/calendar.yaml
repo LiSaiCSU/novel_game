@@ -1,0 +1,27 @@
+epoch_label: 春日坂学年
+epoch_year: 2026
+minutes_per_hour: 60
+hours_per_day: 24
+days_per_month: 30
+months_per_year: 12
+shichen:
+  - {key: midnight, name: 深夜, start_hour: 0, end_hour: 5}
+  - {key: morning, name: 上午, start_hour: 5, end_hour: 12}
+  - {key: afternoon, name: 下午, start_hour: 12, end_hour: 18}
+  - {key: evening, name: 晚间, start_hour: 18, end_hour: 24}
+day_phases:
+  - {key: deep_night, name: 深夜, start_hour: 0, end_hour: 5}
+  - {key: dawn, name: 清晨, start_hour: 5, end_hour: 7}
+  - {key: morning, name: 上午, start_hour: 7, end_hour: 11}
+  - {key: noon, name: 中午, start_hour: 11, end_hour: 13}
+  - {key: afternoon, name: 下午, start_hour: 13, end_hour: 17}
+  - {key: dusk, name: 傍晚, start_hour: 17, end_hour: 19}
+  - {key: night, name: 晚间, start_hour: 19, end_hour: 24}
+seasons: [{key: spring, name: 春, months: [4, 5, 6]}, {key: summer, name: 夏, months: [7, 8, 9]}, {key: autumn, name: 秋, months: [10, 11]}, {key: winter, name: 冬, months: [12, 1, 2, 3]}]
+month_names: [一月, 二月, 三月, 四月, 五月, 六月, 七月, 八月, 九月, 十月, 十一月, 十二月]
+start_year: 2026
+start_month: 4
+start_day: 6
+start_hour: 8
+start_minute: 0
+format: "{year}年{month_name}{day}日 {phase}"

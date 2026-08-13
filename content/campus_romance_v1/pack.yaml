@@ -1,0 +1,204 @@
+key: campus_romance_v1
+name: 春日坂未完通信
+genre: campus_romance
+version: "1.4.0"
+engine_min_version: "0.2.0"
+primary_progression_key: education
+attribute_definitions:
+  - {key: empathy, label: 共情, type: number}
+  - {key: insight, label: 洞察, type: number}
+  - {key: resolve, label: 坚定, type: number}
+  - {key: creativity, label: 创意, type: number}
+resource_definitions:
+  - {key: health, label: 健康, minimum: 0, maximum: 100, default: 100}
+  - {key: energy, label: 精力, minimum: 0, maximum: 100, default: 80}
+progression_definitions:
+  - key: education
+    label: 学业阶段
+    tiers:
+      - {key: undergraduate, label: 本科生, order: 0}
+      - {key: graduate, label: 研究生, order: 1}
+  - key: festival_reputation
+    label: 企划组声望
+    tiers:
+      - {key: newcomer, label: 新成员, order: 0}
+      - {key: contributor, label: 可靠伙伴, order: 1}
+      - {key: core_member, label: 核心成员, order: 2}
+player_fields:
+  - {key: name, label: 姓名, type: text, required: true}
+  - {key: age, label: 年龄, type: integer, required: true, default: 20, minimum: 18, maximum: 24}
+  - key: major
+    label: 专业
+    type: choice
+    required: true
+    default: journalism
+    choices:
+      - {value: journalism, label: 新闻传播}
+      - {value: architecture, label: 建筑设计}
+      - {value: literature, label: 文学}
+      - {value: arts_media, label: 艺术与媒体}
+      - {value: undecided, label: 未定专业}
+  - {key: interests, label: 兴趣, type: tags, required: false, default: []}
+  - key: personality_tendency
+    label: 性格倾向
+    type: choice
+    required: true
+    default: thoughtful
+    choices:
+      - {value: thoughtful, label: 细致体贴}
+      - {value: candid, label: 坦率果断}
+      - {value: curious, label: 好奇敏锐}
+      - {value: independent, label: 独立克制}
+  - {key: personal_goal, label: 这个学期最想做到的事, type: text, required: true, default: 找到属于自己的方向}
+  - {key: background, label: 来春日坂之前, type: text, required: false}
+language: zh-CN
+author_tests:
+  - key: opening_knowledge_boundary
+    name: 开场秘密遵守人物知识边界
+    scenario: main_story
+    assertions:
+      - {path: player.location, op: eq, expected: international_dorm}
+      - {path: knowledge.player.fact_missing_funds, op: eq, expected: UNKNOWN}
+      - {path: knowledge.ren.fact_missing_funds, op: eq, expected: KNOWN}
+  - key: haruto_romance_consent_ending
+    name: 明确同意与关系条件共同解锁春人恋爱结局
+    scenario: main_story
+    player:
+      name: 测试玩家
+      age: 20
+      gender: female
+      properties:
+        romance_consent: {haruto: accepted}
+    fixtures:
+      relationships:
+        haruto: {affection: 40, trust: 45, respect: 35, familiarity: 45, boundaries: 50}
+      quests: {quest_final_performance: completed}
+    assertions:
+      - {path: endings.romance_haruto.available, op: eq, expected: true}
+      - {path: endings.bond_haruto.available, op: eq, expected: false}
+world:
+  name: 春日坂大学·月见馆
+  description: 日本虚构大学春日坂大学的春季学期。旧礼堂月见馆将在学期末被关闭，校庆企划组只有十二周证明它仍值得留下。
+  start_location: international_dorm
+  world_seed_default: kasugazaka-spring
+story:
+  title: 春日坂未完通信
+  opening_location: international_dorm
+  premise: 你刚搬进留学生宿舍，就收到一封寄错了二十年的未完成信件。收件地址是即将关闭的月见馆，而落款人的名字被撕掉。校庆企划组需要在十二周内修复礼堂、查清旧账并完成最终演出。
+  starter_items: [{key: unfinished_letter, quantity: 1}, {key: student_card, quantity: 1}]
+  player_template:
+    constraints: {gender: female, minimum_age: 18, maximum_age: 24}
+    properties: {student_status: international_student}
+  relationship_boundaries: 所有可发展感情的角色均为成年学生。亲密推进必须由明确选择与持续信任支持；拒绝后不得重复施压。禁止露骨性描写、美化胁迫、跟踪或控制。
+  endings:
+    - key: romance_haruto
+      type: romance
+      lead: haruto
+      title: 同一张蓝图
+      requires_consent: true
+      priority: 90
+      epilogue: 你和春人没有替彼此决定去留，而是在两座城市之间画出一张可以共同修改的蓝图。月见馆留下了，你们的关系也从一次次明确的选择开始。
+      condition: {op: and, args: [{op: eq, args: [{op: get, args: [quests.quest_final_performance.status]}, completed]}, {op: eq, args: [{op: get, args: [consent.haruto]}, accepted]}, {op: gte, args: [{op: get, args: [relationships.haruto.affection]}, 40]}, {op: gte, args: [{op: get, args: [relationships.haruto.trust]}, 45]}, {op: gte, args: [{op: get, args: [relationships.haruto.respect]}, 35]}, {op: gte, args: [{op: get, args: [relationships.haruto.familiarity]}, 45]}, {op: gte, args: [{op: get, args: [relationships.haruto.boundaries]}, 50]}]}
+    - key: romance_ren
+      type: romance
+      lead: ren
+      title: 写在档案之外
+      requires_consent: true
+      priority: 90
+      epilogue: 莲把那封信放回经过同意才开放的档案盒，而你们决定把属于两个人的那部分留在档案之外。诚实不再只是他的原则，也成为你们相互靠近的方法。
+      condition: {op: and, args: [{op: eq, args: [{op: get, args: [quests.quest_final_performance.status]}, completed]}, {op: eq, args: [{op: get, args: [consent.ren]}, accepted]}, {op: gte, args: [{op: get, args: [relationships.ren.affection]}, 40]}, {op: gte, args: [{op: get, args: [relationships.ren.trust]}, 45]}, {op: gte, args: [{op: get, args: [relationships.ren.respect]}, 35]}, {op: gte, args: [{op: get, args: [relationships.ren.familiarity]}, 45]}, {op: gte, args: [{op: get, args: [relationships.ren.boundaries]}, 50]}]}
+    - key: romance_sora
+      type: romance
+      lead: sora
+      title: 春色显影
+      requires_consent: true
+      priority: 90
+      epilogue: 空把最终海报的第一张样张交给你，画面没有消费任何人的秘密。你们约定继续诚实创作，也继续在每一次靠近前问清彼此的答案。
+      condition: {op: and, args: [{op: eq, args: [{op: get, args: [quests.quest_final_performance.status]}, completed]}, {op: eq, args: [{op: get, args: [consent.sora]}, accepted]}, {op: gte, args: [{op: get, args: [relationships.sora.affection]}, 40]}, {op: gte, args: [{op: get, args: [relationships.sora.trust]}, 45]}, {op: gte, args: [{op: get, args: [relationships.sora.respect]}, 35]}, {op: gte, args: [{op: get, args: [relationships.sora.familiarity]}, 45]}, {op: gte, args: [{op: get, args: [relationships.sora.boundaries]}, 50]}]}
+    - key: romance_akira
+      type: romance
+      lead: akira
+      title: 返场曲
+      requires_consent: true
+      priority: 90
+      epilogue: 彰没有用一场独奏证明自己，你也没有替他选择舞台。返场时，他弹起你们共同改过的旋律；曲终之后，两个人清楚地答应继续同行。
+      condition: {op: and, args: [{op: eq, args: [{op: get, args: [quests.quest_final_performance.status]}, completed]}, {op: eq, args: [{op: get, args: [consent.akira]}, accepted]}, {op: gte, args: [{op: get, args: [relationships.akira.affection]}, 40]}, {op: gte, args: [{op: get, args: [relationships.akira.trust]}, 45]}, {op: gte, args: [{op: get, args: [relationships.akira.respect]}, 35]}, {op: gte, args: [{op: get, args: [relationships.akira.familiarity]}, 45]}, {op: gte, args: [{op: get, args: [relationships.akira.boundaries]}, 50]}]}
+    - key: bond_haruto
+      type: bond
+      lead: haruto
+      title: 城市的共同作者
+      priority: 60
+      epilogue: 春人去了他选择的城市，你留下继续完成自己的目标。你们仍会交换测绘图和近况，像两位平等的合作者，共同保存一段城市记忆。
+      condition: {op: and, args: [{op: eq, args: [{op: get, args: [quests.quest_final_performance.status]}, completed]}, {op: ne, args: [{op: get, args: [consent.haruto]}, accepted]}, {op: gte, args: [{op: get, args: [relationships.haruto.trust]}, 30]}, {op: gte, args: [{op: get, args: [relationships.haruto.respect]}, 30]}, {op: gte, args: [{op: get, args: [relationships.haruto.familiarity]}, 35]}]}
+    - key: bond_ren
+      type: bond
+      lead: ren
+      title: 诚实的保管人
+      priority: 60
+      epilogue: 你和莲把完整档案交还给当事人与学校，公开该公开的，也守住该守住的。你们没有成为恋人，却成为彼此最信任的事实核查者。
+      condition: {op: and, args: [{op: eq, args: [{op: get, args: [quests.quest_final_performance.status]}, completed]}, {op: ne, args: [{op: get, args: [consent.ren]}, accepted]}, {op: gte, args: [{op: get, args: [relationships.ren.trust]}, 30]}, {op: gte, args: [{op: get, args: [relationships.ren.respect]}, 30]}, {op: gte, args: [{op: get, args: [relationships.ren.familiarity]}, 35]}]}
+    - key: bond_sora
+      type: bond
+      lead: sora
+      title: 不被定义的作品
+      priority: 60
+      epilogue: 赞助商没有得到一件可以随意定义的作品，空也不再独自对抗所有目光。你们作为朋友完成了展览，并把署名留给每一位真正参与的人。
+      condition: {op: and, args: [{op: eq, args: [{op: get, args: [quests.quest_final_performance.status]}, completed]}, {op: ne, args: [{op: get, args: [consent.sora]}, accepted]}, {op: gte, args: [{op: get, args: [relationships.sora.trust]}, 30]}, {op: gte, args: [{op: get, args: [relationships.sora.respect]}, 30]}, {op: gte, args: [{op: get, args: [relationships.sora.familiarity]}, 35]}]}
+    - key: bond_akira
+      type: bond
+      lead: akira
+      title: 各自的舞台
+      priority: 60
+      epilogue: 彰重新开始治疗，也保留了不参加比赛的自由。你们在各自的舞台上继续前进，偶尔合作一首曲子，不需要用恋爱证明这段羁绊的重量。
+      condition: {op: and, args: [{op: eq, args: [{op: get, args: [quests.quest_final_performance.status]}, completed]}, {op: ne, args: [{op: get, args: [consent.akira]}, accepted]}, {op: gte, args: [{op: get, args: [relationships.akira.trust]}, 30]}, {op: gte, args: [{op: get, args: [relationships.akira.respect]}, 30]}, {op: gte, args: [{op: get, args: [relationships.akira.familiarity]}, 35]}]}
+    - key: independent_growth
+      type: independent
+      title: 未完通信
+      priority: 10
+      hidden_until_available: false
+      epilogue: 月见馆的灯在学期末重新亮起。你没有把自己的成长交给任何一段关系定义，而是完成了来到春日坂时写下的个人目标。那封未完的信被妥善保存，你也开始写属于自己的下一页。
+      condition: {op: or, args: [{op: eq, args: [{op: get, args: [quests.quest_final_performance.status]}, completed]}, {op: gte, args: [{op: get, args: [world.minute]}, 120960]}]}
+narrative_style:
+  language: 中文
+  person: 第二人称
+  tense: 现在时
+  tone: 清新克制的大学校园群像，具体、自然、有行动推进，避免偶像剧式强迫浪漫
+  target_length: 1600
+  avoid_phrases: [嘴角勾起一抹弧度, 眼中闪过一丝异色, 空气仿佛凝固, 心里微沉, 淡淡地说道]
+  phrase_repeat_window: 12
+  phrase_repeat_threshold: 2
+  guidance:
+    - 每段至少推进礼堂主线、人物目标、线索或关系之一
+    - 尊重玩家拒绝，不把嫉妒和控制当作爱
+    - 四位主要角色在没有恋爱时也拥有完整的人生选择
+theme: {accent: "#8d5f73", background: "#f7f0eb", surface: "#fffaf6", text: "#30272d"}
+vocabulary:
+  profile_labels: {age_suffix: 岁, realm: 身份, root: 专业, faction: 组织, male: 男, female: 女, unspecified: 未指定, story_lead: 重要伙伴, no_story_lead: 尚未建立羁绊, absent: 当前不在场}
+  relationship_labels: {affection: 好感, trust: 信任, respect: 尊重, fear: 压力, hatred: 反感, suspicion: 疑虑, dependency: 依赖, familiarity: 熟悉, boundaries: 界限感}
+  action_aliases:
+    MOVE: [去, 前往, 走向, 回到, 进入, 出发, 赶往]
+    TALK: [聊, 交谈, 说话, 打招呼, 找]
+    ASK: [问, 询问, 打听, 请教]
+    OBSERVE: [看, 观察, 环顾, 查看, 留意]
+    SEARCH: [搜, 搜索, 翻找, 寻找, 调查]
+    FOLLOW: [跟, 跟着]
+    HIDE: [躲, 藏, 隐藏]
+    USE_ITEM: [用, 使用, 打开, 阅读]
+    GIVE_ITEM: [给, 赠送, 交给, 递给]
+    PICKUP: [捡, 拾取, 拿起]
+    DROP: [丢, 丢弃, 放下]
+    REST: [休息, 睡觉, 歇]
+    WAIT: [等, 等待]
+    ACCEPT_QUEST: [接, 接受, 答应, 参加]
+    REJECT_QUEST: [拒绝, 不接, 回绝]
+  method_aliases: {persuade: [劝, 说服], comfort: [安慰, 宽慰], promise: [承诺, 答应], flirt: [示好, 暧昧], negotiate: [商量, 谈判], indirect_questioning: [试探, 套话]}
+  query_aliases: {QUERY_STATUS: [我的状态, 状态], QUERY_INVENTORY: [背包, 我的东西], QUERY_RELATIONSHIPS: [人物关系, 关系表], QUERY_QUESTS: [任务, 企划事项]}
+  request_size_hints: {extreme: [全部, 一切], large: [替我完成, 都给我], moderate: [帮我, 陪我], small: [问一句, 看一眼]}
+  refusal_words: [不, 不要, 拒绝, 算了]
+  plan_connectors: [然后, 接着, 随后, 再]
+  continue_words: [继续, 继续。, 接着说, 让故事继续, "..."]
+  entity_aliases: {礼堂: moonview_hall, 图书馆: university_library, 咖啡店: slope_cafe, 宿舍: international_dorm}
+  status_labels: {offered: 待办, active: 进行中, completed: 已完成, failed: 失败, expired: 已过期, taken_by_other: 已由他人完成, rejected: 已拒绝}
+  ambiguity_messages: {empty_input: 请输入你想做的事。, move_target_unknown: 请说明你想去哪个已知地点。, conversation_target_unknown: 请说明你想和当前在场的谁交谈。, item_unknown: 请说明你想使用哪个实际拥有的物品。}
+  time_units: {分钟: 1, 小时: 60, 天: 1440, 周: 10080}
+  time_words: {半小时: 30, 一小时: 60, 半天: 360, 一天: 1440, 一周: 10080}

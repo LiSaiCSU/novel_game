@@ -1,103 +1,59 @@
-# CURRENT_STATE — Phase 0 Repository Audit
+# 当前工程状态
 
-**审计时间**: 2026-08-09
-**审计范围**: `c:\Users\28123\Desktop\game`
+更新时间：2026-08-13
 
-## 1. 审计结果
+## 已实现
 
-审计前仓库内容：
+- FastAPI + Next.js/TypeScript 的玩家端、创作台和公开目录。
+- Content Pack v2、不可变 Release、固定版本 Playthrough，以及《七日血契》v1→v2 兼容转换。
+- 《春日坂未完通信》官方校园女性向包：14 个地点、12 个重要 NPC、6 条剧情线程、24 个节拍、12 个任务、9 个可判定结局、关系同意与拒绝语义；全程使用声明式规则。
+- 当前公开官方 Release：《七日血契》`2.3.0`、《春日坂未完通信》`1.4.0`。数据库保留旧的 `2.1.0`/`2.2.0` 与 `1.2.0`/`1.3.0` 不可变制品并标记下架，因此当前为 2 个项目、6 个 Release、2 个可新建版本；重复初始化不会增加记录。
+- 邮箱注册登录、验证/重置令牌、服务器会话、CSRF、设备会话撤销、角色权限、管理员 TOTP/恢复码二次认证、异常登录审计和接口限流。
+- 共享 PostgreSQL 租户模型、应用层所有权检查，以及覆盖项目、版本、素材和完整 Playthrough 数据图的强制 PostgreSQL RLS；SQLite 保留同等仓储检查供测试。
+- 平台 LLM/BYOK、加密密钥、额度预算、使用台账、无模型 fallback 和 SSE 回合恢复。
+- 项目自动保存、乐观 revision、双方内容保留、撤销/重做、地点图、知识矩阵、结局编辑、字段级差异、预览、诊断、导入导出、素材与发布流程。
+- 未列出作品的一次性邀请链接、公开目录筛选/排序，以及封面、头像、背景图的清洗、病毒扫描、缩略图和对象存储。
+- 异步个人数据导出和延迟注销；导出明确排除凭据密文、令牌哈希、内部 trace、秘密状态和完整存档载荷。
+- Redis 任务队列/死信、邮件、审核扫描、过期预览和导出清理、结构化日志、指标、traceparent、慢查询、Sentry 接口和 LLM 成本告警。
+- PostgreSQL、Redis、MinIO、Mailpit、ClamAV、worker 的本地 Compose 编排和 Python/TypeScript CI 依赖审计。
+- 三种编译器验证的创作模板、可安装的 `narrative` CLI、机器可读 Schema、创作者声明式玩法测试和独立创作指南；测试可预置关系/知识/任务/线程，执行真实回合并断言 canonical state，失败会阻断 Release。
+- 玩家重返游戏回顾；默认关闭的产品分析、白名单事件、幂等去重、撤回即时删除、个人导出和仅聚合的管理员漏斗。
+- 公共目录、玩家私有 Playthrough 生命周期、canonical gameplay/SSE、创作素材和审核/举报路由已拆分为独立模块，保持原 `/api/v1` 契约不变。
 
-```text
-game/
-└── prompt.md      (44,806 bytes)  —— 唯一文件，本项目的 Master Engineering Prompt
+## 最近验证基线
+
+本轮最终实测结果：
+
+- Python：`611 passed in 61.46s`
+- Ruff：`All checks passed!`
+- Mypy：`Success: no issues found in 144 source files`
+- Next.js：ESLint 通过，Next.js 16.3.0 生产构建通过
+- 迁移：空数据库和实际开发库均位于 Alembic `e91c37a2b604 (head)`
+- 烟测：独立 FastAPI 进程的 `/api/health` 为 `ok`，数据库 `/api/ready` 为 `ready`，Content Pack v2 JSON Schema 可读取
+- 本机 SQLite 验收：普通状态读取 p95 `12.2ms`；50 个 Playthrough 同时读取全部成功（p95 `637.3ms`）；同一 Playthrough 的两次并发行动均成功并经过串行锁。生产性能仍须在 PostgreSQL/Redis 环境复测。
+- Compose：`docker compose config --quiet` 通过
+- Python wheel 构建通过，并确认包含创作模板、Content Pack 编译器、提示词资源与 `narrative` 控制台入口。
+
+复现命令：
+
+```powershell
+C:\ProgramData\miniconda3\envs\game\python.exe -m ruff check .
+C:\ProgramData\miniconda3\envs\game\python.exe -m mypy engine database apps scripts
+C:\ProgramData\miniconda3\envs\game\python.exe -m pytest -q
+C:\ProgramData\miniconda3\envs\game\python.exe scripts/load_smoke.py --playthroughs 50 --action-check
+Set-Location apps/web-next
+npm run lint
+npm run build
 ```
 
-结论：
+Alembic 已在空 SQLite 数据库和重建后的开发库上升级到当前 head。迁移前备份为 `data/game.pre-engine-refactor.20260813-025150.db`，SHA-256 为 `4AEA79A6B89469BE376BFE3134526EFD35E6D4F1A4F8354F8923906506615DED`，文件属性为只读。重建库中没有迁移旧匿名 Playthrough；系统账号持有两个官方项目及其六个不可变 Release，当前版本为 `2.3.0` 与 `1.4.0`。
 
-- **无既有源码**、无 `README`、无 `package config`、无依赖清单、无数据库、无测试。
-- 不是 git 仓库（`git init` 尚未执行）。
-- 因此 **不存在“不要破坏已有功能”的约束**，按 Prompt §73 “如果项目为空，从零初始化”执行。
-- `prompt.md` 被视为**需求规格文档**，全程保留，不修改、不删除。
+## 尚需外部环境验收
 
-## 2. 宿主环境探测
+- 在真实 PostgreSQL 上分别执行 RLS 隔离与恢复演练；SQLite 不能替代这项验证。
+- Docker Desktop daemon 本轮不可用，未能启动整套 Compose；配置渲染已通过，但仍需在目标 PostgreSQL/Redis/S3/邮件/ClamAV/KMS/Sentry 环境做集成、故障和权限演练。
+- 使用真实模型做文风、延迟、成本、越狱和长存档 A/B 测试。
+- 用邀请用户验证首日完成率、章节继续率、7 日回访、拒绝恋爱体验和创作者首次发布耗时。
+- 上线公共 UGC 前落实人工审核、举报、申诉、证据留存和地区法律审查。
 
-| 项目 | 结果 | 影响 |
-|---|---|---|
-| OS | Windows 10 Pro 19045 | 路径/换行需注意；测试需跨平台 |
-| conda | 25.7.0 (miniconda3) | ✅ 按用户要求新建环境 `game` |
-| 系统 Python | 3.13.5 (base) | 不直接使用 |
-| 目标 Python | 3.12 (env `game`) | 满足 Prompt §3 "Python 3.12+" |
-| Node.js / npm | **不存在** | ❗ 无法构建/运行 Next.js，见 `DECISIONS.md` D-002 |
-| PostgreSQL | **未探测到本地实例** | ❗ 见 `DECISIONS.md` D-001 |
-| Redis | **未探测到本地实例** | ❗ 见 `DECISIONS.md` D-003 |
-| git | 2.51.0 | 可用 |
-
-## 3. 由环境推导出的工程约束
-
-1. **数据库必须双后端**：默认 SQLite（开发/测试可零依赖运行），
-   PostgreSQL + pgvector 为生产后端。所有 SQL 通过 SQLAlchemy 2.x 抽象，
-   向量检索通过 `VectorIndex` 接口抽象（`PgVectorIndex` / `NumpyVectorIndex`）。
-2. **前端不能依赖 Node 工具链**：V1 前端为 FastAPI 直接托管的零构建单页应用，
-   保留 `apps/web/` 目录结构以便后续无痛迁移到 Next.js。
-3. **Redis 可选**：并发锁/幂等键通过 `LockBackend` 接口抽象，
-   默认进程内实现，生产切 Redis。
-4. **所有代码在 conda env `game` 内运行与测试**（用户强制要求）。
-
-## 4. 交付基线
-
-Phase 0 完成时，仓库从空目录变为：
-
-```text
-game/
-├── prompt.md            # 原始需求（只读）
-├── pyproject.toml
-├── .env.example
-├── README.md
-├── apps/{api,web}/
-├── engine/              # 与内容无关的纯引擎
-├── content/cultivation_v1/
-├── prompts/
-├── database/
-├── tests/{unit,integration,evals}/
-├── scripts/
-└── docs/
-```
-
-后续状态变化记录在 `docs/ROADMAP.md` 的 Phase 完成勾选中。
-
----
-
-## 5. 当前实际状态（2026-08-10）
-
-全部 10 个 Phase 已实现、运行并通过验证。以下为**实测**结果，非计划：
-
-| 项目 | 状态 |
-|---|---|
-| 测试 | `527 passed`（unit 446 / integration 64 / evals 17） |
-| Lint | `ruff check .` → All checks passed |
-| 类型 | `mypy .` → no issues in 109 source files |
-| 迁移 | `alembic upgrade head` → 22 张表 |
-| 内容包 | `cultivation_v1`《七日血契》：26 个角色（含玩家）、20 个地点、4 个势力、21 条世界事实、4 条剧情线程、3 个初始任务、4 个 canonical 倒计时事件 |
-| API | 全部 §50 端点 + SSE + Debug + Inspector，已对运行中的服务实测通过 |
-| 前端 | 三栏 UI + 流式叙事 + Debug Panel + 400—4000 字长度双向控件，由 FastAPI 托管 |
-| LLM | 未配置（`LLM_PROVIDER=null`），全链路走确定性 fallback；接入模型只需改 `.env` |
-
-测试分布：
-
-```text
-tests/unit/          446   规则、RNG、时钟、Action Plan、内容包/Rule Plugin、关系、事件、一致性、
-                           NPC/Director 生命周期、Memory 事实来源/幂等、意图解析、知识隔离、架构守卫
-tests/integration/    64   完整回合（内存/SQL）、API、Action Plan（含 SSE、幂等与 post-commit 恢复）
-tests/evals/          17   §62 五个场景 + 节奏约束 + 结构化输出纪律
-```
-
-### 已知限制
-
-1. **本轮未做真实模型文风 A/B**：所有关键 LLM 契约以 `ScriptedProvider` / `NullProvider` 验证；
-   Prompt 本身的措辞质量需要真实 A/B 才能评估。
-2. **pgvector 未实机验证**：向量列在 PostgreSQL 分支的 DDL 已写好但只在 SQLite
-   上跑过；首次部署 Postgres 时需要执行 `CREATE EXTENSION vector` 并补一条迁移
-   把 `memories.embedding` 从 JSON 改为 `vector(N)` + ivfflat 索引。
-3. **前端非 Next.js**：见 D-002。当前零构建 SPA 保持 REST/SSE 解耦，可直接由 FastAPI 托管。
-4. **单进程锁**：`InMemoryLockBackend` 只在单进程内正确；多 worker 部署需切 Redis。
-5. **世界规模为 V1 纵切**：20 个地点、26 个角色。背景 NPC 模板已就绪但尚未批量生成。
+这些是“完美产品”不能由单元测试代替的上线门槛；详细顺序见 [ROADMAP](ROADMAP.md)。

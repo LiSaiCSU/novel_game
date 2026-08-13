@@ -315,3 +315,12 @@ def world_tension(world_id: str, before: float, after: float, reason: str = "") 
         after=after,
         reason=reason,
     )
+
+
+def location_flag(location_id: str, payload: dict[str, Any], reason: str = "") -> StateChange:
+    return StateChange(
+        kind=ChangeKind.LOCATION_FLAG,
+        target_id=location_id,
+        payload=payload,
+        reason=reason,
+    )

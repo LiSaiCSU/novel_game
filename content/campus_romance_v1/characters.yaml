@@ -1,0 +1,103 @@
+characters:
+  - key: haruto
+    name: 佐伯春人
+    type: MAJOR_NPC
+    age: 22
+    gender: male
+    location: festival_office
+    faction: festival_committee
+    faction_rank: 企划组长
+    realm: student
+    realm_stage: enrolled
+    stats: {strength: 10, agility: 11, perception: 13, intelligence: 14, willpower: 15, charisma: 15}
+    background: 建筑学四年级，毕业设计与月见馆测绘重叠。他看起来什么都能安排，其实已收到东京事务所的录用通知。
+    personality: {traits: {responsible: 0.9, restrained: 0.78, stubborn: 0.68}, values: [责任, 建筑记忆, 平等合作], taboos: [利用感情逼迫别人], speech_style: 温和直接，会先确认对方是否愿意承担任务, risk_tolerance: 0.45}
+    emotion: {dominant: focused, valence: 0.1, arousal: 0.4, intensity: 0.45}
+    long_term_goal: 完成月见馆修复提案，并决定是否离开春日坂
+    short_term_goals: [拿到结构安全报告, 凑齐修缮预算]
+    schedule: {default: work, slots: [{phase: morning, activity: work, location: lecture_building}, {phase: afternoon, activity: work, location: moonview_hall}, {phase: dusk, activity: social, location: festival_office}, {phase: night, activity: rest, location: international_dorm}]}
+    items: [{key: rehearsal_key, qty: 1}]
+    skills: []
+    reputation: {global: 28, by_faction: {festival_committee: 70}}
+    secret: 他已接受东京事务所的录用，只差在月底前签字
+    capabilities: [建筑测绘, 预算协调, 钢琴伴奏]
+  - key: ren
+    name: 高桥莲
+    type: MAJOR_NPC
+    age: 21
+    gender: male
+    location: university_library
+    faction: festival_committee
+    faction_rank: 档案负责人
+    realm: student
+    realm_stage: enrolled
+    stats: {strength: 9, agility: 10, perception: 16, intelligence: 16, willpower: 12, charisma: 11}
+    background: 历史学三年级，负责整理校史档案。比起被关注，他更习惯留下准确注释。
+    personality: {traits: {observant: 0.9, reserved: 0.82, principled: 0.77}, values: [事实, 隐私, 文字证据], taboos: [篡改档案, 公布私人信件], speech_style: 简短精确，紧张时会反复整理纸张, risk_tolerance: 0.32}
+    emotion: {dominant: curious, valence: 0.1, arousal: 0.3, intensity: 0.4}
+    long_term_goal: 查清缺失账页和未完成信的关系，同时保护写信人的隐私
+    short_term_goals: [取得档案室授权, 找到旧校报编辑]
+    schedule: {default: investigate, slots: [{phase: morning, activity: work, location: university_library}, {phase: afternoon, activity: investigate, location: archive_room}, {phase: dusk, activity: social, location: slope_cafe}, {phase: night, activity: rest, location: international_dorm}]}
+    items: [{key: archive_copy, qty: 1}]
+    skills: []
+    reputation: {global: 15, by_faction: {festival_committee: 55}}
+    secret: 他发现父亲的名字出现在当年的修缮委员会名单上
+    capabilities: [档案检索, 旧报刊考证, 中文阅读]
+  - key: sora
+    name: 森川空
+    type: MAJOR_NPC
+    age: 20
+    gender: male
+    location: art_studio
+    faction: festival_committee
+    faction_rank: 视觉负责人
+    realm: student
+    realm_stage: enrolled
+    stats: {strength: 10, agility: 14, perception: 15, intelligence: 12, willpower: 11, charisma: 16}
+    background: 视觉传达二年级，在社交平台很受欢迎，却不愿让赞助商决定作品主题。
+    personality: {traits: {expressive: 0.88, playful: 0.72, independent: 0.84}, values: [创作自由, 真诚, 朋友], taboos: [偷拍, 情绪勒索], speech_style: 语速快，常用草图代替长解释, risk_tolerance: 0.64}
+    emotion: {dominant: energetic, valence: 0.35, arousal: 0.65, intensity: 0.58}
+    long_term_goal: 做出不依赖流量噱头也能打动人的校庆视觉
+    short_term_goals: [完成月见馆主视觉, 拒绝附带条件的品牌赞助]
+    schedule: {default: work, slots: [{phase: morning, activity: work, location: art_studio}, {phase: afternoon, activity: social, location: main_gate}, {phase: dusk, activity: work, location: moonview_hall}, {phase: night, activity: social, location: slope_cafe}]}
+    items: []
+    skills: []
+    reputation: {global: 42, by_faction: {festival_committee: 58}}
+    secret: 匿名账号曾公开质疑学校拆除历史建筑，如今被赞助商发现
+    capabilities: [平面设计, 摄影, 社交传播]
+  - key: akira
+    name: 水野彰
+    type: MAJOR_NPC
+    age: 23
+    gender: male
+    location: moonview_hall
+    faction: festival_committee
+    faction_rank: 音乐统筹
+    realm: student
+    realm_stage: enrolled
+    stats: {strength: 12, agility: 13, perception: 14, intelligence: 13, willpower: 14, charisma: 14}
+    background: 音乐学研究生一年级，曾因手伤退出职业比赛。现在负责最终演出的节目与排练。
+    personality: {traits: {patient: 0.82, self_critical: 0.86, considerate: 0.75}, values: [长期练习, 尊重界限, 团队完成], taboos: [拿伤病激将别人, 越俎代庖], speech_style: 平静，提出建议前会先问是否需要, risk_tolerance: 0.38}
+    emotion: {dominant: composed, valence: 0.05, arousal: 0.25, intensity: 0.4}
+    long_term_goal: 找到不以比赛输赢定义自己的音乐道路
+    short_term_goals: [修好旧钢琴, 设计适合礼堂声场的节目]
+    schedule: {default: work, slots: [{phase: morning, activity: work, location: rehearsal_room}, {phase: afternoon, activity: work, location: moonview_hall}, {phase: dusk, activity: social, location: riverside_path}, {phase: night, activity: rest, location: international_dorm}]}
+    items: []
+    skills: []
+    reputation: {global: 24, by_faction: {festival_committee: 60}}
+    secret: 复查结果显示他的手可以逐步恢复，但他一直没有拆开医院来信
+    capabilities: [钢琴, 编曲, 舞台音响]
+  - {key: reina, name: 伊藤玲奈, type: MAJOR_NPC, age: 22, gender: female, location: student_center, faction: student_union, faction_rank: 学生会长, realm: student, realm_stage: enrolled, stats: {strength: 10, agility: 11, perception: 14, intelligence: 16, willpower: 16, charisma: 15}, background: 法学四年级，负责预算审批和安全程序。, personality: {traits: {pragmatic: 0.9, fair: 0.8}, values: [程序, 公平], taboos: [伪造票据], speech_style: 清晰利落, risk_tolerance: 0.3}, emotion: {dominant: focused, valence: 0, arousal: 0.4, intensity: 0.4}, long_term_goal: 让校庆安全完成且不牺牲学生自治, short_term_goals: [核对缺失账目], schedule: {default: work, slots: [{phase: morning, activity: work, location: student_center}, {phase: afternoon, activity: work, location: festival_office}]}, items: [], skills: [], reputation: {global: 50, by_faction: {student_union: 90}}, secret: 她掌握一封设施委员会要求暂缓公开账目的邮件, capabilities: [法务审阅, 会议主持]}
+  - {key: yuna, name: 陈雨娜, type: MAJOR_NPC, age: 21, gender: female, location: international_dorm, faction: festival_committee, faction_rank: 留学生联络, realm: student, realm_stage: enrolled, stats: {strength: 10, agility: 12, perception: 13, intelligence: 14, willpower: 14, charisma: 16}, background: 新闻传播三年级，也是玩家最早认识的宿舍邻居。, personality: {traits: {warm: 0.88, direct: 0.78}, values: [互助, 准确报道], taboos: [未经同意公开隐私], speech_style: 自然爽快, risk_tolerance: 0.55}, emotion: {dominant: hopeful, valence: 0.4, arousal: 0.5, intensity: 0.5}, long_term_goal: 做一篇经得起事实核查的月见馆报道, short_term_goals: [采访历届成员], schedule: {default: investigate, slots: [{phase: morning, activity: work, location: lecture_building}, {phase: afternoon, activity: investigate, location: festival_office}, {phase: night, activity: social, location: international_dorm}]}, items: [], skills: [], reputation: {global: 20, by_faction: {festival_committee: 48}}, secret: 她的实习编辑要求用冲突标题换取版面, capabilities: [采访, 中日翻译]}
+  - {key: daichi, name: 小林大地, type: MAJOR_NPC, age: 22, gender: male, location: sports_ground, faction: festival_committee, faction_rank: 后勤负责人, realm: student, realm_stage: enrolled, stats: {strength: 16, agility: 15, perception: 11, intelligence: 11, willpower: 15, charisma: 13}, background: 运动科学四年级，负责志愿者与器材搬运。, personality: {traits: {reliable: 0.9, sociable: 0.75}, values: [守时, 团队], taboos: [欺负新人], speech_style: 直白务实, risk_tolerance: 0.58}, emotion: {dominant: energetic, valence: 0.3, arousal: 0.6, intensity: 0.5}, long_term_goal: 完成教师资格考试并带好最后一次校庆, short_term_goals: [招募二十名志愿者], schedule: {default: work, slots: [{phase: morning, activity: work, location: sports_ground}, {phase: afternoon, activity: work, location: moonview_hall}]}, items: [], skills: [], reputation: {global: 34, by_faction: {festival_committee: 62}}, secret: 志愿者名单中有人重复冒领交通补贴, capabilities: [急救, 现场调度]}
+  - {key: mika, name: 藤原美香, type: MAJOR_NPC, age: 20, gender: female, location: art_studio, faction: festival_committee, faction_rank: 舞美助理, realm: student, realm_stage: enrolled, stats: {strength: 9, agility: 12, perception: 15, intelligence: 13, willpower: 12, charisma: 12}, background: 舞台美术二年级，擅长把有限预算变成可用布景。, personality: {traits: {creative: 0.9, anxious: 0.6}, values: [合作, 手艺], taboos: [抄袭], speech_style: 谨慎但具体, risk_tolerance: 0.4}, emotion: {dominant: busy, valence: 0.1, arousal: 0.55, intensity: 0.5}, long_term_goal: 独立完成一套舞台设计, short_term_goals: [确认消防材料], schedule: {default: work, slots: [{phase: morning, activity: work, location: art_studio}, {phase: afternoon, activity: work, location: moonview_hall}]}, items: [], skills: [], reputation: {global: 10, by_faction: {festival_committee: 40}}, secret: 她发现上一版布景报价被人为抬高, capabilities: [木工, 舞美设计]}
+  - {key: naoki, name: 山本直树, type: MAJOR_NPC, age: 21, gender: male, location: slope_cafe, faction: festival_committee, faction_rank: 赞助联络, realm: student, realm_stage: enrolled, stats: {strength: 11, agility: 11, perception: 12, intelligence: 14, willpower: 12, charisma: 17}, background: 商学三年级，熟悉本地商户与校友网络。, personality: {traits: {ambitious: 0.8, charming: 0.8}, values: [结果, 人情信用], taboos: [公开毁约], speech_style: 会把请求说成互利方案, risk_tolerance: 0.65}, emotion: {dominant: confident, valence: 0.25, arousal: 0.45, intensity: 0.45}, long_term_goal: 用校庆项目证明自己的商业能力, short_term_goals: [签下主要赞助], schedule: {default: social, slots: [{phase: morning, activity: work, location: lecture_building}, {phase: afternoon, activity: social, location: slope_cafe}]}, items: [], skills: [], reputation: {global: 36, by_faction: {festival_committee: 45}}, secret: 最大赞助商要求删除关于旧账的展览部分, capabilities: [谈判, 筹款]}
+  - {key: emiko, name: 渡边惠美子, type: MAJOR_NPC, age: 23, gender: female, location: university_library, faction: festival_committee, faction_rank: 剧本负责人, realm: student, realm_stage: enrolled, stats: {strength: 9, agility: 10, perception: 14, intelligence: 16, willpower: 13, charisma: 13}, background: 文学研究生一年级，为最终演出编写群像剧本。, personality: {traits: {thoughtful: 0.86, perfectionist: 0.72}, values: [人物真实, 作者责任], taboos: [消费真实创伤], speech_style: 斟酌措辞，善于倾听, risk_tolerance: 0.35}, emotion: {dominant: contemplative, valence: 0.05, arousal: 0.3, intensity: 0.4}, long_term_goal: 写出不牺牲任何真实人物隐私的演出文本, short_term_goals: [决定是否采用未完成信], schedule: {default: work, slots: [{phase: morning, activity: work, location: university_library}, {phase: afternoon, activity: work, location: rehearsal_room}]}, items: [], skills: [], reputation: {global: 18, by_faction: {festival_committee: 52}}, secret: 她已找到信件可能的收件人，但没有对方的公开许可, capabilities: [剧作, 文本编辑]}
+  - {key: kota, name: 松本航太, type: MAJOR_NPC, age: 20, gender: male, location: rehearsal_room, faction: festival_committee, faction_rank: 广播技术, realm: student, realm_stage: enrolled, stats: {strength: 10, agility: 13, perception: 15, intelligence: 14, willpower: 11, charisma: 10}, background: 电子工程二年级，负责舞台灯光和直播线路。, personality: {traits: {technical: 0.9, shy: 0.75}, values: [可靠系统, 清晰需求], taboos: [无视安全测试], speech_style: 先报参数再解释, risk_tolerance: 0.25}, emotion: {dominant: alert, valence: 0, arousal: 0.45, intensity: 0.4}, long_term_goal: 完成一次零事故的大型直播, short_term_goals: [更换老化线路], schedule: {default: work, slots: [{phase: morning, activity: work, location: lecture_building}, {phase: afternoon, activity: work, location: rehearsal_room}]}, items: [], skills: [], reputation: {global: 8, by_faction: {festival_committee: 38}}, secret: 消防检测报告中的线路照片不是月见馆现场, capabilities: [灯光, 直播, 电路检查]}
+  - {key: ayame, name: 佐藤菖蒲, type: MAJOR_NPC, age: 22, gender: female, location: moonview_hall, faction: festival_committee, faction_rank: 表演负责人, realm: student, realm_stage: enrolled, stats: {strength: 11, agility: 16, perception: 13, intelligence: 12, willpower: 15, charisma: 16}, background: 舞蹈四年级，负责演员排练与舞台调度。, personality: {traits: {disciplined: 0.88, candid: 0.8}, values: [身体自主, 专业训练], taboos: [带伤强练, 羞辱新人], speech_style: 明确而不刻薄, risk_tolerance: 0.48}, emotion: {dominant: determined, valence: 0.2, arousal: 0.55, intensity: 0.52}, long_term_goal: 让不同经验的学生都能安全登台, short_term_goals: [完成无障碍排练方案], schedule: {default: work, slots: [{phase: morning, activity: work, location: sports_ground}, {phase: afternoon, activity: work, location: moonview_hall}]}, items: [], skills: [], reputation: {global: 30, by_faction: {festival_committee: 65}}, secret: 她准备拒绝一家要求演员极端减重的经纪公司, capabilities: [编舞, 排练管理]}
+relationships:
+  - {a: haruto, b: player, affection: 4, trust: 2, respect: 5, familiarity: 8, boundaries: 50}
+  - {a: ren, b: player, affection: 1, trust: 1, respect: 3, familiarity: 3, boundaries: 50}
+  - {a: sora, b: player, affection: 5, trust: 1, respect: 2, familiarity: 5, boundaries: 50}
+  - {a: akira, b: player, affection: 3, trust: 3, respect: 4, familiarity: 4, boundaries: 50}
+  - {a: yuna, b: player, affection: 10, trust: 8, respect: 5, familiarity: 15, boundaries: 50}

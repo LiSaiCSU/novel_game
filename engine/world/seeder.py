@@ -85,6 +85,10 @@ class PlayerSpec:
     spiritual_root: str | None = None
     background: str = ""
     stats: dict[str, int] = field(default_factory=dict)
+    attributes: dict[str, Any] = field(default_factory=dict)
+    resources: dict[str, Any] = field(default_factory=dict)
+    progressions: dict[str, Any] = field(default_factory=dict)
+    properties: dict[str, Any] = field(default_factory=dict)
 
 
 def _oid(world_id: str, kind: str, key: str) -> str:
@@ -330,6 +334,25 @@ def _seed_characters(pack: ContentPack, bundle: SeedBundle) -> None:
                 by_faction={k: float(v) for k, v in (rep_raw.get("by_faction") or {}).items()},
             ),
             capabilities=list(raw.get("capabilities", []) or []),
+            attributes={**{key: int(value) for key, value in stats.items()},
+                        **dict(raw.get("attributes", {}) or {})},
+            resources={**{
+                "health": {"current": max_hp, "maximum": max_hp},
+                **(
+                    {"spiritual_power": {"current": max_sp, "maximum": max_sp}}
+                    if max_sp > 0
+                    else {}
+                ),
+            }, **dict(raw.get("resources", {}) or {})},
+            progressions={**{
+                str(pack.realms.progression_name): {
+                    "track": str(pack.meta.get("primary_progression_key", "primary")),
+                    "tier": realm,
+                    "stage": stage,
+                    "progress": float(raw.get("cultivation_progress", 0.0)),
+                }
+            }, **dict(raw.get("progressions", {}) or {})},
+            properties=dict(raw.get("properties", {}) or {}),
             metadata={
                 **dict(raw.get("metadata", {}) or {}),
                 **({"secret": raw.get("secret")} if raw.get("secret") else {}),
@@ -374,6 +397,27 @@ def _seed_player(pack: ContentPack, bundle: SeedBundle, spec: PlayerSpec) -> Non
     max_sp = ladder.max_spiritual_power(realm, stage)
     start_location = str(meta.get("start_location", pack.locations[0]["key"]))
     stats = spec.stats or {}
+    template = dict(pack.meta.get("player_template", {}) or {})
+    declared_resources = {
+        str(item["key"]): {
+            "current": float(item.get("default", 0)),
+            "maximum": float(item.get("maximum", 100)),
+        }
+        for item in pack.meta.get("resource_definitions", [])
+    }
+    declared_progressions = {
+        str(item["key"]): {
+            "track": str(item["key"]),
+            "tier": str((item.get("tiers") or [{"key": "standard"}])[0]["key"]),
+            "stage": "active",
+            "progress": 0.0,
+        }
+        for item in pack.meta.get("progression_definitions", [])
+    }
+    template_attributes = dict(template.get("attributes", {}) or {})
+    template_resources = dict(template.get("resources", {}) or {})
+    template_progressions = dict(template.get("progressions", {}) or {})
+    template_properties = dict(template.get("properties", {}) or {})
 
     player = Character(
         id=_oid(world_id, "character", PLAYER_KEY),
@@ -406,6 +450,31 @@ def _seed_player(pack: ContentPack, bundle: SeedBundle, spec: PlayerSpec) -> Non
         background=spec.background,
         long_term_goal="",
         current_emotion=Emotion(updated_at_minute=bundle.world.current_minute),
+        attributes={**{key: int(value) for key, value in {
+            "strength": stats.get("strength", 11),
+            "agility": stats.get("agility", 11),
+            "perception": stats.get("perception", 11),
+            "intelligence": stats.get("intelligence", 11),
+            "willpower": stats.get("willpower", 11),
+            "charisma": stats.get("charisma", 11),
+        }.items()}, **template_attributes, **spec.attributes},
+        resources={**{
+            "health": {"current": max_hp, "maximum": max_hp},
+            **(
+                {"spiritual_power": {"current": max_sp, "maximum": max_sp}}
+                if max_sp > 0
+                else {}
+            ),
+        }, **declared_resources, **template_resources, **spec.resources},
+        progressions={**declared_progressions, **{
+            str(pack.realms.progression_name): {
+                "track": str(pack.meta.get("primary_progression_key", "primary")),
+                "tier": realm,
+                "stage": stage,
+                "progress": 0.0,
+            }
+        }, **template_progressions, **spec.progressions},
+        properties={**template_properties, **spec.properties},
     )
     bundle.characters.append(player)
 
@@ -572,6 +641,7 @@ def _seed_relationships(pack: ContentPack, bundle: SeedBundle) -> None:
                 suspicion=int(raw.get("suspicion", 0)),
                 dependency=int(raw.get("dependency", 0)),
                 familiarity=int(raw.get("familiarity", 0)),
+                boundaries=int(raw.get("boundaries", 50)),
                 tags=list(raw.get("tags", []) or []),
                 last_interaction_minute=bundle.world.current_minute,
                 interaction_count=1,

@@ -1,0 +1,16 @@
+location_types: [{key: campus, name: 校园}, {key: building, name: 建筑}, {key: room, name: 房间}, {key: outdoor, name: 户外}, {key: district, name: 街区}]
+locations:
+  - {key: kasugazaka_university, name: 春日坂大学, type: campus, parent: null, danger: 0, spirit_density: 1, description: 建在缓坡上的综合大学，银杏道连接新校舍与旧建筑群。}
+  - {key: international_dorm, name: 留学生宿舍, type: building, parent: kasugazaka_university, danger: 0, spirit_density: 1, description: 新学期刚刚住满，公共厨房的冰箱贴着十几种语言的便签。, travel: {main_gate: 8, student_center: 12}}
+  - {key: main_gate, name: 正门银杏道, type: outdoor, parent: kasugazaka_university, danger: 0, spirit_density: 1, description: 从车站通往校园的长坡，春天总有社团在这里招新。, travel: {international_dorm: 8, lecture_building: 10, slope_cafe: 12}}
+  - {key: lecture_building, name: 第一教学楼, type: building, parent: kasugazaka_university, danger: 0, spirit_density: 1, description: 大一公共课集中地，走廊公告板贴满校庆志愿者招募。, travel: {main_gate: 10, university_library: 6, student_center: 5}}
+  - {key: university_library, name: 中央图书馆, type: building, parent: kasugazaka_university, danger: 0, spirit_density: 1, description: 地下一层保存旧校报和捐赠档案。, travel: {lecture_building: 6, archive_room: 2, moonview_hall: 8}}
+  - {key: archive_room, name: 校史档案室, type: room, parent: university_library, danger: 0, spirit_density: 1, description: 预约才能进入的小房间，二十年前月见馆修缮账册缺了三页。, travel: {university_library: 2}}
+  - {key: student_center, name: 学生中心, type: building, parent: kasugazaka_university, danger: 0, spirit_density: 1, description: 学生会、社团办公室与器材借用窗口都在这里。, travel: {international_dorm: 12, lecture_building: 5, festival_office: 2}}
+  - {key: festival_office, name: 校庆企划室, type: room, parent: student_center, danger: 0, spirit_density: 1, description: 旧会议桌上摊着预算表、施工报价和一张不断被修改的排练日程。, travel: {student_center: 2, moonview_hall: 7}}
+  - {key: moonview_hall, name: 月见馆, type: building, parent: kasugazaka_university, danger: 1, spirit_density: 1, description: 昭和末期建成的木质礼堂，舞台仍漂亮，但屋顶漏水且消防设备过期。, travel: {festival_office: 7, university_library: 8, rehearsal_room: 1, riverside_path: 10}}
+  - {key: rehearsal_room, name: 月见馆排练室, type: room, parent: moonview_hall, danger: 0, spirit_density: 1, description: 墙上留着历届演出的铅笔记号，角落有一架走音的立式钢琴。, travel: {moonview_hall: 1}}
+  - {key: art_studio, name: 美术工房, type: building, parent: kasugazaka_university, danger: 0, spirit_density: 1, description: 模型、木料和颜料堆到窗边，是制作校庆视觉方案的地方。, travel: {moonview_hall: 9, sports_ground: 7}}
+  - {key: sports_ground, name: 综合运动场, type: outdoor, parent: kasugazaka_university, danger: 0, spirit_density: 1, description: 傍晚最热闹，广播社常在看台测试设备。, travel: {art_studio: 7, student_center: 8}}
+  - {key: riverside_path, name: 春川河岸, type: outdoor, parent: kasugazaka_university, danger: 0, spirit_density: 1, description: 校园后门外的步道，夜里能看见月见馆屋顶的轮廓。, travel: {moonview_hall: 10, slope_cafe: 8}}
+  - {key: slope_cafe, name: 坡上咖啡, type: district, parent: kasugazaka_university, danger: 0, spirit_density: 1, description: 学生常去的旧咖啡店，老板保存着许多毕业生寄来的明信片。, travel: {main_gate: 12, riverside_path: 8}}

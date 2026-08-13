@@ -17,6 +17,13 @@ dist/
 .venv/
 venv/
 
+# Node / Next.js
+node_modules/
+.next/
+out/
+*.tsbuildinfo
+.pnp.*
+
 # Tooling caches
 .pytest_cache/
 .mypy_cache/

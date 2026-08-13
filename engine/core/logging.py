@@ -9,6 +9,7 @@ from contextvars import ContextVar
 from typing import Any
 
 _request_id: ContextVar[str] = ContextVar("request_id", default="-")
+_trace_id: ContextVar[str] = ContextVar("trace_id", default="-")
 _turn_id: ContextVar[str] = ContextVar("turn_id", default="-")
 _world_id: ContextVar[str] = ContextVar("world_id", default="-")
 _session_id: ContextVar[str] = ContextVar("session_id", default="-")
@@ -19,6 +20,7 @@ _CONFIGURED = False
 class _ContextFilter(logging.Filter):
     def filter(self, record: logging.LogRecord) -> bool:
         record.request_id = _request_id.get()
+        record.trace_id = _trace_id.get()
         record.turn_id = _turn_id.get()
         record.world_id = _world_id.get()
         record.session_id = _session_id.get()
@@ -32,6 +34,7 @@ class _JsonFormatter(logging.Formatter):
             "logger": record.name,
             "message": record.getMessage(),
             "request_id": getattr(record, "request_id", "-"),
+            "trace_id": getattr(record, "trace_id", "-"),
             "turn_id": getattr(record, "turn_id", "-"),
             "world_id": getattr(record, "world_id", "-"),
             "session_id": getattr(record, "session_id", "-"),
@@ -71,12 +74,15 @@ def get_logger(name: str) -> logging.Logger:
 def bind(
     *,
     request_id: str | None = None,
+    trace_id: str | None = None,
     turn_id: str | None = None,
     world_id: str | None = None,
     session_id: str | None = None,
 ) -> None:
     if request_id is not None:
         _request_id.set(request_id)
+    if trace_id is not None:
+        _trace_id.set(trace_id)
     if turn_id is not None:
         _turn_id.set(turn_id)
     if world_id is not None:

@@ -39,6 +39,7 @@ RELATIONSHIP_DIMENSIONS: tuple[str, ...] = (
     "suspicion",
     "dependency",
     "familiarity",
+    "boundaries",
 )
 
 
@@ -57,6 +58,8 @@ class World(Base):
     calendar_config: dict[str, Any] = Field(default_factory=dict)
     world_seed: str = "seed"
     content_pack: str = ""
+    release_id: str | None = None
+    playthrough_id: str | None = None
     rule_version: str = "1.0.0"
     narrative_tension: float = 20.0
     tension_history: list[float] = Field(default_factory=list)
@@ -265,6 +268,10 @@ class Character(Base):
     alive: bool = True
     death_event_id: str | None = None
     capabilities: list[str] = Field(default_factory=list)
+    attributes: dict[str, Any] = Field(default_factory=dict)
+    resources: dict[str, Any] = Field(default_factory=dict)
+    progressions: dict[str, Any] = Field(default_factory=dict)
+    properties: dict[str, Any] = Field(default_factory=dict)
     metadata: dict[str, Any] = Field(default_factory=dict)
 
     @property
@@ -291,6 +298,7 @@ class Relationship(Base):
     suspicion: int = 0
     dependency: int = 0
     familiarity: int = 0
+    boundaries: int = 50
     last_interaction_minute: int = 0
     interaction_count: int = 0
     tags: list[str] = Field(default_factory=list)
@@ -591,3 +599,4 @@ class GameSession(Base):
     session_seed: str = "session"
     status: str = "active"
     turn_number: int = 0
+    playthrough_id: str | None = None

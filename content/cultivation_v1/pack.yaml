@@ -1,8 +1,9 @@
 key: cultivation_v1
 name: 七日血契
 genre: cultivation
-version: "1.0.0"
-engine_min_version: "0.1.0"
+version: "2.3.0"
+engine_min_version: "0.2.0"
+primary_progression_key: cultivation
 language: zh-CN
 rule_plugin:
   path: rule_plugin.py

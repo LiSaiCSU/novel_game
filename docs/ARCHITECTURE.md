@@ -1,235 +1,120 @@
-# ARCHITECTURE
+# 系统架构
 
-> Code determines what CAN happen.
-> Database determines what IS true.
-> AI determines intent, reasoning, behavior and expression.
+本文件是代码依赖和运行时边界的契约。
 
-本文件是全项目的结构契约。任何与本文件冲突的实现都是 bug。
-
----
-
-## 1. 分层
+## 分层
 
 ```text
-┌──────────────────────────────────────────────────────────────┐
-│ apps/web        零构建 SPA（三栏 UI + Debug Panel）           │
-├──────────────────────────────────────────────────────────────┤
-│ apps/api        FastAPI：REST + SSE，只做 I/O 与 DTO 转换      │
-├──────────────────────────────────────────────────────────────┤
-│ engine/         纯领域层（不 import SQLAlchemy / FastAPI）    │
-│   orchestrator  回合调度                                      │
-│   actions rules events knowledge memory relationships         │
-│   world characters simulation director narrative context llm  │
-│   contentpack   世界观数据加载                                 │
-│   core          ports / errors / config / mutations / clock   │
-├──────────────────────────────────────────────────────────────┤
-│ database/       SQLAlchemy 2.x models + repositories(适配器)   │
-│                 + alembic migrations + seeding                │
-├──────────────────────────────────────────────────────────────┤
-│ content/        YAML + 受信任、版本化 Rule Plugin             │
-└──────────────────────────────────────────────────────────────┘
+apps/web-next   Next.js 玩家端、作品库、创作台、审核/设置界面
+       ↓ REST + SSE (/api/v1)
+apps/api        FastAPI DTO、认证、租户、运行时组装、Redis/S3/邮件适配器
+       ↓                       ↓
+engine          纯领域层       database
+规则/回合/AI/内容端口          SQLAlchemy、Alembic、RLS、Repository、备份
+       ↑                       ↑
+       └──── engine/core/ports ┘
+
+apps/worker     邮件、编译、素材、导出、过期预览等后台任务
+content         官方内容源；发布后转为不可变 Content Pack v2 制品
 ```
 
-**依赖方向严格向下**：`apps → engine → (ports) ← database`。
-`engine` 通过 `engine/core/ports.py` 中的 `Protocol` 反向依赖持久化，
-因此可以用纯内存 fake repo 完整跑通整个回合（见 `tests/`）。
+自动化约束 `tests/unit/test_engine_purity.py` 保证 `engine/` 不依赖 Web、ORM、Redis 或数据库。
 
-自动化守卫：`tests/unit/test_engine_purity.py`
-- engine 内不得出现 `import sqlalchemy` / `import fastapi`
-- engine 内除 `engine/rng/` 外不得出现 `import random` / `numpy.random`
-- engine 内不得出现内容包专有名词（中文实体名硬编码）
-- RuleEngine / ActionResolver 不得包含修炼题材分支；bundled plugin 不得 import 基础设施或随机模块
-
----
-
-## 2. 回合数据流（与 Prompt §5 一致）
+## 平台对象关系
 
 ```text
-                      PLAYER
-                        │  natural language
-                        ▼
-                 GameOrchestrator            ← 唯一的流程编排者
-                        │
-      ┌─────────────────┼─────────────────┐
-      ▼                 ▼                 ▼
- IntentParser      ContextBuilder     WorldStateView
- (LLM/fallback)    (逐 Agent 裁剪)     (repo 只读快照)
-      └─────────────────┼─────────────────┘
-                        ▼
-                   RuleEngine            ← 纯确定性，LLM 无权覆盖
-                   validate_action()
-                        │  allowed / reason_code
-                        ▼
-                  ActionResolver         ← GameRNG，产出 ActionOutcome
-                        │
-      ┌─────────────────┼─────────────────┐
-      ▼                 ▼                 ▼
-  NPCAgents        WorldSimulator      Director
- (proposal only)   (LOD 0..3)        (剧情线程/张力)
-      └─────────────────┼─────────────────┘
-                        ▼
-                 ProposalValidator       ← §18：AI 提案 → 校验 → 钳制
-                        ▼
-                 ConsistencyGuard        ← §63：7 类一致性检查
-                        ▼
-                 StateTransaction        ← canonical state + EventLog + Turn 原子提交
-                        │
-                        ▼
-   MemoryExtractor (owner/event 幂等投影；独立事务，可由恢复胶囊重建)
-                        ▼
-                NarrativeRenderer        ← 只描述已确定的事实
-                        ▼
-                      PLAYER
+User ─┬─ Project ─ ProjectRevision ─ ContentRelease(immutable)
+      │                                  │
+      ├─ Asset                            └─ Playthrough ─ World/GameSession
+      ├─ LlmCredential(encrypted)                         ├─ Turn/Event/Memory
+      ├─ AuthSession                                      └─ SaveSlot
+      ├─ UsageLedger
+      └─ ProductEvent（主动同意、白名单字段、可即时清除）
 ```
 
-**关键不变量**
-1. `NarrativeRenderer` 在 `commit()` 之后才启动（§49）。流式输出不影响世界状态。
-2. 任何 AI 输出在未经 `ProposalValidator` 之前不得转成 `StateChange`（§18/§47）。
-3. `ContextBuilder` 是 NPC 上帝视角的唯一防线（§15/§30）。
-4. 不是每回合都调 LLM。`OrchestratorPlan` 决定本回合需要哪些 AI（§6）。
-5. Memory 的事实文本只来自 canonical Event；AI 分类不能把 Narrative 修辞写回事实层。
+- `Project` 是持续编辑对象；`revision` 处理乐观并发。
+- `World` 是内容世界；`Scenario` 是入口；`Scene` 只是局内地点、时间或事件。
+- `Release` 制品不可修改；下架只修改可见性元数据。
+- `Playthrough` 永久固定 `release_id`，新版本默认新开一局。
+- 玩家数据以 `user_id` 与 `playthrough_id` 归属；应用查询和 PostgreSQL RLS 双重约束。生产策略对租户表启用 `FORCE ROW LEVEL SECURITY`，并沿 World、角色、事件、记忆、回合、叙事与存档的完整关联图验证所属 Playthrough。
 
----
+## 请求级运行时
 
-## 3. 模块职责表
-
-| 模块 | 职责 | 确定性 | 可调 LLM |
-|---|---|---|---|
-| `engine/orchestrator` | 回合编排、事务边界、重试、token 预算、日志 | ✅ | ❌ |
-| `engine/actions` | Action schema、fallback 解析、Action 注册表 | ✅ | ❌ |
-| `engine/rules` | 通用规则 + RulePlugin 协议/路由 | ✅ | ❌ |
-| `engine/rng` | GameRNG、seed 派生、RngTrace、聚合分布采样 | ✅ | ❌ |
-| `engine/world` | 世界状态视图、WorldClock、位置图 | ✅ | ❌ |
-| `engine/characters` | 角色模型、人格/情绪与持久 Goal→Plan→Action→Result 生命周期 | ✅ | ❌ |
-| `engine/relationships` | 8 维关系、钳制、变化原因日志 | ✅ | ❌ |
-| `engine/knowledge` | Fact / CharacterKnowledge、信息传播 | ✅ | ❌ |
-| `engine/memory` | 4 层记忆、embedding、复合排序检索 | ✅ | ✅(抽取) |
-| `engine/events` | Event 构造、append-only、因果链 | ✅ | ❌ |
-| `engine/simulation` | LOD 0-3、Temporal Jump、年龄/寿命、NPC 日程与离屏目标推进、势力模拟 | ✅ | ✅(LOD0) |
-| `engine/director` | 剧情线程、张力曲线、事件提案及持久调度/去重/兑现生命周期 | ✅(状态裁决) | ✅(提案) |
-| `engine/narrative` | 叙事渲染、风格配置、去 AI 味 | ❌ | ✅ |
-| `engine/context` | 逐 Agent 上下文构造 + token 预算 | ✅ | ❌ |
-| `engine/llm` | Provider 抽象、ModelRouter、结构化输出与修复 | ✅ | — |
-| `engine/contentpack` | YAML → ContentPack 对象、校验 | ✅ | ❌ |
-
----
-
-## 4. LLM 抽象（§3/§48）
+旧的全局内容包/Orchestrator 单例不参与 v1 请求。
 
 ```text
-LLMProvider (Protocol)
-├── AnthropicProvider
-├── OpenAIProvider
-├── CompatibleProvider     (OpenAI 兼容端点：DeepSeek/Qwen/vLLM/Ollama…)
-├── ScriptedProvider       (测试：录制/回放固定响应)
-└── NullProvider           (无 Key 时：触发确定性 fallback)
-
-方法: generate_text() / generate_structured(schema) / stream_text()
+request
+  → owner-checked Playthrough
+  → Release artifact + checksum（不回读当前磁盘内容源）
+  → ReleaseContentCache（仅缓存不可变 ContentPack）
+  → request-scoped provider / LLMClient / Orchestrator
+  → RedisLockBackend(playthrough world) 或本地锁
+  → canonical transaction
+  → UsageLedger
 ```
 
-`ModelRouter` 按任务角色选模型，全部来自 `.env`：
+这样用户密钥、LLM 调用记录、token 预算和错误不会跨用户或跨请求泄漏。
+
+## 回合流水线
 
 ```text
-INTENT_MODEL   NPC_MODEL   NPC_MAJOR_MODEL
-DIRECTOR_MODEL NARRATIVE_MODEL   MEMORY_MODEL
+玩家文本
+  → IntentParser（LLM 或确定性 fallback）
+  → RuleEngine.validate
+  → ActionResolver + GameRNG
+  → NPC / Simulation / Director proposals
+  → ProposalValidator
+  → 声明式 Content Pack rules
+  → ConsistencyGuard
+  → canonical state + EventLog + recovery capsule 原子提交
+  → Memory projection
+  → NarrativeRenderer（只描述已提交事实）
+  → SSE narrative/state/done
 ```
 
-`generate_structured()` 流程：`调用 → JSON 抽取 → pydantic 校验 →
-（失败）修复提示重试 ≤N → （仍失败）fallback 策略 → 记录 LLMCallRecord`。
+关键不变量：
 
----
+1. LLM 没有数据库写句柄。
+2. AI proposal 未经验证不能成为 `StateChange`。
+3. 叙事失败不能重做 canonical action。
+4. NPC context 只包含其知识与可感知事件。
+5. 同一世界的行动通过锁串行；数据库事务和幂等 Turn 行仍是最终正确性来源。
 
-## 5. 内容包接口（§64/§65）
+## Content Pack v2
 
-```text
-content/cultivation_v1/
-├── pack.yaml         元信息、叙事风格、模型偏好
-├── rule_plugin.py    题材行为 validate / resolve（只返回 proposal）
-├── domain_rules.py   修炼/突破的确定性领域计算
-├── calendar.yaml     世界日历（分钟↔年月日时辰）
-├── realms.yaml       境界阶梯 + 突破参数 + 战力系数
-├── rules.yaml        时间成本/关系钳制/检测/经济/社交等数值
-├── locations.yaml    位置树
-├── factions.yaml     势力
-├── characters.yaml   重要 NPC（完整人格/知识/日程/秘密）
-├── npc_templates.yaml 背景 NPC 模板
-├── items.yaml        物品
-├── skills.yaml       技能
-├── facts.yaml        世界事实（truth）与初始知识分布
-├── plot_threads.yaml 初始剧情线程 / World Seeds
-└── event_templates.yaml
-```
+Pydantic 契约位于 `engine/contentpack/schema_v2.py`，编译器位于 `compiler.py`。
 
-数据型差异只需 YAML。复杂题材规则通过 `pack.yaml::rule_plugin` 声明：
+发布编译执行：schema、稳定 key、重复 key、引擎 API 与版本范围、交叉引用、地点可达性、资源范围、表达式/效果白名单、素材完整性校验和确定性作者玩法测试。规范 JSON 以 SHA-256 标识；校验和是内容身份和缓存键，不是所有权标识，因此不同创作者可各自发布相同制品。
 
-```yaml
-rule_plugin:
-  path: rule_plugin.py
-  class: CultivationRulePlugin
-  api_version: "1"
-```
+`author_tests` 与作品一起版本化。每条测试在隔离的 `MemoryUnitOfWork` 中建立固定种子 Playthrough，可预置玩家、关系、知识、任务和剧情线，并通过真实 Orchestrator 执行有限行动。断言只能读取白名单 canonical state，不包含生成正文或调试上下文；整套测试最多执行 80 个行动。CLI、创作台校验与 Release API 共享同一个 runner，公开发布必须至少声明一条测试。
 
-插件实现 `handled_actions / validate_action / resolve_action`。Engine 只注入只读
-`RuleContext`、已验证 Action、RuleResult 和 EventBuilder；插件只能返回 `ActionOutcome + ChangeSet`
-proposal，最终仍由 ConsistencyGuard 与 Orchestrator 事务提交。插件路径必须位于包目录，API 版本
-必须匹配。它是部署者安装的**受信任服务器代码**，不是面向用户上传的不可信脚本沙箱。
+作者规则由 `DeclarativeRule` 表示：
 
-当前非修仙调查插件测试证明同一边界可接管 `CUSTOM` 领域行为，但完整第二内容包尚未完成；
-角色 schema 仍有 V1 progression 兼容字段，不能宣称任意题材无需建模工作即可替换。
+- 条件：无 I/O 的受限 AST；
+- 效果：玩家通用数据、资源、关系、背包、任务、线程和地点标记的白名单操作；
+- 限制：递归深度、操作步数、参数数量、可写字段和关系变化钳制；
+- 禁止：`eval`、脚本、文件、网络、数据库和反射路径。
 
----
+官方受信任作品仍可由管理员安装版本化 Python Rule Plugin；网页上传永远不可用。插件源码树哈希会编译进 Release，运行时只有系统所有者且本地源码哈希仍匹配时才会加载；普通 Release 完全从不可变制品还原。
 
-## 6. 一致性与事务（§58/§59/§63）
+## 基础设施
 
-- 一个玩家回合的 canonical changes、事件、session 计数与
-  `Turn(status=CANONICAL_COMMITTED)` = 一个 `TurnTransaction`。提交前失败整体回滚。
-- `ConsistencyGuard` 在 commit 前检查：alive / location / inventory /
-  realm / knowledge / faction / time 七类一致性，任一失败 → 回滚并记录 `TurnError`。
-- 幂等：`POST /game/{sid}/action` 接受 `Idempotency-Key`；
-  同 key 重放返回首次结果；若叙事未完成则只恢复叙事，不重复推进世界。
-- 世界级并发：`LockBackend.acquire(f"world:{world_id}")`。
+- PostgreSQL：生产事实源、RLS、自动备份与 PITR。
+- Redis：跨进程世界锁、限流、Release/任务状态。
+- S3 兼容存储：清洗后的不可变素材；读取同时校验所有者或公开 Release 引用。
+- Worker：Redis 任务入口和过期预览清理；邮件、缩略图、编译与导出任务仍按路线图逐项迁入。
+- SMTP/Mailpit：验证、重置与本地邮件捕获。
+- Next.js：独立部署，`/api` 与 `/media` 反向代理到 FastAPI。
 
----
+SQLite 只用于测试和本地轻量开发，由仓储和 API 所有权条件模拟租户隔离。
 
-## 7. 前后端契约
+## 产品反馈与回顾
 
-```text
-POST /worlds                      创建世界（从 content pack 播种）
-GET  /worlds/{id}
-POST /characters                  创建角色
-GET  /characters/{id}
-POST /game/start                  开局 → session
-POST /game/{session_id}/action    提交自然语言行动（同步返回完整回合结果）
-GET  /game/{session_id}/action/stream   SSE：先推 state_changes，再流式 narrative
-GET  /game/{session_id}/state
-GET  /game/{session_id}/history
-GET  /characters/{id}/relationships
-GET  /characters/{id}/memories
-GET  /player/inventory
-GET  /debug/turn/{turn_id}        Debug Panel 数据（§52）
-GET  /admin/world/{id}/inspector  World Inspector（§53）
-```
+- 玩家回顾由玩家已见叙事、当前场景、公开任务与剧情提示确定性生成，不调用 LLM，也不读取秘密事实。
+- 产品分析默认关闭；开启后只接受服务器定义的事件名和属性白名单，不保存玩家输入、生成正文、邮箱、密钥或 IP。
+- 撤回同意会立即删除该用户的事件；幂等回合使用 `turn_id` 去重。管理端只读取聚合漏斗，不返回身份或逐条事件。
+- 公共目录、玩家 Playthrough 生命周期、canonical gameplay/SSE、创作者图片管线与审核/举报分属独立模块；拆分只改变应用内部边界，不改变 `/api/v1` URL。
 
-`action` 响应：
+## 兼容层
 
-```json
-{
-  "narrative": "...",
-  "state_changes": {},
-  "visible_updates": {},
-  "choices": [],
-  "turn_id": "...",
-  "debug": { "...": "DEBUG_MODE 时才有" }
-}
-```
-
----
-
-## 8. Observability（§60）
-
-每回合产出一条 `TurnTrace`：
-`request_id / session_id / world_id / turn_id / 各阶段耗时 /
-每次 LLM 调用(model, prompt_version, temperature, tokens, latency, 校验结果) /
-RNG traces / state mutations / errors`。
-持久化到 `turn_traces` 表，Debug Panel 直接读取。
-结构化日志走 `engine/core/logging.py`（stdlib logging + JSON formatter），禁止 print。
+`/api/game/*` 仅在 `DEBUG_MODE=true` 时注册，用于迁移测试。生产和 Next.js 只使用 `/api/v1`。旧 `apps/web` 已删除，避免维护两份玩家契约。
