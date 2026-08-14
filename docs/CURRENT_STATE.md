@@ -15,7 +15,7 @@
 - 未列出作品的一次性邀请链接、公开目录筛选/排序，以及封面、头像、背景图的清洗、病毒扫描、缩略图和对象存储。
 - 异步个人数据导出和延迟注销；导出明确排除凭据密文、令牌哈希、内部 trace、秘密状态和完整存档载荷。
 - Redis 任务队列/死信、邮件、审核扫描、过期预览和导出清理、结构化日志、指标、traceparent、慢查询、Sentry 接口和 LLM 成本告警。
-- PostgreSQL、Redis、MinIO、Mailpit、ClamAV、worker 的本地 Compose 编排和 Python/TypeScript CI 依赖审计。
+- PostgreSQL、Redis、MinIO、Mailpit、ClamAV、worker 的本地 Compose 编排；`novegame.online` 的生产 Compose、Caddy 自动 HTTPS、迁移前备份、镜像回滚与首位管理员授权；Python/TypeScript CI 依赖审计。
 - 三种编译器验证的创作模板、可安装的 `narrative` CLI、机器可读 Schema、创作者声明式玩法测试和独立创作指南；测试可预置关系/知识/任务/线程，执行真实回合并断言 canonical state，失败会阻断 Release。
 - 玩家重返游戏回顾；默认关闭的产品分析、白名单事件、幂等去重、撤回即时删除、个人导出和仅聚合的管理员漏斗。
 - 公共目录、玩家私有 Playthrough 生命周期、canonical gameplay/SSE、创作素材和审核/举报路由已拆分为独立模块，保持原 `/api/v1` 契约不变。
@@ -27,13 +27,13 @@
 - Python：`643 passed in 76.73s`，其中 2 项使用真实 PostgreSQL 17 验证 RLS 与单查询快照
 - Ruff：`All checks passed!`
 - Mypy：`Success: no issues found in 145 source files`
-- Next.js：6 项 Vitest、Prettier、ESLint 通过，Next.js 16.3.0 生产构建通过
+- Next.js：9 项 Vitest、Prettier、ESLint 通过，Next.js 16.3.0 生产构建通过
 - 迁移：空 SQLite、开发 SQLite 与空 PostgreSQL 17 均位于 Alembic `e91c37a2b604 (head)`
 - 烟测：独立 FastAPI 进程的 `/api/health` 为 `ok`，数据库 `/api/ready` 为 `ready`，Content Pack v2 JSON Schema 可读取
 - 回合起始状态从同一 AsyncSession 的 10 次串行读取改为单条 `UNION ALL` 快照；SQLite 与真实 PostgreSQL/RLS 连接均断言只执行 1 条 SQL。
 - PostgreSQL RLS：应用角色为 `NOSUPERUSER NOBYPASSRLS`；跨用户列举、直接对象读取、更新和伪造所有权插入均已在数据库层拒绝。迁移 owner 与 API/Worker 运行角色已分离。
 - 本机 SQLite 验收：普通状态读取 p95 `12.2ms`；50 个 Playthrough 同时读取全部成功（p95 `637.3ms`）；同一 Playthrough 的两次并发行动均成功并经过串行锁。生产规格 PostgreSQL/Redis 压测仍未完成。
-- Compose：Docker Desktop、PostgreSQL 17 容器、迁移、官方 Release 初始化与 RLS 测试实际运行通过；`docker compose config --quiet` 通过。
+- Compose：Docker Desktop、PostgreSQL 17 容器、迁移、官方 Release 初始化与 RLS 测试实际运行通过；开发和生产 Compose 均通过 `docker compose config --quiet`。生产镜像构建、Caddy 校验，以及独立 PostgreSQL/Redis/MinIO、全量 Alembic 迁移和 API readiness 冒烟测试已通过；ClamAV、真实 SMTP/Sentry 与公网 HTTPS 仍待目标 Ubuntu 实机验收。
 - 真实 LLM：12 回合首次整局完成但人工评审失败；修复调用追踪和玩家代理权后，单回合从 7 次调用/61.3 秒/约 2.3 万 token 降至 2 次调用/17.9 秒/8172 token/估算 0.032664 元。模型仍会违背精确事实，已加入声明式叙事不变量和失败降级，尚未达到发布门槛。
 - Python wheel 构建通过，并确认包含创作模板、Content Pack 编译器、提示词资源与 `narrative` 控制台入口。
 

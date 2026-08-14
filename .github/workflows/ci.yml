@@ -28,6 +28,27 @@ jobs:
       - run: ruff check .
       - run: mypy engine apps database
       - run: python scripts/compile_official_content.py
+      - name: Validate local and production deployment definitions
+        env:
+          DOMAIN: novegame.online
+          ACME_EMAIL: ops@novegame.online
+          IMAGE_TAG: ci
+          POSTGRES_OWNER_PASSWORD: ci-owner-password-0123456789
+          POSTGRES_APP_PASSWORD: ci-app-password-0123456789
+          REDIS_PASSWORD: ci-redis-password-0123456789
+          MINIO_ROOT_USER: novegame
+          MINIO_ROOT_PASSWORD: ci-minio-password-0123456789
+          AUTH_PEPPER: ci-auth-pepper-012345678901234567890123456789
+          CREDENTIAL_ENCRYPTION_KEY: ci-encryption-key-012345678901234567890123456789
+          METRICS_TOKEN: ci-metrics-token-01234567890123456789
+          SENTRY_DSN: https://public@example.invalid/1
+          SMTP_HOST: smtp.example.invalid
+          SMTP_FROM: noreply@novegame.online
+          LLM_PRICE_TABLE: '{}'
+        run: |
+          bash -n scripts/init-production-env.sh scripts/backup-production.sh scripts/deploy-production.sh scripts/rollback-production.sh scripts/promote-admin.sh
+          docker compose -f compose.yaml config --quiet
+          docker compose -f compose.prod.yaml config --quiet
       - run: DATABASE_URL=sqlite+aiosqlite:///./data/ci-migration.db alembic upgrade head
       - name: Migrate and provision PostgreSQL application role
         run: |
@@ -35,7 +56,8 @@ jobs:
           docker run --rm --network host \
             -v "$PWD/infra/postgres:/infra:ro" \
             -e PGPASSWORD=local-only-password postgres:17-alpine \
-            psql -h 127.0.0.1 -U narrative -d narrative -f /infra/provision-app-role.sql
+            psql -h 127.0.0.1 -U narrative -d narrative \
+              -v app_password=local-app-password -f /infra/provision-app-role.sql
           DATABASE_URL=postgresql+asyncpg://narrative:local-only-password@127.0.0.1:5432/narrative \
             python -c "import asyncio; from database.bootstrap import ensure_official_releases; from engine.core.config import get_settings; asyncio.run(ensure_official_releases(get_settings()))"
       - run: pytest -q

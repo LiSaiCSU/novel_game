@@ -45,6 +45,20 @@ docker compose up --build
 
 Compose 中的密码只用于本地开发。生产密钥必须由密钥管理服务注入，不能提交到仓库或放进生产 `.env`。
 
+## Ubuntu 一键部署
+
+`novegame.online` 的生产编排、自动 HTTPS、迁移前备份、镜像回滚和首位管理员授权已经封装完成。
+服务器安装 Docker 与 Compose Plugin、域名完成解析后执行：
+
+```bash
+git clone <你的 GitHub 仓库地址> /opt/novegame
+cd /opt/novegame
+sudo bash scripts/deploy-production.sh
+```
+
+后续更新使用 `git pull --ff-only && sudo bash scripts/deploy-production.sh`。完整准备、首次配置、
+故障排查和旧版数据边界见 [Ubuntu 部署指南](docs/DEPLOY_UBUNTU.md)。
+
 ## LLM 接入
 
 平台模型可通过统一配置接入 OpenAI 兼容端点：

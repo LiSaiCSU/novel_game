@@ -1,0 +1,263 @@
+name: novegame-v2
+
+x-backend-environment: &backend-environment
+  APP_ENV: production
+  DEBUG_MODE: "false"
+  LOG_LEVEL: ${LOG_LEVEL:-INFO}
+  LOG_JSON: "true"
+  DATABASE_ECHO: "false"
+  REDIS_URL: redis://:${REDIS_PASSWORD:?REDIS_PASSWORD is required}@redis:6379/0
+  CONTENT_DIR: /app/content
+  PUBLIC_APP_URL: https://${DOMAIN:?DOMAIN is required}
+  CORS_ORIGINS: https://${DOMAIN}
+  AUTH_COOKIE_SECURE: "true"
+  AUTH_PEPPER: ${AUTH_PEPPER:?AUTH_PEPPER is required}
+  CREDENTIAL_ENCRYPTION_KEY: ${CREDENTIAL_ENCRYPTION_KEY:?CREDENTIAL_ENCRYPTION_KEY is required}
+  REQUIRE_VERIFIED_EMAIL: "true"
+  ADMIN_MFA_REQUIRED: "true"
+  ADULT_CATALOG_ENABLED: "false"
+  METRICS_TOKEN: ${METRICS_TOKEN:?METRICS_TOKEN is required}
+  SENTRY_DSN: ${SENTRY_DSN:?SENTRY_DSN is required}
+  SENTRY_TRACES_SAMPLE_RATE: ${SENTRY_TRACES_SAMPLE_RATE:-0.1}
+  SLOW_QUERY_SECONDS: ${SLOW_QUERY_SECONDS:-0.3}
+  OBJECT_STORE_BACKEND: s3
+  S3_ENDPOINT_URL: http://minio:9000
+  S3_BUCKET: ${S3_BUCKET:-narrative-assets}
+  S3_ACCESS_KEY: ${MINIO_ROOT_USER:?MINIO_ROOT_USER is required}
+  S3_SECRET_KEY: ${MINIO_ROOT_PASSWORD:?MINIO_ROOT_PASSWORD is required}
+  S3_REGION: ${S3_REGION:-us-east-1}
+  CLAMAV_HOST: clamav
+  CLAMAV_PORT: "3310"
+  SMTP_HOST: ${SMTP_HOST:?SMTP_HOST is required}
+  SMTP_PORT: ${SMTP_PORT:-587}
+  SMTP_USERNAME: ${SMTP_USERNAME:-}
+  SMTP_PASSWORD: ${SMTP_PASSWORD:-}
+  SMTP_FROM: ${SMTP_FROM:?SMTP_FROM is required}
+  SMTP_STARTTLS: ${SMTP_STARTTLS:-true}
+  LLM_PROVIDER: ${LLM_PROVIDER:-null}
+  LLM_API_KEY: ${LLM_API_KEY:-}
+  LLM_API_KEYS: ${LLM_API_KEYS:-}
+  LLM_BASE_URL: ${LLM_BASE_URL:-}
+  LLM_MODEL: ${LLM_MODEL:-}
+  LLM_PRICE_TABLE: ${LLM_PRICE_TABLE:-{}}
+  LLM_DAILY_COST_ALERT_MICROUNITS: ${LLM_DAILY_COST_ALERT_MICROUNITS:-0}
+
+services:
+  postgres:
+    image: postgres:17-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-narrative}
+      POSTGRES_USER: ${POSTGRES_USER:-narrative}
+      POSTGRES_PASSWORD: ${POSTGRES_OWNER_PASSWORD:?POSTGRES_OWNER_PASSWORD is required}
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    networks: [backend]
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+      interval: 5s
+      timeout: 3s
+      retries: 30
+      start_period: 10s
+
+  postgres-role:
+    image: postgres:17-alpine
+    restart: "no"
+    environment:
+      PGPASSWORD: ${POSTGRES_OWNER_PASSWORD:?POSTGRES_OWNER_PASSWORD is required}
+      POSTGRES_DB: ${POSTGRES_DB:-narrative}
+      POSTGRES_USER: ${POSTGRES_USER:-narrative}
+      POSTGRES_APP_PASSWORD: ${POSTGRES_APP_PASSWORD:?POSTGRES_APP_PASSWORD is required}
+    command:
+      - /bin/sh
+      - -ec
+      - >-
+        psql -h postgres -U "$${POSTGRES_USER}" -d "$${POSTGRES_DB}"
+        -v app_password="$${POSTGRES_APP_PASSWORD}"
+        -f /infra/provision-app-role.sql
+    volumes:
+      - ./infra/postgres/provision-app-role.sql:/infra/provision-app-role.sql:ro
+    networks: [backend]
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  redis:
+    image: redis:7-alpine
+    restart: unless-stopped
+    environment:
+      REDIS_PASSWORD: ${REDIS_PASSWORD:?REDIS_PASSWORD is required}
+    command:
+      - /bin/sh
+      - -ec
+      - exec redis-server --appendonly yes --requirepass "$${REDIS_PASSWORD}"
+    volumes:
+      - redis-data:/data
+    networks: [backend]
+    healthcheck:
+      test: ["CMD-SHELL", "redis-cli -a \"$${REDIS_PASSWORD}\" ping | grep PONG"]
+      interval: 5s
+      timeout: 3s
+      retries: 30
+
+  minio:
+    image: minio/minio:latest
+    restart: unless-stopped
+    command: server /data
+    environment:
+      MINIO_ROOT_USER: ${MINIO_ROOT_USER:?MINIO_ROOT_USER is required}
+      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD:?MINIO_ROOT_PASSWORD is required}
+    volumes:
+      - object-data:/data
+    networks: [backend]
+
+  minio-init:
+    image: minio/mc:latest
+    restart: "no"
+    environment:
+      MINIO_ROOT_USER: ${MINIO_ROOT_USER:?MINIO_ROOT_USER is required}
+      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD:?MINIO_ROOT_PASSWORD is required}
+      S3_BUCKET: ${S3_BUCKET:-narrative-assets}
+    entrypoint: ["/bin/sh", "-ec"]
+    command:
+      - >-
+        until mc alias set local http://minio:9000 "$${MINIO_ROOT_USER}" "$${MINIO_ROOT_PASSWORD}";
+        do sleep 2; done;
+        mc mb --ignore-existing "local/$${S3_BUCKET}";
+        mc version enable "local/$${S3_BUCKET}"
+    networks: [backend]
+    depends_on: [minio]
+
+  clamav:
+    image: clamav/clamav:stable
+    restart: unless-stopped
+    volumes:
+      - clamav-data:/var/lib/clamav
+    networks: [backend]
+    healthcheck:
+      test: ["CMD", "clamdscan", "--ping", "1"]
+      interval: 15s
+      timeout: 10s
+      retries: 30
+      start_period: 90s
+
+  migrate:
+    image: novegame-api:${IMAGE_TAG:?IMAGE_TAG is required}
+    build:
+      context: .
+      dockerfile: Dockerfile
+    restart: "no"
+    command: ["alembic", "upgrade", "head"]
+    environment:
+      <<: *backend-environment
+      DATABASE_URL: postgresql+asyncpg://${POSTGRES_USER:-narrative}:${POSTGRES_OWNER_PASSWORD}@postgres:5432/${POSTGRES_DB:-narrative}
+    networks: [backend]
+    depends_on:
+      postgres-role:
+        condition: service_completed_successfully
+
+  api:
+    image: novegame-api:${IMAGE_TAG:?IMAGE_TAG is required}
+    build:
+      context: .
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    stop_grace_period: 30s
+    environment:
+      <<: *backend-environment
+      DATABASE_URL: postgresql+asyncpg://narrative_app:${POSTGRES_APP_PASSWORD}@postgres:5432/${POSTGRES_DB:-narrative}
+    networks: [backend, egress]
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+      redis:
+        condition: service_healthy
+      minio-init:
+        condition: service_completed_successfully
+      clamav:
+        condition: service_healthy
+    healthcheck:
+      test:
+        - CMD
+        - python
+        - -c
+        - import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/api/ready', timeout=4)
+      interval: 15s
+      timeout: 6s
+      retries: 20
+      start_period: 30s
+
+  worker:
+    image: novegame-api:${IMAGE_TAG:?IMAGE_TAG is required}
+    restart: unless-stopped
+    command: ["python", "-m", "apps.worker.main"]
+    environment:
+      <<: *backend-environment
+      DATABASE_URL: postgresql+asyncpg://narrative_app:${POSTGRES_APP_PASSWORD}@postgres:5432/${POSTGRES_DB:-narrative}
+    networks: [backend, egress]
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+      redis:
+        condition: service_healthy
+      minio-init:
+        condition: service_completed_successfully
+
+  web:
+    image: novegame-web:${IMAGE_TAG:?IMAGE_TAG is required}
+    build:
+      context: ./apps/web-next
+      dockerfile: Dockerfile
+      args:
+        NEXT_PUBLIC_SITE_URL: https://${DOMAIN:?DOMAIN is required}
+    restart: unless-stopped
+    environment:
+      API_ORIGIN: http://api:8000
+      NEXT_PUBLIC_SITE_URL: https://${DOMAIN}
+    networks: [frontend, backend]
+    depends_on:
+      api:
+        condition: service_healthy
+    healthcheck:
+      test:
+        - CMD
+        - node
+        - -e
+        - fetch('http://127.0.0.1:3000').then(r=>{if(!r.ok)process.exit(1)}).catch(()=>process.exit(1))
+      interval: 15s
+      timeout: 6s
+      retries: 20
+      start_period: 20s
+
+  caddy:
+    image: caddy:2-alpine
+    restart: unless-stopped
+    environment:
+      DOMAIN: ${DOMAIN:?DOMAIN is required}
+      ACME_EMAIL: ${ACME_EMAIL:?ACME_EMAIL is required}
+    ports:
+      - "80:80"
+      - "443:443"
+      - "443:443/udp"
+    volumes:
+      - ./infra/caddy/Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy-data:/data
+      - caddy-config:/config
+    networks: [frontend]
+    depends_on:
+      web:
+        condition: service_healthy
+
+networks:
+  frontend:
+  backend:
+    internal: true
+  egress:
+
+volumes:
+  postgres-data:
+  redis-data:
+  object-data:
+  clamav-data:
+  caddy-data:
+  caddy-config:

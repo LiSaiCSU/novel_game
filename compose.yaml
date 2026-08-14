@@ -20,7 +20,7 @@ services:
     command:
       - /bin/sh
       - -c
-      - PGPASSWORD=local-only-password psql -h postgres -U narrative -d narrative -f /infra/provision-app-role.sql
+      - PGPASSWORD=local-only-password psql -h postgres -U narrative -d narrative -v app_password=local-app-password -f /infra/provision-app-role.sql
     volumes:
       - ./infra/postgres/provision-app-role.sql:/infra/provision-app-role.sql:ro
     depends_on:
