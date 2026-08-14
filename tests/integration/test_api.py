@@ -1209,6 +1209,7 @@ async def test_v1_history_saves_and_credentials_are_owner_scoped(client, monkeyp
         },
     )
     assert private_endpoint.status_code == 422
+    assert "sk-private-endpoint" not in private_endpoint.text
 
     second = await client.post(
         "/api/v1/auth/register",

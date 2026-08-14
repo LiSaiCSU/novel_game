@@ -144,6 +144,18 @@ def create_app() -> FastAPI:
 
     @app.exception_handler(RequestValidationError)
     async def validation_problem(request: Request, exc: RequestValidationError) -> JSONResponse:
+        # Pydantic's raw error entries may contain the submitted value and an
+        # exception object in ``ctx``.  Besides not always being JSON-safe,
+        # echoing those fields can disclose passwords or API keys.  The public
+        # contract only needs a stable location, type and human-readable hint.
+        safe_errors = [
+            {
+                "type": str(error.get("type", "validation_error")),
+                "loc": [str(part) for part in error.get("loc", ())],
+                "msg": str(error.get("msg", "Invalid value")),
+            }
+            for error in exc.errors()
+        ]
         return JSONResponse(
             status_code=422,
             media_type="application/problem+json",
@@ -152,7 +164,7 @@ def create_app() -> FastAPI:
                 "title": "请求校验失败",
                 "status": 422,
                 "instance": str(request.url.path),
-                "errors": exc.errors(),
+                "errors": safe_errors,
             },
         )
 
