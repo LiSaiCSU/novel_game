@@ -33,7 +33,7 @@ HEARTBEAT_SECONDS = 12.0
 
 
 def _sse(event: str, payload: dict[str, Any]) -> str:
-    return f"event: {event}\\ndata: {json.dumps(payload, ensure_ascii=False)}\\n\\n"
+    return f"event: {event}\ndata: {json.dumps(payload, ensure_ascii=False)}\n\n"
 
 
 @router.post("/playthroughs/{playthrough_id}/actions")

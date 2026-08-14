@@ -1556,8 +1556,10 @@ async def test_v1_sse_disables_proxy_transforms(client) -> None:
     assert response.status_code == 200
     assert response.headers["cache-control"] == "no-cache, no-transform"
     assert response.headers["x-accel-buffering"] == "no"
-    assert "event: state" in body
-    assert "event: done" in body
+    assert "event: open\ndata:" in body
+    assert "event: state\ndata:" in body
+    assert "event: done\ndata:" in body
+    assert "\\ndata:" not in body
 
 
 async def test_sse_idempotency_header_replays_without_advancing_twice(client) -> None:
