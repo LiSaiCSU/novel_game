@@ -174,8 +174,6 @@ class Settings(BaseSettings):
             problems.append("CLAMAV_HOST is required")
         if not self.require_verified_email:
             problems.append("REQUIRE_VERIFIED_EMAIL must be true")
-        if not self.admin_mfa_required:
-            problems.append("ADMIN_MFA_REQUIRED must be true")
         if len(self.metrics_token) < 24:
             problems.append("METRICS_TOKEN must be a strong injected secret")
         if not self.sentry_dsn:

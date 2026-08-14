@@ -1010,6 +1010,16 @@ async def test_v1_registration_playthrough_and_cross_user_isolation(client) -> N
     assert state["player"]["properties"]["major"] == "journalism"
     assert state["player"]["properties"]["interests"] == ["摄影"]
     assert state["player"]["resources"]["energy"]["current"] == 80
+    settings = (await client.get(f"/api/v1/playthroughs/{playthrough_id}/settings")).json()
+    assert settings["narrative_length"] == "standard"
+    assert settings["narrative_max_chars"] == 1600
+    changed = await client.put(
+        f"/api/v1/playthroughs/{playthrough_id}/settings",
+        headers={"X-CSRF-Token": csrf},
+        json={"narrative_length": "detailed"},
+    )
+    assert changed.status_code == 200, changed.text
+    assert changed.json()["narrative_max_chars"] == 2400
 
     second = await client.post(
         "/api/v1/auth/register",
@@ -1024,6 +1034,28 @@ async def test_v1_registration_playthrough_and_cross_user_isolation(client) -> N
     assert denied.status_code == 404
     assert denied.headers["content-type"].startswith("application/problem+json")
     assert (await client.get(f"/api/v1/playthroughs/{playthrough_id}/recap")).status_code == 404
+    second_csrf = client.cookies.get("ng_csrf")
+    denied_delete = await client.delete(
+        f"/api/v1/playthroughs/{playthrough_id}",
+        headers={"X-CSRF-Token": second_csrf},
+    )
+    assert denied_delete.status_code == 404
+
+    logged_back_in = await client.post(
+        "/api/v1/auth/login",
+        json={"email": "first@example.com", "password": "correct-horse-123"},
+    )
+    assert logged_back_in.status_code == 200
+    first_csrf = client.cookies.get("ng_csrf")
+    deleted = await client.delete(
+        f"/api/v1/playthroughs/{playthrough_id}",
+        headers={"X-CSRF-Token": first_csrf},
+    )
+    assert deleted.status_code == 204
+    assert playthrough_id not in {
+        item["id"] for item in (await client.get("/api/v1/playthroughs")).json()
+    }
+    assert (await client.get(f"/api/v1/playthroughs/{playthrough_id}/state")).status_code == 404
 
 
 async def test_catalog_filters_tags_and_popularity_sort(client) -> None:

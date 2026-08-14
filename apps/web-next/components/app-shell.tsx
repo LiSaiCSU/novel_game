@@ -2,17 +2,19 @@
 
 import {
   BookOpenText,
+  ChevronUp,
   Compass,
   Gauge,
   LogIn,
+  LogOut,
   PenTool,
   Settings,
   ShieldCheck,
   UserRound,
 } from "lucide-react";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
-import { type ReactNode, useEffect, useState } from "react";
+import { usePathname, useRouter } from "next/navigation";
+import { type ReactNode, useEffect, useRef, useState } from "react";
 import { api } from "@/lib/api";
 
 type CurrentUser = {
@@ -37,8 +39,11 @@ function displayName(user: CurrentUser) {
 
 export function AppShell({ children }: { children: ReactNode }) {
   const pathname = usePathname();
+  const router = useRouter();
   const [user, setUser] = useState<CurrentUser>();
   const [authReady, setAuthReady] = useState(false);
+  const [accountOpen, setAccountOpen] = useState(false);
+  const accountArea = useRef<HTMLDivElement>(null);
   const immersive = /^\/(play|creator)\/[^/]+/.test(pathname);
 
   useEffect(() => {
@@ -55,6 +60,30 @@ export function AppShell({ children }: { children: ReactNode }) {
       active = false;
     };
   }, []);
+
+  useEffect(() => {
+    if (!accountOpen) return;
+    function close(event: MouseEvent | KeyboardEvent) {
+      if (event instanceof KeyboardEvent && event.key !== "Escape") return;
+      if (event instanceof MouseEvent && accountArea.current?.contains(event.target as Node))
+        return;
+      setAccountOpen(false);
+    }
+    document.addEventListener("mousedown", close);
+    document.addEventListener("keydown", close);
+    return () => {
+      document.removeEventListener("mousedown", close);
+      document.removeEventListener("keydown", close);
+    };
+  }, [accountOpen]);
+
+  async function logout() {
+    await api("/auth/logout", { method: "POST" });
+    setUser(undefined);
+    setAccountOpen(false);
+    router.replace("/");
+    router.refresh();
+  }
 
   const roleNavigation = [
     user?.roles.includes("reviewer")
@@ -104,21 +133,48 @@ export function AppShell({ children }: { children: ReactNode }) {
           ))}
         </nav>
         {user ? (
-          <Link
-            className={`account ${isCurrent(pathname, "/settings") ? "active" : ""}`}
-            href="/settings"
-            title={`${user.email} · 账户设置`}
-            aria-label={`账户设置：${displayName(user)}`}
-          >
-            <span className="accountAvatar" aria-hidden="true">
-              {displayName(user).slice(0, 1).toUpperCase()}
-            </span>
-            <span className="accountCopy">
-              <b>{displayName(user)}</b>
-              <small>账户设置</small>
-            </span>
-            <Settings className="accountSettings" size={16} aria-hidden="true" />
-          </Link>
+          <div className="accountArea" ref={accountArea}>
+            <button
+              type="button"
+              className={`account ${accountOpen || isCurrent(pathname, "/settings") ? "active" : ""}`}
+              title={`${user.email} · 账户菜单`}
+              aria-label={`打开账户菜单：${displayName(user)}`}
+              aria-expanded={accountOpen}
+              aria-controls="account-menu"
+              onClick={() => setAccountOpen((open) => !open)}
+            >
+              <span className="accountAvatar" aria-hidden="true">
+                {displayName(user).slice(0, 1).toUpperCase()}
+              </span>
+              <span className="accountCopy">
+                <b>{displayName(user)}</b>
+                <small>账户与偏好</small>
+              </span>
+              <ChevronUp className="accountSettings" size={16} aria-hidden="true" />
+            </button>
+            {accountOpen && (
+              <div className="accountMenu" id="account-menu" role="menu">
+                <header>
+                  <b>{displayName(user)}</b>
+                  <small>{user.email}</small>
+                </header>
+                <Link href="/play" role="menuitem" onClick={() => setAccountOpen(false)}>
+                  <BookOpenText size={16} /> 我的故事
+                </Link>
+                <Link href="/settings" role="menuitem" onClick={() => setAccountOpen(false)}>
+                  <Settings size={16} /> 账户设置
+                </Link>
+                {user.roles.includes("admin") && (
+                  <Link href="/admin" role="menuitem" onClick={() => setAccountOpen(false)}>
+                    <Gauge size={16} /> 平台管理
+                  </Link>
+                )}
+                <button type="button" role="menuitem" onClick={() => void logout()}>
+                  <LogOut size={16} /> 退出登录
+                </button>
+              </div>
+            )}
+          </div>
         ) : (
           <Link className="account accountGuest" href="/" aria-label="登录叙界">
             {authReady ? <LogIn size={18} /> : <UserRound className="authPulse" size={18} />}

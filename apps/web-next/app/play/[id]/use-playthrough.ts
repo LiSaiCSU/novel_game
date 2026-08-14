@@ -10,6 +10,7 @@ import {
   type EndingStatus,
   type History,
   initialChoices,
+  type PlaythroughSettings,
   type Recap,
   type Save,
   type Scene,
@@ -32,17 +33,20 @@ export function usePlaythrough(id: string) {
   const [recap, setRecap] = useState<Recap>();
   const [showRecap, setShowRecap] = useState(true);
   const [progress, setProgress] = useState("");
+  const [qualityWarning, setQualityWarning] = useState("");
+  const [settings, setSettings] = useState<PlaythroughSettings>();
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
   const [loading, setLoading] = useState(true);
 
   const refresh = useCallback(async () => {
-    const [nextState, history, saved, nextDashboard, endings] = await Promise.all([
+    const [nextState, history, saved, nextDashboard, endings, nextSettings] = await Promise.all([
       api<Scene>(`/playthroughs/${id}/state`),
       api<History>(`/playthroughs/${id}/history`),
       api<Save[]>(`/playthroughs/${id}/saves`),
       api<Dashboard>(`/playthroughs/${id}/dashboard`),
       api<EndingStatus>(`/playthroughs/${id}/endings`),
+      api<PlaythroughSettings>(`/playthroughs/${id}/settings`),
     ]);
     setState(nextState);
     setChapters(formatChapters(history));
@@ -50,6 +54,7 @@ export function usePlaythrough(id: string) {
     setSaves(saved);
     setDashboard(nextDashboard);
     setEndingStatus(endings);
+    setSettings(nextSettings);
   }, [id]);
 
   useEffect(() => {
@@ -60,8 +65,9 @@ export function usePlaythrough(id: string) {
       api<Dashboard>(`/playthroughs/${id}/dashboard`),
       api<EndingStatus>(`/playthroughs/${id}/endings`),
       api<Recap>(`/playthroughs/${id}/recap`),
+      api<PlaythroughSettings>(`/playthroughs/${id}/settings`),
     ])
-      .then(([nextState, history, saved, nextDashboard, endings, returnRecap]) => {
+      .then(([nextState, history, saved, nextDashboard, endings, returnRecap, nextSettings]) => {
         setState(nextState);
         setChapters(formatChapters(history));
         if (history.choices.length) setChoices(history.choices);
@@ -69,6 +75,7 @@ export function usePlaythrough(id: string) {
         setDashboard(nextDashboard);
         setEndingStatus(endings);
         setRecap(returnRecap);
+        setSettings(nextSettings);
         if (returnRecap.suggestions.length) setChoices(returnRecap.suggestions);
       })
       .catch((loadError: unknown) => setError(errorMessage(loadError)))
@@ -78,6 +85,7 @@ export function usePlaythrough(id: string) {
   async function reload(): Promise<void> {
     setLoading(true);
     setError("");
+    setQualityWarning("");
     try {
       await refresh();
       const returnRecap = await api<Recap>(`/playthroughs/${id}/recap`);
@@ -120,6 +128,11 @@ export function usePlaythrough(id: string) {
             const nextBeat = payload.beat as { question?: string; options?: Choice[] } | null;
             setBeat(nextBeat?.question ?? "");
             if (nextBeat?.options?.length) setChoices(nextBeat.options);
+            if (payload.degraded) {
+              setQualityWarning(
+                "本回合的叙事模型没有完整完成，系统已保留你的行动并使用基础文本。你可以继续游戏；如果反复出现，请让管理员检查模型健康状态。",
+              );
+            }
           } else if (streamEvent === "error") {
             throw new Error(String(payload.message ?? "行动失败"));
           }
@@ -177,6 +190,19 @@ export function usePlaythrough(id: string) {
     await refresh();
   }
 
+  async function updateSettings(narrativeLength: PlaythroughSettings["narrative_length"]) {
+    const next = await api<PlaythroughSettings>(`/playthroughs/${id}/settings`, {
+      method: "PUT",
+      body: JSON.stringify({ narrative_length: narrativeLength }),
+    });
+    setSettings(next);
+  }
+
+  async function deleteStory(): Promise<boolean> {
+    await api(`/playthroughs/${id}`, { method: "DELETE" });
+    return true;
+  }
+
   function reportError(operationError: unknown): void {
     setError(errorMessage(operationError));
   }
@@ -196,9 +222,11 @@ export function usePlaythrough(id: string) {
     showRecap,
     setShowRecap,
     progress,
+    qualityWarning,
     error,
     busy,
     loading,
+    settings,
     completed: state?.playthrough?.status === "completed",
     act,
     createSave,
@@ -206,6 +234,8 @@ export function usePlaythrough(id: string) {
     deleteSave,
     setConsent,
     chooseEnding,
+    updateSettings,
+    deleteStory,
     reload,
     reportError,
   };

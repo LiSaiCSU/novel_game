@@ -96,12 +96,14 @@ def test_production_configuration_accepts_explicit_secure_services() -> None:
         public_app_url="https://game.example",
         object_store_backend="s3",
         require_verified_email=True,
+        admin_mfa_required=False,
         metrics_token="m" * 32,
         clamav_host="antivirus.internal",
         sentry_dsn="https://public@example.invalid/1",
     )
 
     assert settings.app_env == "production"
+    assert settings.admin_mfa_required is False
 
 
 def test_llm_price_table_uses_exact_then_provider_wildcard() -> None:
@@ -168,7 +170,10 @@ async def test_provider_pool_round_robins_calls() -> None:
 @pytest.mark.asyncio
 async def test_turn_budget_rejects_before_dispatch_and_accumulates_calls() -> None:
     provider = ScriptedProvider(default="ok")
-    guarded = BudgetedProvider(provider, token_limit=26)
+    # The in-flight request reserves 12 tokens, then settles to the scripted
+    # response's actual five. Two calls fit; a third worst-case reservation
+    # would cross the 20-token cap.
+    guarded = BudgetedProvider(provider, token_limit=20)
     request = LLMRequest(
         model="model",
         messages=[LLMMessage(content="四个汉字")],

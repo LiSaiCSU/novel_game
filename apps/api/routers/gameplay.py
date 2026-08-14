@@ -14,7 +14,12 @@ from starlette.background import BackgroundTask
 
 from apps.api.deps import settings_dep, uow_dep
 from apps.api.product_analytics import record_product_event
-from apps.api.routers.playthroughs import PlayAction, _owned_playthrough, _runtime_for
+from apps.api.routers.playthroughs import (
+    PlayAction,
+    _owned_playthrough,
+    _runtime_for,
+    narrative_max_chars,
+)
 from apps.api.runtime import release_runtime_service
 from apps.api.security import Principal, require_csrf
 from apps.api.tenancy import set_tenant_context
@@ -57,7 +62,7 @@ async def playthrough_action(
                     session_id=session.id,
                     text=body.text,
                     idempotency_key=body.idempotency_key,
-                    narrative_max_chars=body.narrative_max_chars,
+                    narrative_max_chars=narrative_max_chars(play, body.narrative_max_chars),
                 ),
             )
         finally:
@@ -133,7 +138,7 @@ async def stream_playthrough_action(
                         session_id=session.id,
                         text=body.text,
                         idempotency_key=body.idempotency_key,
-                        narrative_max_chars=body.narrative_max_chars,
+                        narrative_max_chars=narrative_max_chars(play, body.narrative_max_chars),
                     ),
                     on_step,
                     on_chunk,

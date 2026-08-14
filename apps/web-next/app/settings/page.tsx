@@ -409,7 +409,9 @@ export default function Settings() {
           <div>
             <h2>双重验证</h2>
             <p className="studioHint">
-              使用支持 TOTP 的验证器。管理员必须先完成本设备二次验证，才能进入管理与审核操作。
+              {mfa?.required_for_admin
+                ? "使用支持 TOTP 的验证器。管理员必须先完成本设备二次验证，才能进入管理与审核操作。"
+                : "可选的账号安全功能。当前平台登录管理员账号后即可进入管理中心。"}
             </p>
           </div>
           {mfa?.required_for_admin && (

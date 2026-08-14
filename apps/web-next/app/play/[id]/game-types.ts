@@ -5,7 +5,25 @@ export type Scene = {
   location?: { name?: string; description?: string };
   player?: { name?: string; health?: number[]; realm?: string };
   present_characters?: Character[];
-  playthrough?: { status: string; ending_key?: string | null; ending_title?: string | null };
+  playthrough?: {
+    status: string;
+    ending_key?: string | null;
+    ending_title?: string | null;
+    settings?: PlaythroughSettings;
+  };
+};
+
+export type NarrativeLengthPreset = {
+  key: "concise" | "standard" | "detailed" | "long";
+  label: string;
+  min_chars: number;
+  max_chars: number;
+};
+
+export type PlaythroughSettings = {
+  narrative_length: NarrativeLengthPreset["key"];
+  narrative_max_chars: number;
+  presets: NarrativeLengthPreset[];
 };
 
 export type Choice = { label: string; hint?: string; action_type?: string };

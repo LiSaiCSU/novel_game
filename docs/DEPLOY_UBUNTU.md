@@ -76,8 +76,9 @@ cd /opt/novegame
 sudo bash scripts/promote-admin.sh 你的邮箱@example.com
 ```
 
-重新登录后先在账户设置中启用 MFA，随后才能执行管理员操作。命令同时授予 `admin` 和
-`reviewer`，不会修改密码或跳过邮箱验证。
+重新登录后即可执行管理员操作。命令同时授予 `admin` 和 `reviewer`，不会修改密码或跳过邮箱
+验证。MFA 默认是可选的；需要强制管理员二次验证时，将生产环境中的
+`ADMIN_MFA_REQUIRED` 改为 `true` 并重新部署。
 
 ## 3. 日常更新
 

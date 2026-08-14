@@ -8,7 +8,7 @@ from datetime import UTC, datetime, timedelta
 from typing import Annotated, Any, Literal
 
 import sqlalchemy as sa
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Response
 from pydantic import BaseModel, Field
 
 from apps.api.deps import settings_dep, uow_dep
@@ -33,10 +33,19 @@ from engine.core.models import Event, NarrativeSegment
 from engine.core.mutations import ChangeSet, character_field
 from engine.core.types import Visibility
 from engine.endings import build_ending_context, evaluate_endings
+from engine.orchestrator.turn import DEFAULT_NARRATIVE_CHARS
 from engine.world.seeder import PlayerSpec, build_world
 from engine.world.state_view import build_world_state
 
 router = APIRouter(tags=["v1-catalog", "v1-playthroughs"])
+
+NARRATIVE_LENGTH_PRESETS: dict[str, dict[str, int | str]] = {
+    "concise": {"label": "精简", "min_chars": 680, "max_chars": 800},
+    "standard": {"label": "标准", "min_chars": 1360, "max_chars": 1600},
+    "detailed": {"label": "丰富", "min_chars": 2040, "max_chars": 2400},
+    "long": {"label": "长篇", "min_chars": 3060, "max_chars": 3600},
+}
+DEFAULT_NARRATIVE_LENGTH = "standard"
 
 
 def _sse(event: str, payload: dict[str, Any]) -> str:
@@ -75,7 +84,11 @@ class PlaythroughCreate(BaseModel):
 class PlayAction(BaseModel):
     text: str = Field(min_length=1, max_length=4000)
     idempotency_key: str | None = None
-    narrative_max_chars: int = Field(default=1800, ge=400, le=4000)
+    narrative_max_chars: int | None = Field(default=None, ge=400, le=4000)
+
+
+class PlaythroughSettingsWrite(BaseModel):
+    narrative_length: Literal["concise", "standard", "detailed", "long"]
 
 
 class RomanceConsentWrite(BaseModel):
@@ -148,7 +161,16 @@ def _player_spec(release: ContentReleaseORM, body: PlaythroughCreate) -> PlayerS
         **body.player_config,
     }
     allowed = {field.key for field in package.manifest.player_fields}
-    unknown = set(body.player_config) - allowed - {"model_mode", "provider"}
+    unknown = (
+        set(body.player_config)
+        - allowed
+        - {
+            "model_mode",
+            "provider",
+            "narrative_length",
+            "narrative_max_chars",
+        }
+    )
     if unknown:
         raise HTTPException(
             status_code=422, detail=f"unknown player fields: {', '.join(sorted(unknown))}"
@@ -193,12 +215,35 @@ async def _owned_playthrough(
 ) -> PlaythroughORM:
     row = await uow.session.scalar(
         sa.select(PlaythroughORM).where(
-            PlaythroughORM.id == playthrough_id, PlaythroughORM.user_id == user_id
+            PlaythroughORM.id == playthrough_id,
+            PlaythroughORM.user_id == user_id,
+            PlaythroughORM.status != "deleted",
         )
     )
     if row is None:
         raise HTTPException(status_code=404, detail="playthrough not found")
     return row
+
+
+def _playthrough_settings(play: PlaythroughORM) -> dict[str, Any]:
+    config = dict(play.player_config or {})
+    key = str(config.get("narrative_length") or DEFAULT_NARRATIVE_LENGTH)
+    if key not in NARRATIVE_LENGTH_PRESETS:
+        key = DEFAULT_NARRATIVE_LENGTH
+    selected = NARRATIVE_LENGTH_PRESETS[key]
+    return {
+        "narrative_length": key,
+        "narrative_max_chars": int(config.get("narrative_max_chars") or selected["max_chars"]),
+        "presets": [
+            {"key": preset_key, **preset} for preset_key, preset in NARRATIVE_LENGTH_PRESETS.items()
+        ],
+    }
+
+
+def narrative_max_chars(play: PlaythroughORM, requested: int | None = None) -> int:
+    if requested is not None:
+        return requested
+    return int(_playthrough_settings(play).get("narrative_max_chars", DEFAULT_NARRATIVE_CHARS))
 
 
 def _release_package(release: ContentReleaseORM) -> ContentPackageV2:
@@ -255,6 +300,12 @@ async def create_playthrough(
         session_seed=f"session-{new_id()}",
     )
     assert bundle.session is not None
+    player_config = dict(body.player_config)
+    requested_length = str(player_config.get("narrative_length") or DEFAULT_NARRATIVE_LENGTH)
+    if requested_length not in NARRATIVE_LENGTH_PRESETS:
+        raise HTTPException(status_code=422, detail="unknown narrative length preset")
+    player_config["narrative_length"] = requested_length
+    player_config["narrative_max_chars"] = NARRATIVE_LENGTH_PRESETS[requested_length]["max_chars"]
     playthrough = PlaythroughORM(
         id=new_id(),
         user_id=principal.user_id,
@@ -265,7 +316,7 @@ async def create_playthrough(
         name=body.name,
         is_preview=body.preview,
         expires_at=datetime.now(UTC) + timedelta(hours=24) if body.preview else None,
-        player_config=body.player_config,
+        player_config=player_config,
     )
     bundle.world.release_id = release.id
     bundle.world.playthrough_id = playthrough.id
@@ -314,7 +365,10 @@ async def list_playthroughs(
         await uow.session.execute(
             sa.select(PlaythroughORM, ContentReleaseORM)
             .join(ContentReleaseORM, ContentReleaseORM.id == PlaythroughORM.release_id)
-            .where(PlaythroughORM.user_id == principal.user_id)
+            .where(
+                PlaythroughORM.user_id == principal.user_id,
+                PlaythroughORM.status != "deleted",
+            )
             .order_by(PlaythroughORM.updated_at.desc())
         )
     ).all()
@@ -332,6 +386,56 @@ async def list_playthroughs(
         }
         for play, release in rows
     ]
+
+
+@router.get("/playthroughs/{playthrough_id}/settings")
+async def get_playthrough_settings(
+    playthrough_id: str,
+    principal: Annotated[Principal, Depends(verified_principal)],
+    uow: SqlUnitOfWork = Depends(uow_dep),
+) -> dict[str, Any]:
+    await set_tenant_context(uow.session, principal.user_id)
+    play = await _owned_playthrough(uow, playthrough_id, principal.user_id)
+    return _playthrough_settings(play)
+
+
+@router.put("/playthroughs/{playthrough_id}/settings")
+async def update_playthrough_settings(
+    playthrough_id: str,
+    body: PlaythroughSettingsWrite,
+    principal: Annotated[Principal, Depends(require_csrf)],
+    uow: SqlUnitOfWork = Depends(uow_dep),
+) -> dict[str, Any]:
+    await set_tenant_context(uow.session, principal.user_id)
+    play = await _owned_playthrough(uow, playthrough_id, principal.user_id)
+    selected = NARRATIVE_LENGTH_PRESETS[body.narrative_length]
+    play.player_config = {
+        **dict(play.player_config or {}),
+        "narrative_length": body.narrative_length,
+        "narrative_max_chars": selected["max_chars"],
+    }
+    play.updated_at = datetime.now(UTC)
+    await uow.commit()
+    return _playthrough_settings(play)
+
+
+@router.delete("/playthroughs/{playthrough_id}", status_code=204)
+async def delete_playthrough(
+    playthrough_id: str,
+    principal: Annotated[Principal, Depends(require_csrf)],
+    uow: SqlUnitOfWork = Depends(uow_dep),
+) -> Response:
+    """Remove a story from the player's library without destroying audit data."""
+    await set_tenant_context(uow.session, principal.user_id)
+    play = await _owned_playthrough(uow, playthrough_id, principal.user_id)
+    play.status = "deleted"
+    play.player_config = {
+        **dict(play.player_config or {}),
+        "deleted_at": datetime.now(UTC).isoformat(),
+    }
+    play.updated_at = datetime.now(UTC)
+    await uow.commit()
+    return Response(status_code=204)
 
 
 @router.get("/playthroughs/{playthrough_id}/state")
@@ -356,6 +460,7 @@ async def playthrough_state(
             "ending_key": play.ending_key,
             "ending_title": play.ending_title,
             "completed_at": play.completed_at,
+            "settings": _playthrough_settings(play),
         },
     }
 

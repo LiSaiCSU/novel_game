@@ -1,4 +1,4 @@
-import { Bookmark, ChevronDown, MapPin, PanelRight, Sparkles } from "lucide-react";
+import { Bookmark, ChevronDown, MapPin, PanelRight, Settings2, Sparkles } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { ActionComposer } from "./action-composer";
 import type { Choice, Dashboard, Recap, Scene } from "./game-types";
@@ -16,6 +16,7 @@ type Props = {
   showRecap: boolean;
   progress: string;
   error: string;
+  qualityWarning: string;
   busy: boolean;
   completed: boolean;
   onHideRecap: () => void;
@@ -23,6 +24,7 @@ type Props = {
   onAct: (value: string) => void;
   onOpenSaves: () => void;
   onOpenStatus: () => void;
+  onOpenSettings: () => void;
 };
 
 export function StoryPanel({
@@ -37,6 +39,7 @@ export function StoryPanel({
   showRecap,
   progress,
   error,
+  qualityWarning,
   busy,
   completed,
   onHideRecap,
@@ -44,6 +47,7 @@ export function StoryPanel({
   onAct,
   onOpenSaves,
   onOpenStatus,
+  onOpenSettings,
 }: Props) {
   const endRef = useRef<HTMLDivElement>(null);
   const formRef = useRef<HTMLFormElement>(null);
@@ -77,6 +81,10 @@ export function StoryPanel({
           <button onClick={onOpenStatus} title="打开人物与状态">
             <PanelRight size={17} aria-hidden="true" />
             <span>状态</span>
+          </button>
+          <button onClick={onOpenSettings} title="打开本故事设置">
+            <Settings2 size={17} aria-hidden="true" />
+            <span>设置</span>
           </button>
         </nav>
       </header>
@@ -133,6 +141,11 @@ export function StoryPanel({
         )}
         {busy && <p className="progressLine">{progress || "世界正在回应你的行动"}</p>}
         {error && <p className="error">{error}</p>}
+        {qualityWarning && (
+          <p className="qualityWarning" role="status">
+            {qualityWarning}
+          </p>
+        )}
         <div ref={endRef} />
       </div>
       {completed && (

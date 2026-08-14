@@ -47,4 +47,4 @@ WHERE u.email = :'email'
 GROUP BY u.email;
 SQL
 
-echo "Administrator access granted. Sign in again and enroll MFA before using admin actions."
+echo "Administrator access granted. Sign in again to use the management center."

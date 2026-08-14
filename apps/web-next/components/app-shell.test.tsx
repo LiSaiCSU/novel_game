@@ -1,11 +1,14 @@
 // @vitest-environment jsdom
 
-import { cleanup, render, screen, waitFor } from "@testing-library/react";
+import { cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { api } from "@/lib/api";
 import { AppShell } from "./app-shell";
 
-vi.mock("next/navigation", () => ({ usePathname: () => "/play" }));
+vi.mock("next/navigation", () => ({
+  usePathname: () => "/play",
+  useRouter: () => ({ replace: vi.fn(), refresh: vi.fn() }),
+}));
 vi.mock("@/lib/api", () => ({ api: vi.fn() }));
 
 const apiMock = vi.mocked(api);
@@ -28,9 +31,14 @@ describe("AppShell", () => {
       "page",
     );
     await waitFor(() => expect(screen.getByText("林澄")).toBeTruthy());
-    expect(screen.getByRole("link", { name: "账户设置：林澄" }).getAttribute("href")).toBe(
+    const account = screen.getByRole("button", { name: "打开账户菜单：林澄" });
+    expect(account.getAttribute("aria-expanded")).toBe("false");
+    fireEvent.click(account);
+    expect(screen.getByRole("menu")).toBeTruthy();
+    expect(screen.getByRole("menuitem", { name: "账户设置" }).getAttribute("href")).toBe(
       "/settings",
     );
+    expect(screen.getByRole("menuitem", { name: "退出登录" })).toBeTruthy();
     expect(screen.queryByRole("link", { name: "审核台" })).toBeNull();
     expect(screen.queryByRole("link", { name: "管理" })).toBeNull();
   });

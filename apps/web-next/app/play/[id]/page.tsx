@@ -1,6 +1,6 @@
 "use client";
 
-import { useParams } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import { useState } from "react";
 import { ErrorState, LoadingState, RetryButton } from "@/components/ui/async-state";
 import { DashboardRail } from "./dashboard-rail";
@@ -8,10 +8,12 @@ import { GameMobileNavigation, type MobileView } from "./game-mobile-nav";
 import type { Ending, Save } from "./game-types";
 import { SaveRail } from "./save-rail";
 import { StoryPanel } from "./story-panel";
+import { GameSettingsRail } from "./game-settings-rail";
 import { usePlaythrough } from "./use-playthrough";
 
 export default function Game() {
   const { id } = useParams<{ id: string }>();
+  const router = useRouter();
   const game = usePlaythrough(id);
   const [mobileView, setMobileView] = useState<MobileView>("story");
 
@@ -69,6 +71,7 @@ export default function Game() {
         showRecap={game.showRecap}
         progress={game.progress}
         error={game.error}
+        qualityWarning={game.qualityWarning}
         busy={game.busy}
         completed={game.completed}
         onHideRecap={() => game.setShowRecap(false)}
@@ -76,6 +79,7 @@ export default function Game() {
         onAct={(text) => run(game.act(text))}
         onOpenSaves={() => setMobileView("saves")}
         onOpenStatus={() => setMobileView("status")}
+        onOpenSettings={() => setMobileView("settings")}
       />
       <DashboardRail
         state={game.state}
@@ -84,6 +88,19 @@ export default function Game() {
         completed={game.completed}
         onConsent={(lead, decision) => run(game.setConsent(lead, decision))}
         onEnding={(ending: Ending) => run(game.chooseEnding(ending))}
+        onClose={() => setMobileView("story")}
+      />
+      <GameSettingsRail
+        settings={game.settings}
+        onChange={(value) => run(game.updateSettings(value))}
+        onDelete={() =>
+          run(
+            game.deleteStory().then(() => {
+              router.replace("/play");
+              router.refresh();
+            }),
+          )
+        }
         onClose={() => setMobileView("story")}
       />
       <GameMobileNavigation value={mobileView} onChange={setMobileView} />

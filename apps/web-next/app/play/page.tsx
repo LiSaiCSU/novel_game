@@ -1,6 +1,6 @@
 "use client";
 
-import { ArrowRight, BookOpenText, Clock3, Plus, Sparkles } from "lucide-react";
+import { ArrowRight, BookOpenText, Clock3, Plus, Sparkles, Trash2 } from "lucide-react";
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import { CardSkeletons, EmptyState, ErrorState, RetryButton } from "@/components/ui/async-state";
@@ -26,6 +26,7 @@ export default function PlayLibrary() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [reloadKey, setReloadKey] = useState(0);
+  const [deleting, setDeleting] = useState("");
 
   useEffect(() => {
     api<Play[]>("/playthroughs")
@@ -45,6 +46,22 @@ export default function PlayLibrary() {
     }),
     [items],
   );
+
+  async function deleteStory(item: Play) {
+    if (!window.confirm(`删除“${item.name || item.release.title}”？它会立即从你的故事书架移除。`)) {
+      return;
+    }
+    setDeleting(item.id);
+    setError("");
+    try {
+      await api(`/playthroughs/${item.id}`, { method: "DELETE" });
+      setItems((current) => current.filter((story) => story.id !== item.id));
+    } catch (exception) {
+      setError((exception as Error).message);
+    } finally {
+      setDeleting("");
+    }
+  }
 
   return (
     <div className="page playLibraryPage">
@@ -127,13 +144,25 @@ export default function PlayLibrary() {
                   最后进入 {new Date(item.updated_at).toLocaleString("zh-CN")}
                 </p>
               </div>
-              <Link
-                className="playContinue"
-                href={`/play/${item.id}`}
-                aria-label={`继续${item.name}`}
-              >
-                {item.status === "completed" ? "重温" : "继续"} <ArrowRight size={17} />
-              </Link>
+              <div className="playCardActions">
+                <Link
+                  className="playContinue"
+                  href={`/play/${item.id}`}
+                  aria-label={`继续${item.name}`}
+                >
+                  {item.status === "completed" ? "重温" : "继续"} <ArrowRight size={17} />
+                </Link>
+                <button
+                  type="button"
+                  className="playDelete"
+                  aria-label={`删除${item.name}`}
+                  title="删除故事"
+                  disabled={deleting === item.id}
+                  onClick={() => void deleteStory(item)}
+                >
+                  <Trash2 size={16} />
+                </button>
+              </div>
             </article>
           ))}
         </div>

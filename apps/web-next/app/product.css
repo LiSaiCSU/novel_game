@@ -87,6 +87,81 @@ a {
 .account {
   min-width: 112px;
   justify-content: flex-end;
+  border: 0;
+  background: transparent;
+  cursor: pointer;
+  font: inherit;
+}
+
+.accountArea {
+  position: relative;
+  min-width: 112px;
+}
+
+.accountMenu {
+  width: 228px;
+  position: absolute;
+  right: 0;
+  top: calc(100% + 9px);
+  z-index: 90;
+  display: grid;
+  gap: 3px;
+  padding: 8px;
+  border: 1px solid var(--line);
+  border-radius: 15px;
+  background: rgba(255, 253, 250, 0.98);
+  box-shadow: var(--shadow-raised);
+  backdrop-filter: blur(18px);
+}
+
+.accountMenu header {
+  display: grid;
+  gap: 2px;
+  margin: 0 3px 5px;
+  padding: 8px 9px 11px;
+  overflow: hidden;
+  border-bottom: 1px solid var(--line);
+}
+
+.accountMenu header b,
+.accountMenu header small {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.accountMenu header small {
+  color: var(--muted);
+  font-size: 10px;
+}
+
+.accountMenu > a,
+.accountMenu > button {
+  min-height: 40px;
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  padding: 0 10px;
+  border: 0;
+  border-radius: 9px;
+  background: transparent;
+  color: var(--ink-soft);
+  cursor: pointer;
+  font-size: 12px;
+  text-align: left;
+}
+
+.accountMenu > a:hover,
+.accountMenu > button:hover {
+  background: var(--surface-soft);
+  color: var(--rose-dark);
+}
+
+.accountMenu > button:last-child {
+  margin-top: 3px;
+  border-top: 1px solid var(--line);
+  border-radius: 0 0 9px 9px;
+  color: #99445a;
 }
 
 .accountAvatar {
@@ -809,6 +884,30 @@ a {
   font-weight: 750;
 }
 
+.playCardActions {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+}
+
+.playDelete {
+  width: 42px;
+  height: 42px;
+  display: grid;
+  place-items: center;
+  border: 1px solid var(--line);
+  border-radius: 50%;
+  background: transparent;
+  color: var(--muted);
+  cursor: pointer;
+}
+
+.playDelete:hover:not(:disabled) {
+  border-color: #c77787;
+  background: #fff2f3;
+  color: #9e4053;
+}
+
 /* Release detail and character setup */
 
 .workHero {
@@ -1129,7 +1228,8 @@ a {
   }
 
   .gameShell[data-mobile-view="saves"] .gameSaveRail,
-  .gameShell[data-mobile-view="status"] .gameDashboard {
+  .gameShell[data-mobile-view="status"] .gameDashboard,
+  .gameShell[data-mobile-view="settings"] .gameSettings {
     display: block;
   }
 
@@ -1148,7 +1248,7 @@ a {
     z-index: 8;
     height: 62px;
     display: grid;
-    grid-template-columns: repeat(3, 1fr);
+    grid-template-columns: repeat(4, 1fr);
     border-top: 1px solid var(--line);
     background: rgba(255, 250, 246, 0.96);
     backdrop-filter: blur(14px);
@@ -1299,8 +1399,11 @@ a {
   }
 
   .playContinue {
-    grid-column: 1 / -1;
     width: 100%;
+  }
+
+  .playCardActions {
+    grid-column: 1 / -1;
   }
 
   .workHero {
@@ -1480,6 +1583,18 @@ a {
     padding: 8px 9px;
     border: 1px solid transparent;
     border-radius: 13px;
+  }
+
+  .accountArea {
+    width: 100%;
+    min-width: 0;
+  }
+
+  .accountMenu {
+    right: auto;
+    bottom: calc(100% + 7px);
+    left: 0;
+    top: auto;
   }
 
   .account:hover,
@@ -1811,11 +1926,116 @@ a {
   transform: translateX(102%);
 }
 
+.gameSettings {
+  right: 0;
+  border-left: 1px solid var(--line);
+  background: #f8f1ec;
+  transform: translateX(102%);
+}
+
 .gameShell[data-mobile-view="saves"] .gameSaveRail,
-.gameShell[data-mobile-view="status"] .gameDashboard {
+.gameShell[data-mobile-view="status"] .gameDashboard,
+.gameShell[data-mobile-view="settings"] .gameSettings {
   visibility: visible;
   opacity: 1;
   transform: translateX(0);
+}
+
+.lengthPicker {
+  display: grid;
+  gap: 8px;
+  margin: 28px 0 0;
+  padding: 0;
+  border: 0;
+}
+
+.lengthPicker legend {
+  margin-bottom: 10px;
+  color: var(--ink);
+  font-size: 13px;
+  font-weight: 750;
+}
+
+.lengthPicker > button {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 5px 10px;
+  padding: 13px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: var(--surface-raised);
+  color: var(--ink);
+  cursor: pointer;
+  text-align: left;
+}
+
+.lengthPicker > button:hover,
+.lengthPicker > button.selected {
+  border-color: var(--rose);
+}
+
+.lengthPicker > button.selected {
+  background: #fff7fa;
+  color: var(--rose-dark);
+}
+
+.lengthPicker > button span {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.lengthPicker > button small,
+.lengthPicker > button em {
+  color: var(--muted);
+  font-size: 10px;
+  font-style: normal;
+}
+
+.lengthPicker > button em {
+  grid-column: 1 / -1;
+  line-height: 1.55;
+}
+
+.storyDangerZone {
+  margin-top: 34px;
+  padding-top: 24px;
+  border-top: 1px solid var(--line);
+}
+
+.storyDangerZone h3 {
+  margin: 0 0 7px;
+  font-size: 13px;
+}
+
+.storyDangerZone p {
+  margin: 0 0 14px;
+  color: var(--muted);
+  font-size: 11px;
+  line-height: 1.65;
+}
+
+.storyDangerZone > div {
+  display: flex;
+  gap: 7px;
+}
+
+.button.danger {
+  border-color: #dca9b2;
+  background: #fff2f3;
+  color: #963d50;
+}
+
+.qualityWarning {
+  padding: 11px 13px;
+  border: 1px solid #e4c47f;
+  border-radius: 11px;
+  background: #fff8e8;
+  color: #77551c;
+  font:
+    11px/1.65 system-ui,
+    sans-serif;
 }
 
 .gameRailClose {
@@ -1903,6 +2123,25 @@ a {
     min-width: 0;
     margin: 0 0 0 auto;
     padding: 4px;
+  }
+
+  .accountArea {
+    width: auto;
+    min-width: 0;
+    margin-left: auto;
+  }
+
+  .account .accountAvatar {
+    display: grid;
+  }
+
+  .accountMenu {
+    width: min(290px, calc(100vw - 28px));
+    position: fixed;
+    top: 58px;
+    right: 14px;
+    bottom: auto;
+    left: auto;
   }
 
   .accountCopy,
