@@ -184,6 +184,7 @@ class ContextBuilder:
             "npc_decisions": npc_decisions or "-",
             "world_events": world_events or "-",
             "visible_facts": self._beliefs(beliefs, hedges),
+            "inventory_facts": self._inventory_facts(state),
         }
         built = BuiltContext(sections=sections, included_fact_keys=[b.fact_key for b in beliefs])
         self._enforce_budget(
@@ -248,6 +249,38 @@ class ContextBuilder:
             built, self.budget("director", 3000), ("recent_events", "major_characters")
         )
         return built
+
+    def _inventory_facts(self, state: WorldStateView) -> str:
+        """Render only author-approved, player-visible facts about held items.
+
+        Item effects are engine instructions and may contain fact keys or other
+        implementation details.  They are deliberately excluded from the prose
+        context.  Authors can opt specific statements in through
+        ``metadata.narrative_facts``; anything not stated there remains unknown.
+        """
+        rows: list[str] = []
+        for held in sorted(state.inventory, key=lambda row: row.item_key):
+            raw = self.pack.item(held.item_key)
+            if raw is None:
+                rows.append(f"- {held.item_key} ×{held.quantity}")
+                continue
+
+            name = str(raw.get("name") or held.item_key)
+            description = str(raw.get("description") or "").strip()
+            facts = (raw.get("metadata") or {}).get("narrative_facts", [])
+            if not isinstance(facts, list):
+                facts = []
+            # A balance is not a physical denomination. Exposing "5000 yen"
+            # to a prose model routinely turns it into a non-existent coin or
+            # banknote even when money had nothing to do with the action.
+            if raw.get("type") == "currency" and not facts:
+                continue
+
+            detail = [description] if description else []
+            detail.extend(str(fact).strip() for fact in facts if str(fact).strip())
+            suffix = "; ".join(detail) or "-"
+            rows.append(f"- {name}[{held.item_key}] ×{held.quantity}：{suffix}")
+        return "\n".join(rows) or "-"
 
     async def visible_player_facts(
         self, uow: UnitOfWork, state: WorldStateView

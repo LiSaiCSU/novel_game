@@ -7,6 +7,19 @@ on:
 jobs:
   python:
     runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:17-alpine
+        env:
+          POSTGRES_DB: narrative
+          POSTGRES_USER: narrative
+          POSTGRES_PASSWORD: local-only-password
+        ports: ["5432:5432"]
+        options: >-
+          --health-cmd "pg_isready -U narrative -d narrative"
+          --health-interval 5s
+          --health-timeout 3s
+          --health-retries 20
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
@@ -14,9 +27,21 @@ jobs:
       - run: pip install -e ".[dev,postgres,redis]" pip-audit
       - run: ruff check .
       - run: mypy engine apps database
-      - run: pytest -q
       - run: python scripts/compile_official_content.py
       - run: DATABASE_URL=sqlite+aiosqlite:///./data/ci-migration.db alembic upgrade head
+      - name: Migrate and provision PostgreSQL application role
+        run: |
+          DATABASE_URL=postgresql+asyncpg://narrative:local-only-password@127.0.0.1:5432/narrative alembic upgrade head
+          docker run --rm --network host \
+            -v "$PWD/infra/postgres:/infra:ro" \
+            -e PGPASSWORD=local-only-password postgres:17-alpine \
+            psql -h 127.0.0.1 -U narrative -d narrative -f /infra/provision-app-role.sql
+          DATABASE_URL=postgresql+asyncpg://narrative:local-only-password@127.0.0.1:5432/narrative \
+            python -c "import asyncio; from database.bootstrap import ensure_official_releases; from engine.core.config import get_settings; asyncio.run(ensure_official_releases(get_settings()))"
+      - run: pytest -q
+        env:
+          TEST_POSTGRES_OWNER_URL: postgresql+asyncpg://narrative:local-only-password@127.0.0.1:5432/narrative
+          TEST_POSTGRES_APP_URL: postgresql+asyncpg://narrative_app:local-app-password@127.0.0.1:5432/narrative
       - run: pip-audit
 
   web:
@@ -30,5 +55,7 @@ jobs:
         with: {node-version: "24", cache: npm, cache-dependency-path: apps/web-next/package-lock.json}
       - run: npm ci
       - run: npm run lint
+      - run: npm run format:check
+      - run: npm test
       - run: npm run build
       - run: npm audit --audit-level=high

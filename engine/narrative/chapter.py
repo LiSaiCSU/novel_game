@@ -158,6 +158,27 @@ class ChapterRenderer:
         if not prose:
             return ChapterResult(text=fallback, degraded=True)
 
+        fact_violations = self.renderer.fact_guard.review(
+            state,
+            player_action="\n".join(step.action for step in steps if step.action),
+            prose=prose,
+        )
+        if fact_violations:
+            logger.warning(
+                "chapter violated declared facts, using templates: %s",
+                [violation.as_dict() for violation in fact_violations],
+            )
+            return ChapterResult(
+                text=fallback,
+                degraded=True,
+                debug={
+                    "steps": len(steps),
+                    "fact_violations": [
+                        violation.as_dict() for violation in fact_violations
+                    ],
+                },
+            )
+
         report = self.renderer.style.review(prose, self.renderer._known_entities(state))
         self.renderer.style.observe(prose)
         return ChapterResult(

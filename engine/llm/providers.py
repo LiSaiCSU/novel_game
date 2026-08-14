@@ -45,7 +45,7 @@ class NullProvider:
 
 
 class ScriptedProvider:
-    """Replays canned responses. Used by evals so they cost nothing and never flake."""
+    """Replays canned responses for deterministic LLM-boundary contract tests."""
 
     name = "scripted"
 

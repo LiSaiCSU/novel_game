@@ -38,6 +38,7 @@ from engine.core.models import (
     World,
 )
 from engine.core.mutations import ChangeKind, ChangeSet
+from engine.core.snapshots import WorldStateSnapshot
 from engine.core.types import KnowledgeSource, KnowledgeState
 from engine.world.seeder import SeedBundle
 
@@ -104,11 +105,27 @@ class MemoryStore:
         return {
             name: copy.deepcopy(getattr(self, name))
             for name in (
-                "worlds", "locations", "factions", "characters", "relationships",
-                "relationship_changes", "facts", "knowledge", "memories", "items",
-                "inventory", "skills", "character_skills", "quests", "events",
+                "worlds",
+                "locations",
+                "factions",
+                "characters",
+                "relationships",
+                "relationship_changes",
+                "facts",
+                "knowledge",
+                "memories",
+                "items",
+                "inventory",
+                "skills",
+                "character_skills",
+                "quests",
+                "events",
                 "director_events",
-                "plot_threads", "sessions", "turns", "turn_traces", "narrative",
+                "plot_threads",
+                "sessions",
+                "turns",
+                "turn_traces",
+                "narrative",
             )
         }
 
@@ -156,7 +173,11 @@ class _LocationRepo:
 
     async def get_by_key(self, world_id: str, key: str) -> Location | None:
         return next(
-            (loc for loc in self.s.locations.values() if loc.world_id == world_id and loc.key == key),
+            (
+                loc
+                for loc in self.s.locations.values()
+                if loc.world_id == world_id and loc.key == key
+            ),
             None,
         )
 
@@ -211,7 +232,9 @@ class _CharacterRepo:
         return _detach_all(
             c
             for c in self.s.characters.values()
-            if c.world_id == world_id and c.location_id == location_id and (c.alive or not alive_only)
+            if c.world_id == world_id
+            and c.location_id == location_id
+            and (c.alive or not alive_only)
         )
 
     async def list_by_type(self, world_id: str, character_type: str) -> list[Character]:
@@ -293,9 +316,7 @@ class _MemoryRepo:
         rows.sort(key=lambda m: m.created_at_minute, reverse=True)
         return rows[:limit]
 
-    async def get_by_event(
-        self, owner_character_id: str, related_event_id: str
-    ) -> Memory | None:
+    async def get_by_event(self, owner_character_id: str, related_event_id: str) -> Memory | None:
         return next(
             (
                 _detach(memory)
@@ -308,9 +329,7 @@ class _MemoryRepo:
 
     async def add(self, memory: Memory) -> None:
         if memory.related_event_id is not None:
-            existing = await self.get_by_event(
-                memory.owner_character_id, memory.related_event_id
-            )
+            existing = await self.get_by_event(memory.owner_character_id, memory.related_event_id)
             if existing is not None:
                 return
         self.s.memories[memory.id] = memory.model_copy(deep=True)
@@ -397,7 +416,9 @@ class _EventRepo:
         return rows[-limit:]
 
     async def list_since(self, world_id: str, since_minute: int) -> list[Event]:
-        return [e for e in self.s.events if e.world_id == world_id and e.world_minute >= since_minute]
+        return [
+            e for e in self.s.events if e.world_id == world_id and e.world_minute >= since_minute
+        ]
 
     async def get(self, event_id: str) -> Event | None:
         return next((e for e in self.s.events if e.id == event_id), None)
@@ -428,9 +449,7 @@ class _DirectorEventRepo:
         row = self.s.director_events.get(director_event_id)
         return row.model_copy(deep=True) if row else None
 
-    async def get_by_dedup_key(
-        self, world_id: str, dedup_key: str
-    ) -> DirectorEvent | None:
+    async def get_by_dedup_key(self, world_id: str, dedup_key: str) -> DirectorEvent | None:
         row = next(
             (
                 event
@@ -481,9 +500,7 @@ class _DirectorEventRepo:
             and start_minute <= event.scheduled_for_minute < end_minute
         )
 
-    async def count_booked_between(
-        self, world_id: str, start_minute: int, end_minute: int
-    ) -> int:
+    async def count_booked_between(self, world_id: str, start_minute: int, end_minute: int) -> int:
         return sum(
             1
             for event in self.s.director_events.values()
@@ -520,9 +537,7 @@ class _TurnRepo:
         return self.s.turns.get(turn_id)
 
     async def get_by_idempotency_key(self, key: str) -> dict[str, Any] | None:
-        return next(
-            (t for t in self.s.turns.values() if t.get("idempotency_key") == key), None
-        )
+        return next((t for t in self.s.turns.values() if t.get("idempotency_key") == key), None)
 
     async def list_for_session(self, session_id: str, limit: int = 50) -> list[dict[str, Any]]:
         rows = [t for t in self.s.turns.values() if t.get("session_id") == session_id]
@@ -541,6 +556,54 @@ class _TurnRepo:
 
     async def get_trace(self, turn_id: str) -> dict[str, Any] | None:
         return self.s.turn_traces.get(turn_id)
+
+
+class _WorldStateRepo:
+    """Build the same turn-start snapshot as the SQL batch adapter."""
+
+    def __init__(self, store: MemoryStore) -> None:
+        self.s = store
+
+    async def load(self, world_id: str, player_id: str) -> WorldStateSnapshot:
+        player = self.s.characters.get(player_id)
+        player_location_id = player.location_id if player is not None else None
+        return WorldStateSnapshot(
+            world=_detach(self.s.worlds.get(world_id)),
+            player=_detach(player) if player is not None and player.world_id == world_id else None,
+            locations=_detach_all(
+                location for location in self.s.locations.values() if location.world_id == world_id
+            ),
+            present_characters=_detach_all(
+                character
+                for character in self.s.characters.values()
+                if character.world_id == world_id
+                and character.location_id == player_location_id
+                and character.id != player_id
+                and character.alive
+            ),
+            factions=_detach_all(
+                faction for faction in self.s.factions.values() if faction.world_id == world_id
+            ),
+            inventory=_detach_all(
+                item for item in self.s.inventory.values() if item.character_id == player_id
+            ),
+            skills=_detach_all(
+                skill
+                for skill in self.s.character_skills.values()
+                if skill.character_id == player_id
+            ),
+            relationships=_detach_all(
+                relationship
+                for relationship in self.s.relationships.values()
+                if relationship.world_id == world_id and relationship.character_a_id == player_id
+            ),
+            quests=_detach_all(
+                quest for quest in self.s.quests.values() if quest.world_id == world_id
+            ),
+            plot_threads=_detach_all(
+                thread for thread in self.s.plot_threads.values() if thread.world_id == world_id
+            ),
+        )
 
 
 # ---------------------------------------------------------------------------
@@ -562,6 +625,7 @@ class MemoryUnitOfWork:
         self.director_events = _DirectorEventRepo(store)
         self.sessions = _SessionRepo(store)
         self.turns = _TurnRepo(store)
+        self.world_state = _WorldStateRepo(store)
         self._snapshot: dict[str, Any] | None = None
 
     async def __aenter__(self) -> MemoryUnitOfWork:
@@ -748,4 +812,6 @@ class MemoryUnitOfWork:
             row.knowledge_state = state
             row.confidence = confidence
             row.source = source
-            row.learned_at_minute = int(change.payload.get("learned_at_minute", row.learned_at_minute))
+            row.learned_at_minute = int(
+                change.payload.get("learned_at_minute", row.learned_at_minute)
+            )

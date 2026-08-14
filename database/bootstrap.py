@@ -95,6 +95,11 @@ async def _ensure_pack(session, settings: Settings, pack_key: str, slug: str, ta
         revision=project.current_revision,
         document=package.model_dump(mode="json"), diagnostics=[]
     )
+    # Keep this ordering explicit. PostgreSQL enforces the release -> revision
+    # foreign key during flush; relying on a later add_all() left ordering to
+    # the ORM and failed on a truly empty production-shaped database.
+    session.add(revision)
+    await session.flush()
     release = ContentReleaseORM(
         id=new_id(), project_id=project.id, revision_id=revision.id, owner_id=SYSTEM_USER_ID,
         version=package.manifest.version, checksum=compiled.checksum, title=package.manifest.title,
@@ -112,4 +117,4 @@ async def _ensure_pack(session, settings: Settings, pack_key: str, slug: str, ta
         )
         .values(withdrawn_at=sa.func.now())
     )
-    session.add_all([revision, release])
+    session.add(release)

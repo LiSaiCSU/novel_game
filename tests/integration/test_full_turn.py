@@ -26,6 +26,85 @@ async def test_a_turn_produces_narrative_state_and_a_trace(orchestrator, uow, se
     assert result.debug["rng_traces"] is not None
 
 
+async def test_final_trace_includes_post_commit_narrative_call(
+    pack, registry, uow, session_id
+) -> None:
+    from engine.core.config import Settings
+    from engine.llm.providers import ScriptedProvider
+    from engine.orchestrator.factory import build_orchestrator
+
+    settings = Settings(
+        llm_provider="scripted",
+        llm_model="",
+        intent_model="",
+        npc_model="",
+        npc_major_model="",
+        director_model="",
+        steward_model="",
+        memory_model="",
+        narrative_model="test-writer",
+        debug_mode=True,
+    )
+    scripted = ScriptedProvider(default="你静下心来，按既定方法完成了这次修炼。")
+    subject = build_orchestrator(
+        settings=settings,
+        pack=pack,
+        provider=scripted,
+        registry=registry,
+    )
+
+    result = await subject.play_turn(
+        uow,
+        TurnRequest(session_id=session_id, text="我打坐修炼一个时辰", debug=True),
+    )
+    stored_trace = await uow.turns.get_trace(result.turn_id)
+
+    assert result.debug is not None
+    assert stored_trace is not None
+    assert [call["role"] for call in result.debug["llm_calls"]] == ["narrative"]
+    assert [call["role"] for call in stored_trace["llm_calls"]] == ["narrative"]
+    assert result.debug["token_usage"]["completion"] > 0
+
+
+async def test_advance_trace_and_usage_include_the_final_chapter_call(
+    pack, registry, uow, session_id
+) -> None:
+    from engine.core.config import Settings
+    from engine.llm.providers import ScriptedProvider
+    from engine.orchestrator.factory import build_orchestrator
+
+    settings = Settings(
+        llm_provider="scripted",
+        llm_model="",
+        intent_model="",
+        npc_model="",
+        npc_major_model="",
+        director_model="",
+        steward_model="",
+        memory_model="",
+        narrative_model="test-writer",
+        debug_mode=True,
+    )
+    subject = build_orchestrator(
+        settings=settings,
+        pack=pack,
+        provider=ScriptedProvider(default="你完成了行动，世界安静地向前推进。"),
+        registry=registry,
+    )
+
+    result = await subject.advance(
+        uow,
+        TurnRequest(session_id=session_id, text="我打坐修炼一个时辰", debug=True),
+    )
+    stored_trace = await uow.turns.get_trace(result.turn_id)
+
+    assert result.debug is not None
+    assert stored_trace is not None
+    assert [call["role"] for call in result.debug["llm_calls"]] == ["narrative"]
+    assert [call["role"] for call in stored_trace["llm_calls"]] == ["narrative"]
+    assert [record.role for record in subject.d.llm.records] == ["narrative"]
+
+
 async def test_world_time_advances_with_the_action(orchestrator, uow, session_id, store) -> None:
     world = next(iter(store.worlds.values()))
     before = world.current_minute
@@ -35,7 +114,10 @@ async def test_world_time_advances_with_the_action(orchestrator, uow, session_id
     after = next(iter(store.worlds.values())).current_minute
     assert after > before
     assert result.state_changes["world_minute"] == [before, after]
-    assert result.state_changes["time_label"][0] != result.state_changes["time_label"][1] or after - before < 60
+    assert (
+        result.state_changes["time_label"][0] != result.state_changes["time_label"][1]
+        or after - before < 60
+    )
 
 
 async def test_query_turns_are_free(orchestrator, uow, session_id, store) -> None:
@@ -79,9 +161,7 @@ async def test_unreadable_input_holds_the_scene_without_blaming_the_player(
     orchestrator, uow, session_id, store
 ) -> None:
     before = next(iter(store.worlds.values())).current_minute
-    result = await orchestrator.play_turn(
-        uow, TurnRequest(session_id=session_id, text="唔……")
-    )
+    result = await orchestrator.play_turn(uow, TurnRequest(session_id=session_id, text="唔……"))
     # No error code reaches the player, and the free turn still offers a way on.
     assert result.rejected is None
     assert result.narrative
@@ -382,9 +462,7 @@ async def test_narrative_retry_does_not_reactivate_due_director_event(
     first = await orchestrator.play_turn(uow, request)
     stored_after_first = await uow.director_events.get(scheduled.id)
     canonical = [
-        event
-        for event in store.events
-        if event.payload.get("director_event_id") == scheduled.id
+        event for event in store.events if event.payload.get("director_event_id") == scheduled.id
     ]
     assert first.status is TurnStatus.NARRATIVE_FAILED
     assert stored_after_first is not None
@@ -393,9 +471,7 @@ async def test_narrative_retry_does_not_reactivate_due_director_event(
 
     second = await orchestrator.play_turn(uow, request)
     canonical_after_retry = [
-        event
-        for event in store.events
-        if event.payload.get("director_event_id") == scheduled.id
+        event for event in store.events if event.payload.get("director_event_id") == scheduled.id
     ]
     assert second.status is TurnStatus.COMPLETED
     assert second.turn_id == first.turn_id
@@ -427,9 +503,7 @@ async def test_events_are_appended_for_every_meaningful_turn(
     assert any(e.event_type == "CULTIVATION_SESSION" for e in store.events)
 
 
-async def test_npc_killed_by_current_changeset_cannot_respond(
-    orchestrator, uow, ctx
-) -> None:
+async def test_npc_killed_by_current_changeset_cannot_respond(orchestrator, uow, ctx) -> None:
     from engine.actions.schema import Action, ActionOutcome
     from engine.core import mutations as mut
     from engine.core.mutations import ChangeSet
@@ -511,9 +585,7 @@ async def test_cultivating_to_the_cap_then_breaking_through(
     """The full progression loop, driven only through natural language."""
     player_id = next(c.id for c in store.characters.values() if c.key == "player")
     for _ in range(12):
-        await orchestrator.play_turn(
-            uow, TurnRequest(session_id=session_id, text="我闭关修炼30日")
-        )
+        await orchestrator.play_turn(uow, TurnRequest(session_id=session_id, text="我闭关修炼30日"))
         if store.characters[player_id].cultivation_progress >= 0.999:
             break
     player = store.characters[player_id]
@@ -594,8 +666,7 @@ async def test_thirty_year_seclusion_ages_the_cast_and_resolves_natural_deaths(
     assert doomed, "the seeded cast should include mortal characters near end of life"
     doomed_goal_deadlines = {
         character.id: start_minute
-        + (pack.realms.realm(character.realm).lifespan_years - character.age)
-        * 518_400
+        + (pack.realms.realm(character.realm).lifespan_years - character.age) * 518_400
         for character in store.characters.values()
         if character.id in doomed
         and character.goal_lifecycle is not None
@@ -617,13 +688,14 @@ async def test_thirty_year_seclusion_ages_the_cast_and_resolves_natural_deaths(
         assert not store.characters[character_id].alive
         assert store.characters[character_id].death_event_id
     death_ids = {event.id for event in store.events if event.event_type == "DEATH"}
-    assert all(store.characters[character_id].death_event_id in death_ids for character_id in doomed)
+    assert all(
+        store.characters[character_id].death_event_id in death_ids for character_id in doomed
+    )
     for character_id, death_minute in doomed_goal_deadlines.items():
         pre_death_actions = [
             event
             for event in store.events
-            if event.event_type == "NPC_GOAL_ACTION_RESULT"
-            and event.actor_id == character_id
+            if event.event_type == "NPC_GOAL_ACTION_RESULT" and event.actor_id == character_id
         ]
         assert pre_death_actions
         assert all(event.world_minute < death_minute for event in pre_death_actions)
@@ -636,9 +708,7 @@ async def test_player_lie_remains_a_claim_and_cannot_rewrite_truth_or_grant_know
     from engine.actions.schema import Action, ActionPlan, ActionPrimitive, PlayerIntent
     from engine.core.types import KnowledgeState
 
-    fact = await uow.knowledge.get_fact_by_key(
-        state.world.id, "fact_lin_is_sect_master_daughter"
-    )
+    fact = await uow.knowledge.get_fact_by_key(state.world.id, "fact_lin_is_sect_master_daughter")
     assert fact is not None and fact.truth_value is False
     target = None
     for character in state.present_characters:
@@ -664,9 +734,7 @@ async def test_player_lie_remains_a_claim_and_cannot_rewrite_truth_or_grant_know
             raw_text=claim.raw_text,
         ),
         action=claim,
-        plan=ActionPlan(
-            primitives=[ActionPrimitive(primitive_id="primary", action=claim)]
-        ),
+        plan=ActionPlan(primitives=[ActionPrimitive(primitive_id="primary", action=claim)]),
         degraded=False,
     )
 
@@ -686,9 +754,10 @@ async def test_player_lie_remains_a_claim_and_cannot_rewrite_truth_or_grant_know
 
     stored_fact = await uow.knowledge.get_fact_by_key(state.world.id, fact.key)
     assert stored_fact is not None and stored_fact.truth_value is False
-    assert await orchestrator.d.knowledge.state_of(
-        uow, target.id, fact.key, state.world.id
-    ) is KnowledgeState.UNKNOWN
+    assert (
+        await orchestrator.d.knowledge.state_of(uow, target.id, fact.key, state.world.id)
+        is KnowledgeState.UNKNOWN
+    )
     assert any(
         "asked_about_unknown_fact" in reason
         for decision in result.debug["npc_decisions"]
@@ -710,7 +779,9 @@ async def test_offline_quests_get_taken_by_someone_else(
     )
 
 
-async def test_dead_npcs_stay_dead_across_turns(orchestrator, uow, session_id, store, state) -> None:
+async def test_dead_npcs_stay_dead_across_turns(
+    orchestrator, uow, session_id, store, state
+) -> None:
     if not state.present_characters:
         pytest.skip("nobody is in the starting scene")
     victim = state.present_characters[0]

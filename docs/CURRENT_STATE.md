@@ -1,13 +1,13 @@
 # 当前工程状态
 
-更新时间：2026-08-13
+更新时间：2026-08-14
 
 ## 已实现
 
 - FastAPI + Next.js/TypeScript 的玩家端、创作台和公开目录。
 - Content Pack v2、不可变 Release、固定版本 Playthrough，以及《七日血契》v1→v2 兼容转换。
 - 《春日坂未完通信》官方校园女性向包：14 个地点、12 个重要 NPC、6 条剧情线程、24 个节拍、12 个任务、9 个可判定结局、关系同意与拒绝语义；全程使用声明式规则。
-- 当前公开官方 Release：《七日血契》`2.3.0`、《春日坂未完通信》`1.4.0`。数据库保留旧的 `2.1.0`/`2.2.0` 与 `1.2.0`/`1.3.0` 不可变制品并标记下架，因此当前为 2 个项目、6 个 Release、2 个可新建版本；重复初始化不会增加记录。
+- 当前公开官方 Release：《七日血契》`2.3.0`、《春日坂未完通信》`1.5.0`。数据库保留旧的 `2.1.0`/`2.2.0` 与 `1.2.0`/`1.3.0`/`1.4.0` 不可变制品并标记下架，因此当前为 2 个项目、7 个 Release、2 个可新建版本；重复初始化不会增加记录。
 - 邮箱注册登录、验证/重置令牌、服务器会话、CSRF、设备会话撤销、角色权限、管理员 TOTP/恢复码二次认证、异常登录审计和接口限流。
 - 共享 PostgreSQL 租户模型、应用层所有权检查，以及覆盖项目、版本、素材和完整 Playthrough 数据图的强制 PostgreSQL RLS；SQLite 保留同等仓储检查供测试。
 - 平台 LLM/BYOK、加密密钥、额度预算、使用台账、无模型 fallback 和 SSE 回合恢复。
@@ -24,14 +24,17 @@
 
 本轮最终实测结果：
 
-- Python：`611 passed in 61.46s`
+- Python：`643 passed in 76.73s`，其中 2 项使用真实 PostgreSQL 17 验证 RLS 与单查询快照
 - Ruff：`All checks passed!`
-- Mypy：`Success: no issues found in 144 source files`
-- Next.js：ESLint 通过，Next.js 16.3.0 生产构建通过
-- 迁移：空数据库和实际开发库均位于 Alembic `e91c37a2b604 (head)`
+- Mypy：`Success: no issues found in 145 source files`
+- Next.js：6 项 Vitest、Prettier、ESLint 通过，Next.js 16.3.0 生产构建通过
+- 迁移：空 SQLite、开发 SQLite 与空 PostgreSQL 17 均位于 Alembic `e91c37a2b604 (head)`
 - 烟测：独立 FastAPI 进程的 `/api/health` 为 `ok`，数据库 `/api/ready` 为 `ready`，Content Pack v2 JSON Schema 可读取
-- 本机 SQLite 验收：普通状态读取 p95 `12.2ms`；50 个 Playthrough 同时读取全部成功（p95 `637.3ms`）；同一 Playthrough 的两次并发行动均成功并经过串行锁。生产性能仍须在 PostgreSQL/Redis 环境复测。
-- Compose：`docker compose config --quiet` 通过
+- 回合起始状态从同一 AsyncSession 的 10 次串行读取改为单条 `UNION ALL` 快照；SQLite 与真实 PostgreSQL/RLS 连接均断言只执行 1 条 SQL。
+- PostgreSQL RLS：应用角色为 `NOSUPERUSER NOBYPASSRLS`；跨用户列举、直接对象读取、更新和伪造所有权插入均已在数据库层拒绝。迁移 owner 与 API/Worker 运行角色已分离。
+- 本机 SQLite 验收：普通状态读取 p95 `12.2ms`；50 个 Playthrough 同时读取全部成功（p95 `637.3ms`）；同一 Playthrough 的两次并发行动均成功并经过串行锁。生产规格 PostgreSQL/Redis 压测仍未完成。
+- Compose：Docker Desktop、PostgreSQL 17 容器、迁移、官方 Release 初始化与 RLS 测试实际运行通过；`docker compose config --quiet` 通过。
+- 真实 LLM：12 回合首次整局完成但人工评审失败；修复调用追踪和玩家代理权后，单回合从 7 次调用/61.3 秒/约 2.3 万 token 降至 2 次调用/17.9 秒/8172 token/估算 0.032664 元。模型仍会违背精确事实，已加入声明式叙事不变量和失败降级，尚未达到发布门槛。
 - Python wheel 构建通过，并确认包含创作模板、Content Pack 编译器、提示词资源与 `narrative` 控制台入口。
 
 复现命令：
@@ -46,13 +49,13 @@ npm run lint
 npm run build
 ```
 
-Alembic 已在空 SQLite 数据库和重建后的开发库上升级到当前 head。迁移前备份为 `data/game.pre-engine-refactor.20260813-025150.db`，SHA-256 为 `4AEA79A6B89469BE376BFE3134526EFD35E6D4F1A4F8354F8923906506615DED`，文件属性为只读。重建库中没有迁移旧匿名 Playthrough；系统账号持有两个官方项目及其六个不可变 Release，当前版本为 `2.3.0` 与 `1.4.0`。
+Alembic 已在空 SQLite、重建后的开发库和真实 PostgreSQL 17 上升级到当前 head。迁移前备份为 `data/game.pre-engine-refactor.20260813-025150.db`，SHA-256 为 `4AEA79A6B89469BE376BFE3134526EFD35E6D4F1A4F8354F8923906506615DED`，文件属性为只读。重建库中没有迁移旧匿名 Playthrough；系统账号持有两个官方项目及其七个不可变 Release，当前版本为 `2.3.0` 与 `1.5.0`。
 
 ## 尚需外部环境验收
 
-- 在真实 PostgreSQL 上分别执行 RLS 隔离与恢复演练；SQLite 不能替代这项验证。
-- Docker Desktop daemon 本轮不可用，未能启动整套 Compose；配置渲染已通过，但仍需在目标 PostgreSQL/Redis/S3/邮件/ClamAV/KMS/Sentry 环境做集成、故障和权限演练。
-- 使用真实模型做文风、延迟、成本、越狱和长存档 A/B 测试。
+- PostgreSQL RLS 隔离已经实测；PITR 与备份恢复演练仍未执行。
+- PostgreSQL 容器已实测；Redis/S3/邮件/ClamAV/KMS/Sentry 仍需在目标环境做集成、故障和权限演练。
+- 已完成一次真实模型整局和多次单回合诊断，但质量评审失败；仍需在叙事不变量保护下重新做 12 回合与多模型 A/B。
 - 用邀请用户验证首日完成率、章节继续率、7 日回访、拒绝恋爱体验和创作者首次发布耗时。
 - 上线公共 UGC 前落实人工审核、举报、申诉、证据留存和地区法律审查。
 

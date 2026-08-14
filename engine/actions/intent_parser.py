@@ -41,6 +41,21 @@ _MISSING_ENTITY_PREFIXES = (
     "move_without_destination",
 )
 
+_WORLD_GROWTH_ACTIONS = frozenset(
+    {
+        ActionType.MOVE,
+        ActionType.TALK,
+        ActionType.ASK,
+        ActionType.CONVERSATION,
+        ActionType.FOLLOW,
+        ActionType.ATTACK,
+        ActionType.GIVE_ITEM,
+        ActionType.STEAL,
+        ActionType.BUY,
+        ActionType.SELL,
+    }
+)
+
 
 @dataclass(slots=True)
 class ParsedIntent:
@@ -69,7 +84,17 @@ class ParsedIntent:
 
     @property
     def needs_steward(self) -> bool:
-        return bool(self.unresolved)
+        if any(note.startswith(_MISSING_ENTITY_PREFIXES) for note in self.resolution_notes):
+            return True
+        if not self.intent.unresolved_reference:
+            return False
+        # A free-form observation can mention letters, weather, clothing, or
+        # any other narrative prop. Those words are context for the narrator,
+        # not a request to spend a model call inventing a new world entity.
+        return self.intent.action_type in _WORLD_GROWTH_ACTIONS or self.intent.ambiguity in {
+            "move_target_unknown",
+            "conversation_target_unknown",
+        }
 
 
 class IntentParser:
@@ -102,8 +127,10 @@ class IntentParser:
         intent: PlayerIntent | None = None
         degraded = True
 
-        if self.llm is not None and self.registry is not None and self.llm.usable_for(
-            LLMRole.INTENT
+        if (
+            self.llm is not None
+            and self.registry is not None
+            and self.llm.usable_for(LLMRole.INTENT)
         ):
             try:
                 context = await self.context_builder.build_intent_context(
@@ -143,9 +170,7 @@ class IntentParser:
         )
 
     # ------------------------------------------------------------------
-    def rebind(
-        self, state: WorldStateView, parsed: ParsedIntent, steward: Any
-    ) -> ParsedIntent:
+    def rebind(self, state: WorldStateView, parsed: ParsedIntent, steward: Any) -> ParsedIntent:
         """Re-resolve an intent against a world the steward has just extended.
 
         The steward may have recognised what the player meant, or created it.
@@ -203,9 +228,7 @@ class IntentParser:
         action = self._bind_action(state, intent, intent.raw_text, notes)
 
         if intent.plan is None:
-            plan = ActionPlan(
-                primitives=[ActionPrimitive(primitive_id="primary", action=action)]
-            )
+            plan = ActionPlan(primitives=[ActionPrimitive(primitive_id="primary", action=action)])
             return action, plan, notes
 
         primitives: list[ActionPrimitive] = []
@@ -222,31 +245,22 @@ class IntentParser:
                 and proposed.condition.primitive_id not in seen
             ):
                 notes.append(
-                    f"condition_requires_earlier_primitive:"
-                    f"{proposed.condition.primitive_id}"
+                    f"condition_requires_earlier_primitive:{proposed.condition.primitive_id}"
                 )
                 invalid = True
             if proposed.condition is not None:
                 condition = proposed.condition
-                if (
-                    condition.target_id is not None
-                    and not state.is_present(condition.target_id)
-                ):
+                if condition.target_id is not None and not state.is_present(condition.target_id):
                     notes.append(f"condition_target_not_present:{condition.target_id}")
                     invalid = True
-                if (
-                    condition.item_key is not None
-                    and self.pack.item(condition.item_key) is None
-                ):
+                if condition.item_key is not None and self.pack.item(condition.item_key) is None:
                     notes.append(f"condition_unknown_item:{condition.item_key}")
                     invalid = True
                 if (
                     condition.location_key is not None
                     and state.graph.by_key(condition.location_key) is None
                 ):
-                    notes.append(
-                        f"condition_unknown_location:{condition.location_key}"
-                    )
+                    notes.append(f"condition_unknown_location:{condition.location_key}")
                     invalid = True
             bound = self._bind_action(state, proposed, intent.raw_text, notes)
             primitives.append(
@@ -261,9 +275,7 @@ class IntentParser:
         if any(p.action.action_type in QUERY_ACTIONS for p in primitives):
             notes.append("query_action_cannot_be_in_plan")
             invalid = True
-        if any(
-            p.action.action_type is ActionType.MOVE for p in primitives[:-1]
-        ):
+        if any(p.action.action_type is ActionType.MOVE for p in primitives[:-1]):
             notes.append("movement_must_be_last_primitive")
             invalid = True
         if invalid or len(primitives) < 2:
@@ -271,9 +283,7 @@ class IntentParser:
             fallback = action.model_copy(update={"action_type": ActionType.CUSTOM})
             return (
                 fallback,
-                ActionPlan(
-                    primitives=[ActionPrimitive(primitive_id="primary", action=fallback)]
-                ),
+                ActionPlan(primitives=[ActionPrimitive(primitive_id="primary", action=fallback)]),
                 notes,
             )
         return primitives[0].action, ActionPlan(primitives=primitives), notes

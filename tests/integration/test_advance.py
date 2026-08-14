@@ -1,8 +1,8 @@
-"""A turn is a stretch of story, not a single action.
+"""An explicit turn preserves agency; "continue" delegates a short run.
 
-These tests pin the pacing contract: one player input runs the character
-forward through several adjudicated steps, stops at the first thing that needs
-a decision, and comes back as one chapter rather than a stack of paragraphs.
+These tests pin the pacing contract: a player's action is not silently extended
+with model-chosen decisions. A delegated run still stops at the first thing
+that needs a decision and returns one chapter rather than many paragraphs.
 """
 
 from __future__ import annotations
@@ -54,7 +54,7 @@ class _ScriptedAutopilot:
         ], run.intent
 
 
-async def test_one_input_runs_several_steps_and_returns_one_chapter(
+async def test_explicit_input_stays_one_step_and_does_not_delegate(
     orchestrator, uow, bundle
 ) -> None:
     orchestrator.d.autopilot = _ScriptedAutopilot(
@@ -70,25 +70,17 @@ async def test_one_input_runs_several_steps_and_returns_one_chapter(
         uow, TurnRequest(session_id=bundle.session.id, text="我打坐修炼一个时辰")
     )
 
-    # The player acted once; the character kept going.
-    assert result.steps > 1
+    assert result.steps == 1
     assert result.status is TurnStatus.COMPLETED
     assert result.narrative
     assert result.interrupt is not None
-    # One planning call for the whole run, not one per step.
-    assert orchestrator.d.autopilot.calls == 1
+    assert orchestrator.d.autopilot.calls == 0
 
 
-async def test_the_run_continues_what_the_player_asked_for(
+async def test_an_explicit_request_never_hands_the_pen_to_autopilot(
     orchestrator, uow, bundle
 ) -> None:
-    """The planner must be told what the player said, or it hijacks the story.
-
-    Reported symptom: the player typed "过去看看是干什么的" about a notice that
-    had just been announced, and the run went off to interview someone else
-    about an unrelated theft - because the planner only ever saw the
-    character's standing goals.
-    """
+    """Regression: a notice lookup must not become unrelated model-chosen errands."""
     orchestrator.d.autopilot = _ScriptedAutopilot(
         orchestrator,
         [AutopilotChoice(action_type=ActionType.OBSERVE, reason="看看告示")],
@@ -99,7 +91,7 @@ async def test_the_run_continues_what_the_player_asked_for(
         TurnRequest(session_id=bundle.session.id, text="过去看看告示写的是什么"),
     )
 
-    assert orchestrator.d.autopilot.player_input == "过去看看告示写的是什么"
+    assert orchestrator.d.autopilot.calls == 0
 
 
 async def test_a_bare_continue_leaves_the_planner_to_its_own_judgement(
@@ -111,9 +103,7 @@ async def test_a_bare_continue_leaves_the_planner_to_its_own_judgement(
         [AutopilotChoice(action_type=ActionType.OBSERVE, reason="看看四周")],
     )
 
-    await orchestrator.advance(
-        uow, TurnRequest(session_id=bundle.session.id, text="继续")
-    )
+    await orchestrator.advance(uow, TurnRequest(session_id=bundle.session.id, text="继续"))
 
     assert orchestrator.d.autopilot.player_input == ""
 
@@ -147,27 +137,21 @@ async def test_the_run_is_recorded_as_one_chapter_not_one_segment_per_step(
         [AutopilotChoice(action_type=ActionType.OBSERVE, reason="看看四周")] * 3,
     )
 
-    await orchestrator.advance(
-        uow, TurnRequest(session_id=bundle.session.id, text="我环顾四周")
-    )
+    await orchestrator.advance(uow, TurnRequest(session_id=bundle.session.id, text="继续"))
 
     segments = await uow.turns.list_narrative(bundle.session.id, limit=20)
     assert len(segments) == 1
     assert segments[0].kind == "chapter"
 
 
-async def test_every_step_of_a_run_is_a_committed_turn(
-    orchestrator, uow, bundle, store
-) -> None:
+async def test_every_step_of_a_run_is_a_committed_turn(orchestrator, uow, bundle, store) -> None:
     """Batching the prose must not batch away the audit trail."""
     orchestrator.d.autopilot = _ScriptedAutopilot(
         orchestrator,
         [AutopilotChoice(action_type=ActionType.OBSERVE, reason="看看四周")] * 2,
     )
 
-    result = await orchestrator.advance(
-        uow, TurnRequest(session_id=bundle.session.id, text="我环顾四周")
-    )
+    result = await orchestrator.advance(uow, TurnRequest(session_id=bundle.session.id, text="继续"))
 
     turns = await uow.turns.list_for_session(bundle.session.id, limit=50)
     assert len(turns) == result.steps
@@ -202,9 +186,7 @@ async def test_the_run_stops_at_the_first_thing_that_needs_the_player(
         ],
     )
 
-    result = await orchestrator.advance(
-        uow, TurnRequest(session_id=bundle.session.id, text="继续")
-    )
+    result = await orchestrator.advance(uow, TurnRequest(session_id=bundle.session.id, text="继续"))
 
     assert result.interrupt is not None
     assert result.interrupt["reason"] in (
@@ -217,9 +199,7 @@ async def test_the_run_stops_at_the_first_thing_that_needs_the_player(
     assert result.steps < 3
 
 
-async def test_without_a_model_a_turn_stays_a_single_turn(
-    orchestrator, uow, bundle
-) -> None:
+async def test_without_a_model_a_turn_stays_a_single_turn(orchestrator, uow, bundle) -> None:
     """The deterministic fallback would just repeat itself, so it does not run."""
     result = await orchestrator.advance(
         uow, TurnRequest(session_id=bundle.session.id, text="我环顾四周")
@@ -236,9 +216,7 @@ async def test_a_retried_request_replays_instead_of_acting_again(
         orchestrator,
         [AutopilotChoice(action_type=ActionType.OBSERVE, reason="看看四周")] * 2,
     )
-    request = TurnRequest(
-        session_id=bundle.session.id, text="我环顾四周", idempotency_key="run-key-1"
-    )
+    request = TurnRequest(session_id=bundle.session.id, text="继续", idempotency_key="run-key-1")
 
     first = await orchestrator.advance(uow, request)
     minute = store.worlds[bundle.world.id].current_minute
@@ -298,9 +276,7 @@ async def test_the_opening_chapter_is_recorded_so_the_first_move_can_answer_it(
     from engine.orchestrator.turn import Choice, StoryBeat
     from engine.world.state_view import build_world_state
 
-    state = await build_world_state(
-        uow, pack, bundle.world.id, bundle.session.player_character_id
-    )
+    state = await build_world_state(uow, pack, bundle.world.id, bundle.session.player_character_id)
 
     async def scripted(_uow, _state):
         from engine.narrative.prologue import PrologueResult

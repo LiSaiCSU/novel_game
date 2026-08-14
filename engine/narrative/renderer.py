@@ -21,6 +21,7 @@ from engine.core.models import Character
 from engine.core.ports import UnitOfWork
 from engine.core.types import LLMRole
 from engine.llm.structured import extract_json
+from engine.narrative.fact_guard import NarrativeFactGuard
 from engine.narrative.style import NarrativeStyle, StyleReport
 from engine.narrative.template_renderer import TemplateNarrativeRenderer
 from engine.orchestrator.turn import DEFAULT_NARRATIVE_CHARS, StoryBeat
@@ -92,6 +93,7 @@ class NarrativeRenderer:
         self.registry = registry
         self.prompt_version = prompt_version
         self.style = NarrativeStyle(pack)
+        self.fact_guard = NarrativeFactGuard(pack)
         self.template = TemplateNarrativeRenderer(pack)
 
     # ------------------------------------------------------------------
@@ -149,6 +151,24 @@ class NarrativeRenderer:
         prose = self.style.enforce_max_chars(prose, max_chars)
         if not prose:
             return NarrativeResult(text=fallback, degraded=True)
+
+        fact_violations = self.fact_guard.review(
+            state, player_action=player_action, prose=prose
+        )
+        if fact_violations:
+            logger.warning(
+                "narrative violated declared facts, using templates: %s",
+                [violation.as_dict() for violation in fact_violations],
+            )
+            return NarrativeResult(
+                text=fallback,
+                degraded=True,
+                debug={
+                    "fact_violations": [
+                        violation.as_dict() for violation in fact_violations
+                    ]
+                },
+            )
 
         report = self.style.review(prose, self._known_entities(state))
         self.style.observe(prose)

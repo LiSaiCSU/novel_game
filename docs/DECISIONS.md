@@ -131,7 +131,10 @@ BLAKE2b(seed_material) → `random.Random(int)`。每次掷点写入
 
 这保证：**世界引擎的正确性可以在没有任何 LLM 的情况下被完整测试**，
 LLM 只是“理解与表达”的增强层——与 Prompt §0 的分工完全一致。
-所有 eval 用 `ScriptedProvider`（录制/回放固定 JSON）运行，不消耗真实额度。
+确定性的 LLM 边界契约使用 `ScriptedProvider`（固定 JSON 回放），不消耗真实额度；
+它们只证明模型提案无法绕过规则，不能称为模型质量评估。真实文风、越狱抵抗、
+延迟、token/成本和长局一致性必须通过显式启用的 live evaluation 验证，未执行时
+状态必须显示为“未验证”。
 
 **可逆性**: 高（填 `.env` 即启用真实模型）。
 

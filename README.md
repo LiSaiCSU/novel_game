@@ -60,6 +60,16 @@ LLM_MODEL=your-model
 
 LLM 只负责自然语言理解、NPC 提案、导演建议与叙事表达。世界状态、时钟、资源、关系、任务和事实均由确定性引擎校验并提交，模型不能直接写数据库。
 
+真实模型质量不由离线测试冒充。付费、显式确认的整局评估使用：
+
+```bash
+python -m evaluation.live_llm --allow-paid-calls --turns 12 --resume-after 6
+```
+
+命令逐回合原子写入 `data/evaluations/`，记录延迟、调用、token、成本、canonical 变化和完整转录；默认每回合 180 秒硬超时。自动检查只作烟雾报警，报告在人工评审前保持 `awaiting_human_review`。首次真实基线及失败项见 [docs/LIVE_LLM_BASELINE.md](docs/LIVE_LLM_BASELINE.md)。
+
+`LLM_PRICE_TABLE` 的 `input_per_million` / `output_per_million` 使用“每百万 token 对应的计费货币微单位”（1 元 = 1,000,000 微单位）。价格是部署配置，不应在模型未知或供应商更新后沿用猜测值。
+
 ## 内容与版本模型
 
 - `Project`：创作者持续编辑的作品。
@@ -99,7 +109,7 @@ database/          SQLAlchemy 模型、仓储、RLS 与 Alembic 迁移
 content/
   cultivation_v1/ 《七日血契》官方作品
   campus_romance_v1/ 《春日坂未完通信》官方作品
-tests/             unit、integration 与 evals
+tests/             unit、integration 与确定性的 LLM 边界契约测试
 docs/              架构、策略、决策和部署文档
 ```
 

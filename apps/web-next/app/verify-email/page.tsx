@@ -1,3 +1,38 @@
 "use client";
-import {FormEvent,useState} from "react";import {api} from "@/lib/api";
-export default function VerifyEmail(){const[message,setMessage]=useState("");async function submit(e:FormEvent<HTMLFormElement>){e.preventDefault();const d=new FormData(e.currentTarget);const token=String(d.get("token")||new URLSearchParams(location.search).get("token")||"");try{await api("/auth/verify-email",{method:"POST",body:JSON.stringify({token})});setMessage("邮箱已验证，现在可以开始游戏和创作。")}catch(x){setMessage((x as Error).message)}}return <div className="authShell"><form className="authCard stack" onSubmit={submit}><div><p className="eyebrow">VERIFY</p><h1>验证邮箱</h1><p style={{color:"var(--muted)"}}>从邮件链接进入时会自动使用令牌；也可以在下方手动粘贴。</p></div><div className="field"><label htmlFor="token">验证令牌（可选）</label><input className="input" id="token" name="token"/></div>{message&&<p className="success" role="status">{message}</p>}<button className="button primary">完成验证</button></form></div>}
+import { FormEvent, useState } from "react";
+import { api } from "@/lib/api";
+export default function VerifyEmail() {
+  const [message, setMessage] = useState("");
+  async function submit(e: FormEvent<HTMLFormElement>) {
+    e.preventDefault();
+    const d = new FormData(e.currentTarget);
+    const token = String(d.get("token") || new URLSearchParams(location.search).get("token") || "");
+    try {
+      await api("/auth/verify-email", { method: "POST", body: JSON.stringify({ token }) });
+      setMessage("邮箱已验证，现在可以开始游戏和创作。");
+    } catch (x) {
+      setMessage((x as Error).message);
+    }
+  }
+  return (
+    <div className="authShell">
+      <form className="authCard stack" onSubmit={submit}>
+        <div>
+          <p className="eyebrow">VERIFY</p>
+          <h1>验证邮箱</h1>
+          <p className="mutedCopy">从邮件链接进入时会自动使用令牌；也可以在下方手动粘贴。</p>
+        </div>
+        <div className="field">
+          <label htmlFor="token">验证令牌（可选）</label>
+          <input className="input" id="token" name="token" />
+        </div>
+        {message && (
+          <p className="success" role="status">
+            {message}
+          </p>
+        )}
+        <button className="button primary">完成验证</button>
+      </form>
+    </div>
+  );
+}

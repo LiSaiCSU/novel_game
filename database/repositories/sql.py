@@ -36,6 +36,7 @@ from database.models.orm import (
     TurnTraceORM,
     WorldORM,
 )
+from database.repositories.state_snapshot import SqlWorldStateRepository
 from engine.core.errors import EngineError
 from engine.core.ids import new_id
 from engine.core.models import (
@@ -100,9 +101,7 @@ class SqlLocationRepo(_Repo):
 
     async def get_by_key(self, world_id: str, key: str) -> Location | None:
         row = await self._one(
-            sa.select(LocationORM).where(
-                LocationORM.world_id == world_id, LocationORM.key == key
-            )
+            sa.select(LocationORM).where(LocationORM.world_id == world_id, LocationORM.key == key)
         )
         return m.location_to_domain(row) if row else None
 
@@ -257,9 +256,7 @@ class SqlMemoryRepo(_Repo):
         stmt = stmt.order_by(MemoryORM.created_at_minute.desc()).limit(limit)
         return [m.memory_to_domain(r) for r in await self._scalars(stmt)]
 
-    async def get_by_event(
-        self, owner_character_id: str, related_event_id: str
-    ) -> Memory | None:
+    async def get_by_event(self, owner_character_id: str, related_event_id: str) -> Memory | None:
         row = await self._one(
             sa.select(MemoryORM).where(
                 MemoryORM.owner_character_id == owner_character_id,
@@ -270,9 +267,7 @@ class SqlMemoryRepo(_Repo):
 
     async def add(self, memory: Memory) -> None:
         if memory.related_event_id is not None:
-            existing = await self.get_by_event(
-                memory.owner_character_id, memory.related_event_id
-            )
+            existing = await self.get_by_event(memory.owner_character_id, memory.related_event_id)
             if existing is not None:
                 return
         self.s.add(m.memory_to_orm(memory))
@@ -414,9 +409,7 @@ class SqlDirectorEventRepo(_Repo):
         row = await self.s.get(DirectorEventORM, director_event_id)
         return m.director_event_to_domain(row) if row else None
 
-    async def get_by_dedup_key(
-        self, world_id: str, dedup_key: str
-    ) -> DirectorEvent | None:
+    async def get_by_dedup_key(self, world_id: str, dedup_key: str) -> DirectorEvent | None:
         row = await self._one(
             sa.select(DirectorEventORM).where(
                 DirectorEventORM.world_id == world_id,
@@ -474,9 +467,7 @@ class SqlDirectorEventRepo(_Repo):
         )
         return int(value or 0)
 
-    async def count_booked_between(
-        self, world_id: str, start_minute: int, end_minute: int
-    ) -> int:
+    async def count_booked_between(self, world_id: str, start_minute: int, end_minute: int) -> int:
         value = await self.s.scalar(
             sa.select(sa.func.count())
             .select_from(DirectorEventORM)
@@ -626,6 +617,7 @@ class SqlUnitOfWork:
         self.director_events = SqlDirectorEventRepo(session)
         self.sessions = SqlSessionRepo(session)
         self.turns = SqlTurnRepo(session)
+        self.world_state = SqlWorldStateRepository(session)
 
     async def __aenter__(self) -> SqlUnitOfWork:
         return self
@@ -727,13 +719,17 @@ class SqlUnitOfWork:
                 )
         elif kind is ChangeKind.SKILL_USED:
             skill_row = (
-                await s.execute(
-                    sa.select(CharacterSkillORM).where(
-                        CharacterSkillORM.character_id == change.target_id,
-                        CharacterSkillORM.skill_key == str(change.payload["skill_key"]),
+                (
+                    await s.execute(
+                        sa.select(CharacterSkillORM).where(
+                            CharacterSkillORM.character_id == change.target_id,
+                            CharacterSkillORM.skill_key == str(change.payload["skill_key"]),
+                        )
                     )
                 )
-            ).scalars().first()
+                .scalars()
+                .first()
+            )
             if skill_row is not None:
                 skill_row.last_used_minute = int(change.payload.get("at_minute", 0))
                 skill_row.mastery = min(1.0, skill_row.mastery + 0.005)
@@ -777,13 +773,17 @@ class SqlUnitOfWork:
         s = self.session
         a_id, b_id = change.target_id, str(change.payload["other_id"])
         row = (
-            await s.execute(
-                sa.select(RelationshipORM).where(
-                    RelationshipORM.character_a_id == a_id,
-                    RelationshipORM.character_b_id == b_id,
+            (
+                await s.execute(
+                    sa.select(RelationshipORM).where(
+                        RelationshipORM.character_a_id == a_id,
+                        RelationshipORM.character_b_id == b_id,
+                    )
                 )
             )
-        ).scalars().first()
+            .scalars()
+            .first()
+        )
         if row is None:
             actor = await s.get(CharacterORM, a_id)
             row = RelationshipORM(
@@ -803,13 +803,17 @@ class SqlUnitOfWork:
         item_key = str(change.payload["item_key"])
         quantity = int(change.payload.get("quantity", 1))
         row = (
-            await s.execute(
-                sa.select(InventoryItemORM).where(
-                    InventoryItemORM.character_id == change.target_id,
-                    InventoryItemORM.item_key == item_key,
+            (
+                await s.execute(
+                    sa.select(InventoryItemORM).where(
+                        InventoryItemORM.character_id == change.target_id,
+                        InventoryItemORM.item_key == item_key,
+                    )
                 )
             )
-        ).scalars().first()
+            .scalars()
+            .first()
+        )
         if row is None:
             s.add(
                 InventoryItemORM(
@@ -827,13 +831,17 @@ class SqlUnitOfWork:
         item_key = str(change.payload["item_key"])
         quantity = int(change.payload.get("quantity", 1))
         row = (
-            await s.execute(
-                sa.select(InventoryItemORM).where(
-                    InventoryItemORM.character_id == change.target_id,
-                    InventoryItemORM.item_key == item_key,
+            (
+                await s.execute(
+                    sa.select(InventoryItemORM).where(
+                        InventoryItemORM.character_id == change.target_id,
+                        InventoryItemORM.item_key == item_key,
+                    )
                 )
             )
-        ).scalars().first()
+            .scalars()
+            .first()
+        )
         if row is None or row.quantity < quantity:
             raise EngineError(
                 f"cannot remove {quantity} of {item_key}", character_id=change.target_id
@@ -846,13 +854,17 @@ class SqlUnitOfWork:
         s = self.session
         fact_id = str(change.payload["fact_id"])
         row = (
-            await s.execute(
-                sa.select(CharacterKnowledgeORM).where(
-                    CharacterKnowledgeORM.character_id == change.target_id,
-                    CharacterKnowledgeORM.fact_id == fact_id,
+            (
+                await s.execute(
+                    sa.select(CharacterKnowledgeORM).where(
+                        CharacterKnowledgeORM.character_id == change.target_id,
+                        CharacterKnowledgeORM.fact_id == fact_id,
+                    )
                 )
             )
-        ).scalars().first()
+            .scalars()
+            .first()
+        )
         if row is None:
             s.add(
                 CharacterKnowledgeORM(

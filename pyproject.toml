@@ -52,9 +52,10 @@ asyncio_mode = "auto"
 asyncio_default_fixture_loop_scope = "function"
 filterwarnings = ["ignore::DeprecationWarning"]
 markers = [
-    "llm: tests that require a real LLM provider (skipped by default)",
     "integration: tests that touch the database",
-    "eval: AI behaviour evaluations",
+    "postgres_integration: tests PostgreSQL-specific migrations and RLS",
+    "llm_contract: deterministic engine contracts around untrusted LLM proposals",
+    "live_llm: opt-in evaluation that calls a configured external model",
 ]
 
 [tool.ruff]

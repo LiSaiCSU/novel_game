@@ -1,12 +1,13 @@
-"""AI evaluations (Prompt section 62).
+"""Deterministic LLM-boundary contracts (Prompt section 62).
 
-These are behavioural, not stylistic. They ask the questions from section 71:
+These are engine contracts, not model-quality evaluations. They ask:
 does the world refuse the impossible, do characters act only on what they know,
 does the past reach the future, does the world keep moving without the player.
 
-All five run against ScriptedProvider or NullProvider - deterministic, offline,
-and free. A model that behaves badly cannot make them pass, and a missing model
-cannot make them fail.
+All cases run against ScriptedProvider or NullProvider: deterministic, offline,
+and free. They prove that untrusted model proposals cannot violate canonical
+rules. They do not prove prose quality, jailbreak resistance, provider latency,
+cost, or long-session coherence; those belong to the opt-in live evaluation.
 """
 
 from __future__ import annotations
@@ -31,7 +32,7 @@ from engine.rules.combat import CombatRules
 from engine.rules.engine import RuleEngine
 from tests.helpers import RiggedRNG
 
-pytestmark = pytest.mark.eval
+pytestmark = pytest.mark.llm_contract
 
 
 # ===========================================================================

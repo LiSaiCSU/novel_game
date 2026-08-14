@@ -29,15 +29,35 @@ def _parsed(state: WorldStateView, text: str, **kwargs) -> ParsedIntent:
     )
 
 
+def test_observation_props_do_not_summon_the_world_steward(state: WorldStateView) -> None:
+    parsed = _parsed(
+        state,
+        "阅读那封旧信",
+        action_type=ActionType.OBSERVE,
+        unresolved_reference=["那封寄错二十年的未完成信"],
+    )
+
+    assert not parsed.needs_steward
+
+
+def test_unknown_conversation_target_still_summons_the_world_steward(
+    state: WorldStateView,
+) -> None:
+    parsed = _parsed(
+        state,
+        "去找新来的馆员",
+        action_type=ActionType.TALK,
+        unresolved_reference=["新来的馆员"],
+    )
+
+    assert parsed.needs_steward
+
+
 async def test_reaching_someone_elsewhere_becomes_a_journey(
     pack, context_builder, state: WorldStateView, uow
 ) -> None:
     everyone = await uow.characters.list_for_world(state.world.id)
-    absent = next(
-        c
-        for c in everyone
-        if c.alive and not state.is_present(c.id) and c.location_key
-    )
+    absent = next(c for c in everyone if c.alive and not state.is_present(c.id) and c.location_key)
     parser = IntentParser(pack, context_builder)
 
     rebound = parser.rebind(
@@ -70,9 +90,7 @@ async def test_someone_standing_right_here_is_simply_talked_to(
     rebound = parser.rebind(
         state,
         _parsed(state, "我找他说几句"),
-        StewardResult(
-            action_type=ActionType.TALK, target_id=here.id, target_key=here.key
-        ),
+        StewardResult(action_type=ActionType.TALK, target_id=here.id, target_key=here.key),
     )
 
     assert rebound.action.action_type is ActionType.TALK
@@ -84,9 +102,7 @@ async def test_the_stewards_reading_replaces_the_first_guess(
 ) -> None:
     """It decided last and knew most, so it is not merely a tie-breaker."""
     parser = IntentParser(pack, context_builder)
-    somewhere = next(
-        loc for loc in state.graph.all() if loc.key != state.location_key()
-    )
+    somewhere = next(loc for loc in state.graph.all() if loc.key != state.location_key())
 
     rebound = parser.rebind(
         state,

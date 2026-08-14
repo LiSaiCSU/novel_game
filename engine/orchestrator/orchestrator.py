@@ -23,7 +23,7 @@ from engine.actions.intent_parser import IntentParser, ParsedIntent
 from engine.actions.planner import ActionPlanExecutor
 from engine.actions.resolver import ActionResolver
 from engine.actions.schema import Action, ActionOutcome, PlayerIntent, RuleResult
-from engine.characters.npc_agent import NPCAgent, NPCSituation
+from engine.characters.npc_agent import NPCAgent
 from engine.contentpack.declarative_runtime import apply_declarative_rules
 from engine.contentpack.pack import ContentPack
 from engine.context.builder import ContextBuilder
@@ -48,7 +48,9 @@ from engine.narrative.chapter import (
 )
 from engine.narrative.prologue import Prologue, PrologueResult
 from engine.narrative.renderer import NarrativeRenderer, NarrativeResult
+from engine.orchestrator.canonical import commit_canonical_turn, recovery_capsule
 from engine.orchestrator.interrupt import Interrupt, InterruptDetector, InterruptReason
+from engine.orchestrator.npc_phase import NpcPhase
 from engine.orchestrator.proposals import ProposalValidator
 from engine.orchestrator.turn import (
     DEFAULT_NARRATIVE_CHARS,
@@ -140,6 +142,14 @@ class GameOrchestrator:
         self.d = deps
         self.tension = TensionModel(deps.pack)
         self.proposals = ProposalValidator(deps.pack, deps.relationships)
+        self.npc_phase = NpcPhase(
+            pack=deps.pack,
+            rules=deps.rules,
+            knowledge=deps.knowledge,
+            agent=deps.npc_agent,
+            proposals=self.proposals,
+            narrative=deps.narrative,
+        )
 
     # ==================================================================
     async def open_session(
@@ -211,13 +221,13 @@ class GameOrchestrator:
         on_step: StepListener | None = None,
         on_chunk: ChunkListener | None = None,
     ) -> TurnResult:
-        """Play the player's action, then keep the story moving until it needs them.
+        """Play one explicit action, or continue autonomously when asked.
 
-        This is the loop the game is actually played through. A turn is no
-        longer "one action, one paragraph": the character carries on doing the
-        obvious next things - walking there, asking around, finishing the
-        errand - and the run stops the moment something happens that only the
-        player can answer. All of it is then written up as one chapter.
+        A compound request is already compiled into one atomic action plan.
+        Autopilot is reserved for the explicit content-pack "continue" command;
+        otherwise it can turn a harmless observation into several choices the
+        player never made. A delegated run stops at the first interruption and
+        is written as one chapter.
 
         Every step is still an ordinary, fully adjudicated, individually
         committed turn. What changed is who decides to take it and when the
@@ -271,8 +281,10 @@ class GameOrchestrator:
         arc = ""
         minutes_spent = 0
         degraded = False
+        run_llm_records: list[Any] = []
 
-        player_led = bool(request.text.strip()) and not self._is_continue(request.text)
+        delegated = self._is_continue(request.text)
+        player_led = bool(request.text.strip()) and not delegated
 
         # -- the player's own move, if they made one -------------------------
         if player_led:
@@ -294,17 +306,20 @@ class GameOrchestrator:
             interrupt = outcome.interrupt
             degraded = degraded or outcome.degraded
             await self._notify(on_step, len(steps), step)
+            if d.llm is not None:
+                run_llm_records.extend(d.llm.records)
 
         # -- then the character carries on by themselves ---------------------
         # Only with a model behind it. The deterministic fallback picks the
         # same safe action every time, so running it five times would just
         # make the character meditate five times - worse than not running.
-        if interrupt is None and d.autopilot is not None and d.autopilot.usable():
+        if interrupt is None and delegated and d.autopilot is not None and d.autopilot.usable():
             state = await build_world_state(
                 uow, d.pack, session.world_id, session.player_character_id
             )
             remaining = budget.max_steps - len(steps)
             if remaining > 0:
+                before_autopilot = len(d.llm.records) if d.llm is not None else 0
                 with timer.measure("autopilot"):
                     # The run continues what the player asked for. Without
                     # these two the planner falls back on standing goals and
@@ -316,6 +331,8 @@ class GameOrchestrator:
                         player_input=request.text if player_led else "",
                         player_did=steps[0].action if steps else "",
                     )
+                if d.llm is not None:
+                    run_llm_records.extend(d.llm.records[before_autopilot:])
                 for intent in intents:
                     if minutes_spent >= budget.max_minutes:
                         break
@@ -327,9 +344,7 @@ class GameOrchestrator:
                         timer,
                         forced_intent=intent,
                         # Only the run as a whole answers to the request's key.
-                        idempotency_key=(
-                            request.idempotency_key if not turn_ids else None
-                        ),
+                        idempotency_key=(request.idempotency_key if not turn_ids else None),
                     )
                     if outcome.clarification is not None:
                         break
@@ -339,6 +354,8 @@ class GameOrchestrator:
                     minutes_spent += step.minutes
                     degraded = degraded or outcome.degraded
                     await self._notify(on_step, len(steps), step)
+                    if d.llm is not None:
+                        run_llm_records.extend(d.llm.records)
                     if outcome.interrupt is not None:
                         interrupt = outcome.interrupt
                         break
@@ -355,9 +372,8 @@ class GameOrchestrator:
             interrupt = Interrupt(InterruptReason.BUDGET, "run_complete")
 
         # -- one chapter for the whole run -----------------------------------
-        state = await build_world_state(
-            uow, d.pack, session.world_id, session.player_character_id
-        )
+        state = await build_world_state(uow, d.pack, session.world_id, session.player_character_id)
+        before_chapter = len(d.llm.records) if d.llm is not None else 0
         with timer.measure("chapter"):
             chapter = await d.chapter.render(
                 uow,
@@ -369,6 +385,11 @@ class GameOrchestrator:
                 on_chunk=on_chunk,
                 max_chars=request.narrative_max_chars,
             )
+        if d.llm is not None:
+            run_llm_records.extend(d.llm.records[before_chapter:])
+            # Usage accounting runs after advance() returns. Preserve the
+            # whole run rather than only the final step plus chapter.
+            d.llm.records = run_llm_records
         return await self._close_run(
             uow,
             session,
@@ -379,6 +400,7 @@ class GameOrchestrator:
             interrupt=interrupt,
             timer=timer,
             degraded=degraded or chapter.degraded,
+            llm_calls=record_llm_calls(run_llm_records),
         )
 
     async def play_turn(self, uow: UnitOfWork, request: TurnRequest) -> TurnResult:
@@ -451,9 +473,7 @@ class GameOrchestrator:
                 uow, d.pack, session.world_id, session.player_character_id
             )
             turn_number = session.turn_number + 1
-            rng = event_rng(
-                state.world.world_seed, session.session_seed, f"turn-{turn_number}"
-            )
+            rng = event_rng(state.world.world_seed, session.session_seed, f"turn-{turn_number}")
             ctx = RuleContext(pack=d.pack, state=state, rng=rng)
             recent_narrative = await self._recent_narrative(uow, session.id)
             # Snapshot primitives, not object references: after commit the
@@ -554,9 +574,7 @@ class GameOrchestrator:
                 plan_result = ActionPlanExecutor(
                     d.rules,
                     resolver,
-                    max_total_minutes=int(
-                        d.pack.rule("action_plan.max_total_minutes", 1440)
-                    ),
+                    max_total_minutes=int(d.pack.rule("action_plan.max_total_minutes", 1440)),
                 ).execute(ctx, parsed.plan)
                 rule_result = plan_result.rule_result
                 outcome = plan_result.outcome
@@ -583,9 +601,7 @@ class GameOrchestrator:
         npc_lines: list[str] = []
         if plan.needs_npcs:
             with timer.measure("npc"):
-                npc_lines = await self._run_npcs(
-                    uow, ctx, action, outcome, change_set, trace
-                )
+                npc_lines = await self._run_npcs(uow, ctx, action, outcome, change_set, trace)
 
         # -- S7 simulate ----------------------------------------------------
         simulation_report = None
@@ -603,12 +619,9 @@ class GameOrchestrator:
 
         # -- S8 direct ------------------------------------------------------
         director_result = None
-        director_state = self._projected_state(
-            state, change_set, outcome.time_cost_minutes
-        )
+        director_state = self._projected_state(state, change_set, outcome.time_cost_minutes)
         scheduled_director_resolved = bool(
-            simulation_report is not None
-            and simulation_report.director_events_resolved > 0
+            simulation_report is not None and simulation_report.director_events_resolved > 0
         )
         if plan.needs_director and not scheduled_director_resolved:
             with timer.measure("direct"):
@@ -690,72 +703,48 @@ class GameOrchestrator:
         with timer.measure("commit"):
             trace.state_changes = change_set.summary()
             trace.rng_traces = record_rng(rng.traces)
-            if d.llm is not None:
-                trace.llm_calls = record_llm_calls(d.llm.records)
-                usage = d.llm.total_usage()
-                trace.token_usage = {
-                    "prompt": usage.prompt_tokens,
-                    "completion": usage.completion_tokens,
-                }
-            try:
-                # The recovery capsule is committed atomically with the world.
-                # Once this row exists, retries are presentation-only.
-                canonical_payload = {
-                    # On an autopilot turn the literal input is "继续", which
-                    # tells the narrator nothing. Hand it the move instead.
-                    "player_action": autopilot_reason or request.text,
-                    "outcome": outcome.model_dump(mode="json"),
-                    "change_set": change_set.model_dump(mode="json"),
-                    "before_facts": before_facts,
-                    "npc_lines": npc_lines,
-                    "world_lines": self._world_lines(change_set, state.player.id),
-                    "recent_narrative": recent_narrative,
-                    "parsed_degraded": parsed.degraded,
-                    "rejected": (
-                        None
-                        if rule_result.allowed
-                        else {
-                            "reason_code": str(rule_result.reason_code),
-                            "reason": rule_result.reason,
-                        }
-                    ),
-                    "trace": trace.as_dict(),
-                    "debug_requested": request.debug,
-                    "narrative_max_chars": request.narrative_max_chars,
-                    "memory_projection": {
-                        "status": (
-                            "PENDING"
-                            if plan.needs_memory and bool(change_set.events)
-                            else "NOT_REQUIRED"
-                        ),
-                        "attempts": 0,
-                    },
-                }
-                await uow.apply(change_set)
-                session.turn_number = turn_number
-                await uow.sessions.save(session)
-                await uow.turns.record(
-                    {
-                        "id": turn_id,
-                        "session_id": session.id,
-                        "turn_number": turn_number,
-                        "player_input": request.text,
-                        "idempotency_key": request.idempotency_key or turn_id,
-                        "status": str(TurnStatus.CANONICAL_COMMITTED),
-                        "world_minute_before": state.world.current_minute,
-                        "world_minute_after": (
-                            state.world.current_minute + outcome.time_cost_minutes
-                        ),
-                        "canonical_payload": canonical_payload,
-                        "last_error": {},
-                        "result": {},
+            self._refresh_llm_trace(trace)
+            capsule = recovery_capsule(
+                # On an autopilot turn the literal input is "继续", which
+                # tells the narrator nothing. Hand it the move instead.
+                player_action=autopilot_reason or request.text,
+                outcome=outcome,
+                change_set=change_set,
+                before_facts=before_facts,
+                npc_lines=npc_lines,
+                world_lines=self._world_lines(change_set, state.player.id),
+                recent_narrative=recent_narrative,
+                parsed_degraded=parsed.degraded,
+                rejected=(
+                    None
+                    if rule_result.allowed
+                    else {
+                        "reason_code": str(rule_result.reason_code),
+                        "reason": rule_result.reason,
                     }
+                ),
+                trace=trace,
+                debug_requested=request.debug,
+                narrative_max_chars=request.narrative_max_chars,
+                memory_required=plan.needs_memory and bool(change_set.events),
+            )
+            try:
+                await commit_canonical_turn(
+                    uow,
+                    session=session,
+                    turn_id=turn_id,
+                    turn_number=turn_number,
+                    player_input=request.text,
+                    idempotency_key=request.idempotency_key,
+                    world_minute_before=state.world.current_minute,
+                    world_minute_after=(
+                        state.world.current_minute + outcome.time_cost_minutes
+                    ),
+                    change_set=change_set,
+                    capsule=capsule,
                 )
-                await uow.commit()
             except Exception as exc:
-                await uow.rollback()
                 trace.errors.append({"code": "COMMIT_FAILED", "message": str(exc)})
-                logger.error("commit failed, turn rolled back: %s", exc)
                 raise
 
         if not narrate:
@@ -838,9 +827,7 @@ class GameOrchestrator:
                 npc_lines=list(payload.get("npc_lines") or []),
                 world_lines=list(payload.get("world_lines") or []),
                 recent_narrative=str(payload.get("recent_narrative") or ""),
-                max_chars=int(
-                    payload.get("narrative_max_chars", DEFAULT_NARRATIVE_CHARS)
-                ),
+                max_chars=int(payload.get("narrative_max_chars", DEFAULT_NARRATIVE_CHARS)),
             )
             after_status = TurnStatus.COMPLETED
             trace.narrative_style = narrative.debug
@@ -867,6 +854,11 @@ class GameOrchestrator:
         finally:
             if timer is not None:
                 timer.stop("narrate")
+
+        # Canonical commit happens before memory projection and narration.
+        # Refresh here so the persisted trace, usage ledger, and live evals do
+        # not silently omit those paid calls.
+        self._refresh_llm_trace(trace)
 
         require_turn_transition(before_status, after_status)
         if timer is not None:
@@ -931,9 +923,7 @@ class GameOrchestrator:
                 turn_id=stored.get("id"),
             )
         payload = dict(stored.get("canonical_payload") or {})
-        stored_chars = int(
-            payload.get("narrative_max_chars", DEFAULT_NARRATIVE_CHARS)
-        )
+        stored_chars = int(payload.get("narrative_max_chars", DEFAULT_NARRATIVE_CHARS))
         if stored_chars != request.narrative_max_chars:
             raise EngineError(
                 "idempotency key was already used with a different narrative length",
@@ -983,9 +973,7 @@ class GameOrchestrator:
                 uow, self.d.pack, session.world_id, session.player_character_id
             )
             cast = await self._cast(uow, state)
-            extraction = await self.d.memory.extract(
-                uow, state, change_set.events, owners=cast
-            )
+            extraction = await self.d.memory.extract(uow, state, change_set.events, owners=cast)
             for memory in extraction.memories:
                 await uow.memories.add(memory)
             trace.memory = {
@@ -993,19 +981,11 @@ class GameOrchestrator:
                 "skipped": extraction.skipped,
                 "degraded": extraction.degraded,
             }
-            if self.d.llm is not None:
-                trace.llm_calls = record_llm_calls(self.d.llm.records)
-                usage = self.d.llm.total_usage()
-                trace.token_usage = {
-                    "prompt": usage.prompt_tokens,
-                    "completion": usage.completion_tokens,
-                }
+            self._refresh_llm_trace(trace)
             projection.update({"status": "COMPLETED", "last_error": {}})
             payload["memory_projection"] = projection
             payload["trace"] = trace.as_dict()
-            await uow.turns.record(
-                {**stored, "canonical_payload": payload, "last_error": {}}
-            )
+            await uow.turns.record({**stored, "canonical_payload": payload, "last_error": {}})
             await uow.turns.save_trace(trace.as_dict())
             await uow.commit()
         except Exception as exc:
@@ -1062,91 +1042,8 @@ class GameOrchestrator:
         change_set: ChangeSet,
         trace: TurnTrace,
     ) -> list[str]:
-        """Run every present NPC's decision, validate it, and collect what was said."""
-        d = self.d
-        state = ctx.state
-        dying = {
-            change.target_id
-            for change in change_set.by_kind(mut.ChangeKind.CHARACTER_DEATH)
-        }
-        present = [
-            c for c in state.present_characters if c.alive and c.id not in dying
-        ]
-        if not present:
-            return []
-
-        referenced = await d.knowledge.match_facts(
-            uow, state.world.id, action.utterance or action.raw_text
-        )
-        llm_budget = int(d.pack.rule("auto_advance.npc_llm_per_step", 2))
-        lines: list[str] = []
-        for npc in present:
-            situation = NPCSituation(
-                player_action=action.action_type,
-                is_target=action.target_id == npc.id,
-                utterance=action.utterance,
-                method=action.method,
-                request_size=action.request_size,
-                topic=action.goal.topic,
-                referenced_facts=referenced if action.target_id == npc.id else [],
-                summary=outcome.summary_key,
-            )
-            available = d.rules.available_actions(ctx, npc.id)
-            result = await d.npc_agent.decide(
-                uow,
-                ctx,
-                npc,
-                situation,
-                available,
-                allow_llm=self._deserves_a_model(npc, action, llm_budget),
-            )
-            if not result.degraded:
-                llm_budget -= 1
-            report = await self.proposals.apply_npc_decision(
-                uow,
-                state,
-                result,
-                change_set,
-                importance=outcome.importance,
-                available_actions=available,
-            )
-            trace.npc_decisions.append(
-                {
-                    "npc": npc.key,
-                    "degraded": result.degraded,
-                    "reasons": result.reasons,
-                    "decision": result.decision.model_dump(mode="json"),
-                    "proposals": report.as_dict(),
-                    "context_tokens": result.context.estimated_tokens if result.context else 0,
-                }
-            )
-            if result.context is not None:
-                trace.context_snapshots[f"npc:{npc.key}"] = result.context.as_dict()
-
-            if result.decision.speech_intent or result.decision.spoken_line:
-                lines.append(
-                    d.narrative.npc_line(
-                        npc, result.decision.speech_intent, result.decision.spoken_line
-                    )
-                )
-        return [line for line in lines if line]
-
-    @staticmethod
-    def _deserves_a_model(
-        npc: Character, action: Action, remaining_budget: int
-    ) -> bool:
-        """Who in this scene is worth a model call.
-
-        The person being spoken to always is - that is the scene. Important
-        characters are, because the player will notice if they act flatly.
-        Everyone else is scenery, and scenery does not need to be reasoned
-        about several times per chapter.
-        """
-        if action.target_id == npc.id:
-            return True
-        if remaining_budget <= 0:
-            return False
-        return npc.character_type is CharacterType.MAJOR_NPC
+        """Compatibility facade; the phase itself lives in ``NpcPhase``."""
+        return await self.npc_phase.run(uow, ctx, action, outcome, change_set, trace)
 
     # ==================================================================
     def _new_tension(
@@ -1198,14 +1095,10 @@ class GameOrchestrator:
                 continue
             if event.event_type == "DEATH" and event.payload.get("cause") == "natural_lifespan":
                 template = str(
-                    self.d.pack.narrative_templates.get("world_event", {}).get(
-                        "natural_death", ""
-                    )
+                    self.d.pack.narrative_templates.get("world_event", {}).get("natural_death", "")
                 )
                 if template:
-                    lines.append(
-                        template.format(name=str(event.payload.get("character_name", "")))
-                    )
+                    lines.append(template.format(name=str(event.payload.get("character_name", ""))))
         return lines[-3:]
 
     _TRACKED_FIELDS = (
@@ -1263,9 +1156,7 @@ class GameOrchestrator:
                 **change.payload,
                 "name": after.item_name(str(change.payload.get("item_key", ""))),
             }
-            bucket = (
-                "added" if change.kind is mut.ChangeKind.INVENTORY_ADD else "removed"
-            )
+            bucket = "added" if change.kind is mut.ChangeKind.INVENTORY_ADD else "removed"
             inventory[bucket].append(entry)
 
         relationships = [
@@ -1323,9 +1214,7 @@ class GameOrchestrator:
         return choices[:8]
 
     # ==================================================================
-    async def _notify(
-        self, on_step: StepListener | None, index: int, step: ChapterStep
-    ) -> None:
+    async def _notify(self, on_step: StepListener | None, index: int, step: ChapterStep) -> None:
         """Progress reporting must never be able to break the run."""
         if on_step is None:
             return
@@ -1354,9 +1243,7 @@ class GameOrchestrator:
     ) -> StepOutcome:
         """Commit one step of a run and decide whether it ended the run."""
         d = self.d
-        before = await build_world_state(
-            uow, d.pack, session.world_id, session.player_character_id
-        )
+        before = await build_world_state(uow, d.pack, session.world_id, session.player_character_id)
         health_before = before.player.health
         present_before = list(before.present_characters)
 
@@ -1394,9 +1281,7 @@ class GameOrchestrator:
         change_set = ChangeSet.model_validate(payload["change_set"])
         trace = dict(payload.get("trace") or {})
 
-        after = await build_world_state(
-            uow, d.pack, session.world_id, session.player_character_id
-        )
+        after = await build_world_state(uow, d.pack, session.world_id, session.player_character_id)
         interrupt = d.interrupts.detect(
             after,
             outcome=outcome,
@@ -1432,6 +1317,7 @@ class GameOrchestrator:
         interrupt: Interrupt,
         timer: StageTimer,
         degraded: bool,
+        llm_calls: list[dict[str, Any]],
     ) -> TurnResult:
         """Complete every turn in the run and attach the chapter to its first.
 
@@ -1453,9 +1339,7 @@ class GameOrchestrator:
             narrative=chapter.text,
             state_changes=await self._run_state_changes(uow, turn_ids, state),
             visible_updates=state.scene_summary(),
-            choices=self._choices(
-                state, RuleContext(self.d.pack, state, GameRNG("choices"))
-            ),
+            choices=self._choices(state, RuleContext(self.d.pack, state, GameRNG("choices"))),
             beat=chapter.beat,
             interrupt=interrupt.as_dict(),
             steps=len(turn_ids),
@@ -1473,15 +1357,18 @@ class GameOrchestrator:
                 "stage_timings": {**base.get("stage_timings", {}), **timer.timings},
                 "interrupt": interrupt.as_dict(),
                 "chapter": chapter.debug,
+                "llm_calls": llm_calls,
+                "token_usage": {
+                    "prompt": sum(int(call.get("prompt_tokens", 0)) for call in llm_calls),
+                    "completion": sum(int(call.get("completion_tokens", 0)) for call in llm_calls),
+                },
             }
 
         for turn_id in turn_ids:
             stored = await uow.turns.get(turn_id)
             if stored is None:
                 continue
-            before_status = TurnStatus(
-                stored.get("status", TurnStatus.CANONICAL_COMMITTED)
-            )
+            before_status = TurnStatus(stored.get("status", TurnStatus.CANONICAL_COMMITTED))
             if before_status is TurnStatus.COMPLETED:
                 continue
             require_turn_transition(before_status, TurnStatus.COMPLETED)
@@ -1528,9 +1415,7 @@ class GameOrchestrator:
             stored = await uow.turns.get(turn_id)
             capsule = dict((stored or {}).get("canonical_payload") or {})
             if capsule.get("change_set"):
-                merged.changes.extend(
-                    ChangeSet.model_validate(capsule["change_set"]).changes
-                )
+                merged.changes.extend(ChangeSet.model_validate(capsule["change_set"]).changes)
         summary = self._state_change_summary(dict(before), state, merged)
         summary["steps"] = len(turn_ids)
         return summary
@@ -1550,9 +1435,7 @@ class GameOrchestrator:
     async def _autopilot_intent(
         self, autopilot: Autopilot, state: WorldStateView, recent_narrative: str
     ) -> tuple[ParsedIntent, str]:
-        intent, reason = await autopilot.choose(
-            state, recent_narrative=recent_narrative
-        )
+        intent, reason = await autopilot.choose(state, recent_narrative=recent_narrative)
         action, plan, notes = self.d.intent_parser.resolve(state, intent)
         return (
             ParsedIntent(
@@ -1616,9 +1499,7 @@ class GameOrchestrator:
             invented.target_key = result.target_key
         return invented
 
-    def _extend_state(
-        self, state: WorldStateView, steward: StewardResult
-    ) -> WorldStateView:
+    def _extend_state(self, state: WorldStateView, steward: StewardResult) -> WorldStateView:
         """Make freshly created entities visible for the rest of this turn.
 
         They are already in the change set headed for the database; this keeps
@@ -1627,9 +1508,7 @@ class GameOrchestrator:
         locations = state.graph.all() + steward.new_locations
         graph = LocationGraph(locations)
         present = list(state.present_characters)
-        present += [
-            c for c in steward.new_characters if c.location_id == state.player.location_id
-        ]
+        present += [c for c in steward.new_characters if c.location_id == state.player.location_id]
         return replace(
             state,
             graph=graph,
@@ -1729,9 +1608,7 @@ class GameOrchestrator:
 
     async def _recent_narrative(self, uow: UnitOfWork, session_id: str, limit: int = 4) -> str:
         segments = await uow.turns.list_narrative(session_id, limit=limit)
-        return "\n\n".join(
-            s.text for s in segments if s.text and s.kind != BEAT_SEGMENT
-        )
+        return "\n\n".join(s.text for s in segments if s.text and s.kind != BEAT_SEGMENT)
 
     async def _pending_beat(self, uow: UnitOfWork, session_id: str) -> str:
         """What the last chapter left hanging, as plain text.
@@ -1776,9 +1653,7 @@ class GameOrchestrator:
             parts.append("[" + " | ".join(options) + "]")
         return " ".join(parts)
 
-    async def _turns_since_director(
-        self, uow: UnitOfWork, session: GameSession
-    ) -> int:
+    async def _turns_since_director(self, uow: UnitOfWork, session: GameSession) -> int:
         last = await uow.director_events.last_for_session(session.id)
         if last is None:
             return session.turn_number
@@ -1816,6 +1691,16 @@ class GameOrchestrator:
             for c in people
             if c.character_type is not CharacterType.BACKGROUND or c.id == state.player.id
         ]
+
+    def _refresh_llm_trace(self, trace: TurnTrace) -> None:
+        if self.d.llm is None:
+            return
+        trace.llm_calls = record_llm_calls(self.d.llm.records)
+        usage = self.d.llm.total_usage()
+        trace.token_usage = {
+            "prompt": usage.prompt_tokens,
+            "completion": usage.completion_tokens,
+        }
 
     def importance_band(self, importance: float):
         return band_for_importance(importance)

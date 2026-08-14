@@ -1,3 +1,32 @@
 "use client";
-import {FormEvent,useState} from "react";import {api} from "@/lib/api";
-export default function Forgot(){const[done,setDone]=useState(false);async function submit(e:FormEvent<HTMLFormElement>){e.preventDefault();const d=new FormData(e.currentTarget);await api("/auth/forgot-password",{method:"POST",body:JSON.stringify({email:d.get("email")})});setDone(true)}return <div className="authShell"><form className="authCard stack" onSubmit={submit}><div><p className="eyebrow">RECOVERY</p><h1>找回密码</h1><p style={{color:"var(--muted)"}}>无论账号是否存在，我们都会给出相同响应。</p></div><div className="field"><label htmlFor="email">邮箱</label><input className="input" id="email" name="email" type="email" required/></div>{done&&<p className="success">如果该邮箱已注册，重置邮件已发送。</p>}<button className="button primary">发送重置邮件</button></form></div>}
+import { FormEvent, useState } from "react";
+import { api } from "@/lib/api";
+export default function Forgot() {
+  const [done, setDone] = useState(false);
+  async function submit(e: FormEvent<HTMLFormElement>) {
+    e.preventDefault();
+    const d = new FormData(e.currentTarget);
+    await api("/auth/forgot-password", {
+      method: "POST",
+      body: JSON.stringify({ email: d.get("email") }),
+    });
+    setDone(true);
+  }
+  return (
+    <div className="authShell">
+      <form className="authCard stack" onSubmit={submit}>
+        <div>
+          <p className="eyebrow">RECOVERY</p>
+          <h1>找回密码</h1>
+          <p className="mutedCopy">无论账号是否存在，我们都会给出相同响应。</p>
+        </div>
+        <div className="field">
+          <label htmlFor="email">邮箱</label>
+          <input className="input" id="email" name="email" type="email" required />
+        </div>
+        {done && <p className="success">如果该邮箱已注册，重置邮件已发送。</p>}
+        <button className="button primary">发送重置邮件</button>
+      </form>
+    </div>
+  );
+}

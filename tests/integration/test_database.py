@@ -7,6 +7,7 @@ exercised through the real ORM, mappers and UnitOfWork.
 from __future__ import annotations
 
 import pytest
+from sqlalchemy import event as sa_event
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
 
 from database.base import Base
@@ -56,9 +57,7 @@ async def test_seeded_world_round_trips(sql_uow, bundle, pack) -> None:
     assert all(event.status is DirectorEventStatus.SCHEDULED for event in director_events)
 
 
-async def test_sql_memory_repository_enforces_owner_event_idempotency(
-    sql_uow, bundle
-) -> None:
+async def test_sql_memory_repository_enforces_owner_event_idempotency(sql_uow, bundle) -> None:
     from engine.core.models import Memory
 
     owner = bundle.character_by_key(PLAYER_KEY)
@@ -78,8 +77,7 @@ async def test_sql_memory_repository_enforces_owner_event_idempotency(
     rows = await sql_uow.memories.list_for_owner(owner.id)
     assert len([row for row in rows if row.related_event_id == "canonical-event-1"]) == 1
     assert any(
-        constraint.name == "uq_memory_owner_event"
-        for constraint in MemoryORM.__table__.constraints
+        constraint.name == "uq_memory_owner_event" for constraint in MemoryORM.__table__.constraints
     )
 
 
@@ -100,9 +98,7 @@ async def test_character_structure_survives_the_round_trip(sql_uow, bundle) -> N
     assert loaded_major.goal_lifecycle == major.goal_lifecycle
 
 
-async def test_npc_goal_action_result_persists_atomically_in_sql(
-    sql_uow, bundle, pack
-) -> None:
+async def test_npc_goal_action_result_persists_atomically_in_sql(sql_uow, bundle, pack) -> None:
     from engine.characters.goals import GoalLifecycleService
     from engine.core.mutations import ChangeSet, character_goals
     from engine.events.builder import EventBuilder
@@ -203,6 +199,28 @@ async def test_world_state_builds_from_sql(sql_uow, pack, bundle) -> None:
     assert state.location is not None
     assert state.graph.all()
     assert state.inventory
+
+
+async def test_world_state_uses_one_database_round_trip(sql_uow, sql_session, pack, bundle) -> None:
+    """The hot turn-start path must stay batched on a networked PostgreSQL."""
+
+    player = bundle.character_by_key(PLAYER_KEY)
+    assert player is not None
+    statements = 0
+
+    def count_statement(*_args) -> None:
+        nonlocal statements
+        statements += 1
+
+    sync_engine = sql_session.get_bind()
+    sa_event.listen(sync_engine, "before_cursor_execute", count_statement)
+    try:
+        state = await build_world_state(sql_uow, pack, bundle.world.id, player.id)
+    finally:
+        sa_event.remove(sync_engine, "before_cursor_execute", count_statement)
+
+    assert state.player.id == player.id
+    assert statements == 1
 
 
 async def test_a_full_turn_runs_against_sql(sql_uow, orchestrator, bundle) -> None:
@@ -430,13 +448,9 @@ async def test_a_save_restores_the_world_and_the_story(sql_uow, bundle, pack) ->
 
     # A story in progress: one chapter read, one character where they started.
     await sql_uow.turns.append_narrative(
-        NarrativeSegment(
-            session_id=session.id, kind="chapter", text="第一章：你走进了青云宗。"
-        )
+        NarrativeSegment(session_id=session.id, kind="chapter", text="第一章：你走进了青云宗。")
     )
-    state = await build_world_state(
-        sql_uow, pack, bundle.world.id, session.player_character_id
-    )
+    state = await build_world_state(sql_uow, pack, bundle.world.id, session.player_character_id)
     home = state.player.location_id
     await sql_uow.commit()
 
@@ -455,16 +469,10 @@ async def test_a_save_restores_the_world_and_the_story(sql_uow, bundle, pack) ->
     from engine.core.mutations import ChangeSet
 
     elsewhere = next(
-        loc
-        for loc in await sql_uow.locations.list_for_world(bundle.world.id)
-        if loc.id != home
+        loc for loc in await sql_uow.locations.list_for_world(bundle.world.id) if loc.id != home
     )
     damage = ChangeSet()
-    damage.add(
-        mut.character_move(
-            session.player_character_id, home, elsewhere.id, reason="test"
-        )
-    )
+    damage.add(mut.character_move(session.player_character_id, home, elsewhere.id, reason="test"))
     damage.add(
         mut.character_field(
             session.player_character_id,
@@ -476,9 +484,7 @@ async def test_a_save_restores_the_world_and_the_story(sql_uow, bundle, pack) ->
     )
     await sql_uow.apply(damage)
     await sql_uow.turns.append_narrative(
-        NarrativeSegment(
-            session_id=session.id, kind="chapter", text="第二章：一切都搞砸了。"
-        )
+        NarrativeSegment(session_id=session.id, kind="chapter", text="第二章：一切都搞砸了。")
     )
     await sql_uow.commit()
 
@@ -500,21 +506,15 @@ async def test_a_save_restores_the_world_and_the_story(sql_uow, bundle, pack) ->
     assert [s.text for s in segments] == ["第一章：你走进了青云宗。"]
 
 
-async def test_saves_are_listed_newest_first_and_can_be_deleted(
-    sql_uow, bundle
-) -> None:
+async def test_saves_are_listed_newest_first_and_can_be_deleted(sql_uow, bundle) -> None:
     from database.saves import SaveService
 
     saves = SaveService(sql_uow.session)
     session = bundle.session
     assert session is not None
 
-    first = await saves.capture(
-        session_id=session.id, world_id=bundle.world.id, name="存档一"
-    )
-    second = await saves.capture(
-        session_id=session.id, world_id=bundle.world.id, name="存档二"
-    )
+    first = await saves.capture(session_id=session.id, world_id=bundle.world.id, name="存档一")
+    second = await saves.capture(session_id=session.id, world_id=bundle.world.id, name="存档二")
     await sql_uow.commit()
 
     listed = await saves.list_for_session(session.id)

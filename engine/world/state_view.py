@@ -134,34 +134,20 @@ class WorldStateView:
 async def build_world_state(
     uow: UnitOfWork, pack: ContentPack, world_id: str, player_id: str
 ) -> WorldStateView:
-    world = await uow.worlds.get(world_id)
+    snapshot = await uow.world_state.load(world_id, player_id)
+    world = snapshot.world
     if world is None:
         raise LookupError(f"world {world_id} not found")
-    player = await uow.characters.get(player_id)
+    player = snapshot.player
     if player is None:
         raise LookupError(f"player character {player_id} not found")
 
-    locations = await uow.locations.list_for_world(world_id)
-    graph = LocationGraph(locations)
+    graph = LocationGraph(snapshot.locations)
     clock = WorldClock(world.calendar_config or pack.calendar)
 
     location = graph.by_id(player.location_id)
-    present: list[Character] = []
-    if player.location_id:
-        present = [
-            c
-            for c in await uow.characters.list_at_location(world_id, player.location_id)
-            if c.id != player.id
-        ]
-
-    factions = {f.key: f for f in await uow.factions.list_for_world(world_id)}
-    inventory = await uow.items.list_inventory(player.id)
-    skills = await uow.skills.list_for_character(player.id)
-    relationships = {
-        rel.character_b_id: rel for rel in await uow.relationships.list_for_character(player.id)
-    }
-    quests = await uow.quests.list_for_world(world_id)
-    threads = await uow.plot_threads.list_for_world(world_id)
+    factions = {f.key: f for f in snapshot.factions}
+    relationships = {rel.character_b_id: rel for rel in snapshot.relationships}
 
     return WorldStateView(
         world=world,
@@ -171,11 +157,11 @@ async def build_world_state(
         graph=graph,
         player=player,
         location=location,
-        present_characters=present,
+        present_characters=snapshot.present_characters,
         factions=factions,
-        inventory=inventory,
-        known_skills=skills,
+        inventory=snapshot.inventory,
+        known_skills=snapshot.skills,
         relationships=relationships,
-        active_quests=quests,
-        plot_threads=threads,
+        active_quests=snapshot.quests,
+        plot_threads=snapshot.plot_threads,
     )

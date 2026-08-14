@@ -78,10 +78,12 @@ simulation:
 auto_advance:
   max_steps: 4
   max_minutes: 240
-  npc_llm_per_step: 1
+  # Only the explicitly addressed character gets a model call. Other people
+  # present use deterministic reactions, avoiding costly unsolicited dialogue.
+  npc_llm_per_step: 0
   interrupt_importance: 0.8
   interrupt_health_loss: 0.2
-  engaging_actions: [TALK, ASK, SEARCH, OBSERVE]
+  engaging_actions: [TALK, ASK, SEARCH]
   hostile_actions: []
   offer_events: [QUEST_OFFER, CONFRONTATION, SECRET_DISCLOSURE]
 consistency: {strict: true, checks: [alive, location, inventory, knowledge, faction, time]}
