@@ -61,7 +61,8 @@ describe("platform model administration", () => {
     render(<PlatformModelPanel />);
 
     await screen.findByDisplayValue("deepseek-v4-flash");
-    fireEvent.click(screen.getByRole("button", { name: "测试当前配置" }));
+    fireEvent.click(screen.getByRole("button", { name: "测试连接（非完整回合）" }));
     expect(await screen.findByText(/连接成功：deepseek-v4-flash · 1422 ms/)).toBeTruthy();
+    expect(screen.getByText(/不代表完整游戏回合/)).toBeTruthy();
   });
 });

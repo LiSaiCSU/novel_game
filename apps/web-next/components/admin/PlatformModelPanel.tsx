@@ -38,6 +38,15 @@ function messageOf(exception: unknown): string {
   return exception instanceof Error ? exception.message : "请求没有完成";
 }
 
+function thinkingEnabled(value: string): boolean {
+  try {
+    const parsed = JSON.parse(value) as { thinking?: { type?: string } };
+    return parsed.thinking?.type === "enabled";
+  } catch {
+    return false;
+  }
+}
+
 export default function PlatformModelPanel() {
   const [config, setConfig] = useState<PlatformModelConfig>(EMPTY);
   const [apiKey, setApiKey] = useState("");
@@ -98,7 +107,7 @@ export default function PlatformModelPanel() {
     try {
       const result = await api<TestResult>("/admin/llm-config/test", { method: "POST" });
       setMessage(
-        `连接成功：${result.model} · ${result.latency_ms} ms · ${result.input_tokens + result.output_tokens} tokens`,
+        `连接成功：${result.model} · ${result.latency_ms} ms · ${result.input_tokens + result.output_tokens} tokens。此结果验证网络、密钥和模型名称，不代表完整游戏回合的质量与延迟。`,
       );
     } catch (exception) {
       setError(messageOf(exception));
@@ -188,6 +197,12 @@ export default function PlatformModelPanel() {
             onChange={(event) => setExtraBody(event.target.value)}
           />
           <small>例如 DeepSeek 关闭思考模式：{`{"thinking":{"type":"disabled"}}`}</small>
+          {config.base_url.includes("api.deepseek.com") && thinkingEnabled(extraBody) && (
+            <small className="modelWarning">
+              当前已启用思考模式。完整游戏会连续调用多个角色，隐藏推理可能耗尽正文 token
+              并显著增加延迟；叙事平台建议设为 disabled。
+            </small>
+          )}
         </label>
         <label className="modelReasonField">
           <span>变更理由（写入审计日志）</span>
@@ -204,7 +219,7 @@ export default function PlatformModelPanel() {
             {busy ? "处理中…" : "保存配置"}
           </button>
           <button className="button" type="button" disabled={busy} onClick={testConnection}>
-            测试当前配置
+            测试连接（非完整回合）
           </button>
           <small>当前来源：{config.source === "database" ? "管理界面" : "服务器环境变量"}</small>
         </div>

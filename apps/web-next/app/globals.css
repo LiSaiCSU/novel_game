@@ -1317,6 +1317,16 @@ footer {
   background: #edf8f0;
   color: #267143;
 }
+.modelJsonField .modelWarning {
+  display: block;
+  margin-top: 7px;
+  padding: 9px 11px;
+  border: 1px solid #e4c47f;
+  border-radius: 9px;
+  background: #fff8e8;
+  color: #77551c;
+  line-height: 1.6;
+}
 .successNotice {
   margin: 0;
   border: 1px solid #9fc8aa;
