@@ -209,6 +209,23 @@ class LlmCredentialORM(TimestampMixin, Base):
     status: Mapped[str] = mapped_column(sa.String(24), default="active")
 
 
+class PlatformLlmConfigORM(TimestampMixin, Base):
+    """Encrypted singleton configuration for the platform-funded model."""
+
+    __tablename__ = "platform_llm_config"
+    id: Mapped[str] = mapped_column(sa.String(36), primary_key=True)
+    enabled: Mapped[bool] = mapped_column(sa.Boolean, default=True)
+    provider: Mapped[str] = mapped_column(sa.String(60), default="null")
+    model: Mapped[str] = mapped_column(sa.String(160), default="")
+    base_url: Mapped[str] = mapped_column(sa.String(500), default="")
+    encrypted_secret: Mapped[str | None] = mapped_column(sa.Text, nullable=True)
+    key_hint: Mapped[str] = mapped_column(sa.String(16), default="")
+    extra_body: Mapped[dict[str, Any]] = mapped_column(JSONType, default=dict)
+    updated_by: Mapped[str | None] = mapped_column(
+        sa.String(36), sa.ForeignKey("users.id", ondelete="SET NULL"), nullable=True
+    )
+
+
 class UsageLedgerORM(Base):
     __tablename__ = "usage_ledger"
     id: Mapped[str] = mapped_column(sa.String(36), primary_key=True)

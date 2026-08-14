@@ -1270,6 +1270,61 @@ footer {
 .adminStats b {
   font: 700 28px serif;
 }
+.modelConfigForm {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+}
+.modelConfigForm label {
+  display: grid;
+  gap: 7px;
+  color: var(--muted);
+  font-size: 12px;
+}
+.modelToggle,
+.modelJsonField,
+.modelReasonField,
+.modelActions {
+  grid-column: 1 / -1;
+}
+.modelToggle {
+  display: flex !important;
+  align-items: center;
+  gap: 9px !important;
+  color: var(--ink) !important;
+}
+.modelToggle input {
+  accent-color: var(--rose);
+}
+.modelActions {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+.modelActions small {
+  color: var(--muted);
+}
+.modelStatus {
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  padding: 7px 11px;
+  color: var(--muted);
+  font-size: 12px;
+}
+.modelStatusOn {
+  border-color: #78aa8c;
+  background: #edf8f0;
+  color: #267143;
+}
+.successNotice {
+  margin: 0;
+  border: 1px solid #9fc8aa;
+  border-radius: 10px;
+  padding: 10px 12px;
+  background: #f1faf3;
+  color: #24643b;
+}
 .adminUsers {
   display: grid;
   gap: 10px;
@@ -1327,6 +1382,9 @@ footer {
     grid-template-columns: repeat(2, 1fr);
   }
   .adminUser {
+    grid-template-columns: 1fr;
+  }
+  .modelConfigForm {
     grid-template-columns: 1fr;
   }
   .roleLine {

@@ -9,6 +9,10 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 async def set_tenant_context(session: AsyncSession, user_id: str) -> None:
     """Set the transaction-local identity consumed by PostgreSQL RLS policies."""
+    # SqlUnitOfWork restores this transaction-local value after every internal
+    # commit/rollback. A single game turn deliberately spans several durable
+    # transactions, while PostgreSQL SET LOCAL does not.
+    session.info["tenant_user_id"] = user_id
     if session.bind is not None and session.bind.dialect.name == "postgresql":
         await session.execute(
             sa.text("SELECT set_config('app.current_user_id', :user_id, true)"),

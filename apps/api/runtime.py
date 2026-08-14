@@ -11,6 +11,7 @@ from typing import Literal
 
 import sqlalchemy as sa
 
+from apps.api.llm_config import load_platform_llm_config
 from apps.api.security import SecretBox
 from database.models.platform import (
     ContentReleaseORM,
@@ -240,6 +241,12 @@ class ReleaseRuntimeService:
             available = await self._platform_tokens_available(user_id, uow, settings)
             if available <= 0:
                 raise InferenceQuotaExceeded("platform inference quota exhausted")
+            try:
+                runtime_settings, _config = await load_platform_llm_config(uow.session, settings)
+            except ValueError as exc:
+                raise RuntimeConfigurationError(
+                    "platform model credential cannot be decrypted"
+                ) from exc
 
         provider = BudgetedProvider(
             build_provider(runtime_settings), min(settings.llm_turn_token_limit, available)
@@ -256,7 +263,7 @@ class ReleaseRuntimeService:
             pack=pack,
             orchestrator=orchestrator,
             credential_mode=credential_mode,
-            settings=settings,
+            settings=runtime_settings,
         )
 
     async def _platform_tokens_available(

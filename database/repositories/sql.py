@@ -628,9 +628,24 @@ class SqlUnitOfWork:
 
     async def commit(self) -> None:
         await self.session.commit()
+        await self._restore_tenant_context()
 
     async def rollback(self) -> None:
         await self.session.rollback()
+        await self._restore_tenant_context()
+
+    async def _restore_tenant_context(self) -> None:
+        """Re-apply PostgreSQL's transaction-local RLS identity after a boundary."""
+        user_id = self.session.info.get("tenant_user_id")
+        if (
+            user_id
+            and self.session.bind is not None
+            and self.session.bind.dialect.name == "postgresql"
+        ):
+            await self.session.execute(
+                sa.text("SELECT set_config('app.current_user_id', :user_id, true)"),
+                {"user_id": str(user_id)},
+            )
 
     # -- the write path -----------------------------------------------------
     async def apply(self, change_set: ChangeSet) -> None:

@@ -183,6 +183,27 @@ def create_app() -> FastAPI:
             },
         )
 
+    @app.exception_handler(Exception)
+    async def unexpected_error_handler(request: Request, exc: Exception) -> JSONResponse:
+        request_id = str(getattr(request.state, "request_id", ""))
+        logger.exception(
+            "unhandled API error error_type=%s request_id=%s",
+            type(exc).__name__,
+            request_id,
+        )
+        return JSONResponse(
+            status_code=500,
+            media_type="application/problem+json",
+            content={
+                "type": "https://narrative.game/problems/internal",
+                "title": "服务器暂时无法完成请求",
+                "status": 500,
+                "detail": "服务器暂时无法完成请求，请稍后重试",
+                "instance": str(request.url.path),
+                "request_id": request_id,
+            },
+        )
+
     # The pre-v1 contract has no tenant-aware identifiers. Keep it available
     # only for local migration tests; production exposes the owner-checked v1 API.
     if settings.debug_mode:

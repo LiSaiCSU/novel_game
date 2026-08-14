@@ -9,6 +9,7 @@ import sqlalchemy as sa
 from sqlalchemy.exc import DBAPIError
 from sqlalchemy.ext.asyncio import async_sessionmaker, create_async_engine
 
+from apps.api.tenancy import set_tenant_context
 from database.models.orm import WorldORM
 from database.models.platform import ContentReleaseORM, PlaythroughORM, UserORM
 from database.repositories.sql import SqlUnitOfWork
@@ -33,9 +34,7 @@ async def test_application_role_cannot_cross_playthrough_tenants() -> None:
     app_engine = create_async_engine(APP_URL)
     owner_maker = async_sessionmaker(owner_engine, expire_on_commit=False)
     app_maker = async_sessionmaker(app_engine, expire_on_commit=False)
-    user_a, user_b, play_a, play_b, world_a, world_b = (
-        str(uuid.uuid4()) for _ in range(6)
-    )
+    user_a, user_b, play_a, play_b, world_a, world_b = (str(uuid.uuid4()) for _ in range(6))
 
     try:
         async with owner_maker() as session:
@@ -103,8 +102,7 @@ async def test_application_role_cannot_cross_playthrough_tenants() -> None:
             role = (
                 await session.execute(
                     sa.text(
-                        "SELECT rolsuper, rolbypassrls FROM pg_roles "
-                        "WHERE rolname = current_user"
+                        "SELECT rolsuper, rolbypassrls FROM pg_roles WHERE rolname = current_user"
                     )
                 )
             ).one()
@@ -114,9 +112,7 @@ async def test_application_role_cannot_cross_playthrough_tenants() -> None:
                 sa.text("SELECT set_config('app.current_user_id', :user_id, true)"),
                 {"user_id": user_a},
             )
-            visible_plays = set(
-                (await session.scalars(sa.select(PlaythroughORM.id))).all()
-            )
+            visible_plays = set((await session.scalars(sa.select(PlaythroughORM.id))).all())
             visible_worlds = set((await session.scalars(sa.select(WorldORM.id))).all())
             assert play_a in visible_plays
             assert play_b not in visible_plays
@@ -151,14 +147,22 @@ async def test_application_role_cannot_cross_playthrough_tenants() -> None:
 
         async with app_maker() as session:
             assert list(await session.scalars(sa.select(PlaythroughORM.id))) == []
+
+        # Game orchestration uses multiple durable transactions in one request.
+        # The UoW must restore SET LOCAL after each boundary without weakening
+        # connection-pool isolation.
+        async with app_maker() as session:
+            uow = SqlUnitOfWork(session)
+            await set_tenant_context(session, user_a)
+            assert await session.get(WorldORM, world_a) is not None
+            await uow.commit()
+            assert await session.get(WorldORM, world_a) is not None
+            assert await session.get(WorldORM, world_b) is None
+            await uow.rollback()
     finally:
         async with owner_maker() as session:
-            await session.execute(
-                sa.delete(WorldORM).where(WorldORM.id.in_([world_a, world_b]))
-            )
-            await session.execute(
-                sa.delete(UserORM).where(UserORM.id.in_([user_a, user_b]))
-            )
+            await session.execute(sa.delete(WorldORM).where(WorldORM.id.in_([world_a, world_b])))
+            await session.execute(sa.delete(UserORM).where(UserORM.id.in_([user_a, user_b])))
             await session.commit()
         await app_engine.dispose()
         await owner_engine.dispose()
@@ -176,9 +180,7 @@ async def test_postgres_world_state_snapshot_is_one_owned_statement() -> None:
     suffix = uuid.uuid4().hex
     user_id = str(uuid.uuid4())
     playthrough_id = str(uuid.uuid4())
-    pack = load_content_pack(
-        Path(__file__).resolve().parents[2] / "content", "campus_romance_v1"
-    )
+    pack = load_content_pack(Path(__file__).resolve().parents[2] / "content", "campus_romance_v1")
     bundle = build_world(
         pack,
         world_seed=f"postgres-snapshot-{suffix}",
@@ -238,18 +240,14 @@ async def test_postgres_world_state_snapshot_is_one_owned_statement() -> None:
                     SqlUnitOfWork(session), pack, bundle.world.id, player.id
                 )
             finally:
-                sa.event.remove(
-                    app_engine.sync_engine, "before_cursor_execute", count_statement
-                )
+                sa.event.remove(app_engine.sync_engine, "before_cursor_execute", count_statement)
 
             assert state.world.id == bundle.world.id
             assert state.player.id == player.id
             assert statements == 1
     finally:
         async with owner_maker() as session:
-            await session.execute(
-                sa.delete(WorldORM).where(WorldORM.id == bundle.world.id)
-            )
+            await session.execute(sa.delete(WorldORM).where(WorldORM.id == bundle.world.id))
             await session.execute(sa.delete(UserORM).where(UserORM.id == user_id))
             await session.commit()
         await app_engine.dispose()

@@ -2,6 +2,7 @@
 
 import { FormEvent, useEffect, useState } from "react";
 import { api } from "@/lib/api";
+import PlatformModelPanel from "@/components/admin/PlatformModelPanel";
 
 type Summary = {
   users: number;
@@ -146,6 +147,7 @@ export default function AdminCenter() {
               <b>{summary?.llm_failures ?? 0}</b>
             </article>
           </section>
+          <PlatformModelPanel />
           <section className="panel stack">
             <div className="entityToolbar">
               <div>

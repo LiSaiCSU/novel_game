@@ -2,30 +2,45 @@
 
 from __future__ import annotations
 
+import json
 from datetime import UTC, datetime, timedelta
-from typing import Annotated, Literal
+from typing import Annotated, Any, Literal
 
 import sqlalchemy as sa
 from fastapi import APIRouter, Depends, HTTPException, Query, Request
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, model_validator
 
-from apps.api.deps import uow_dep
-from apps.api.security import Principal, require_role_csrf, require_roles
+from apps.api.deps import settings_dep, uow_dep
+from apps.api.llm_config import (
+    PLATFORM_LLM_CONFIG_ID,
+    SUPPORTED_PLATFORM_PROVIDERS,
+    load_platform_llm_config,
+    normalize_public_api_base_url,
+    platform_llm_view,
+)
+from apps.api.rate_limit import rate_limiter
+from apps.api.security import Principal, SecretBox, require_role_csrf, require_roles
 from apps.api.tenancy import set_tenant_context
 from database.models.platform import (
     AuditLogORM,
     ContentReleaseORM,
     ModerationCaseORM,
+    PlatformLlmConfigORM,
     ProductEventORM,
     UsageLedgerORM,
     UserORM,
     UserRoleORM,
 )
 from database.repositories.sql import SqlUnitOfWork
+from engine.core.config import Settings
 from engine.core.ids import new_id
+from engine.core.logging import get_logger
+from engine.llm.provider import LLMMessage, LLMRequest
+from engine.llm.providers import build_provider
 
 router = APIRouter(prefix="/admin", tags=["v1-admin"])
 _ALLOWED_ROLES = frozenset({"player", "creator", "reviewer", "admin"})
+logger = get_logger("admin")
 
 
 def _funnel_stage(key: str, label: str, users: set[str], events: int) -> dict[str, object]:
@@ -42,11 +57,189 @@ class RolesWrite(BaseModel):
     reason: str = Field(min_length=3, max_length=500)
 
 
+class PlatformLlmWrite(BaseModel):
+    enabled: bool = True
+    provider: Literal["openai", "anthropic", "compatible"]
+    model: str = Field(min_length=1, max_length=160)
+    base_url: str = Field(default="", max_length=500)
+    api_key: str | None = Field(default=None, min_length=8, max_length=1000)
+    extra_body: dict[str, Any] = Field(default_factory=dict)
+    reason: str = Field(min_length=3, max_length=500)
+
+    @model_validator(mode="after")
+    def validate_configuration(self) -> PlatformLlmWrite:
+        self.model = self.model.strip()
+        self.base_url = normalize_public_api_base_url(
+            self.base_url, required=self.provider == "compatible"
+        )
+        if len(json.dumps(self.extra_body, ensure_ascii=False)) > 8_000:
+            raise ValueError("附加请求参数不能超过 8 KB")
+        reserved = {"model", "messages", "stream"}.intersection(self.extra_body)
+        if reserved:
+            raise ValueError("附加请求参数不能覆盖 model、messages 或 stream")
+        return self
+
+
+def _audit_llm_view(view: dict[str, object]) -> dict[str, object]:
+    return {key: value for key, value in view.items() if key not in {"updated_at", "key_hint"}}
+
+
 async def _target_user(uow: SqlUnitOfWork, user_id: str) -> UserORM:
     user = await uow.session.get(UserORM, user_id)
     if user is None:
         raise HTTPException(status_code=404, detail="user not found")
     return user
+
+
+@router.get("/llm-config")
+async def get_platform_llm_config(
+    principal: Annotated[Principal, Depends(require_roles("admin"))],
+    uow: SqlUnitOfWork = Depends(uow_dep),
+    settings: Settings = Depends(settings_dep),
+) -> dict[str, object]:
+    """Return operational model settings without ever returning the secret."""
+    await set_tenant_context(uow.session, principal.user_id)
+    _effective, row = await load_platform_llm_config(uow.session, settings)
+    return platform_llm_view(settings, row)
+
+
+@router.put("/llm-config")
+async def update_platform_llm_config(
+    body: PlatformLlmWrite,
+    request: Request,
+    principal: Annotated[Principal, Depends(require_role_csrf("admin"))],
+    uow: SqlUnitOfWork = Depends(uow_dep),
+    settings: Settings = Depends(settings_dep),
+) -> dict[str, object]:
+    await set_tenant_context(uow.session, principal.user_id)
+    if body.provider not in SUPPORTED_PLATFORM_PROVIDERS:
+        raise HTTPException(status_code=422, detail="unsupported platform model provider")
+    row = await uow.session.get(PlatformLlmConfigORM, PLATFORM_LLM_CONFIG_ID)
+    before = platform_llm_view(settings, row)
+    if row is None:
+        row = PlatformLlmConfigORM(id=PLATFORM_LLM_CONFIG_ID)
+        uow.session.add(row)
+    row.enabled = body.enabled
+    row.provider = body.provider
+    row.model = body.model
+    row.base_url = body.base_url
+    row.extra_body = body.extra_body
+    row.updated_by = principal.user_id
+    if body.api_key is not None:
+        try:
+            row.encrypted_secret = SecretBox(settings.credential_encryption_key).encrypt(
+                body.api_key
+            )
+        except ValueError as exc:
+            raise HTTPException(
+                status_code=503, detail="platform credential encryption is not configured"
+            ) from exc
+        row.key_hint = f"…{body.api_key[-4:]}"
+    await uow.session.flush()
+    after = platform_llm_view(settings, row)
+    uow.session.add(
+        AuditLogORM(
+            id=new_id(),
+            actor_id=principal.user_id,
+            action="platform_llm.config_changed",
+            target_type="platform_llm_config",
+            target_id=row.id,
+            request_id=str(getattr(request.state, "request_id", "")),
+            details={
+                "before": _audit_llm_view(before),
+                "after": _audit_llm_view(after),
+                "key_rotated": body.api_key is not None,
+                "reason": body.reason,
+            },
+        )
+    )
+    await uow.commit()
+    return platform_llm_view(settings, row)
+
+
+@router.post("/llm-config/test")
+async def test_platform_llm_config(
+    request: Request,
+    principal: Annotated[Principal, Depends(require_role_csrf("admin"))],
+    uow: SqlUnitOfWork = Depends(uow_dep),
+    settings: Settings = Depends(settings_dep),
+) -> dict[str, object]:
+    await set_tenant_context(uow.session, principal.user_id)
+    await rate_limiter.check(
+        f"platform-llm-test:{principal.user_id}", 3, 60, redis_url=settings.redis_url
+    )
+    try:
+        effective, row = await load_platform_llm_config(uow.session, settings)
+    except ValueError as exc:
+        raise HTTPException(
+            status_code=503, detail="platform credential cannot be decrypted"
+        ) from exc
+    view = platform_llm_view(settings, row)
+    if not view["enabled"]:
+        raise HTTPException(status_code=409, detail="platform model is disabled")
+    if not effective.llm_model.strip():
+        raise HTTPException(status_code=409, detail="platform model name is missing")
+    provider = build_provider(
+        effective.model_copy(update={"llm_timeout_seconds": min(effective.llm_timeout_seconds, 20)})
+    )
+    if not provider.available:
+        raise HTTPException(status_code=409, detail="platform model credential is missing")
+    try:
+        extra_body = json.loads(effective.llm_extra_body or "{}")
+        response = await provider.generate_text(
+            LLMRequest(
+                model=effective.llm_model,
+                system="Return only valid JSON.",
+                messages=[LLMMessage(content='Return {"status":"ok"}.')],
+                temperature=0,
+                max_output_tokens=96,
+                json_mode=True,
+                extra_body=extra_body if isinstance(extra_body, dict) else {},
+            )
+        )
+        if not response.text.strip():
+            raise RuntimeError("empty model response")
+    except Exception as exc:
+        logger.warning("platform LLM connection test failed error_type=%s", type(exc).__name__)
+        uow.session.add(
+            AuditLogORM(
+                id=new_id(),
+                actor_id=principal.user_id,
+                action="platform_llm.connection_test_failed",
+                target_type="platform_llm_config",
+                target_id=PLATFORM_LLM_CONFIG_ID,
+                request_id=str(getattr(request.state, "request_id", "")),
+                details={"provider": view["provider"], "model": view["model"]},
+            )
+        )
+        await uow.commit()
+        raise HTTPException(
+            status_code=502, detail="模型连接失败，请检查 API 地址、密钥和模型名称"
+        ) from exc
+    uow.session.add(
+        AuditLogORM(
+            id=new_id(),
+            actor_id=principal.user_id,
+            action="platform_llm.connection_test_succeeded",
+            target_type="platform_llm_config",
+            target_id=PLATFORM_LLM_CONFIG_ID,
+            request_id=str(getattr(request.state, "request_id", "")),
+            details={
+                "provider": view["provider"],
+                "model": response.model or view["model"],
+                "latency_ms": response.latency_ms,
+            },
+        )
+    )
+    await uow.commit()
+    return {
+        "status": "ok",
+        "provider": view["provider"],
+        "model": response.model or view["model"],
+        "latency_ms": response.latency_ms,
+        "input_tokens": response.usage.prompt_tokens,
+        "output_tokens": response.usage.completion_tokens,
+    }
 
 
 @router.get("/users")
@@ -67,40 +260,52 @@ async def list_users(
         or 0
     )
     users = (
-        await uow.session.execute(
-            sa.select(UserORM)
-            .where(*filters)
-            .order_by(UserORM.created_at.desc())
-            .offset(offset)
-            .limit(limit)
+        (
+            await uow.session.execute(
+                sa.select(UserORM)
+                .where(*filters)
+                .order_by(UserORM.created_at.desc())
+                .offset(offset)
+                .limit(limit)
+            )
         )
-    ).scalars().all()
+        .scalars()
+        .all()
+    )
     ids = [user.id for user in users]
     role_rows = (
-        await uow.session.execute(
-            sa.select(UserRoleORM.user_id, UserRoleORM.role).where(UserRoleORM.user_id.in_(ids))
-        )
-    ).all() if ids else []
+        (
+            await uow.session.execute(
+                sa.select(UserRoleORM.user_id, UserRoleORM.role).where(UserRoleORM.user_id.in_(ids))
+            )
+        ).all()
+        if ids
+        else []
+    )
     roles: dict[str, list[str]] = {user_id: [] for user_id in ids}
     for user_id, role in role_rows:
         roles[user_id].append(role)
     month_start = datetime.now(UTC).replace(day=1, hour=0, minute=0, second=0, microsecond=0)
     usage_rows = (
-        await uow.session.execute(
-            sa.select(
-                UsageLedgerORM.user_id,
-                sa.func.coalesce(
-                    sa.func.sum(UsageLedgerORM.input_tokens + UsageLedgerORM.output_tokens), 0
-                ),
+        (
+            await uow.session.execute(
+                sa.select(
+                    UsageLedgerORM.user_id,
+                    sa.func.coalesce(
+                        sa.func.sum(UsageLedgerORM.input_tokens + UsageLedgerORM.output_tokens), 0
+                    ),
+                )
+                .where(
+                    UsageLedgerORM.user_id.in_(ids),
+                    UsageLedgerORM.created_at >= month_start,
+                    UsageLedgerORM.provider != "byok",
+                )
+                .group_by(UsageLedgerORM.user_id)
             )
-            .where(
-                UsageLedgerORM.user_id.in_(ids),
-                UsageLedgerORM.created_at >= month_start,
-                UsageLedgerORM.provider != "byok",
-            )
-            .group_by(UsageLedgerORM.user_id)
-        )
-    ).all() if ids else []
+        ).all()
+        if ids
+        else []
+    )
     usage = {user_id: int(tokens) for user_id, tokens in usage_rows}
     return {
         "items": [
@@ -137,8 +342,11 @@ async def set_user_quota(
     user.platform_quota_monthly = body.monthly_tokens
     uow.session.add(
         AuditLogORM(
-            id=new_id(), actor_id=principal.user_id, action="user.quota_changed",
-            target_type="user", target_id=user.id,
+            id=new_id(),
+            actor_id=principal.user_id,
+            action="user.quota_changed",
+            target_type="user",
+            target_id=user.id,
             request_id=str(getattr(request.state, "request_id", "")),
             details={"before": before, "after": body.monthly_tokens, "reason": body.reason},
         )
@@ -166,18 +374,25 @@ async def set_user_roles(
             await uow.session.execute(
                 sa.select(UserRoleORM.role).where(UserRoleORM.user_id == user_id)
             )
-        ).scalars().all()
+        )
+        .scalars()
+        .all()
     )
     if user_id == principal.user_id and "admin" not in requested:
-        raise HTTPException(status_code=409, detail="administrator cannot remove their own admin role")
+        raise HTTPException(
+            status_code=409, detail="administrator cannot remove their own admin role"
+        )
     await uow.session.execute(sa.delete(UserRoleORM).where(UserRoleORM.user_id == user_id))
     uow.session.add_all(
         [UserRoleORM(id=new_id(), user_id=user_id, role=role) for role in sorted(requested)]
     )
     uow.session.add(
         AuditLogORM(
-            id=new_id(), actor_id=principal.user_id, action="user.roles_changed",
-            target_type="user", target_id=user_id,
+            id=new_id(),
+            actor_id=principal.user_id,
+            action="user.roles_changed",
+            target_type="user",
+            target_id=user_id,
             request_id=str(getattr(request.state, "request_id", "")),
             details={"before": sorted(current), "after": sorted(requested), "reason": body.reason},
         )
@@ -201,18 +416,20 @@ async def system_summary(
     )
     pending = int(
         await uow.session.scalar(
-            sa.select(sa.func.count()).select_from(ModerationCaseORM).where(
-                ModerationCaseORM.status == "pending"
-            )
-        ) or 0
+            sa.select(sa.func.count())
+            .select_from(ModerationCaseORM)
+            .where(ModerationCaseORM.status == "pending")
+        )
+        or 0
     )
     tokens = int(await uow.session.scalar(sa.select(token_sum)) or 0)
     failures = int(
         await uow.session.scalar(
-            sa.select(sa.func.count()).select_from(UsageLedgerORM).where(
-                UsageLedgerORM.success.is_(False)
-            )
-        ) or 0
+            sa.select(sa.func.count())
+            .select_from(UsageLedgerORM)
+            .where(UsageLedgerORM.success.is_(False))
+        )
+        or 0
     )
     return {
         "users": users,
@@ -234,9 +451,9 @@ async def product_funnel(
     since = datetime.now(UTC) - timedelta(days=days)
     consented_users = int(
         await uow.session.scalar(
-            sa.select(sa.func.count()).select_from(UserORM).where(
-                UserORM.analytics_consent.is_(True)
-            )
+            sa.select(sa.func.count())
+            .select_from(UserORM)
+            .where(UserORM.analytics_consent.is_(True))
         )
         or 0
     )
@@ -259,8 +476,13 @@ async def product_funnel(
     stage_users: dict[str, set[str]] = {
         key: set()
         for key in (
-            "playthrough_started", "first_action", "third_turn", "ending_selected",
-            "project_created", "project_validated", "release_created",
+            "playthrough_started",
+            "first_action",
+            "third_turn",
+            "ending_selected",
+            "project_created",
+            "project_validated",
+            "release_created",
         )
     }
     stage_events = {key: 0 for key in stage_users}
@@ -287,15 +509,47 @@ async def product_funnel(
         daily_events[day] = daily_events.get(day, 0) + 1
 
     player = [
-        _funnel_stage("playthrough_started", "开始正式游戏", stage_users["playthrough_started"], stage_events["playthrough_started"]),
-        _funnel_stage("first_action", "完成第一回合", stage_users["first_action"], stage_events["first_action"]),
-        _funnel_stage("third_turn", "完成第三回合", stage_users["third_turn"], stage_events["third_turn"]),
-        _funnel_stage("ending_selected", "抵达结局", stage_users["ending_selected"], stage_events["ending_selected"]),
+        _funnel_stage(
+            "playthrough_started",
+            "开始正式游戏",
+            stage_users["playthrough_started"],
+            stage_events["playthrough_started"],
+        ),
+        _funnel_stage(
+            "first_action",
+            "完成第一回合",
+            stage_users["first_action"],
+            stage_events["first_action"],
+        ),
+        _funnel_stage(
+            "third_turn", "完成第三回合", stage_users["third_turn"], stage_events["third_turn"]
+        ),
+        _funnel_stage(
+            "ending_selected",
+            "抵达结局",
+            stage_users["ending_selected"],
+            stage_events["ending_selected"],
+        ),
     ]
     creator = [
-        _funnel_stage("project_created", "创建项目", stage_users["project_created"], stage_events["project_created"]),
-        _funnel_stage("project_validated", "通过校验", stage_users["project_validated"], stage_events["project_validated"]),
-        _funnel_stage("release_created", "创建版本", stage_users["release_created"], stage_events["release_created"]),
+        _funnel_stage(
+            "project_created",
+            "创建项目",
+            stage_users["project_created"],
+            stage_events["project_created"],
+        ),
+        _funnel_stage(
+            "project_validated",
+            "通过校验",
+            stage_users["project_validated"],
+            stage_events["project_validated"],
+        ),
+        _funnel_stage(
+            "release_created",
+            "创建版本",
+            stage_users["release_created"],
+            stage_events["release_created"],
+        ),
     ]
     daily_active = [
         {"date": day, "users": len(users), "events": daily_events[day]}

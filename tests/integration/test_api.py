@@ -137,9 +137,7 @@ async def test_admin_quota_and_role_controls_are_authorized_and_audited(client) 
     assert administrator.status_code == 201
     maker = db_session.get_sessionmaker()
     async with maker() as session:
-        session.add(
-            UserRoleORM(id=new_id(), user_id=administrator.json()["id"], role="admin")
-        )
+        session.add(UserRoleORM(id=new_id(), user_id=administrator.json()["id"], role="admin"))
         await session.commit()
     admin_csrf = client.cookies.get("ng_csrf")
     blocked_until_mfa = await client.get("/api/v1/admin/users")
@@ -182,11 +180,15 @@ async def test_admin_quota_and_role_controls_are_authorized_and_audited(client) 
         session.add_all(
             [
                 ProductEventORM(
-                    id=new_id(), user_id=regular_id, event_name="playthrough_started",
+                    id=new_id(),
+                    user_id=regular_id,
+                    event_name="playthrough_started",
                     event_properties={"scenario_key": "campus"},
                 ),
                 ProductEventORM(
-                    id=new_id(), user_id=regular_id, event_name="action_completed",
+                    id=new_id(),
+                    user_id=regular_id,
+                    event_name="action_completed",
                     event_properties={"turn_number": 3, "steps": 1, "degraded": False},
                 ),
             ]
@@ -202,6 +204,83 @@ async def test_admin_quota_and_role_controls_are_authorized_and_audited(client) 
     assert "user_id" not in funnel.text
     audits = (await client.get("/api/v1/creator/audit-logs?limit=20")).json()
     assert {row["action"] for row in audits} >= {"user.quota_changed", "user.roles_changed"}
+
+
+async def test_admin_can_manage_and_test_platform_llm_without_secret_echo(
+    client, monkeypatch
+) -> None:
+    import time
+
+    import database.session as db_session
+    from apps.api.security import SecretBox, _totp
+    from database.models.platform import PlatformLlmConfigORM, UserRoleORM
+    from engine.core.ids import new_id
+    from engine.llm.providers import ScriptedProvider
+
+    administrator = await client.post(
+        "/api/v1/auth/register",
+        json={
+            "email": "model-admin@example.com",
+            "password": "correct-horse-model-admin",
+            "display_name": "模型管理员",
+        },
+    )
+    assert administrator.status_code == 201
+    maker = db_session.get_sessionmaker()
+    async with maker() as session:
+        session.add(UserRoleORM(id=new_id(), user_id=administrator.json()["id"], role="admin"))
+        await session.commit()
+    csrf = client.cookies.get("ng_csrf")
+    enrollment = await client.post(
+        "/api/v1/auth/mfa/enroll",
+        headers={"X-CSRF-Token": csrf},
+        json={"password": "correct-horse-model-admin"},
+    )
+    secret = enrollment.json()["secret"]
+    confirmed = await client.post(
+        "/api/v1/auth/mfa/confirm",
+        headers={"X-CSRF-Token": csrf},
+        json={"code": _totp(secret, int(time.time() // 30))},
+    )
+    assert confirmed.status_code == 200
+
+    initial = await client.get("/api/v1/admin/llm-config")
+    assert initial.status_code == 200
+    assert initial.json()["source"] == "environment"
+    production_key = "sk-platform-secret-1234"
+    updated = await client.put(
+        "/api/v1/admin/llm-config",
+        headers={"X-CSRF-Token": csrf},
+        json={
+            "enabled": True,
+            "provider": "compatible",
+            "model": "deepseek-chat",
+            "base_url": "https://api.deepseek.com",
+            "api_key": production_key,
+            "extra_body": {"thinking": {"type": "disabled"}},
+            "reason": "接入生产模型",
+        },
+    )
+    assert updated.status_code == 200, updated.text
+    assert updated.json()["source"] == "database"
+    assert updated.json()["key_hint"] == "…1234"
+    assert production_key not in updated.text
+    async with maker() as session:
+        row = await session.get(PlatformLlmConfigORM, "00000000-0000-0000-0000-000000000002")
+        assert row is not None and production_key not in (row.encrypted_secret or "")
+        assert (
+            SecretBox("integration-test-credential-key").decrypt(row.encrypted_secret or "")
+            == production_key
+        )
+
+    monkeypatch.setattr(
+        "apps.api.routers.admin.build_provider",
+        lambda _settings: ScriptedProvider(default='{"status":"ok"}'),
+    )
+    tested = await client.post("/api/v1/admin/llm-config/test", headers={"X-CSRF-Token": csrf})
+    assert tested.status_code == 200, tested.text
+    assert tested.json()["status"] == "ok"
+    assert production_key not in tested.text
 
 
 async def test_mfa_recovery_code_is_single_use_and_totp_replay_is_rejected(client) -> None:
@@ -246,10 +325,16 @@ async def test_mfa_recovery_code_is_single_use_and_totp_replay_is_rejected(clien
     async with maker() as session:
         # Session ids are deliberately unrelated to opaque cookie values.
         row = (
-            await session.execute(
-                sa.select(AuthSessionORM).where(AuthSessionORM.user_id == registered.json()["id"])
+            (
+                await session.execute(
+                    sa.select(AuthSessionORM).where(
+                        AuthSessionORM.user_id == registered.json()["id"]
+                    )
+                )
             )
-        ).scalars().one()
+            .scalars()
+            .one()
+        )
         row.mfa_verified_at = None
         await session.commit()
     first = await client.post(
@@ -301,7 +386,9 @@ async def test_new_device_login_is_detected_without_leaking_password_state(clien
                 await session.execute(
                     sa.select(AuditLogORM.action).where(AuditLogORM.actor_id == user_id)
                 )
-            ).scalars().all()
+            )
+            .scalars()
+            .all()
         )
     assert actions >= {"auth.login_failed", "auth.login_anomaly"}
 
@@ -389,17 +476,13 @@ async def test_creator_can_start_from_server_verified_template(client) -> None:
         },
     )
     assert created.status_code == 201, created.text
-    project = (
-        await client.get(f"/api/v1/creator/projects/{created.json()['id']}")
-    ).json()
+    project = (await client.get(f"/api/v1/creator/projects/{created.json()['id']}")).json()
     document = project["document"]
     assert document["manifest"]["slug"] == "template-mystery"
     assert len(document["content"]["locations"]) == 3
     assert document["content"]["scenarios"][0]["initial_threads"] == ["missing_exhibit"]
     assert len(document["author_tests"]) == 2
-    validated = await client.post(
-        f"/api/v1/creator/projects/{created.json()['id']}/validate"
-    )
+    validated = await client.post(f"/api/v1/creator/projects/{created.json()['id']}/validate")
     assert validated.status_code == 200
     assert validated.json()["valid"] is True
     assert validated.json()["author_tests"]["passed_count"] == 2
@@ -497,7 +580,10 @@ async def test_product_analytics_requires_consent_and_withdrawal_erases_events(c
     assert no_consent_project.status_code == 201, no_consent_project.text
     maker = db_session.get_sessionmaker()
     async with maker() as session:
-        assert int(await session.scalar(sa.select(sa.func.count()).select_from(ProductEventORM)) or 0) == 0
+        assert (
+            int(await session.scalar(sa.select(sa.func.count()).select_from(ProductEventORM)) or 0)
+            == 0
+        )
 
     opted_in = await client.put(
         "/api/v1/settings/privacy",
@@ -517,9 +603,7 @@ async def test_product_analytics_requires_consent_and_withdrawal_erases_events(c
         },
     )
     assert project.status_code == 201, project.text
-    validated = await client.post(
-        f"/api/v1/creator/projects/{project.json()['id']}/validate"
-    )
+    validated = await client.post(f"/api/v1/creator/projects/{project.json()['id']}/validate")
     assert validated.status_code == 200
     async with maker() as session:
         rows = list(
@@ -527,10 +611,14 @@ async def test_product_analytics_requires_consent_and_withdrawal_erases_events(c
                 await session.execute(
                     sa.select(ProductEventORM).where(ProductEventORM.user_id == user_id)
                 )
-            ).scalars().all()
+            )
+            .scalars()
+            .all()
         )
         assert {row.event_name for row in rows} == {
-            "analytics_opted_in", "project_created", "project_validated"
+            "analytics_opted_in",
+            "project_created",
+            "project_validated",
         }
         serialized = repr([row.event_properties for row in rows])
         assert "SECRET-NARRATIVE-TEXT" not in serialized
@@ -546,9 +634,9 @@ async def test_product_analytics_requires_consent_and_withdrawal_erases_events(c
     async with maker() as session:
         remaining = int(
             await session.scalar(
-                sa.select(sa.func.count()).select_from(ProductEventORM).where(
-                    ProductEventORM.user_id == user_id
-                )
+                sa.select(sa.func.count())
+                .select_from(ProductEventORM)
+                .where(ProductEventORM.user_id == user_id)
             )
             or 0
         )
@@ -573,9 +661,7 @@ async def test_due_account_worker_scrubs_identity_and_private_access(client) -> 
     )
     user_id = registered.json()["id"]
     csrf = client.cookies.get("ng_csrf")
-    scheduled = await client.delete(
-        "/api/v1/settings/account", headers={"X-CSRF-Token": csrf}
-    )
+    scheduled = await client.delete("/api/v1/settings/account", headers={"X-CSRF-Token": csrf})
     assert scheduled.status_code == 202
     maker = db_session.get_sessionmaker()
     async with maker() as session:
@@ -604,9 +690,7 @@ async def test_async_personal_export_excludes_secrets_and_is_owner_only(client) 
     )
     assert registered.status_code == 201
     csrf = client.cookies.get("ng_csrf")
-    created = await client.post(
-        "/api/v1/settings/data-exports", headers={"X-CSRF-Token": csrf}
-    )
+    created = await client.post("/api/v1/settings/data-exports", headers={"X-CSRF-Token": csrf})
     assert created.status_code == 202, created.text
     assert created.json()["status"] == "ready"
     export_id = created.json()["id"]
@@ -693,13 +777,25 @@ async def test_unlisted_release_invitation_is_non_enumerable_and_playable(client
     wrong = await client.post(
         "/api/v1/playthroughs",
         headers={"X-CSRF-Token": csrf},
-        json={"release_id": release_id, "share_token": "wrong", "name": "林澄", "age": 20, "gender": "female"},
+        json={
+            "release_id": release_id,
+            "share_token": "wrong",
+            "name": "林澄",
+            "age": 20,
+            "gender": "female",
+        },
     )
     assert wrong.status_code == 404
     started = await client.post(
         "/api/v1/playthroughs",
         headers={"X-CSRF-Token": csrf},
-        json={"release_id": release_id, "share_token": token, "name": "林澄", "age": 20, "gender": "female"},
+        json={
+            "release_id": release_id,
+            "share_token": token,
+            "name": "林澄",
+            "age": 20,
+            "gender": "female",
+        },
     )
     assert started.status_code == 201, started.text
 
@@ -765,9 +861,7 @@ async def test_publication_review_appeal_report_and_audit_flow(client) -> None:
     assert reviewer.status_code == 201
     maker = db_session.get_sessionmaker()
     async with maker() as session:
-        session.add(
-            UserRoleORM(id=new_id(), user_id=reviewer.json()["id"], role="reviewer")
-        )
+        session.add(UserRoleORM(id=new_id(), user_id=reviewer.json()["id"], role="reviewer"))
         await session.commit()
     reviewer_csrf = client.cookies.get("ng_csrf")
     queued = (await client.get("/api/v1/creator/reviews")).json()
@@ -873,13 +967,22 @@ async def test_publication_review_appeal_report_and_audit_flow(client) -> None:
     assert takedown.status_code == 200, takedown.text
     audit = (await client.get("/api/v1/creator/audit-logs")).json()
     actions = {item["action"] for item in audit}
-    assert {"release.created", "moderation.appealed", "moderation.decided", "report.decided"} <= actions
+    assert {
+        "release.created",
+        "moderation.appealed",
+        "moderation.decided",
+        "report.decided",
+    } <= actions
 
 
 async def test_v1_registration_playthrough_and_cross_user_isolation(client) -> None:
     first = await client.post(
         "/api/v1/auth/register",
-        json={"email": "first@example.com", "password": "correct-horse-123", "display_name": "一号"},
+        json={
+            "email": "first@example.com",
+            "password": "correct-horse-123",
+            "display_name": "一号",
+        },
     )
     assert first.status_code == 201, first.text
     catalog = await client.get("/api/v1/catalog/releases")
@@ -888,10 +991,18 @@ async def test_v1_registration_playthrough_and_cross_user_isolation(client) -> N
     started = await client.post(
         "/api/v1/playthroughs",
         headers={"X-CSRF-Token": csrf},
-        json={"release_id": campus["id"], "name": "林夏", "age": 20, "gender": "female",
-              "player_config": {"major": "journalism", "interests": ["摄影"],
-                                "personality_tendency": "curious",
-                                "personal_goal": "完成一篇真正重要的报道"}},
+        json={
+            "release_id": campus["id"],
+            "name": "林夏",
+            "age": 20,
+            "gender": "female",
+            "player_config": {
+                "major": "journalism",
+                "interests": ["摄影"],
+                "personality_tendency": "curious",
+                "personal_goal": "完成一篇真正重要的报道",
+            },
+        },
     )
     assert started.status_code == 201, started.text
     playthrough_id = started.json()["id"]
@@ -902,7 +1013,11 @@ async def test_v1_registration_playthrough_and_cross_user_isolation(client) -> N
 
     second = await client.post(
         "/api/v1/auth/register",
-        json={"email": "second@example.com", "password": "correct-horse-456", "display_name": "二号"},
+        json={
+            "email": "second@example.com",
+            "password": "correct-horse-456",
+            "display_name": "二号",
+        },
     )
     assert second.status_code == 201, second.text
     denied = await client.get(f"/api/v1/playthroughs/{playthrough_id}/state")
@@ -949,9 +1064,9 @@ async def test_catalog_filters_tags_and_popularity_sort(client) -> None:
         json={"release_id": campus["id"], "name": "目录测试", "age": 20, "gender": "female"},
     )
     assert started.status_code == 201, started.text
-    popular = (
-        await client.get("/api/v1/catalog/releases", params={"sort": "popular"})
-    ).json()["items"]
+    popular = (await client.get("/api/v1/catalog/releases", params={"sort": "popular"})).json()[
+        "items"
+    ]
     assert popular[0]["id"] == campus["id"]
     assert popular[0]["play_count"] == 1
 
@@ -1021,7 +1136,9 @@ async def test_concurrent_actions_for_one_playthrough_are_serialized(client) -> 
                         ProductEventORM.playthrough_id == playthrough_id
                     )
                 )
-            ).scalars().all()
+            )
+            .scalars()
+            .all()
         )
     assert [row.event_name for row in events].count("playthrough_started") == 1
     assert [row.event_name for row in events].count("action_completed") == 2
@@ -1082,7 +1199,9 @@ async def test_playthrough_consent_ending_and_save_rewind(client) -> None:
         await session.commit()
 
     ending_status = (await client.get(f"/api/v1/playthroughs/{playthrough_id}/endings")).json()
-    independent = next(item for item in ending_status["endings"] if item["key"] == "independent_growth")
+    independent = next(
+        item for item in ending_status["endings"] if item["key"] == "independent_growth"
+    )
     assert independent["available"] is True
     completed = await client.post(
         f"/api/v1/playthroughs/{playthrough_id}/ending",
@@ -1091,9 +1210,9 @@ async def test_playthrough_consent_ending_and_save_rewind(client) -> None:
     )
     assert completed.status_code == 200, completed.text
     assert completed.json()["title"] == "未完通信"
-    assert (await client.get(f"/api/v1/playthroughs/{playthrough_id}/state")).json()[
-        "playthrough"
-    ]["status"] == "completed"
+    assert (await client.get(f"/api/v1/playthroughs/{playthrough_id}/state")).json()["playthrough"][
+        "status"
+    ] == "completed"
     blocked_action = await client.post(
         f"/api/v1/playthroughs/{playthrough_id}/actions",
         headers={"X-CSRF-Token": csrf},
@@ -1104,13 +1223,17 @@ async def test_playthrough_consent_ending_and_save_rewind(client) -> None:
     assert any("属于自己的下一页" in chapter["text"] for chapter in history["chapters"])
     async with maker() as session:
         ending_events = (
-            await session.execute(
-                sa.select(EventORM).where(
-                    EventORM.world_id == play.world_id,
-                    EventORM.event_type == "PLAYTHROUGH_ENDING_SELECTED",
+            (
+                await session.execute(
+                    sa.select(EventORM).where(
+                        EventORM.world_id == play.world_id,
+                        EventORM.event_type == "PLAYTHROUGH_ENDING_SELECTED",
+                    )
                 )
             )
-        ).scalars().all()
+            .scalars()
+            .all()
+        )
         assert len(ending_events) == 1
 
     rewound = await client.post(
@@ -1126,7 +1249,11 @@ async def test_playthrough_consent_ending_and_save_rewind(client) -> None:
 async def test_v1_history_saves_and_credentials_are_owner_scoped(client, monkeypatch) -> None:
     registered = await client.post(
         "/api/v1/auth/register",
-        json={"email": "owner@example.com", "password": "correct-horse-789", "display_name": "存档者"},
+        json={
+            "email": "owner@example.com",
+            "password": "correct-horse-789",
+            "display_name": "存档者",
+        },
     )
     assert registered.status_code == 201
     csrf = client.cookies.get("ng_csrf")
@@ -1213,7 +1340,11 @@ async def test_v1_history_saves_and_credentials_are_owner_scoped(client, monkeyp
 
     second = await client.post(
         "/api/v1/auth/register",
-        json={"email": "intruder@example.com", "password": "correct-horse-987", "display_name": "越权者"},
+        json={
+            "email": "intruder@example.com",
+            "password": "correct-horse-987",
+            "display_name": "越权者",
+        },
     )
     assert second.status_code == 201
     second_csrf = client.cookies.get("ng_csrf")
@@ -1273,8 +1404,7 @@ async def test_start_requires_an_adult_and_selects_the_gendered_lead(client) -> 
     )
     assert started.status_code == 200, started.text
     assert any(
-        character["name"] == "赵无极"
-        for character in started.json()["state"]["present_characters"]
+        character["name"] == "赵无极" for character in started.json()["state"]["present_characters"]
     )
     relationships = (
         await client.get(f"/api/game/{started.json()['session_id']}/relationships")
@@ -1404,9 +1534,7 @@ async def test_debug_trace_endpoint(client) -> None:
         "/api/game/start", json={"player_name": "沈砚", "world_seed": "api-test-6"}
     )
     session_id = started.json()["session_id"]
-    turn = (
-        await client.post(f"/api/game/{session_id}/action", json={"text": "我环顾四周"})
-    ).json()
+    turn = (await client.post(f"/api/game/{session_id}/action", json={"text": "我环顾四周"})).json()
 
     trace = await client.get(f"/api/debug/turn/{turn['turn_id']}")
     assert trace.status_code == 200
