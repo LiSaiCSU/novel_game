@@ -49,7 +49,15 @@ def _prepared_official_asset(
     return output.getvalue(), width, height
 
 
-async def ensure_official_releases(settings: Settings, asset_store: AssetStore) -> None:
+async def ensure_official_releases(
+    settings: Settings, asset_store: AssetStore | None = None
+) -> None:
+    if asset_store is None:
+        # Keep CLI, migration verification and older operational callers
+        # compatible while the API lifespan continues to inject this adapter.
+        from apps.api.object_store import object_store
+
+        asset_store = object_store(settings)
     maker = db_session.get_sessionmaker(settings)
     async with maker() as session:
         if session.bind is not None and session.bind.dialect.name == "postgresql":
