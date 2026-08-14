@@ -203,6 +203,7 @@ class LlmCredentialORM(TimestampMixin, Base):
     )
     provider: Mapped[str] = mapped_column(sa.String(60))
     default_model: Mapped[str] = mapped_column(sa.String(160), default="")
+    base_url: Mapped[str] = mapped_column(sa.String(500), default="")
     encrypted_secret: Mapped[str] = mapped_column(sa.Text)
     key_hint: Mapped[str] = mapped_column(sa.String(16), default="")
     status: Mapped[str] = mapped_column(sa.String(24), default="active")

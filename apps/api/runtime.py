@@ -67,7 +67,7 @@ def llm_cost_microunits(
 
 
 def _byok_runtime_settings(
-    settings: Settings, *, provider: str, secret: str, model: str
+    settings: Settings, *, provider: str, secret: str, model: str, base_url: str = ""
 ) -> Settings:
     """Build an isolated model configuration for one player's credential."""
     return settings.model_copy(
@@ -75,7 +75,7 @@ def _byok_runtime_settings(
             "llm_provider": provider,
             "llm_api_key": secret,
             "llm_api_keys": "",
-            "llm_base_url": "",
+            "llm_base_url": base_url,
             "llm_model": model,
             # Platform role overrides must never leak into a BYOK runtime;
             # every text role uses the model the player chose.
@@ -231,6 +231,7 @@ class ReleaseRuntimeService:
                 provider=credential.provider,
                 secret=secret,
                 model=credential.default_model,
+                base_url=credential.base_url,
             )
             credential_mode: Literal["platform", "byok"] = "byok"
             available = settings.llm_turn_token_limit

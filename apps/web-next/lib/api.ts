@@ -1,13 +1,23 @@
 export type ApiProblem = {
   detail?: string | { code?: string; [key: string]: unknown };
   title?: string;
+  status?: number;
 };
 
 export class ApiError extends Error {
-  constructor(public readonly problem: ApiProblem) {
+  constructor(
+    public readonly problem: ApiProblem,
+    public readonly status: number = problem.status ?? 0,
+  ) {
     const detail =
       typeof problem.detail === "string" ? problem.detail : (problem.title ?? "请求没有完成");
-    super(detail);
+    const localized =
+      detail === "authentication required"
+        ? "请先登录，再继续这项操作。"
+        : detail === "email verification required"
+          ? "请先打开验证邮件完成邮箱验证。"
+          : detail;
+    super(localized);
     this.name = "ApiError";
   }
 }
@@ -29,7 +39,7 @@ export async function api<T>(path: string, init: RequestInit = {}): Promise<T> {
     const problem = (await response.json().catch(() => ({}))) as ApiProblem;
     const detail =
       typeof problem.detail === "string" ? problem.detail : (problem.title ?? "请求没有完成");
-    throw new ApiError({ ...problem, title: detail });
+    throw new ApiError({ ...problem, title: detail, status: response.status }, response.status);
   }
   if (response.status === 204) return undefined as T;
   return response.json() as Promise<T>;

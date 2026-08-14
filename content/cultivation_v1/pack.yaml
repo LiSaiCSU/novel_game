@@ -1,10 +1,15 @@
 key: cultivation_v1
 name: 七日血契
 genre: cultivation
-version: "2.3.0"
+version: "2.4.0"
 engine_min_version: "0.2.0"
 primary_progression_key: cultivation
 language: zh-CN
+assets:
+  - key: seven_day_blood_pact_cover
+    kind: cover
+    path: official/cultivation_v1/seven-day-blood-pact-cover-v1.png
+    alt: 血色秘境将启的深夜，一名外门弟子在青云宗住处查看染血名册残页
 rule_plugin:
   path: rule_plugin.py
   class: CultivationRulePlugin

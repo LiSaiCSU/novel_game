@@ -12,7 +12,7 @@ import {
 import { useRouter } from "next/navigation";
 import { type CSSProperties, type FormEvent, useEffect, useState } from "react";
 import { ErrorState, LoadingState, RetryButton } from "@/components/ui/async-state";
-import { api } from "@/lib/api";
+import { api, ApiError } from "@/lib/api";
 
 type PlayerField = {
   key: string;
@@ -72,6 +72,7 @@ export function ReleaseDetail({ endpoint, shareToken }: { endpoint: string; shar
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
   const [credentials, setCredentials] = useState<Credential[]>([]);
+  const [authenticated, setAuthenticated] = useState<boolean>();
   const [reloadKey, setReloadKey] = useState(0);
 
   useEffect(() => {
@@ -79,13 +80,23 @@ export function ReleaseDetail({ endpoint, shareToken }: { endpoint: string; shar
       .then(setWork)
       .catch((exception) => setError((exception as Error).message));
     api<Credential[]>("/settings/llm-credentials")
-      .then(setCredentials)
-      .catch(() => undefined);
+      .then((items) => {
+        setCredentials(items);
+        setAuthenticated(true);
+      })
+      .catch((exception) => {
+        if (exception instanceof ApiError && exception.status === 401) setAuthenticated(false);
+      });
   }, [endpoint, reloadKey]);
 
   async function start(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     if (!work) return;
+    if (authenticated === false) {
+      const next = `${window.location.pathname}${window.location.search}`;
+      router.push(`/?next=${encodeURIComponent(next)}`);
+      return;
+    }
     setBusy(true);
     setError("");
     const data = new FormData(event.currentTarget);
@@ -122,6 +133,11 @@ export function ReleaseDetail({ endpoint, shareToken }: { endpoint: string; shar
       });
       router.push(`/play/${play.id}`);
     } catch (exception) {
+      if (exception instanceof ApiError && exception.status === 401) {
+        const next = `${window.location.pathname}${window.location.search}`;
+        router.push(`/?next=${encodeURIComponent(next)}`);
+        return;
+      }
       setError((exception as Error).message);
     } finally {
       setBusy(false);
@@ -220,7 +236,7 @@ export function ReleaseDetail({ endpoint, shareToken }: { endpoint: string; shar
               <option value="platform">平台额度（推荐）</option>
               {credentials.map((item) => (
                 <option value={`byok:${item.provider}`} key={item.provider}>
-                  我的 {item.provider} · {item.model}
+                  我的 {item.provider === "compatible" ? "兼容模型" : item.provider} · {item.model}
                 </option>
               ))}
             </select>
@@ -232,7 +248,7 @@ export function ReleaseDetail({ endpoint, shareToken }: { endpoint: string; shar
             </p>
           )}
           <button className="button primary startStoryButton" disabled={busy}>
-            {busy ? "世界正在展开…" : "开始故事"}
+            {busy ? "世界正在展开…" : authenticated === false ? "登录后开始故事" : "开始故事"}
             {!busy && <ArrowRight size={17} />}
           </button>
         </form>

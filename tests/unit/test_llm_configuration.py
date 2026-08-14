@@ -53,7 +53,11 @@ def test_byok_model_replaces_every_platform_role_override() -> None:
     )
 
     private = _byok_runtime_settings(
-        platform, provider="openai", secret="private-key", model="player-model"
+        platform,
+        provider="compatible",
+        secret="private-key",
+        model="player-model",
+        base_url="https://api.deepseek.com",
     )
     router = ModelRouter(private)
 
@@ -70,6 +74,8 @@ def test_byok_model_replaces_every_platform_role_override() -> None:
         )
     )
     assert router.choose(LLMRole.EMBEDDING).model == ""
+    assert private.llm_provider == "compatible"
+    assert private.llm_base_url == "https://api.deepseek.com"
 
 
 def test_production_configuration_fails_closed_when_security_is_incomplete() -> None:

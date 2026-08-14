@@ -117,7 +117,7 @@ export function AppShell({ children }: { children: ReactNode }) {
             <Settings className="accountSettings" size={16} aria-hidden="true" />
           </Link>
         ) : (
-          <Link className="account accountGuest" href="/login" aria-label="登录叙界">
+          <Link className="account accountGuest" href="/" aria-label="登录叙界">
             {authReady ? <LogIn size={18} /> : <UserRound className="authPulse" size={18} />}
             <span>{authReady ? "登录" : "账户"}</span>
           </Link>

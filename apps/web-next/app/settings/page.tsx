@@ -4,7 +4,13 @@ import { FormEvent, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { api } from "@/lib/api";
 
-type Credential = { provider: string; model: string; hint: string; status: string };
+type Credential = {
+  provider: string;
+  model: string;
+  hint: string;
+  status: string;
+  base_url: string;
+};
 type Usage = {
   daily: { used: number; limit: number };
   monthly: { used: number; limit: number };
@@ -44,6 +50,16 @@ export default function Settings() {
   const [mfaCode, setMfaCode] = useState("");
   const [recoveryCodes, setRecoveryCodes] = useState<string[]>([]);
   const [message, setMessage] = useState("");
+  const [providerPreset, setProviderPreset] = useState("compatible:deepseek");
+  const [baseUrl, setBaseUrl] = useState("https://api.deepseek.com");
+
+  function chooseProvider(value: string) {
+    setProviderPreset(value);
+    if (value === "compatible:deepseek") setBaseUrl("https://api.deepseek.com");
+    else if (value === "compatible:volcengine")
+      setBaseUrl("https://ark.cn-beijing.volces.com/api/v3");
+    else setBaseUrl("");
+  }
 
   const load = () =>
     Promise.all([
@@ -68,18 +84,22 @@ export default function Settings() {
     event.preventDefault();
     const form = event.currentTarget;
     const data = new FormData(form);
+    const selected = String(data.get("provider_preset") ?? "openai");
+    const provider = selected.startsWith("compatible:") ? "compatible" : selected;
     try {
       await api("/settings/llm-credentials", {
         method: "PUT",
         body: JSON.stringify({
-          provider: data.get("provider"),
+          provider,
           model: data.get("model"),
           secret: data.get("secret"),
+          base_url: provider === "compatible" ? data.get("base_url") : "",
         }),
       });
       setMessage("密钥已加密保存；平台不会回显完整内容。");
       await load();
       form.reset();
+      chooseProvider("compatible:deepseek");
     } catch (exception) {
       setMessage((exception as Error).message);
     }
@@ -264,16 +284,53 @@ export default function Settings() {
 
         <form className="panel stack" onSubmit={save}>
           <h2>添加或轮换 BYOK 密钥</h2>
+          <p className="studioHint">
+            使用自己的密钥不会消耗平台额度。密钥只会加密保存，任何接口都不会回显完整内容。
+          </p>
           <label className="field">
             <span>供应商</span>
-            <select className="select" name="provider">
+            <select
+              className="select"
+              name="provider_preset"
+              value={providerPreset}
+              onChange={(event) => chooseProvider(event.target.value)}
+            >
+              <option value="compatible:deepseek">DeepSeek</option>
+              <option value="compatible:volcengine">火山引擎方舟</option>
+              <option value="compatible:custom">其他 OpenAI 兼容接口</option>
               <option value="openai">OpenAI</option>
               <option value="anthropic">Anthropic</option>
             </select>
           </label>
+          {providerPreset.startsWith("compatible:") && (
+            <label className="field">
+              <span>API 基础地址</span>
+              <input
+                className="input"
+                name="base_url"
+                type="url"
+                value={baseUrl}
+                onChange={(event) => setBaseUrl(event.target.value)}
+                placeholder="https://api.example.com/v1"
+                required
+              />
+              <small>填写到版本路径即可，不要包含 /chat/completions。</small>
+            </label>
+          )}
           <label className="field">
             <span>模型名称</span>
-            <input className="input" name="model" placeholder="由你的供应商提供" required />
+            <input
+              className="input"
+              name="model"
+              placeholder={
+                providerPreset === "compatible:deepseek"
+                  ? "例如 deepseek-chat"
+                  : providerPreset === "compatible:volcengine"
+                    ? "填写方舟推理接入点 ID"
+                    : "由你的供应商提供"
+              }
+              required
+            />
           </label>
           <label className="field">
             <span>API 密钥</span>
@@ -295,10 +352,11 @@ export default function Settings() {
             keys.map((key) => (
               <div className="credentialRow" key={key.provider}>
                 <span>
-                  <b>{key.provider}</b>
+                  <b>{key.provider === "compatible" ? "OpenAI 兼容接口" : key.provider}</b>
                   <small>
                     {key.model} · {key.hint}
                   </small>
+                  {key.base_url && <small>{key.base_url}</small>}
                 </span>
                 <div>
                   <button

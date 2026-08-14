@@ -50,7 +50,7 @@ async def lifespan(app: FastAPI):
     # Dev convenience only; production schema management is Alembic's job.
     if settings.database_url.startswith("sqlite"):
         await create_all()
-    await ensure_official_releases(settings)
+    await ensure_official_releases(settings, object_store(settings))
     logger.info(
         "world engine ready (pack=%s provider=%s)", settings.content_pack, settings.llm_provider
     )

@@ -10,6 +10,7 @@ export default function Register() {
   async function submit(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
     setBusy(true);
+    setError("");
     const d = new FormData(e.currentTarget);
     try {
       await api("/auth/register", {
@@ -20,7 +21,7 @@ export default function Register() {
           display_name: d.get("name"),
         }),
       });
-      router.push("/library");
+      router.push("/verify-email?sent=1");
       router.refresh();
     } catch (x) {
       setError((x as Error).message);
@@ -73,7 +74,7 @@ export default function Register() {
         </button>
         <p className="authFootnote">
           已有账号？{" "}
-          <Link className="textLink" href="/login">
+          <Link className="textLink" href="/">
             直接登录
           </Link>
         </p>

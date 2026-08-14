@@ -2,12 +2,19 @@
 
 from __future__ import annotations
 
+import hashlib
+import io
 from datetime import UTC, datetime
+from functools import lru_cache
+from pathlib import Path
+from typing import Protocol
 
 import sqlalchemy as sa
+from PIL import Image
 
 import database.session as db_session
 from database.models.platform import (
+    AssetORM,
     ContentReleaseORM,
     ProjectORM,
     ProjectRevisionORM,
@@ -23,7 +30,26 @@ from engine.core.ids import new_id
 SYSTEM_USER_ID = "00000000-0000-0000-0000-000000000001"
 
 
-async def ensure_official_releases(settings: Settings) -> None:
+class AssetStore(Protocol):
+    async def put(self, key: str, payload: bytes, content_type: str) -> None: ...
+
+
+@lru_cache(maxsize=32)
+def _prepared_official_asset(
+    source_name: str, modified_ns: int, content_type: str
+) -> tuple[bytes, int, int]:
+    del modified_ns  # Part of the cache key so replaced files are reprocessed.
+    with Image.open(source_name) as original:
+        width, height = original.size
+        cleaned = original.convert("RGB")
+        output = io.BytesIO()
+        suffix = Path(source_name).suffix.casefold()
+        output_format = "JPEG" if content_type == "image/jpeg" else suffix[1:].upper()
+        cleaned.save(output, format=output_format, quality=90, optimize=True)
+    return output.getvalue(), width, height
+
+
+async def ensure_official_releases(settings: Settings, asset_store: AssetStore) -> None:
     maker = db_session.get_sessionmaker(settings)
     async with maker() as session:
         if session.bind is not None and session.bind.dialect.name == "postgresql":
@@ -42,15 +68,30 @@ async def ensure_official_releases(settings: Settings) -> None:
                 email_verified_at=None,
             )
             session.add(system)
+            await session.flush()
             session.add(UserRoleORM(id=new_id(), user_id=system.id, role="admin"))
-        await _ensure_pack(session, settings, "cultivation_v1", "seven-day-blood-pact", ["修仙", "悬疑"])
+            await session.flush()
+        await _ensure_pack(
+            session, settings, asset_store, "cultivation_v1", "seven-day-blood-pact",
+            ["修仙", "悬疑"],
+        )
         campus_dir = settings.content_path / "campus_romance_v1"
         if campus_dir.is_dir():
-            await _ensure_pack(session, settings, "campus_romance_v1", "unfinished-spring-messages", ["校园", "恋爱", "女性向"])
+            await _ensure_pack(
+                session, settings, asset_store, "campus_romance_v1",
+                "unfinished-spring-messages", ["校园", "恋爱", "女性向"],
+            )
         await session.commit()
 
 
-async def _ensure_pack(session, settings: Settings, pack_key: str, slug: str, tags: list[str]) -> None:
+async def _ensure_pack(
+    session,
+    settings: Settings,
+    asset_store: AssetStore,
+    pack_key: str,
+    slug: str,
+    tags: list[str],
+) -> None:
     pack = load_content_pack(settings.content_path, pack_key)
     package = project_v1_as_v2(pack, slug=slug, rating="16+", tags=tags)
     compiled = compile_package(package)
@@ -67,6 +108,8 @@ async def _ensure_pack(session, settings: Settings, pack_key: str, slug: str, ta
             project_metadata={"official": True},
         )
         session.add(project)
+        await session.flush()
+    await _ensure_official_assets(session, asset_store, project, pack, package.manifest.assets)
     existing = await session.scalar(
         sa.select(ContentReleaseORM).where(
             ContentReleaseORM.project_id == project.id,
@@ -118,3 +161,48 @@ async def _ensure_pack(session, settings: Settings, pack_key: str, slug: str, ta
         .values(withdrawn_at=sa.func.now())
     )
     session.add(release)
+
+
+async def _ensure_official_assets(
+    session,
+    asset_store: AssetStore,
+    project: ProjectORM,
+    pack,
+    assets,
+) -> None:
+    """Install bundled media through the same private object-store path as creator uploads."""
+    content_types = {".jpg": "image/jpeg", ".jpeg": "image/jpeg", ".png": "image/png", ".webp": "image/webp"}
+    for asset in assets:
+        source = pack.root / "assets" / Path(asset.path).name
+        content_type = content_types.get(source.suffix.casefold())
+        if not content_type or not source.is_file():
+            raise RuntimeError(f"official asset source is missing or unsupported: {source}")
+        payload, width, height = _prepared_official_asset(
+            str(source), source.stat().st_mtime_ns, content_type
+        )
+        checksum = hashlib.sha256(payload).hexdigest()
+        await asset_store.put(asset.path, payload, content_type)
+        row = await session.scalar(
+            sa.select(AssetORM).where(
+                AssetORM.project_id == project.id,
+                AssetORM.logical_key == asset.key,
+            )
+        )
+        if row is None:
+            row = AssetORM(
+                id=new_id(), owner_id=SYSTEM_USER_ID, project_id=project.id,
+                logical_key=asset.key, kind=asset.kind, object_key=asset.path,
+                content_type=content_type, byte_size=len(payload), checksum=checksum,
+                width=width, height=height, alt_text=asset.alt, status="ready",
+            )
+            session.add(row)
+        else:
+            row.kind = asset.kind
+            row.object_key = asset.path
+            row.content_type = content_type
+            row.byte_size = len(payload)
+            row.checksum = checksum
+            row.width = width
+            row.height = height
+            row.alt_text = asset.alt
+            row.status = "ready"

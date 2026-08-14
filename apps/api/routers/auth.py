@@ -252,6 +252,11 @@ async def register(
         locale=body.locale,
     )
     uow.session.add(user)
+    # PostgreSQL checks these foreign keys during the flush.  The platform
+    # models deliberately do not expose ORM relationships, so SQLAlchemy
+    # cannot infer that the user row must be inserted before the role, email
+    # token and first session rows.  Make the dependency boundary explicit.
+    await uow.session.flush()
     uow.session.add(UserRoleORM(id=new_id(), user_id=user.id, role="player"))
     raw = await _issue_email_token(uow, settings, user.id, "verify_email")
     await _create_session(uow, settings, user, request, response)

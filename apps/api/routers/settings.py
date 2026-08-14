@@ -3,11 +3,13 @@
 from __future__ import annotations
 
 from datetime import UTC, datetime, timedelta
+from ipaddress import ip_address
 from typing import Annotated, Literal
+from urllib.parse import urlsplit
 
 import sqlalchemy as sa
 from fastapi import APIRouter, Depends, HTTPException, Response
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, model_validator
 
 from apps.api.deps import settings_dep, uow_dep
 from apps.api.object_store import object_store
@@ -36,9 +38,33 @@ router = APIRouter(prefix="/settings", tags=["v1-settings"])
 
 
 class CredentialWrite(BaseModel):
-    provider: Literal["openai", "anthropic"]
+    provider: Literal["openai", "anthropic", "compatible"]
     model: str = Field(min_length=1, max_length=160)
     secret: str = Field(min_length=8, max_length=1000)
+    base_url: str = Field(default="", max_length=500)
+
+    @model_validator(mode="after")
+    def validate_endpoint(self) -> CredentialWrite:
+        self.model = self.model.strip()
+        self.base_url = self.base_url.strip().rstrip("/")
+        if self.provider == "compatible" and not self.base_url:
+            raise ValueError("OpenAI-compatible providers require an API base URL")
+        if not self.base_url:
+            return self
+        parsed = urlsplit(self.base_url)
+        if parsed.scheme != "https" or not parsed.hostname or parsed.username or parsed.password:
+            raise ValueError("API base URL must be a public HTTPS URL without credentials")
+        hostname = parsed.hostname.casefold().rstrip(".")
+        if hostname == "localhost" or hostname.endswith(".local"):
+            raise ValueError("API base URL must not target a local service")
+        try:
+            address = ip_address(hostname)
+        except ValueError:
+            pass
+        else:
+            if not address.is_global:
+                raise ValueError("API base URL must not target a private network")
+        return self
 
 
 class PrivacyPreferencesWrite(BaseModel):
@@ -120,7 +146,7 @@ async def list_credentials(
     ).scalars().all()
     return [
         {"provider": row.provider, "model": row.default_model, "hint": row.key_hint,
-         "status": row.status}
+         "status": row.status, "base_url": row.base_url}
         for row in rows
     ]
 
@@ -176,17 +202,19 @@ async def save_credential(
     if row is None:
         row = LlmCredentialORM(
             id=new_id(), user_id=principal.user_id, provider=body.provider,
-            default_model=body.model, encrypted_secret=encrypted, key_hint=hint, status="active",
+            default_model=body.model, base_url=body.base_url, encrypted_secret=encrypted,
+            key_hint=hint, status="active",
         )
         uow.session.add(row)
     else:
         row.encrypted_secret = encrypted
         row.default_model = body.model
+        row.base_url = body.base_url
         row.key_hint = hint
         row.status = "active"
     await uow.commit()
     return {"provider": row.provider, "model": row.default_model, "hint": row.key_hint,
-            "status": row.status}
+            "status": row.status, "base_url": row.base_url}
 
 
 @router.delete("/llm-credentials/{provider}", status_code=204)
@@ -235,7 +263,7 @@ async def test_credential(
             "llm_provider": row.provider,
             "llm_api_key": secret,
             "llm_api_keys": "",
-            "llm_base_url": "",
+            "llm_base_url": row.base_url,
             "llm_model": row.default_model,
             "llm_timeout_seconds": min(settings.llm_timeout_seconds, 15),
         }

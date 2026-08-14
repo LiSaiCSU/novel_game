@@ -1179,6 +1179,37 @@ async def test_v1_history_saves_and_credentials_are_owner_scoped(client, monkeyp
     assert tested.json()["status"] == "ok"
     assert "never-echo" not in tested.text
 
+    compatible = await client.put(
+        "/api/v1/settings/llm-credentials",
+        headers={"X-CSRF-Token": csrf},
+        json={
+            "provider": "compatible",
+            "model": "deepseek-chat",
+            "secret": "sk-compatible-never-echo",
+            "base_url": "https://api.deepseek.com",
+        },
+    )
+    assert compatible.status_code == 200, compatible.text
+    assert compatible.json()["base_url"] == "https://api.deepseek.com"
+    assert "compatible-never-echo" not in compatible.text
+    compatible_test = await client.post(
+        "/api/v1/settings/llm-credentials/compatible/test",
+        headers={"X-CSRF-Token": csrf},
+    )
+    assert compatible_test.status_code == 200, compatible_test.text
+
+    private_endpoint = await client.put(
+        "/api/v1/settings/llm-credentials",
+        headers={"X-CSRF-Token": csrf},
+        json={
+            "provider": "compatible",
+            "model": "blocked",
+            "secret": "sk-private-endpoint",
+            "base_url": "https://127.0.0.1/v1",
+        },
+    )
+    assert private_endpoint.status_code == 422
+
     second = await client.post(
         "/api/v1/auth/register",
         json={"email": "intruder@example.com", "password": "correct-horse-987", "display_name": "越权者"},
