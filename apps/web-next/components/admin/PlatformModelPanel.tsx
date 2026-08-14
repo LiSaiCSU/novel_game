@@ -146,7 +146,7 @@ export default function PlatformModelPanel() {
           </select>
         </label>
         <label>
-          <span>API Base URL</span>
+          <span>API 基础地址</span>
           <input
             className="input"
             type="url"

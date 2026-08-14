@@ -74,10 +74,12 @@ export function AppShell({ children }: { children: ReactNode }) {
             叙
           </span>
           <span>
-            叙界<small>Narrative Studio</small>
+            叙界<small>互动叙事平台</small>
           </span>
         </Link>
+        <div className="navSpacer" aria-hidden="true" />
         <nav className="primaryNav" aria-label="主导航">
+          <span className="navSectionLabel">探索与工作</span>
           {primaryNavigation.map(({ href, label, icon: Icon }) => (
             <Link
               href={href}
@@ -106,13 +108,14 @@ export function AppShell({ children }: { children: ReactNode }) {
             className={`account ${isCurrent(pathname, "/settings") ? "active" : ""}`}
             href="/settings"
             title={`${user.email} · 账户设置`}
+            aria-label={`账户设置：${displayName(user)}`}
           >
             <span className="accountAvatar" aria-hidden="true">
               {displayName(user).slice(0, 1).toUpperCase()}
             </span>
             <span className="accountCopy">
               <b>{displayName(user)}</b>
-              <small>账户与隐私</small>
+              <small>账户设置</small>
             </span>
             <Settings className="accountSettings" size={16} aria-hidden="true" />
           </Link>
@@ -126,7 +129,7 @@ export function AppShell({ children }: { children: ReactNode }) {
       <main id="content">{children}</main>
       {!immersive && (
         <footer>
-          <span>叙界 · Narrative Studio</span>
+          <span>叙界 · 互动叙事平台</span>
           <span>尊重创作、隐私与每一次明确选择</span>
         </footer>
       )}

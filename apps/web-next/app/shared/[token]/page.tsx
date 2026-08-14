@@ -35,7 +35,7 @@ export default function SharedPreview() {
     <div className="page">
       <div className="pageHead">
         <div>
-          <p className="eyebrow">只读创作预览 · REVISION {preview.revision}</p>
+          <p className="eyebrow">只读创作预览 · 修订版本 {preview.revision}</p>
           <h1>{preview.title}</h1>
           <p>{preview.summary}</p>
         </div>

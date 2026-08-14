@@ -21,7 +21,7 @@ export default function Reset() {
     <div className="authShell">
       <form className="authCard stack" onSubmit={submit}>
         <div>
-          <p className="eyebrow">RESET</p>
+          <p className="eyebrow">重置密码</p>
           <h1>设置新密码</h1>
         </div>
         <div className="field">

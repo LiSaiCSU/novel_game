@@ -1,3 +1,4 @@
+import { X } from "lucide-react";
 import type { Save, Scene } from "./game-types";
 
 type Props = {
@@ -7,11 +8,15 @@ type Props = {
   onCreate: () => void;
   onLoad: (save: Save) => void;
   onDelete: (save: Save) => void;
+  onClose: () => void;
 };
 
-export function SaveRail({ state, saves, completed, onCreate, onLoad, onDelete }: Props) {
+export function SaveRail({ state, saves, completed, onCreate, onLoad, onDelete, onClose }: Props) {
   return (
     <aside className="gameRail gameSaveRail" aria-label="场景与存档">
+      <button className="gameRailClose" aria-label="关闭场景与存档" onClick={onClose}>
+        <X size={18} aria-hidden="true" />
+      </button>
       <p className="eyebrow">当前场景</p>
       <h2>{state?.location?.name ?? "正在抵达…"}</h2>
       <p className="railCopy">{state?.location?.description}</p>

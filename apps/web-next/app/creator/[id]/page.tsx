@@ -320,7 +320,7 @@ export default function Editor() {
       <section className="studioMain">
         <div className="pageHead studioHead">
           <div>
-            <p className="eyebrow">REVISION {revisionNumber}</p>
+            <p className="eyebrow">修订版本 {revisionNumber}</p>
             <h1>{tab}</h1>
           </div>
           <div className="toolbar studioToolbar">

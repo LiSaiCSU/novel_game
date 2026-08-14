@@ -33,7 +33,7 @@ export default function Register() {
     <div className="authShell">
       <form className="authCard stack" onSubmit={submit}>
         <div>
-          <p className="eyebrow">CREATE ACCOUNT</p>
+          <p className="eyebrow">创建账户</p>
           <h1>建立你的书架</h1>
           <p className="mutedCopy">保存游玩进度，也可以随时成为创作者。</p>
         </div>

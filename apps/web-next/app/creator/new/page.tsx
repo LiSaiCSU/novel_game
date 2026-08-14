@@ -63,7 +63,7 @@ export default function NewProject() {
     <div className="page newProjectPage">
       <div className="pageHead">
         <div>
-          <p className="eyebrow">NEW WORLD</p>
+          <p className="eyebrow">创建新作品</p>
           <h1>从一个可玩的骨架开始。</h1>
           <p>模板只负责提供正确的结构和示例，不会替你决定世界观。创建后每个字段都可以修改。</p>
         </div>

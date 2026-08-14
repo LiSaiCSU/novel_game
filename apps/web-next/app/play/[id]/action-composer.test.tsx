@@ -23,16 +23,28 @@ function Harness({ onSubmit }: { onSubmit: (value: string) => void }) {
 }
 
 describe("ActionComposer", () => {
-  it("submits a player's exact draft with Ctrl+Enter", () => {
+  it("submits a player's exact draft with Enter", () => {
     const submit = vi.fn();
     render(<Harness onSubmit={submit} />);
     const textarea = screen.getByLabelText("描述你想做的事");
 
     fireEvent.change(textarea, { target: { value: "拒绝邀约，继续查档案" } });
-    fireEvent.keyDown(textarea, { key: "Enter", ctrlKey: true });
+    fireEvent.keyDown(textarea, { key: "Enter" });
 
     expect(submit).toHaveBeenCalledOnce();
     expect(submit).toHaveBeenCalledWith("拒绝邀约，继续查档案");
+  });
+
+  it("keeps Shift+Enter available for a new line", () => {
+    const submit = vi.fn();
+    render(<Harness onSubmit={submit} />);
+
+    fireEvent.keyDown(screen.getByLabelText("描述你想做的事"), {
+      key: "Enter",
+      shiftKey: true,
+    });
+
+    expect(submit).not.toHaveBeenCalled();
   });
 
   it("disables action submission after the playthrough ends", () => {
@@ -48,7 +60,9 @@ describe("ActionComposer", () => {
       />,
     );
 
-    expect((screen.getByRole("button", { name: "行动" }) as HTMLButtonElement).disabled).toBe(true);
+    expect((screen.getByRole("button", { name: "发送行动" }) as HTMLButtonElement).disabled).toBe(
+      true,
+    );
     expect((screen.getByLabelText("描述你想做的事") as HTMLTextAreaElement).disabled).toBe(true);
   });
 });

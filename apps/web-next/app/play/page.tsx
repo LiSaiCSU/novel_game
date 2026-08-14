@@ -50,7 +50,7 @@ export default function PlayLibrary() {
     <div className="page playLibraryPage">
       <header className="pageHead">
         <div>
-          <p className="eyebrow">MY STORIES</p>
+          <p className="eyebrow">我的故事</p>
           <h1>我的故事</h1>
           <p>每段旅程都有独立存档，并固定在开始时的作品版本上。</p>
         </div>

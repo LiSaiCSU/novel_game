@@ -28,6 +28,9 @@ describe("AppShell", () => {
       "page",
     );
     await waitFor(() => expect(screen.getByText("林澄")).toBeTruthy());
+    expect(screen.getByRole("link", { name: "账户设置：林澄" }).getAttribute("href")).toBe(
+      "/settings",
+    );
     expect(screen.queryByRole("link", { name: "审核台" })).toBeNull();
     expect(screen.queryByRole("link", { name: "管理" })).toBeNull();
   });

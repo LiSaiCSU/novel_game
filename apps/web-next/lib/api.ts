@@ -16,7 +16,11 @@ export class ApiError extends Error {
         ? "请先登录，再继续这项操作。"
         : detail === "email verification required"
           ? "请先打开验证邮件完成邮箱验证。"
-          : detail;
+          : detail === "administrator MFA enrollment required"
+            ? "管理员账号需要先启用双重验证。"
+            : detail === "administrator MFA step-up required"
+              ? "请先完成当前设备的管理员二次验证。"
+              : detail;
     super(localized);
     this.name = "ApiError";
   }

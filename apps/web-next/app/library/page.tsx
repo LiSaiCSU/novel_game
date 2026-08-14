@@ -73,7 +73,7 @@ export default function LibraryPage() {
     <div className="page libraryPage">
       <header className="pageHead libraryHead">
         <div>
-          <p className="eyebrow">WORLD LIBRARY</p>
+          <p className="eyebrow">作品世界</p>
           <h1>找一个世界，留下你的版本。</h1>
           <p>每局固定在开始时的发布版本上。作者更新作品，也不会悄悄改写你的经历。</p>
         </div>

@@ -77,7 +77,7 @@ export function LocationWorkspace({
       <section className="mapPanel">
         <header>
           <div>
-            <p className="eyebrow">LOCATION GRAPH</p>
+            <p className="eyebrow">地点关系图</p>
             <h2>地点关系图</h2>
           </div>
           <span>
@@ -224,7 +224,7 @@ export function KnowledgeStudio({
       <section className="knowledgePanel">
         <div className="entityToolbar">
           <div>
-            <p className="eyebrow">KNOWLEDGE BOUNDARIES</p>
+            <p className="eyebrow">知识边界</p>
             <h2>知识与秘密矩阵</h2>
           </div>
           <p>未知 / 怀疑 / 已知</p>

@@ -221,9 +221,9 @@ export default function Settings() {
     <div className="page">
       <div className="pageHead">
         <div>
-          <p className="eyebrow">PRIVACY & MODELS</p>
-          <h1>模型与隐私</h1>
-          <p>默认使用平台额度；也可以保存自己的模型密钥，并在创建游戏时选择 BYOK。</p>
+          <p className="eyebrow">隐私与模型</p>
+          <h1>账户设置</h1>
+          <p>管理隐私、模型密钥、登录设备、双重验证与个人数据。</p>
         </div>
       </div>
       {message && (
@@ -234,7 +234,7 @@ export default function Settings() {
       <div className="cardGrid">
         <section className="panel stack">
           <div>
-            <p className="eyebrow">YOUR CHOICE</p>
+            <p className="eyebrow">你的选择</p>
             <h2>帮助改进游戏体验</h2>
             <p className="studioHint">
               默认关闭。开启后仅记录“开始游戏、完成回合、抵达结局、创建与发布作品”等服务器定义事件，用来发现流程卡点。
@@ -405,7 +405,7 @@ export default function Settings() {
           ))}
         </section>
 
-        <section className="panel stack mfaPanel">
+        <section className="panel stack mfaPanel" id="mfa">
           <div>
             <h2>双重验证</h2>
             <p className="studioHint">

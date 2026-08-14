@@ -16,7 +16,7 @@ export default function Forgot() {
     <div className="authShell">
       <form className="authCard stack" onSubmit={submit}>
         <div>
-          <p className="eyebrow">RECOVERY</p>
+          <p className="eyebrow">找回账户</p>
           <h1>找回密码</h1>
           <p className="mutedCopy">无论账号是否存在，我们都会给出相同响应。</p>
         </div>

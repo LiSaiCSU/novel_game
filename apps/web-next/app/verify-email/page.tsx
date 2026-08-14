@@ -38,7 +38,7 @@ export default function VerifyEmail() {
     <div className="authShell">
       <form className="authCard stack" onSubmit={submit}>
         <div>
-          <p className="eyebrow">VERIFY</p>
+          <p className="eyebrow">邮箱验证</p>
           <h1>验证邮箱</h1>
           <p className="mutedCopy">打开邮件中的链接会自动完成验证；也可以在下方手动粘贴令牌。</p>
         </div>

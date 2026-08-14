@@ -1,6 +1,7 @@
 "use client";
 
 import { FormEvent, useEffect, useState } from "react";
+import Link from "next/link";
 import { api } from "@/lib/api";
 import PlatformModelPanel from "@/components/admin/PlatformModelPanel";
 
@@ -41,6 +42,7 @@ export default function AdminCenter() {
   const [funnel, setFunnel] = useState<ProductFunnel>();
   const [query, setQuery] = useState("");
   const [error, setError] = useState("");
+  const needsMfa = error.includes("双重验证") || error.includes("二次验证");
 
   async function load(search = "") {
     const [system, page, productFunnel] = await Promise.all([
@@ -110,7 +112,7 @@ export default function AdminCenter() {
     <div className="page">
       <div className="pageHead">
         <div>
-          <p className="eyebrow">PLATFORM OPERATIONS</p>
+          <p className="eyebrow">平台运营</p>
           <h1>平台管理中心</h1>
           <p>仅管理员可见。额度与角色变更必须填写理由，并携带请求 ID 写入不可变审计记录。</p>
         </div>
@@ -120,7 +122,16 @@ export default function AdminCenter() {
           <p className="error" role="alert">
             {error}
           </p>
-          <p className="studioHint">如果你不是管理员，这是预期的权限拒绝。</p>
+          {needsMfa ? (
+            <>
+              <p className="studioHint">这是管理员安全要求，不是权限丢失。</p>
+              <Link className="button primary" href="/settings#mfa">
+                前往账户设置完成验证
+              </Link>
+            </>
+          ) : (
+            <p className="studioHint">如果你不是管理员，这是预期的权限拒绝。</p>
+          )}
         </section>
       )}
       {!error && (

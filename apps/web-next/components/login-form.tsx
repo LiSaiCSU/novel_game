@@ -51,7 +51,7 @@ export function LoginForm() {
     <div className="authShell">
       <form className="authCard stack" onSubmit={submit}>
         <div>
-          <p className="eyebrow">WELCOME BACK</p>
+          <p className="eyebrow">欢迎回来</p>
           <h1>继续你的故事</h1>
           <p className="mutedCopy">登录后，你的世界、模型设置与存档只属于这个账号。</p>
         </div>

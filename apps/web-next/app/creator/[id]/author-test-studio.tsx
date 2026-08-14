@@ -29,7 +29,7 @@ export function AuthorTestStudio({
       <section className="panel stack">
         <div className="authorTestHead">
           <div>
-            <p className="eyebrow">DETERMINISTIC PLAYTESTS</p>
+            <p className="eyebrow">确定性试玩测试</p>
             <h2>把关键承诺写成可重复测试</h2>
           </div>
           <button className="button primary" disabled={running} onClick={() => void run()}>

@@ -85,7 +85,19 @@ export type Recap = {
 };
 
 export const initialChoices: Choice[] = [
-  { label: "环顾四周", hint: "了解当前场景与可互动线索" },
-  { label: "梳理当前目标", hint: "回顾眼下最重要的事情" },
-  { label: "和在场的人交谈", hint: "主动开启一段对话" },
+  {
+    label: "我先仔细观察当前环境，留意容易错过的细节和他人的反应。",
+    hint: "了解当前场景、人物状态与可互动线索",
+    action_type: "OBSERVE",
+  },
+  {
+    label: "我梳理已经掌握的线索与目标，判断现在最值得优先推进的事情。",
+    hint: "避免盲目行动，让下一步围绕当前目标展开",
+    action_type: "QUERY_QUESTS",
+  },
+  {
+    label: "我主动和在场的人打招呼，从对方的态度里了解这里的情况。",
+    hint: "开启对话，同时留意对方愿意透露和刻意回避的信息",
+    action_type: "TALK",
+  },
 ];

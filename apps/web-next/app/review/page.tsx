@@ -79,7 +79,7 @@ export default function ReviewCenter() {
     <div className="page">
       <div className="pageHead">
         <div>
-          <p className="eyebrow">TRUST & SAFETY</p>
+          <p className="eyebrow">内容安全</p>
           <h1>审核与处置中心</h1>
           <p>仅 reviewer/admin 可读取。所有决定、理由与请求 ID 都会进入审计记录。</p>
         </div>

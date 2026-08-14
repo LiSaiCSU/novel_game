@@ -1,3 +1,4 @@
+import { X } from "lucide-react";
 import { useState } from "react";
 import { metric } from "./game-format";
 import type { Dashboard, Ending, EndingStatus, Scene } from "./game-types";
@@ -9,6 +10,7 @@ type Props = {
   completed: boolean;
   onConsent: (lead: string, decision: string) => void;
   onEnding: (ending: Ending) => void;
+  onClose: () => void;
 };
 
 const tabs = ["人物", "关系", "任务", "背包", "结局"] as const;
@@ -20,11 +22,15 @@ export function DashboardRail({
   completed,
   onConsent,
   onEnding,
+  onClose,
 }: Props) {
   const [activeTab, setActiveTab] = useState<(typeof tabs)[number]>("人物");
 
   return (
     <aside className="gameRail gameDashboard">
+      <button className="gameRailClose" aria-label="关闭人物与状态" onClick={onClose}>
+        <X size={18} aria-hidden="true" />
+      </button>
       <div className="railTabs" role="tablist" aria-label="游戏状态">
         {tabs.map((tab) => (
           <button

@@ -52,7 +52,7 @@ export default function Creator() {
     <div className="page">
       <div className="pageHead">
         <div>
-          <p className="eyebrow">CREATOR STUDIO</p>
+          <p className="eyebrow">创作工作台</p>
           <h1>创作台</h1>
           <p>结构化编辑世界、人物与规则，实时校验引用，预览后生成不可变版本。</p>
         </div>

@@ -41,6 +41,13 @@ export default function Game() {
 
   return (
     <div className="gameShell" data-mobile-view={mobileView}>
+      {mobileView !== "story" && (
+        <button
+          className="gamePanelBackdrop"
+          aria-label="关闭游戏面板"
+          onClick={() => setMobileView("story")}
+        />
+      )}
       <SaveRail
         state={game.state}
         saves={game.saves}
@@ -48,12 +55,14 @@ export default function Game() {
         onCreate={() => run(game.createSave())}
         onLoad={(save: Save) => run(game.loadSave(save))}
         onDelete={(save: Save) => run(game.deleteSave(save))}
+        onClose={() => setMobileView("story")}
       />
       <StoryPanel
         state={game.state}
         chapters={game.chapters}
         current={game.current}
         choices={game.choices}
+        dashboard={game.dashboard}
         beat={game.beat}
         draft={game.draft}
         recap={game.recap}
@@ -65,6 +74,8 @@ export default function Game() {
         onHideRecap={() => game.setShowRecap(false)}
         onDraftChange={game.setDraft}
         onAct={(text) => run(game.act(text))}
+        onOpenSaves={() => setMobileView("saves")}
+        onOpenStatus={() => setMobileView("status")}
       />
       <DashboardRail
         state={game.state}
@@ -73,6 +84,7 @@ export default function Game() {
         completed={game.completed}
         onConsent={(lead, decision) => run(game.setConsent(lead, decision))}
         onEnding={(ending: Ending) => run(game.chooseEnding(ending))}
+        onClose={() => setMobileView("story")}
       />
       <GameMobileNavigation value={mobileView} onChange={setMobileView} />
     </div>
