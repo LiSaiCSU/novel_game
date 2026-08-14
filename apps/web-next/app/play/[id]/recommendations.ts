@@ -2,22 +2,25 @@ import type { Choice, Dashboard, Scene } from "./game-types";
 
 const ACTION_SENTENCE_LENGTH = 16;
 
-function sentenceChoice(choice: Choice): Choice | undefined {
+function sentenceChoice(choice: Choice, currentFocus = ""): Choice | undefined {
   const label = choice.label.trim();
   const actionType = choice.action_type?.toUpperCase();
 
   if (actionType === "TALK" && label.length < ACTION_SENTENCE_LENGTH) {
+    const subject = currentFocus ? `关于“${currentFocus}”` : "关于刚才发生的事";
     return {
       ...choice,
-      label: `我先和${label}聊聊，问问对方对眼下事情的看法。`,
-      hint: "留意对方的态度、目标，以及愿意透露或刻意回避的信息",
+      label: `我问${label}：“${subject}，你知道些什么？”`,
+      hint: `点名回应当前在场的${label}，追问与这一刻直接相关的信息`,
     };
   }
   if (actionType === "MOVE" && label.length < ACTION_SENTENCE_LENGTH) {
     return {
       ...choice,
-      label: `我前往${label}，看看那里是否出现了新的线索或人物。`,
-      hint: "换一个场景推进时间，也可能遇见不同的人和事件",
+      label: currentFocus
+        ? `我前往${label}，继续查清“${currentFocus}”。`
+        : `我前往${label}，寻找能承接当前局面的线索或人物。`,
+      hint: "换一个场景推进眼前的事情，而不是回到已经结束的情节",
     };
   }
   if (actionType === "CULTIVATE" && !label) {
@@ -47,8 +50,15 @@ export function buildActionRecommendations(
   dashboard?: Dashboard,
   prioritizeChoices = false,
 ): Choice[] {
+  const activeQuest = dashboard?.quests.find((quest) =>
+    ["active", "offered", "进行中", "已接受"].includes(quest.status.toLowerCase()),
+  );
+  const activeThread = dashboard?.threads.find(
+    (thread) => thread.status.toLowerCase() === "active" && thread.next_beat_hint,
+  );
+  const currentFocus = activeThread?.next_beat_hint || activeQuest?.name || "";
   const originals = choices
-    .map(sentenceChoice)
+    .map((choice) => sentenceChoice(choice, currentFocus))
     .filter((choice): choice is Choice => Boolean(choice));
   const recommendations: Choice[] = [];
 
@@ -58,9 +68,6 @@ export function buildActionRecommendations(
     if (conversation) recommendations.push(conversation);
   }
 
-  const activeQuest = dashboard?.quests.find((quest) =>
-    ["active", "offered", "进行中", "已接受"].includes(quest.status.toLowerCase()),
-  );
   if (activeQuest) {
     recommendations.push({
       label: `我围绕“${activeQuest.name}”梳理已知线索，确认下一步该从哪里着手。`,
@@ -69,9 +76,6 @@ export function buildActionRecommendations(
     });
   }
 
-  const activeThread = dashboard?.threads.find(
-    (thread) => thread.status.toLowerCase() === "active" && thread.next_beat_hint,
-  );
   if (activeThread) {
     recommendations.push({
       label: `我继续推进“${activeThread.name}”，重点留意：${activeThread.next_beat_hint}。`,

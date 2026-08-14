@@ -1524,6 +1524,42 @@ async def test_sse_stream_settles_the_world_before_narrating(client) -> None:
     assert body.rstrip().endswith("}") and "event: done" in body
 
 
+async def test_v1_sse_disables_proxy_transforms(client) -> None:
+    registered = await client.post(
+        "/api/v1/auth/register",
+        json={
+            "email": "stream-reader@example.com",
+            "password": "correct-horse-stream-reader",
+            "display_name": "流式读者",
+        },
+    )
+    assert registered.status_code == 201
+    csrf = client.cookies.get("ng_csrf")
+    releases = (await client.get("/api/v1/catalog/releases")).json()["items"]
+    campus = next(item for item in releases if "春日坂" in item["title"])
+    started = await client.post(
+        "/api/v1/playthroughs",
+        headers={"X-CSRF-Token": csrf},
+        json={"release_id": campus["id"], "name": "林夏", "age": 20, "gender": "female"},
+    )
+    assert started.status_code == 201
+    playthrough_id = started.json()["id"]
+
+    async with client.stream(
+        "POST",
+        f"/api/v1/playthroughs/{playthrough_id}/actions/stream",
+        headers={"X-CSRF-Token": csrf},
+        json={"text": "我看看桌上的资料", "idempotency_key": "stream-reader-turn"},
+    ) as response:
+        body = "".join([chunk async for chunk in response.aiter_text()])
+
+    assert response.status_code == 200
+    assert response.headers["cache-control"] == "no-cache, no-transform"
+    assert response.headers["x-accel-buffering"] == "no"
+    assert "event: state" in body
+    assert "event: done" in body
+
+
 async def test_sse_idempotency_header_replays_without_advancing_twice(client) -> None:
     started = await client.post(
         "/api/game/start", json={"player_name": "沈砚", "world_seed": "sse-idem"}

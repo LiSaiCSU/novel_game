@@ -52,7 +52,7 @@ export async function api<T>(path: string, init: RequestInit = {}): Promise<T> {
 export async function streamApi(
   path: string,
   body: unknown,
-  onEvent: (event: string, payload: Record<string, unknown>) => void,
+  onEvent: (event: string, payload: Record<string, unknown>) => void | Promise<void>,
 ): Promise<void> {
   const response = await fetch(`/api/v1${path}`, {
     method: "POST",
@@ -70,17 +70,17 @@ export async function streamApi(
   const textDecoder = new TextDecoder();
   const eventDecoder = new SseDecoder();
 
-  function dispatch(events: ReturnType<SseDecoder["push"]>) {
+  async function dispatch(events: ReturnType<SseDecoder["push"]>) {
     for (const item of events) {
-      onEvent(item.event, JSON.parse(item.data) as Record<string, unknown>);
+      await onEvent(item.event, JSON.parse(item.data) as Record<string, unknown>);
     }
   }
 
   while (true) {
     const { done, value } = await reader.read();
-    dispatch(eventDecoder.push(textDecoder.decode(value, { stream: !done })));
+    await dispatch(eventDecoder.push(textDecoder.decode(value, { stream: !done })));
     if (done) {
-      dispatch(eventDecoder.finish());
+      await dispatch(eventDecoder.finish());
       break;
     }
   }

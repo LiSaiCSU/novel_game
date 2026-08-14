@@ -1734,6 +1734,10 @@ a {
   border-top: 1px solid color-mix(in srgb, var(--line) 72%, transparent);
 }
 
+.currentChapter {
+  scroll-margin-top: 24px;
+}
+
 .conversationDock {
   width: min(820px, calc(100% - 38px));
   position: relative;

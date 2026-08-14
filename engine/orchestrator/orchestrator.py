@@ -57,6 +57,7 @@ from engine.orchestrator.turn import (
     Choice,
     OrchestratorPlan,
     StageTimer,
+    StoryBeat,
     TurnRequest,
     TurnResult,
     TurnStatus,
@@ -874,8 +875,10 @@ class GameOrchestrator:
                 dict(payload["before_facts"]), fresh_state, change_set
             ),
             visible_updates=fresh_state.scene_summary(),
-            choices=self._choices(
-                fresh_state, RuleContext(self.d.pack, fresh_state, GameRNG("choices"))
+            choices=self._recommendations(
+                fresh_state,
+                narrative.beat,
+                RuleContext(self.d.pack, fresh_state, GameRNG("choices")),
             ),
             beat=narrative.beat,
             rejected=payload.get("rejected"),
@@ -1186,6 +1189,23 @@ class GameOrchestrator:
             "events": [e.event_type for e in change_set.events],
         }
 
+    def _recommendations(
+        self,
+        state: WorldStateView,
+        beat: StoryBeat | None,
+        ctx: RuleContext,
+    ) -> list[Choice]:
+        """Prefer the narrator's just-written hand-off over generic fallbacks.
+
+        The beat is produced from the completed chapter and therefore knows
+        who just spoke, what changed, and which decision is actually pending.
+        Persisting it as ``choices`` keeps history, recap, and a freshly loaded
+        page on the same recommendations the player saw at the end of the turn.
+        """
+        if beat is not None and beat.options:
+            return beat.options
+        return self._choices(state, ctx)
+
     def _choices(self, state: WorldStateView, ctx: RuleContext) -> list[Choice]:
         """Suggestions only. Free-text input is always available."""
         choices: list[Choice] = []
@@ -1339,7 +1359,11 @@ class GameOrchestrator:
             narrative=chapter.text,
             state_changes=await self._run_state_changes(uow, turn_ids, state),
             visible_updates=state.scene_summary(),
-            choices=self._choices(state, RuleContext(self.d.pack, state, GameRNG("choices"))),
+            choices=self._recommendations(
+                state,
+                chapter.beat,
+                RuleContext(self.d.pack, state, GameRNG("choices")),
+            ),
             beat=chapter.beat,
             interrupt=interrupt.as_dict(),
             steps=len(turn_ids),

@@ -50,14 +50,43 @@ export function StoryPanel({
   onOpenSettings,
 }: Props) {
   const endRef = useRef<HTMLDivElement>(null);
+  const currentRef = useRef<HTMLElement>(null);
   const formRef = useRef<HTMLFormElement>(null);
+  const previousInputRef = useRef("");
+  const wasBusyRef = useRef(false);
   const [suggestionsOpen, setSuggestionsOpen] = useState(false);
   const recommendations = useMemo(
     () => buildActionRecommendations(choices, state, dashboard, Boolean(beat)),
     [beat, choices, dashboard, state],
   );
 
-  useEffect(() => endRef.current?.scrollIntoView({ behavior: "smooth" }), [chapters, current]);
+  useEffect(() => {
+    endRef.current?.scrollIntoView({ block: "end" });
+  }, []);
+
+  useEffect(() => {
+    if (!current) {
+      previousInputRef.current = "";
+      return;
+    }
+    if (previousInputRef.current === current.input) return;
+    previousInputRef.current = current.input;
+    requestAnimationFrame(() =>
+      currentRef.current?.scrollIntoView({ behavior: "smooth", block: "start" }),
+    );
+  }, [current]);
+
+  useEffect(() => {
+    if (busy) {
+      wasBusyRef.current = true;
+      requestAnimationFrame(() => setSuggestionsOpen(false));
+      return;
+    }
+    if (wasBusyRef.current && recommendations.length > 0) {
+      wasBusyRef.current = false;
+      requestAnimationFrame(() => setSuggestionsOpen(true));
+    }
+  }, [busy, recommendations.length]);
 
   function choose(value: string) {
     onDraftChange(value);
@@ -134,7 +163,7 @@ export function StoryPanel({
           </article>
         ))}
         {current && (
-          <article className="chapter">
+          <article ref={currentRef} className="chapter currentChapter">
             {`你：${current.input}\n\n${current.narrative}`}
             {busy && <span className="streamCursor" aria-hidden="true" />}
           </article>

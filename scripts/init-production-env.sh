@@ -65,6 +65,7 @@ DOMAIN="${DOMAIN:-novelgame.online}"
 ACME_EMAIL="${ACME_EMAIL:-}"
 REVERSE_PROXY_MODE="${REVERSE_PROXY_MODE:-caddy}"
 WEB_HOST_PORT="${WEB_HOST_PORT:-3100}"
+API_HOST_PORT="${API_HOST_PORT:-8100}"
 SENTRY_DSN="${SENTRY_DSN:-}"
 SMTP_HOST="${SMTP_HOST:-}"
 SMTP_PORT="${SMTP_PORT:-587}"
@@ -95,6 +96,15 @@ esac
 prompt_value WEB_HOST_PORT "Loopback port used by the web container" "3100"
 if [[ ! "$WEB_HOST_PORT" =~ ^[0-9]+$ ]] || (( WEB_HOST_PORT < 1024 || WEB_HOST_PORT > 65535 )); then
   echo "WEB_HOST_PORT must be an integer from 1024 to 65535." >&2
+  exit 1
+fi
+prompt_value API_HOST_PORT "Loopback port used by the API container" "8100"
+if [[ ! "$API_HOST_PORT" =~ ^[0-9]+$ ]] || (( API_HOST_PORT < 1024 || API_HOST_PORT > 65535 )); then
+  echo "API_HOST_PORT must be an integer from 1024 to 65535." >&2
+  exit 1
+fi
+if [[ "$API_HOST_PORT" == "$WEB_HOST_PORT" ]]; then
+  echo "API_HOST_PORT and WEB_HOST_PORT must be different." >&2
   exit 1
 fi
 prompt_value SENTRY_DSN "Sentry DSN"
@@ -158,6 +168,7 @@ write_value DOMAIN "$DOMAIN"
 write_value ACME_EMAIL "$ACME_EMAIL"
 write_value REVERSE_PROXY_MODE "$REVERSE_PROXY_MODE"
 write_value WEB_HOST_PORT "$WEB_HOST_PORT"
+write_value API_HOST_PORT "$API_HOST_PORT"
 write_value IMAGE_TAG "bootstrap"
 write_value PREVIOUS_IMAGE_TAG ""
 write_value POSTGRES_DB "narrative"

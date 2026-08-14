@@ -4,8 +4,6 @@
 }
 
 {$DOMAIN} {
-	encode zstd gzip
-
 	header {
 		Strict-Transport-Security "max-age=31536000"
 		X-Content-Type-Options "nosniff"
@@ -13,7 +11,17 @@
 		-Server
 	}
 
-	reverse_proxy web:3000 {
-		flush_interval -1
+	@backend path /api/* /media/*
+	handle @backend {
+		reverse_proxy api:8000 {
+			flush_interval -1
+		}
+	}
+
+	handle {
+		encode zstd gzip
+		reverse_proxy web:3000 {
+			flush_interval -1
+		}
 	}
 }

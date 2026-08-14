@@ -173,6 +173,8 @@ services:
     environment:
       <<: *backend-environment
       DATABASE_URL: postgresql+asyncpg://narrative_app:${POSTGRES_APP_PASSWORD}@postgres:5432/${POSTGRES_DB:-narrative}
+    ports:
+      - "127.0.0.1:${API_HOST_PORT:-8100}:8000"
     networks: [backend, egress]
     depends_on:
       migrate:

@@ -14,6 +14,7 @@ from engine.core.types import ActionType
 from engine.llm.providers import NullProvider
 from engine.narrative.renderer import BEAT_MARKER, split_beat
 from engine.orchestrator.factory import build_orchestrator
+from engine.orchestrator.turn import Choice, StoryBeat
 from engine.world.state_view import WorldStateView
 
 pytestmark = pytest.mark.anyio
@@ -67,6 +68,32 @@ def test_beat_options_are_capped_and_trimmed() -> None:
     _, beat = split_beat(raw)
     assert beat is not None
     assert [o.label for o in beat.options] == ["a", "b", "c", "d"]
+
+
+def test_beat_option_objects_keep_contextual_hints() -> None:
+    raw = (
+        f"他把账本推到你面前。\n{BEAT_MARKER}\n"
+        '{"question":"朝仓律等着你回应","options":['
+        '{"label":"我问朝仓律：这笔钱是谁要求隐瞒的？",'
+        '"hint":"承接刚出现的账本线索"}]}'
+    )
+    _, beat = split_beat(raw)
+
+    assert beat is not None
+    assert beat.options[0].label == "我问朝仓律：这笔钱是谁要求隐瞒的？"
+    assert beat.options[0].hint == "承接刚出现的账本线索"
+
+
+def test_latest_story_beat_replaces_generic_location_choices(pack, state) -> None:
+    orchestrator = build_orchestrator(pack=pack, provider=NullProvider())
+    beat = StoryBeat(
+        question="他在等你的答案",
+        options=[Choice(label="我直接回答他刚才的问题", hint="承接本章最后一句")],
+    )
+
+    choices = orchestrator._recommendations(state, beat, None)  # type: ignore[arg-type]
+
+    assert choices == beat.options
 
 
 # ---------------------------------------------------------------- continue

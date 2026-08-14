@@ -31,7 +31,8 @@ describe("buildActionRecommendations", () => {
       dashboard,
     );
 
-    expect(choices[0].label).toContain("和朝仓律聊聊");
+    expect(choices[0].label).toContain("我问朝仓律");
+    expect(choices[0].label).toContain("确认旧节目单上的赞助人署名");
     expect(choices[0].hint).not.toBe("TALK");
     expect(choices.some((choice) => choice.label.includes("前往档案室"))).toBe(true);
     expect(choices.some((choice) => choice.label.includes("月见馆修复计划"))).toBe(true);

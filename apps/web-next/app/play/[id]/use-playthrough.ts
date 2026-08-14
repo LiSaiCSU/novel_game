@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { api, streamApi } from "@/lib/api";
+import { revealTextDelta } from "@/lib/text-stream";
 import { formatChapters } from "./game-format";
 import {
   type Choice,
@@ -39,23 +40,26 @@ export function usePlaythrough(id: string) {
   const [busy, setBusy] = useState(false);
   const [loading, setLoading] = useState(true);
 
-  const refresh = useCallback(async () => {
-    const [nextState, history, saved, nextDashboard, endings, nextSettings] = await Promise.all([
-      api<Scene>(`/playthroughs/${id}/state`),
-      api<History>(`/playthroughs/${id}/history`),
-      api<Save[]>(`/playthroughs/${id}/saves`),
-      api<Dashboard>(`/playthroughs/${id}/dashboard`),
-      api<EndingStatus>(`/playthroughs/${id}/endings`),
-      api<PlaythroughSettings>(`/playthroughs/${id}/settings`),
-    ]);
-    setState(nextState);
-    setChapters(formatChapters(history));
-    if (history.choices.length) setChoices(history.choices);
-    setSaves(saved);
-    setDashboard(nextDashboard);
-    setEndingStatus(endings);
-    setSettings(nextSettings);
-  }, [id]);
+  const refresh = useCallback(
+    async (preserveRecommendations = false) => {
+      const [nextState, history, saved, nextDashboard, endings, nextSettings] = await Promise.all([
+        api<Scene>(`/playthroughs/${id}/state`),
+        api<History>(`/playthroughs/${id}/history`),
+        api<Save[]>(`/playthroughs/${id}/saves`),
+        api<Dashboard>(`/playthroughs/${id}/dashboard`),
+        api<EndingStatus>(`/playthroughs/${id}/endings`),
+        api<PlaythroughSettings>(`/playthroughs/${id}/settings`),
+      ]);
+      setState(nextState);
+      setChapters(formatChapters(history));
+      if (!preserveRecommendations && history.choices.length) setChoices(history.choices);
+      setSaves(saved);
+      setDashboard(nextDashboard);
+      setEndingStatus(endings);
+      setSettings(nextSettings);
+    },
+    [id],
+  );
 
   useEffect(() => {
     Promise.all([
@@ -112,10 +116,13 @@ export function usePlaythrough(id: string) {
       await streamApi(
         `/playthroughs/${id}/actions/stream`,
         { text: action, idempotency_key: crypto.randomUUID() },
-        (streamEvent, payload) => {
+        async (streamEvent, payload) => {
           if (streamEvent === "narrative") {
-            narrative += String(payload.delta ?? "");
-            setCurrent({ input: action, narrative });
+            setProgress("正在书写这一节");
+            await revealTextDelta(String(payload.delta ?? ""), (piece) => {
+              narrative += piece;
+              setCurrent({ input: action, narrative });
+            });
           } else if (streamEvent === "progress") {
             const summary = String(payload.summary ?? "");
             setProgress(
@@ -123,11 +130,11 @@ export function usePlaythrough(id: string) {
             );
           } else if (streamEvent === "state") {
             setState(payload.visible_updates as Scene);
-            const nextChoices = (payload.choices as Choice[] | undefined) ?? [];
-            if (nextChoices.length) setChoices(nextChoices);
             const nextBeat = payload.beat as { question?: string; options?: Choice[] } | null;
+            const nextChoices = (payload.choices as Choice[] | undefined) ?? [];
+            const contextualChoices = nextBeat?.options?.length ? nextBeat.options : nextChoices;
+            if (contextualChoices.length) setChoices(contextualChoices);
             setBeat(nextBeat?.question ?? "");
-            if (nextBeat?.options?.length) setChoices(nextBeat.options);
             if (payload.degraded) {
               setQualityWarning(
                 "本回合的叙事模型没有完整完成，系统已保留你的行动并使用基础文本。你可以继续游戏；如果反复出现，请让管理员检查模型健康状态。",
@@ -139,7 +146,7 @@ export function usePlaythrough(id: string) {
         },
       );
       setCurrent(undefined);
-      await refresh();
+      await refresh(true);
     } catch (actionError) {
       setError(errorMessage(actionError));
       setDraft(action);

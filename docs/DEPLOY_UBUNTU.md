@@ -32,7 +32,7 @@ sudo bash scripts/deploy-production.sh
 如果服务器上的 Nginx 还承载其他域名，首次运行改用：
 
 ```bash
-sudo env REVERSE_PROXY_MODE=nginx WEB_HOST_PORT=3100 \
+sudo env REVERSE_PROXY_MODE=nginx WEB_HOST_PORT=3100 API_HOST_PORT=8100 \
   bash scripts/deploy-production.sh
 ```
 
