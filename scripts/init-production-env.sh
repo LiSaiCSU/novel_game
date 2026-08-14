@@ -71,10 +71,12 @@ SMTP_PORT="${SMTP_PORT:-587}"
 SMTP_USERNAME="${SMTP_USERNAME:-}"
 SMTP_PASSWORD="${SMTP_PASSWORD:-}"
 SMTP_FROM="${SMTP_FROM:-}"
+SMTP_SECURITY="${SMTP_SECURITY:-starttls}"
 LLM_PROVIDER="${LLM_PROVIDER:-null}"
 LLM_API_KEY="${LLM_API_KEY:-}"
 LLM_BASE_URL="${LLM_BASE_URL:-}"
 LLM_MODEL="${LLM_MODEL:-}"
+LLM_EXTRA_BODY="${LLM_EXTRA_BODY:-}"
 
 prompt_value DOMAIN "Public domain" "novelgame.online"
 if [[ ! "$DOMAIN" =~ ^[A-Za-z0-9.-]+$ ]]; then
@@ -101,6 +103,25 @@ prompt_value SMTP_PORT "SMTP port" "587"
 prompt_value SMTP_USERNAME "SMTP username (leave blank if unused)" "" false false
 prompt_value SMTP_PASSWORD "SMTP password (leave blank if unused)" "" true false
 prompt_value SMTP_FROM "Sender address" "noreply@$DOMAIN"
+prompt_value SMTP_SECURITY "SMTP security (starttls/ssl/plain)" "starttls"
+case "$SMTP_SECURITY" in
+  starttls)
+    SMTP_SSL="false"
+    SMTP_STARTTLS="true"
+    ;;
+  ssl)
+    SMTP_SSL="true"
+    SMTP_STARTTLS="false"
+    ;;
+  plain)
+    SMTP_SSL="false"
+    SMTP_STARTTLS="false"
+    ;;
+  *)
+    echo "SMTP_SECURITY must be starttls, ssl or plain." >&2
+    exit 1
+    ;;
+esac
 
 if [[ -t 0 && -z "${LLM_PROVIDER_INPUT:-}" ]]; then
   read -r -p "Platform LLM provider (null/openai/anthropic/compatible) [$LLM_PROVIDER]: " LLM_PROVIDER_INPUT
@@ -123,6 +144,10 @@ case "$LLM_PROVIDER" in
     exit 1
     ;;
 esac
+
+if [[ "$LLM_BASE_URL" == "https://api.deepseek.com" && -z "$LLM_EXTRA_BODY" ]]; then
+  LLM_EXTRA_BODY='{"thinking":{"type":"disabled"}}'
+fi
 
 install -d -m 700 "$(dirname "$ENV_FILE")"
 umask 077
@@ -154,12 +179,16 @@ write_value SMTP_PORT "$SMTP_PORT"
 write_value SMTP_USERNAME "$SMTP_USERNAME"
 write_value SMTP_PASSWORD "$SMTP_PASSWORD"
 write_value SMTP_FROM "$SMTP_FROM"
-write_value SMTP_STARTTLS "true"
+write_value SMTP_SSL "$SMTP_SSL"
+write_value SMTP_STARTTLS "$SMTP_STARTTLS"
 write_value LLM_PROVIDER "$LLM_PROVIDER"
 write_value LLM_API_KEY "$LLM_API_KEY"
 write_value LLM_API_KEYS ""
 write_value LLM_BASE_URL "$LLM_BASE_URL"
 write_value LLM_MODEL "$LLM_MODEL"
+write_value LLM_EXTRA_BODY "$LLM_EXTRA_BODY"
+write_value LLM_OUTPUT_BUDGET_SCALE "1.0"
+write_value LLM_TRUNCATION_RETRIES "2"
 write_value LLM_PRICE_TABLE "{}"
 write_value LLM_DAILY_COST_ALERT_MICROUNITS "0"
 write_value LOG_LEVEL "INFO"

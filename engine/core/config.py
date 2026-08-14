@@ -142,6 +142,7 @@ class Settings(BaseSettings):
     smtp_username: str = ""
     smtp_password: str = ""
     smtp_from: str = "noreply@example.invalid"
+    smtp_ssl: bool = False
     smtp_starttls: bool = True
 
     prompts_dir: str = Field(default=str(REPO_ROOT / "prompts"))

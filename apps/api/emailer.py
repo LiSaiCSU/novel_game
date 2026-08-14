@@ -38,8 +38,9 @@ def _send_sync(settings: Settings, to: str, subject: str, text: str) -> None:
     message["To"] = to
     message["Subject"] = subject
     message.set_content(text)
-    with smtplib.SMTP(settings.smtp_host, settings.smtp_port, timeout=15) as smtp:
-        if settings.smtp_starttls:
+    smtp_class = smtplib.SMTP_SSL if settings.smtp_ssl else smtplib.SMTP
+    with smtp_class(settings.smtp_host, settings.smtp_port, timeout=15) as smtp:
+        if settings.smtp_starttls and not settings.smtp_ssl:
             smtp.starttls()
         if settings.smtp_username:
             smtp.login(settings.smtp_username, settings.smtp_password)
