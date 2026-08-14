@@ -117,7 +117,10 @@ services:
         condition: service_started
 
   web:
-    build: ./apps/web-next
+    build:
+      context: ./apps/web-next
+      args:
+        API_ORIGIN: http://api:8000
     environment:
       API_ORIGIN: http://api:8000
     ports: ["3000:3000"]
