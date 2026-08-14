@@ -1,19 +1,19 @@
-# novegame.online 一键部署
+# novelgame.online 一键部署
 
 本方案面向一台已经安装 Docker Engine、Docker Compose Plugin 和 Git 的 Ubuntu 服务器。
-服务器运行 Caddy、Next.js、FastAPI、Worker、PostgreSQL、Redis、MinIO 和 ClamAV；公网只开放
-`80/443`，其余服务位于 Docker 私有网络。
+服务器运行 Next.js、FastAPI、Worker、PostgreSQL、Redis、MinIO 和 ClamAV；可选择独占服务器的
+Caddy，或与现有站点共存的宿主机 Nginx。公网只开放 `80/443`，其余服务位于 Docker 私有网络。
 
 ## 0. 上线前准备
 
-1. 将 `novegame.online` 的 A 记录指向服务器公网 IPv4；使用 IPv6 时同时正确配置 AAAA。
+1. 将 `novelgame.online` 的 A 记录指向服务器公网 IPv4；使用 IPv6 时同时正确配置 AAAA。
 2. 防火墙只开放 SSH、HTTP 和 HTTPS，即 `22/80/443`。
 3. 准备一个真实 SMTP 账号，否则新用户无法收到验证和重置邮件。
 4. 准备 Sentry DSN。后端的 production 校验会拒绝没有错误聚合的配置。
 5. 按需准备平台 LLM 的 provider、模型和 API Key；不配置时可选择 `null`，玩家仍可使用 BYOK。
 6. 建议至少预留 8 GB 内存；ClamAV、构建过程、PostgreSQL 和应用会同时占用内存。
 
-如果旧版正在占用 `80/443`，先在旧部署目录备份并停止旧服务。不要使用 `down -v`，它会删除旧卷：
+如果旧版独占 `80/443`，可先在旧部署目录备份并停止旧服务。不要使用 `down -v`，它会删除旧卷：
 
 ```bash
 docker compose down
@@ -29,10 +29,21 @@ cd /opt/novegame
 sudo bash scripts/deploy-production.sh
 ```
 
+如果服务器上的 Nginx 还承载其他域名，首次运行改用：
+
+```bash
+sudo env REVERSE_PROXY_MODE=nginx WEB_HOST_PORT=3100 \
+  bash scripts/deploy-production.sh
+```
+
+脚本会新增独立的 `novelgame.online` 虚拟主机并调用 Certbot，不会停止或覆盖其他域名配置。
+
 首次执行会交互式询问：
 
-- 域名，默认 `novegame.online`；
+- 域名，默认 `novelgame.online`；
 - HTTPS 证书通知邮箱；
+- 反向代理模式：独占服务器选 `caddy`，服务器已有 Nginx 站点时选 `nginx`；
+- Web 容器绑定的本机回环端口，默认 `3100`；
 - Sentry DSN；
 - SMTP 地址、账号、密码和发件人；
 - 可选的平台模型 provider、模型名称、API Key 与兼容接口地址。
@@ -47,13 +58,13 @@ sudo bash scripts/deploy-production.sh
 3. 启动 PostgreSQL、Redis、MinIO、ClamAV；
 4. 创建 `NOSUPERUSER NOBYPASSRLS` 应用数据库角色；
 5. 运行 Alembic；
-6. 启动 API、Worker、Web 和 Caddy；
-7. 等待内部依赖与 `https://novegame.online/api/ready` 全部通过。
+6. 启动 API、Worker 和 Web，并配置 Caddy 或宿主机 Nginx；
+7. 等待内部依赖与 `https://novelgame.online/api/ready` 全部通过。
 
 成功时最后会显示：
 
 ```text
-Deployment succeeded: https://novegame.online
+Deployment succeeded: https://novelgame.online
 ```
 
 ## 2. 创建首位管理员
@@ -106,8 +117,8 @@ sudo docker compose \
   --env-file /etc/novegame/novegame.env \
   -f compose.prod.yaml logs --tail=200 api worker web caddy
 
-curl https://novegame.online/api/health
-curl https://novegame.online/api/ready
+curl https://novelgame.online/api/health
+curl https://novelgame.online/api/ready
 ```
 
 如果 HTTPS 没有签发，优先检查：
@@ -115,7 +126,7 @@ curl https://novegame.online/api/ready
 - DNS 是否已经指向这台服务器；
 - 云防火墙和 Ubuntu 防火墙是否开放 80/443；
 - 旧版 Nginx、Apache 或容器是否仍占用 80/443；
-- Caddy 日志是否报告 ACME 或域名错误。
+- 所选 Caddy 或 Nginx 的日志是否报告 ACME、证书或域名错误。
 
 ## 6. 修改生产配置
 

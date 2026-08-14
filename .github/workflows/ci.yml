@@ -30,8 +30,9 @@ jobs:
       - run: python scripts/compile_official_content.py
       - name: Validate local and production deployment definitions
         env:
-          DOMAIN: novegame.online
-          ACME_EMAIL: ops@novegame.online
+          DOMAIN: novelgame.online
+          ACME_EMAIL: ops@novelgame.online
+          WEB_HOST_PORT: 3100
           IMAGE_TAG: ci
           POSTGRES_OWNER_PASSWORD: ci-owner-password-0123456789
           POSTGRES_APP_PASSWORD: ci-app-password-0123456789
@@ -43,10 +44,10 @@ jobs:
           METRICS_TOKEN: ci-metrics-token-01234567890123456789
           SENTRY_DSN: https://public@example.invalid/1
           SMTP_HOST: smtp.example.invalid
-          SMTP_FROM: noreply@novegame.online
+          SMTP_FROM: noreply@novelgame.online
           LLM_PRICE_TABLE: '{}'
         run: |
-          bash -n scripts/init-production-env.sh scripts/backup-production.sh scripts/deploy-production.sh scripts/rollback-production.sh scripts/promote-admin.sh
+          bash -n scripts/init-production-env.sh scripts/backup-production.sh scripts/deploy-production.sh scripts/rollback-production.sh scripts/promote-admin.sh scripts/configure-host-nginx.sh
           docker compose -f compose.yaml config --quiet
           docker compose -f compose.prod.yaml config --quiet
       - run: DATABASE_URL=sqlite+aiosqlite:///./data/ci-migration.db alembic upgrade head

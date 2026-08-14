@@ -214,6 +214,8 @@ services:
     environment:
       API_ORIGIN: http://api:8000
       NEXT_PUBLIC_SITE_URL: https://${DOMAIN}
+    ports:
+      - "127.0.0.1:${WEB_HOST_PORT:-3100}:3000"
     networks: [frontend, backend]
     depends_on:
       api:
@@ -231,6 +233,7 @@ services:
 
   caddy:
     image: caddy:2-alpine
+    profiles: [caddy]
     restart: unless-stopped
     environment:
       DOMAIN: ${DOMAIN:?DOMAIN is required}

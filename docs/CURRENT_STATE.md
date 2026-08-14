@@ -15,7 +15,7 @@
 - 未列出作品的一次性邀请链接、公开目录筛选/排序，以及封面、头像、背景图的清洗、病毒扫描、缩略图和对象存储。
 - 异步个人数据导出和延迟注销；导出明确排除凭据密文、令牌哈希、内部 trace、秘密状态和完整存档载荷。
 - Redis 任务队列/死信、邮件、审核扫描、过期预览和导出清理、结构化日志、指标、traceparent、慢查询、Sentry 接口和 LLM 成本告警。
-- PostgreSQL、Redis、MinIO、Mailpit、ClamAV、worker 的本地 Compose 编排；`novegame.online` 的生产 Compose、Caddy 自动 HTTPS、迁移前备份、镜像回滚与首位管理员授权；Python/TypeScript CI 依赖审计。
+- PostgreSQL、Redis、MinIO、Mailpit、ClamAV、worker 的本地 Compose 编排；`novelgame.online` 的生产 Compose、Caddy/宿主机 Nginx 自动 HTTPS、迁移前备份、镜像回滚与首位管理员授权；Python/TypeScript CI 依赖审计。
 - 三种编译器验证的创作模板、可安装的 `narrative` CLI、机器可读 Schema、创作者声明式玩法测试和独立创作指南；测试可预置关系/知识/任务/线程，执行真实回合并断言 canonical state，失败会阻断 Release。
 - 玩家重返游戏回顾；默认关闭的产品分析、白名单事件、幂等去重、撤回即时删除、个人导出和仅聚合的管理员漏斗。
 - 公共目录、玩家私有 Playthrough 生命周期、canonical gameplay/SSE、创作素材和审核/举报路由已拆分为独立模块，保持原 `/api/v1` 契约不变。

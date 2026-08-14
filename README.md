@@ -47,7 +47,7 @@ Compose 中的密码只用于本地开发。生产密钥必须由密钥管理服
 
 ## Ubuntu 一键部署
 
-`novegame.online` 的生产编排、自动 HTTPS、迁移前备份、镜像回滚和首位管理员授权已经封装完成。
+`novelgame.online` 的生产编排、自动 HTTPS、迁移前备份、镜像回滚和首位管理员授权已经封装完成。
 服务器安装 Docker 与 Compose Plugin、域名完成解析后执行：
 
 ```bash

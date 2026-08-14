@@ -47,13 +47,26 @@ set_env_value() {
 }
 
 CURRENT_TAG="$(read_env_value IMAGE_TAG)"
+REVERSE_PROXY_MODE="$(read_env_value REVERSE_PROXY_MODE)"
+REVERSE_PROXY_MODE="${REVERSE_PROXY_MODE:-caddy}"
+case "$REVERSE_PROXY_MODE" in
+  caddy)
+    COMPOSE=(docker compose --profile caddy --env-file "$ENV_FILE" -f "$COMPOSE_FILE")
+    ;;
+  nginx)
+    COMPOSE=(docker compose --env-file "$ENV_FILE" -f "$COMPOSE_FILE")
+    ;;
+  *)
+    echo "REVERSE_PROXY_MODE must be caddy or nginx." >&2
+    exit 1
+    ;;
+esac
 if git -C "$ROOT_DIR" rev-parse --is-inside-work-tree >/dev/null 2>&1; then
   NEW_TAG="$(git -C "$ROOT_DIR" rev-parse --short=12 HEAD)"
 else
   NEW_TAG="$(date -u +%Y%m%d%H%M%S)"
 fi
 
-COMPOSE=(docker compose --env-file "$ENV_FILE" -f "$COMPOSE_FILE")
 if [[ -n "$("${COMPOSE[@]}" ps -q postgres 2>/dev/null)" ]]; then
   bash "$ROOT_DIR/scripts/backup-production.sh"
 fi
@@ -63,7 +76,6 @@ if [[ -n "$CURRENT_TAG" && "$CURRENT_TAG" != "bootstrap" && "$CURRENT_TAG" != "$
 fi
 set_env_value IMAGE_TAG "$NEW_TAG"
 
-COMPOSE=(docker compose --env-file "$ENV_FILE" -f "$COMPOSE_FILE")
 echo "Validating production configuration..."
 "${COMPOSE[@]}" config --quiet
 
@@ -116,8 +128,13 @@ if [[ "$WEB_READY" != "true" ]]; then
   exit 1
 fi
 
-"${COMPOSE[@]}" up -d --no-deps caddy
 DOMAIN="$(read_env_value DOMAIN)"
+if [[ "$REVERSE_PROXY_MODE" == "caddy" ]]; then
+  "${COMPOSE[@]}" up -d --no-deps caddy
+else
+  "${COMPOSE[@]}" stop caddy >/dev/null 2>&1 || true
+  bash "$ROOT_DIR/scripts/configure-host-nginx.sh"
+fi
 
 PUBLIC_READY=false
 for _ in $(seq 1 30); do
@@ -132,7 +149,11 @@ done
 if [[ "$PUBLIC_READY" == "true" ]]; then
   echo "Deployment succeeded: https://$DOMAIN"
 else
-  echo "Containers are healthy, but public HTTPS is not reachable yet. Check DNS and Caddy logs:" >&2
-  echo "  docker compose --env-file $ENV_FILE -f $COMPOSE_FILE logs caddy" >&2
+  echo "Containers are healthy, but public HTTPS is not reachable yet. Check DNS and reverse-proxy logs." >&2
+  if [[ "$REVERSE_PROXY_MODE" == "caddy" ]]; then
+    echo "  docker compose --profile caddy --env-file $ENV_FILE -f $COMPOSE_FILE logs caddy" >&2
+  else
+    echo "  journalctl -u nginx --since '15 minutes ago'" >&2
+  fi
   exit 2
 fi

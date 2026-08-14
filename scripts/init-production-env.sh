@@ -61,8 +61,10 @@ write_value() {
   printf "%s='%s'\n" "$key" "$value" >>"$ENV_FILE"
 }
 
-DOMAIN="${DOMAIN:-novegame.online}"
+DOMAIN="${DOMAIN:-novelgame.online}"
 ACME_EMAIL="${ACME_EMAIL:-}"
+REVERSE_PROXY_MODE="${REVERSE_PROXY_MODE:-caddy}"
+WEB_HOST_PORT="${WEB_HOST_PORT:-3100}"
 SENTRY_DSN="${SENTRY_DSN:-}"
 SMTP_HOST="${SMTP_HOST:-}"
 SMTP_PORT="${SMTP_PORT:-587}"
@@ -74,12 +76,25 @@ LLM_API_KEY="${LLM_API_KEY:-}"
 LLM_BASE_URL="${LLM_BASE_URL:-}"
 LLM_MODEL="${LLM_MODEL:-}"
 
-prompt_value DOMAIN "Public domain" "novegame.online"
+prompt_value DOMAIN "Public domain" "novelgame.online"
 if [[ ! "$DOMAIN" =~ ^[A-Za-z0-9.-]+$ ]]; then
   echo "DOMAIN must be a hostname without a protocol or path." >&2
   exit 1
 fi
 prompt_value ACME_EMAIL "Email for HTTPS certificate notices"
+prompt_value REVERSE_PROXY_MODE "Reverse proxy mode (caddy/nginx)" "caddy"
+case "$REVERSE_PROXY_MODE" in
+  caddy | nginx) ;;
+  *)
+    echo "REVERSE_PROXY_MODE must be caddy or nginx." >&2
+    exit 1
+    ;;
+esac
+prompt_value WEB_HOST_PORT "Loopback port used by the web container" "3100"
+if [[ ! "$WEB_HOST_PORT" =~ ^[0-9]+$ ]] || (( WEB_HOST_PORT < 1024 || WEB_HOST_PORT > 65535 )); then
+  echo "WEB_HOST_PORT must be an integer from 1024 to 65535." >&2
+  exit 1
+fi
 prompt_value SENTRY_DSN "Sentry DSN"
 prompt_value SMTP_HOST "SMTP host"
 prompt_value SMTP_PORT "SMTP port" "587"
@@ -116,6 +131,8 @@ umask 077
 write_value COMPOSE_PROJECT_NAME "novegame-v2"
 write_value DOMAIN "$DOMAIN"
 write_value ACME_EMAIL "$ACME_EMAIL"
+write_value REVERSE_PROXY_MODE "$REVERSE_PROXY_MODE"
+write_value WEB_HOST_PORT "$WEB_HOST_PORT"
 write_value IMAGE_TAG "bootstrap"
 write_value PREVIOUS_IMAGE_TAG ""
 write_value POSTGRES_DB "narrative"
