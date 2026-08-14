@@ -23,6 +23,18 @@ from engine.core.logging import configure_logging, get_logger
 logger = get_logger("worker")
 
 
+async def poll_job(redis: Any) -> Any:
+    """Wait for one job while treating an idle blocking-pop timeout as an empty queue."""
+    from redis.exceptions import TimeoutError as RedisTimeoutError
+
+    try:
+        return await redis.blpop(QUEUE, timeout=30)
+    except RedisTimeoutError:
+        # redis-py 8 can surface BLPOP's normal server-side idle timeout as a
+        # client TimeoutError. An empty queue must not restart the worker.
+        return None
+
+
 async def dispatch(settings: Settings, job: dict[str, Any]) -> None:
     name = job.get("type")
     payload = dict(job.get("payload") or {})
@@ -61,7 +73,7 @@ async def run() -> None:
     redis = from_url(settings.redis_url, decode_responses=True)
     try:
         while True:
-            item = await redis.blpop(QUEUE, timeout=30)
+            item = await poll_job(redis)
             if item:
                 job = json.loads(item[1])
                 try:
