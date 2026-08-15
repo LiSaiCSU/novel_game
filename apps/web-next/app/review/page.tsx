@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { api } from "@/lib/api";
+import { interfaceLabel } from "@/lib/display";
 
 type Review = {
   case_id: string;
@@ -153,7 +154,7 @@ export default function ReviewCenter() {
                 <article className="releaseRow" key={item.id}>
                   <div>
                     <b>
-                      {item.title} · {item.category}
+                      {item.title} · {interfaceLabel(item.category, "其他举报")}
                     </b>
                     <small>{item.details}</small>
                     <small>{new Date(item.created_at).toLocaleString()}</small>
@@ -199,7 +200,7 @@ export default function ReviewCenter() {
             {audits.map((item) => (
               <article className="releaseRow" key={item.id}>
                 <div>
-                  <b>{item.action}</b>
+                  <b>{interfaceLabel(item.action, "平台操作")}</b>
                   <small>
                     {item.target_id || "-"} · {new Date(item.created_at).toLocaleString()}
                   </small>

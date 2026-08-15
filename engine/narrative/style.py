@@ -15,6 +15,7 @@ from __future__ import annotations
 import re
 from collections import deque
 from dataclasses import dataclass, field
+from difflib import SequenceMatcher
 
 from engine.contentpack.pack import ContentPack
 from engine.orchestrator.turn import (
@@ -26,6 +27,91 @@ from engine.orchestrator.turn import (
 # A run of 2-4 CJK characters: the shape a proper noun usually takes.
 # Built from code points so the engine source itself carries no world text.
 _NAME_CANDIDATE = re.compile(f"[{chr(0x4E00)}-{chr(0x9FFF)}]{{2,4}}")
+_PARAGRAPH_BREAK = re.compile(r"\n[ \t]*\n")
+_PROSE_SPACE = re.compile(r"\s+")
+
+
+def _comparable_prose(text: str) -> str:
+    return _PROSE_SPACE.sub("", text).strip()
+
+
+def repeated_opening_length(text: str, recent_narrative: str, *, final: bool = False) -> int:
+    """Return the leading source length that merely repeats recent prose.
+
+    Some compatible model endpoints occasionally begin a continuation by
+    copying one or more paragraphs supplied as context.  The prompt says not
+    to do that, but presentation correctness cannot depend on compliance.
+    Only substantial, near-verbatim *leading* paragraphs are removed; short
+    dialogue callbacks and intentional echoes remain untouched.
+
+    While a response is streaming, an unfinished possible duplicate is held
+    until its paragraph boundary arrives.  Returning ``-1`` tells the caller
+    that it does not yet have enough text to make a stable decision.
+    """
+
+    if not text or not recent_narrative:
+        return 0
+    recent = [
+        _comparable_prose(paragraph)
+        for paragraph in _PARAGRAPH_BREAK.split(recent_narrative)
+        if _comparable_prose(paragraph)
+    ]
+    recent_joined = _comparable_prose(recent_narrative)
+    if not recent:
+        return 0
+
+    offset = 0
+    while offset < len(text):
+        remainder = text[offset:].lstrip()
+        offset += len(text[offset:]) - len(remainder)
+        boundary = _PARAGRAPH_BREAK.search(remainder)
+        if boundary is None:
+            candidate = _comparable_prose(remainder)
+            if not final:
+                if len(candidate) < 64:
+                    return -1
+                possible_repeat = candidate in recent_joined or any(
+                    SequenceMatcher(
+                        None,
+                        candidate,
+                        paragraph[: len(candidate)],
+                        autojunk=False,
+                    ).ratio()
+                    >= 0.9
+                    for paragraph in recent
+                    if len(paragraph) >= len(candidate)
+                )
+                if possible_repeat:
+                    return -1
+                return offset
+            if final and _is_repeated_paragraph(candidate, recent):
+                return len(text)
+            return offset
+
+        candidate = _comparable_prose(remainder[: boundary.start()])
+        if not _is_repeated_paragraph(candidate, recent):
+            return offset
+        offset += boundary.end()
+    return offset
+
+
+def _is_repeated_paragraph(candidate: str, recent: list[str]) -> bool:
+    if len(candidate) < 36:
+        return False
+    for paragraph in recent:
+        if candidate == paragraph or candidate in paragraph or paragraph in candidate:
+            return True
+        if (
+            min(len(candidate), len(paragraph)) >= 48
+            and SequenceMatcher(None, candidate, paragraph, autojunk=False).ratio() >= 0.94
+        ):
+            return True
+    return False
+
+
+def strip_repeated_opening(text: str, recent_narrative: str) -> str:
+    offset = repeated_opening_length(text, recent_narrative, final=True)
+    return text[max(0, offset) :].lstrip()
 
 
 @dataclass(slots=True)
@@ -92,9 +178,7 @@ class NarrativeStyle:
                 continue
             suspects.add(candidate)
         # Only flag names that recur - single occurrences are usually ordinary prose.
-        report.unknown_entities = sorted(
-            s for s in suspects if text.count(s) >= 2 and len(s) >= 3
-        )
+        report.unknown_entities = sorted(s for s in suspects if text.count(s) >= 2 and len(s) >= 3)
         report.needs_rewrite = len(report.overused) >= 2
         return report
 

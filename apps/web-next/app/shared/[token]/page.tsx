@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useParams } from "next/navigation";
 import { useEffect, useState } from "react";
 import { api } from "@/lib/api";
+import { interfaceLabel } from "@/lib/display";
 
 type Preview = {
   title: string;
@@ -45,14 +46,14 @@ export default function SharedPreview() {
       </div>
       <section className="panel">
         <div className="meta">
-          <span>{preview.locale}</span>
+          <span>{interfaceLabel(preview.locale, "其他语言")}</span>
           <span>{preview.rating}</span>
         </div>
         <div className="workStats">
           {Object.entries(preview.content_counts).map(([key, value]) => (
             <article key={key}>
               <b>{value}</b>
-              <span>{key}</span>
+              <span>{interfaceLabel(key, "其他内容")}</span>
             </article>
           ))}
         </div>
@@ -64,7 +65,7 @@ export default function SharedPreview() {
         ) : (
           preview.diagnostics.map((item, index) => (
             <div className="diagnostic" key={index}>
-              <b>{item.level}</b>
+              <b>{interfaceLabel(item.level, "诊断信息")}</b>
               <span>{item.message}</span>
             </div>
           ))

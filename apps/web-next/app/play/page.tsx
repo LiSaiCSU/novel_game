@@ -1,6 +1,15 @@
 "use client";
 
-import { ArrowRight, BookOpenText, Clock3, Plus, Sparkles, Trash2 } from "lucide-react";
+import {
+  ArrowRight,
+  BookOpenText,
+  Check,
+  Clock3,
+  Plus,
+  SlidersHorizontal,
+  Sparkles,
+  Trash2,
+} from "lucide-react";
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import { CardSkeletons, EmptyState, ErrorState, RetryButton } from "@/components/ui/async-state";
@@ -13,6 +22,19 @@ type Play = {
   preview: boolean;
   updated_at: string;
   release: { id: string; title: string };
+  settings: PlaythroughSettings;
+};
+
+type NarrativeLength = "concise" | "standard" | "detailed" | "long";
+type PlaythroughSettings = {
+  narrative_length: NarrativeLength;
+  narrative_max_chars: number;
+  presets: Array<{
+    key: NarrativeLength;
+    label: string;
+    min_chars: number;
+    max_chars: number;
+  }>;
 };
 
 const statusLabels: Record<string, string> = {
@@ -27,6 +49,8 @@ export default function PlayLibrary() {
   const [error, setError] = useState("");
   const [reloadKey, setReloadKey] = useState(0);
   const [deleting, setDeleting] = useState("");
+  const [settingsOpen, setSettingsOpen] = useState("");
+  const [savingSettings, setSavingSettings] = useState("");
 
   useEffect(() => {
     api<Play[]>("/playthroughs")
@@ -60,6 +84,24 @@ export default function PlayLibrary() {
       setError((exception as Error).message);
     } finally {
       setDeleting("");
+    }
+  }
+
+  async function updateLength(item: Play, narrativeLength: NarrativeLength) {
+    setSavingSettings(item.id);
+    setError("");
+    try {
+      const settings = await api<PlaythroughSettings>(`/playthroughs/${item.id}/settings`, {
+        method: "PUT",
+        body: JSON.stringify({ narrative_length: narrativeLength }),
+      });
+      setItems((current) =>
+        current.map((story) => (story.id === item.id ? { ...story, settings } : story)),
+      );
+    } catch (exception) {
+      setError((exception as Error).message);
+    } finally {
+      setSavingSettings("");
     }
   }
 
@@ -134,7 +176,7 @@ export default function PlayLibrary() {
               <div className="playCardBody">
                 <div className="meta">
                   <span className={`statusDot ${item.status}`}>
-                    {item.preview ? "创作预览" : (statusLabels[item.status] ?? item.status)}
+                    {item.preview ? "创作预览" : (statusLabels[item.status] ?? "状态已更新")}
                   </span>
                   <span>{item.release.title}</span>
                 </div>
@@ -154,6 +196,16 @@ export default function PlayLibrary() {
                 </Link>
                 <button
                   type="button"
+                  className={`playManage ${settingsOpen === item.id ? "active" : ""}`}
+                  aria-label={`设置${item.name || item.release.title}`}
+                  aria-expanded={settingsOpen === item.id}
+                  onClick={() => setSettingsOpen((current) => (current === item.id ? "" : item.id))}
+                >
+                  <SlidersHorizontal size={16} />
+                  <span>故事设置</span>
+                </button>
+                <button
+                  type="button"
                   className="playDelete"
                   aria-label={`删除${item.name}`}
                   title="删除故事"
@@ -163,6 +215,35 @@ export default function PlayLibrary() {
                   <Trash2 size={16} />
                 </button>
               </div>
+              {settingsOpen === item.id && (
+                <fieldset className="playSettings">
+                  <legend>每回合叙事长度</legend>
+                  <p>从下一个回合开始生效；字数越多，生成时间和模型用量越高。</p>
+                  <div>
+                    {item.settings.presets.map((preset) => {
+                      const selected = item.settings.narrative_length === preset.key;
+                      return (
+                        <button
+                          type="button"
+                          key={preset.key}
+                          className={selected ? "selected" : ""}
+                          aria-pressed={selected}
+                          disabled={savingSettings === item.id}
+                          onClick={() => void updateLength(item, preset.key)}
+                        >
+                          <span>
+                            <b>{preset.label}</b>
+                            <small>
+                              约 {preset.min_chars}–{preset.max_chars} 字
+                            </small>
+                          </span>
+                          {selected && <Check size={15} aria-hidden="true" />}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </fieldset>
+              )}
             </article>
           ))}
         </div>

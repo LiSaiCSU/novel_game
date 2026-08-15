@@ -1,6 +1,6 @@
 import { X } from "lucide-react";
 import { useState } from "react";
-import { metric } from "./game-format";
+import { displayLabel, metric, progressionMetric } from "./game-format";
 import type { Dashboard, Ending, EndingStatus, Scene } from "./game-types";
 
 type Props = {
@@ -51,14 +51,14 @@ export function DashboardRail({
           <h2>{state?.player?.name}</h2>
           {Object.entries(dashboard?.player.resources ?? {}).map(([key, value]) => (
             <div className="statRow" key={key}>
-              <span>{dashboard?.labels.resources[key] ?? key}</span>
+              <span>{displayLabel(dashboard?.labels.resources, key, "自定义资源")}</span>
               <b>{metric(value)}</b>
             </div>
           ))}
           {Object.entries(dashboard?.player.progressions ?? {}).map(([key, value]) => (
             <div className="statRow" key={key}>
-              <span>{dashboard?.labels.progressions[key] ?? key}</span>
-              <b>{metric(value)}</b>
+              <span>{displayLabel(dashboard?.labels.progressions, key, "成长进度")}</span>
+              <b>{progressionMetric(value, dashboard?.labels.progression_values)}</b>
             </div>
           ))}
           <h2 className="railSection">在场人物</h2>
@@ -66,7 +66,7 @@ export function DashboardRail({
             state.present_characters.map((character) => (
               <div className="statRow" key={character.name}>
                 <span>{character.name}</span>
-                <b>{character.title || character.faction || ""}</b>
+                <b>{displayLabel(undefined, character.title || character.faction || "", "")}</b>
               </div>
             ))
           ) : (
@@ -88,13 +88,18 @@ export function DashboardRail({
                   )
                   .map(([key, value]) => (
                     <div className="relationMetric" key={key}>
-                      <span>{dashboard.labels.relationships[key] ?? key}</span>
+                      <span>{displayLabel(dashboard.labels.relationships, key, "关系变化")}</span>
                       <progress max="100" value={Math.max(0, Math.min(100, value))} />
                       <b>{value}</b>
                     </div>
                   ))}
-                {relationship.tags.length > 0 && (
-                  <p className="tagLine">{relationship.tags.join(" · ")}</p>
+                {relationship.tags.some((tag) => dashboard.labels.relationship_tags[tag]) && (
+                  <p className="tagLine">
+                    {relationship.tags
+                      .map((tag) => dashboard.labels.relationship_tags[tag])
+                      .filter(Boolean)
+                      .join(" · ")}
+                  </p>
                 )}
               </article>
             ))
@@ -111,7 +116,7 @@ export function DashboardRail({
             dashboard.quests.map((quest) => (
               <article className="railCard" key={quest.key}>
                 <b>{quest.name}</b>
-                <span>{dashboard.labels.statuses[quest.status] ?? quest.status}</span>
+                <span>{displayLabel(dashboard.labels.statuses, quest.status, "状态已更新")}</span>
               </article>
             ))
           ) : (
@@ -122,7 +127,8 @@ export function DashboardRail({
             <article className="railCard" key={thread.key}>
               <b>{thread.name}</b>
               <span>
-                阶段 {thread.stage} · {dashboard.labels.statuses[thread.status] ?? thread.status}
+                阶段 {thread.stage} ·{" "}
+                {displayLabel(dashboard.labels.statuses, thread.status, "状态已更新")}
               </span>
               {thread.next_beat_hint && <small>{thread.next_beat_hint}</small>}
             </article>
@@ -136,7 +142,7 @@ export function DashboardRail({
           {dashboard?.inventory.length ? (
             dashboard.inventory.map((item) => (
               <div className="statRow" key={item.key}>
-                <span>{item.name}</span>
+                <span>{displayLabel(undefined, item.name, "未命名物品")}</span>
                 <b>× {item.quantity}</b>
               </div>
             ))
@@ -147,7 +153,7 @@ export function DashboardRail({
           {dashboard?.abilities.length ? (
             dashboard.abilities.map((ability) => (
               <div className="statRow" key={ability.key}>
-                <span>{ability.name}</span>
+                <span>{displayLabel(undefined, ability.name, "未命名能力")}</span>
                 <b>{ability.mastery}</b>
               </div>
             ))

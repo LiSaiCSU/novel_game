@@ -5,6 +5,7 @@ import Link from "next/link";
 import { FormEvent, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { api } from "@/lib/api";
+import { interfaceLabel } from "@/lib/display";
 import { CardSkeletons, EmptyState, ErrorState, RetryButton } from "@/components/ui/async-state";
 
 type Project = {
@@ -104,7 +105,9 @@ export default function Creator() {
             <Link className="workCard" href={`/creator/${project.id}`} key={project.id}>
               <div className="workBody">
                 <div className="meta">
-                  <span className={`projectStatus ${project.status}`}>{project.status}</span>
+                  <span className={`projectStatus ${project.status}`}>
+                    {interfaceLabel(project.status, "状态已更新")}
+                  </span>
                   <span>修订 {project.revision}</span>
                 </div>
                 <h2>{project.title}</h2>

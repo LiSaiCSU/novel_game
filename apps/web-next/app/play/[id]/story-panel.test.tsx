@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 
-import { cleanup, render, screen } from "@testing-library/react";
+import { cleanup, fireEvent, render, screen } from "@testing-library/react";
 import type { ComponentProps } from "react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { StoryPanel } from "./story-panel";
@@ -11,7 +11,6 @@ const callbacks = {
   onAct: vi.fn(),
   onOpenSaves: vi.fn(),
   onOpenStatus: vi.fn(),
-  onOpenSettings: vi.fn(),
 };
 
 describe("StoryPanel reading flow", () => {
@@ -53,19 +52,18 @@ describe("StoryPanel reading flow", () => {
     );
   }
 
-  it("moves to the new turn once and does not chase every streamed chunk", () => {
+  it("never takes over the reader's position while a turn streams or settles", () => {
     const view = render(panel());
     expect(scrollIntoView).toHaveBeenCalledTimes(1);
 
     view.rerender(panel({ busy: true, current: { input: "推开门", narrative: "" } }));
-    expect(scrollIntoView).toHaveBeenCalledTimes(2);
-    expect(scrollIntoView).toHaveBeenLastCalledWith({ behavior: "smooth", block: "start" });
+    expect(scrollIntoView).toHaveBeenCalledTimes(1);
 
     view.rerender(panel({ busy: true, current: { input: "推开门", narrative: "门轴发出轻响。" } }));
-    expect(scrollIntoView).toHaveBeenCalledTimes(2);
+    expect(scrollIntoView).toHaveBeenCalledTimes(1);
   });
 
-  it("opens the newly settled recommendations as soon as a turn finishes", () => {
+  it("keeps newly settled recommendations collapsed until the reader asks", () => {
     const view = render(
       panel({ busy: true, current: { input: "追问", narrative: "他放下了账本。" } }),
     );
@@ -83,7 +81,8 @@ describe("StoryPanel reading flow", () => {
       }),
     );
 
+    expect(screen.queryByText("我问朝仓律：“这笔款项是谁要求暂缓公开的？”")).toBeNull();
+    fireEvent.click(screen.getByRole("button", { name: /朝仓律停下来/ }));
     expect(screen.getByText("我问朝仓律：“这笔款项是谁要求暂缓公开的？”")).toBeTruthy();
-    expect(screen.getByText("承接刚刚出现的账本线索")).toBeTruthy();
   });
 });

@@ -179,7 +179,7 @@ export default function LibraryPage() {
               </Link>
               <div className="workBody">
                 <div className="meta">
-                  <span>{localeNames[item.locale] ?? item.locale}</span>
+                  <span>{localeNames[item.locale] ?? "其他语言"}</span>
                   <span>v{item.version}</span>
                   <span>{item.play_count.toLocaleString("zh-CN")} 局</span>
                 </div>

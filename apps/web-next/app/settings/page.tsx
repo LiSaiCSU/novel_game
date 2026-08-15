@@ -273,8 +273,8 @@ export default function Settings() {
               <UsageBar label="今日" used={usage.daily.used} limit={usage.daily.limit} />
               <UsageBar label="本月" used={usage.monthly.used} limit={usage.monthly.limit} />
               <p className="studioHint">
-                单回合最多预留 {usage.turn_limit.toLocaleString()}{" "}
-                tokens；达到限额后不会继续调用平台模型。
+                单回合最多预留 {usage.turn_limit.toLocaleString()}
+                个模型令牌；达到限额后不会继续调用平台模型。
               </p>
             </>
           ) : (
@@ -283,7 +283,7 @@ export default function Settings() {
         </section>
 
         <form className="panel stack" onSubmit={save}>
-          <h2>添加或轮换 BYOK 密钥</h2>
+          <h2>添加或轮换自带模型密钥</h2>
           <p className="studioHint">
             使用自己的密钥不会消耗平台额度。密钥只会加密保存，任何接口都不会回显完整内容。
           </p>

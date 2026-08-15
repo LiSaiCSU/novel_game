@@ -122,6 +122,9 @@ vocabulary:
     suspicion: 怀疑
     dependency: 依赖
     familiarity: 熟悉
+  relationship_tag_labels:
+    co_protagonist: 核心同伴
+    romance_candidate: 可发展关系
   # 引擎不认识这些词，只有内容包认识；用于 fallback 意图解析与叙事本地化
   action_aliases:
     MOVE: [去, 前往, 走向, 回到, 进入, 出发, 赶往, 下山, 上山]

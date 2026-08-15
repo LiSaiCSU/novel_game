@@ -70,6 +70,8 @@ export type Dashboard = {
     attributes: Record<string, string>;
     resources: Record<string, string>;
     progressions: Record<string, string>;
+    progression_values: Record<string, string>;
+    relationship_tags: Record<string, string>;
   };
 };
 

@@ -13,7 +13,7 @@ function Harness() {
 }
 
 describe("GameMobileNavigation", () => {
-  it("keeps status, save and story settings reachable on narrow screens", () => {
+  it("keeps only the three reading-time panels in the game dock", () => {
     render(<Harness />);
 
     expect(screen.getByRole("button", { name: "故事" }).getAttribute("aria-current")).toBe("page");
@@ -28,7 +28,6 @@ describe("GameMobileNavigation", () => {
       "page",
     );
 
-    fireEvent.click(screen.getByRole("button", { name: "设置" }));
-    expect(screen.getByRole("button", { name: "设置" }).getAttribute("aria-current")).toBe("page");
+    expect(screen.queryByRole("button", { name: "设置" })).toBeNull();
   });
 });

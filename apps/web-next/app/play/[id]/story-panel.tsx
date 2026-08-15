@@ -1,4 +1,4 @@
-import { Bookmark, ChevronDown, MapPin, PanelRight, Settings2, Sparkles } from "lucide-react";
+import { Bookmark, ChevronDown, MapPin, PanelRight, Sparkles } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { ActionComposer } from "./action-composer";
 import type { Choice, Dashboard, Recap, Scene } from "./game-types";
@@ -24,7 +24,6 @@ type Props = {
   onAct: (value: string) => void;
   onOpenSaves: () => void;
   onOpenStatus: () => void;
-  onOpenSettings: () => void;
 };
 
 export function StoryPanel({
@@ -47,13 +46,9 @@ export function StoryPanel({
   onAct,
   onOpenSaves,
   onOpenStatus,
-  onOpenSettings,
 }: Props) {
   const endRef = useRef<HTMLDivElement>(null);
-  const currentRef = useRef<HTMLElement>(null);
   const formRef = useRef<HTMLFormElement>(null);
-  const previousInputRef = useRef("");
-  const wasBusyRef = useRef(false);
   const [suggestionsOpen, setSuggestionsOpen] = useState(false);
   const recommendations = useMemo(
     () => buildActionRecommendations(choices, state, dashboard, Boolean(beat)),
@@ -65,28 +60,10 @@ export function StoryPanel({
   }, []);
 
   useEffect(() => {
-    if (!current) {
-      previousInputRef.current = "";
-      return;
-    }
-    if (previousInputRef.current === current.input) return;
-    previousInputRef.current = current.input;
-    requestAnimationFrame(() =>
-      currentRef.current?.scrollIntoView({ behavior: "smooth", block: "start" }),
-    );
-  }, [current]);
-
-  useEffect(() => {
     if (busy) {
-      wasBusyRef.current = true;
       requestAnimationFrame(() => setSuggestionsOpen(false));
-      return;
     }
-    if (wasBusyRef.current && recommendations.length > 0) {
-      wasBusyRef.current = false;
-      requestAnimationFrame(() => setSuggestionsOpen(true));
-    }
-  }, [busy, recommendations.length]);
+  }, [busy]);
 
   function choose(value: string) {
     onDraftChange(value);
@@ -110,10 +87,6 @@ export function StoryPanel({
           <button onClick={onOpenStatus} title="打开人物与状态">
             <PanelRight size={17} aria-hidden="true" />
             <span>状态</span>
-          </button>
-          <button onClick={onOpenSettings} title="打开本故事设置">
-            <Settings2 size={17} aria-hidden="true" />
-            <span>设置</span>
           </button>
         </nav>
       </header>
@@ -163,7 +136,7 @@ export function StoryPanel({
           </article>
         ))}
         {current && (
-          <article ref={currentRef} className="chapter currentChapter">
+          <article className="chapter currentChapter">
             {`你：${current.input}\n\n${current.narrative}`}
             {busy && <span className="streamCursor" aria-hidden="true" />}
           </article>

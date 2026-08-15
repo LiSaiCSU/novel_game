@@ -1,10 +1,9 @@
-import { BookOpenText, Bookmark, PanelRight, Settings2 } from "lucide-react";
+import { BookOpenText, Bookmark, PanelRight } from "lucide-react";
 
 export const mobileViews = [
   { key: "saves", label: "场景与存档", icon: Bookmark },
   { key: "story", label: "故事", icon: BookOpenText },
   { key: "status", label: "人物与状态", icon: PanelRight },
-  { key: "settings", label: "设置", icon: Settings2 },
 ] as const;
 
 export type MobileView = (typeof mobileViews)[number]["key"];

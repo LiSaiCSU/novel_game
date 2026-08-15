@@ -1,6 +1,7 @@
 "use client";
 
 import { type FormEvent, useMemo, useState } from "react";
+import { interfaceLabel } from "@/lib/display";
 import { Field } from "./editor-controls";
 import type { Asset, CreatedRelease, ProjectRevision, Release } from "./editor-types";
 
@@ -215,7 +216,8 @@ export function ReleaseCenter({
               </div>
               <div className="releaseStatus">
                 <span>
-                  {item.visibility} · {item.status}
+                  {interfaceLabel(item.visibility, "自定义可见范围")} ·{" "}
+                  {interfaceLabel(item.status, "状态已更新")}
                 </span>
                 {["rejected", "withdrawn"].includes(item.status) && (
                   <button

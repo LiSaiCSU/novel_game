@@ -22,7 +22,7 @@ from engine.core.ports import UnitOfWork
 from engine.core.types import LLMRole
 from engine.llm.structured import extract_json
 from engine.narrative.fact_guard import NarrativeFactGuard
-from engine.narrative.style import NarrativeStyle, StyleReport
+from engine.narrative.style import NarrativeStyle, StyleReport, strip_repeated_opening
 from engine.narrative.template_renderer import TemplateNarrativeRenderer
 from engine.orchestrator.turn import DEFAULT_NARRATIVE_CHARS, StoryBeat
 from engine.world.state_view import WorldStateView
@@ -62,8 +62,9 @@ def split_beat(raw: str) -> tuple[str, StoryBeat | None]:
                 "needs_player": bool(payload.get("needs_player", True)),
                 "question": str(payload.get("question", "")).strip(),
                 "options": [
-                    {"label": str(o)[:40]} if isinstance(o, str) else
-                    {
+                    {"label": str(o)[:40]}
+                    if isinstance(o, str)
+                    else {
                         "label": str(o.get("label", ""))[:40],
                         "hint": str(o.get("hint", ""))[:120],
                     }
@@ -148,13 +149,12 @@ class NarrativeRenderer:
             return NarrativeResult(text=fallback, degraded=True)
 
         prose, beat = split_beat(text)
+        prose = strip_repeated_opening(prose, recent_narrative)
         prose = self.style.enforce_max_chars(prose, max_chars)
         if not prose:
             return NarrativeResult(text=fallback, degraded=True)
 
-        fact_violations = self.fact_guard.review(
-            state, player_action=player_action, prose=prose
-        )
+        fact_violations = self.fact_guard.review(state, player_action=player_action, prose=prose)
         if fact_violations:
             logger.warning(
                 "narrative violated declared facts, using templates: %s",
@@ -163,11 +163,7 @@ class NarrativeRenderer:
             return NarrativeResult(
                 text=fallback,
                 degraded=True,
-                debug={
-                    "fact_violations": [
-                        violation.as_dict() for violation in fact_violations
-                    ]
-                },
+                debug={"fact_violations": [violation.as_dict() for violation in fact_violations]},
             )
 
         report = self.style.review(prose, self._known_entities(state))
@@ -201,9 +197,7 @@ class NarrativeRenderer:
     ) -> AsyncIterator[str]:
         """Streaming is presentation only - the world was committed before this."""
         if not (self.llm and self.registry and self.llm.usable_for(LLMRole.NARRATIVE)):
-            yield self.template.render(
-                state, outcome, npc_lines=npc_lines, world_lines=world_lines
-            )
+            yield self.template.render(state, outcome, npc_lines=npc_lines, world_lines=world_lines)
             return
         prompt = await self._prompt(
             uow,

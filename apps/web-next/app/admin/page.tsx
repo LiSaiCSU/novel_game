@@ -3,6 +3,7 @@
 import { FormEvent, useEffect, useState } from "react";
 import Link from "next/link";
 import { api } from "@/lib/api";
+import { interfaceLabel, roleLabels } from "@/lib/display";
 import PlatformModelPanel from "@/components/admin/PlatformModelPanel";
 
 type Summary = {
@@ -215,7 +216,8 @@ export default function AdminCenter() {
                     <b>{user.display_name || "未设置昵称"}</b>
                     <span>{user.email}</span>
                     <small>
-                      {user.status} · {user.verified ? "邮箱已验证" : "邮箱未验证"} ·{" "}
+                      {interfaceLabel(user.status, "状态已更新")} ·{" "}
+                      {user.verified ? "邮箱已验证" : "邮箱未验证"} ·{" "}
                       {new Date(user.created_at).toLocaleDateString("zh-CN")}
                     </small>
                   </div>
@@ -255,7 +257,7 @@ export default function AdminCenter() {
                       管理员
                     </button>
                   </div>
-                  <p className="roleLine">{user.roles.join(" · ")}</p>
+                  <p className="roleLine">{roleLabels(user.roles)}</p>
                 </article>
               ))}
             </div>

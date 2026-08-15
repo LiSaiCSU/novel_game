@@ -44,7 +44,7 @@ export function AppShell({ children }: { children: ReactNode }) {
   const [authReady, setAuthReady] = useState(false);
   const [accountOpen, setAccountOpen] = useState(false);
   const accountArea = useRef<HTMLDivElement>(null);
-  const immersive = /^\/(play|creator)\/[^/]+/.test(pathname);
+  const immersive = /^(?:\/play\/[^/]+|\/creator\/[^/]+)$/.test(pathname);
 
   useEffect(() => {
     let active = true;
@@ -91,6 +91,9 @@ export function AppShell({ children }: { children: ReactNode }) {
       : undefined,
     user?.roles.includes("admin") ? { href: "/admin", label: "管理", icon: Gauge } : undefined,
   ].filter(Boolean) as Array<{ href: string; label: string; icon: typeof Gauge }>;
+  const navigation = user
+    ? [...primaryNavigation, { href: "/settings", label: "账户设置", icon: Settings }]
+    : primaryNavigation;
 
   return (
     <div className={immersive ? "appFrame immersive" : "appFrame"}>
@@ -109,7 +112,7 @@ export function AppShell({ children }: { children: ReactNode }) {
         <div className="navSpacer" aria-hidden="true" />
         <nav className="primaryNav" aria-label="主导航">
           <span className="navSectionLabel">探索与工作</span>
-          {primaryNavigation.map(({ href, label, icon: Icon }) => (
+          {navigation.map(({ href, label, icon: Icon }) => (
             <Link
               href={href}
               key={href}

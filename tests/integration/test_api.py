@@ -1053,6 +1053,12 @@ async def test_v1_registration_playthrough_and_cross_user_isolation(client) -> N
     )
     assert changed.status_code == 200, changed.text
     assert changed.json()["narrative_max_chars"] == 2400
+    listed = (await client.get("/api/v1/playthroughs")).json()
+    listed_play = next(item for item in listed if item["id"] == playthrough_id)
+    assert listed_play["settings"]["narrative_length"] == "detailed"
+    dashboard = (await client.get(f"/api/v1/playthroughs/{playthrough_id}/dashboard")).json()
+    assert dashboard["labels"]["progression_values"]["undergraduate"] == "本科生"
+    assert "relationship_tags" in dashboard["labels"]
 
     second = await client.post(
         "/api/v1/auth/register",

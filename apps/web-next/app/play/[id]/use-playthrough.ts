@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
-import { api, streamApi } from "@/lib/api";
+import { api, localizeApiDetail, streamApi } from "@/lib/api";
 import { revealTextDelta } from "@/lib/text-stream";
 import { formatChapters } from "./game-format";
 import {
@@ -11,7 +11,6 @@ import {
   type EndingStatus,
   type History,
   initialChoices,
-  type PlaythroughSettings,
   type Recap,
   type Save,
   type Scene,
@@ -35,28 +34,25 @@ export function usePlaythrough(id: string) {
   const [showRecap, setShowRecap] = useState(true);
   const [progress, setProgress] = useState("");
   const [qualityWarning, setQualityWarning] = useState("");
-  const [settings, setSettings] = useState<PlaythroughSettings>();
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
   const [loading, setLoading] = useState(true);
 
   const refresh = useCallback(
-    async (preserveRecommendations = false) => {
-      const [nextState, history, saved, nextDashboard, endings, nextSettings] = await Promise.all([
+    async (preserveRecommendations = false, preserveNarrative = false) => {
+      const [nextState, history, saved, nextDashboard, endings] = await Promise.all([
         api<Scene>(`/playthroughs/${id}/state`),
         api<History>(`/playthroughs/${id}/history`),
         api<Save[]>(`/playthroughs/${id}/saves`),
         api<Dashboard>(`/playthroughs/${id}/dashboard`),
         api<EndingStatus>(`/playthroughs/${id}/endings`),
-        api<PlaythroughSettings>(`/playthroughs/${id}/settings`),
       ]);
       setState(nextState);
-      setChapters(formatChapters(history));
-      if (!preserveRecommendations && history.choices.length) setChoices(history.choices);
+      if (!preserveNarrative) setChapters(formatChapters(history));
+      if (!preserveRecommendations) setChoices(history.choices);
       setSaves(saved);
       setDashboard(nextDashboard);
       setEndingStatus(endings);
-      setSettings(nextSettings);
     },
     [id],
   );
@@ -69,17 +65,15 @@ export function usePlaythrough(id: string) {
       api<Dashboard>(`/playthroughs/${id}/dashboard`),
       api<EndingStatus>(`/playthroughs/${id}/endings`),
       api<Recap>(`/playthroughs/${id}/recap`),
-      api<PlaythroughSettings>(`/playthroughs/${id}/settings`),
     ])
-      .then(([nextState, history, saved, nextDashboard, endings, returnRecap, nextSettings]) => {
+      .then(([nextState, history, saved, nextDashboard, endings, returnRecap]) => {
         setState(nextState);
         setChapters(formatChapters(history));
-        if (history.choices.length) setChoices(history.choices);
+        setChoices(history.choices);
         setSaves(saved);
         setDashboard(nextDashboard);
         setEndingStatus(endings);
         setRecap(returnRecap);
-        setSettings(nextSettings);
         if (returnRecap.suggestions.length) setChoices(returnRecap.suggestions);
       })
       .catch((loadError: unknown) => setError(errorMessage(loadError)))
@@ -112,6 +106,7 @@ export function usePlaythrough(id: string) {
     setProgress("正在理解你的意图");
     setDraft("");
     let narrative = "";
+    let turnCompleted = false;
     try {
       await streamApi(
         `/playthroughs/${id}/actions/stream`,
@@ -133,7 +128,7 @@ export function usePlaythrough(id: string) {
             const nextBeat = payload.beat as { question?: string; options?: Choice[] } | null;
             const nextChoices = (payload.choices as Choice[] | undefined) ?? [];
             const contextualChoices = nextBeat?.options?.length ? nextBeat.options : nextChoices;
-            if (contextualChoices.length) setChoices(contextualChoices);
+            setChoices(contextualChoices);
             setBeat(nextBeat?.question ?? "");
             if (payload.degraded) {
               setQualityWarning(
@@ -141,15 +136,17 @@ export function usePlaythrough(id: string) {
               );
             }
           } else if (streamEvent === "error") {
-            throw new Error(String(payload.message ?? "行动失败"));
+            throw new Error(localizeApiDetail(String(payload.message ?? "行动失败")));
           }
         },
       );
+      turnCompleted = true;
+      setChapters((previous) => [...previous, `你：${action}\n\n${narrative}`]);
       setCurrent(undefined);
-      await refresh(true);
+      await refresh(true, true);
     } catch (actionError) {
       setError(errorMessage(actionError));
-      setDraft(action);
+      if (!turnCompleted) setDraft(action);
     } finally {
       setProgress("");
       setBusy(false);
@@ -197,19 +194,6 @@ export function usePlaythrough(id: string) {
     await refresh();
   }
 
-  async function updateSettings(narrativeLength: PlaythroughSettings["narrative_length"]) {
-    const next = await api<PlaythroughSettings>(`/playthroughs/${id}/settings`, {
-      method: "PUT",
-      body: JSON.stringify({ narrative_length: narrativeLength }),
-    });
-    setSettings(next);
-  }
-
-  async function deleteStory(): Promise<boolean> {
-    await api(`/playthroughs/${id}`, { method: "DELETE" });
-    return true;
-  }
-
   function reportError(operationError: unknown): void {
     setError(errorMessage(operationError));
   }
@@ -233,7 +217,6 @@ export function usePlaythrough(id: string) {
     error,
     busy,
     loading,
-    settings,
     completed: state?.playthrough?.status === "completed",
     act,
     createSave,
@@ -241,8 +224,6 @@ export function usePlaythrough(id: string) {
     deleteSave,
     setConsent,
     chooseEnding,
-    updateSettings,
-    deleteStory,
     reload,
     reportError,
   };

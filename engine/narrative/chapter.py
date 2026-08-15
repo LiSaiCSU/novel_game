@@ -27,6 +27,7 @@ from engine.core.logging import get_logger
 from engine.core.ports import UnitOfWork
 from engine.core.types import LLMRole
 from engine.narrative.renderer import BEAT_MARKER, NarrativeRenderer, split_beat
+from engine.narrative.style import repeated_opening_length, strip_repeated_opening
 from engine.orchestrator.interrupt import Interrupt
 from engine.orchestrator.turn import DEFAULT_NARRATIVE_CHARS, StoryBeat
 from engine.world.state_view import WorldStateView
@@ -53,9 +54,7 @@ class ChapterStep:
     def summarise(self, index: int) -> str:
         """A compact, language-neutral dossier. The prompt supplies the words."""
         rows = [f"[{index}] {self.action or self.outcome.summary_key}"]
-        rows.append(
-            f"    result: {self.outcome.summary_key} success={self.outcome.success}"
-        )
+        rows.append(f"    result: {self.outcome.summary_key} success={self.outcome.success}")
         facts = {
             k: v
             for k, v in self.outcome.facts.items()
@@ -121,17 +120,9 @@ class ChapterRenderer:
                 uow,
                 state,
                 player_action=steps[0].action,
-                resolved_result="\n".join(
-                    step.summarise(i + 1) for i, step in enumerate(steps)
-                ),
-                npc_decisions="\n".join(
-                    line for step in steps for line in step.npc_lines
-                )
-                or "-",
-                world_events="\n".join(
-                    line for step in steps for line in step.world_lines
-                )
-                or "-",
+                resolved_result="\n".join(step.summarise(i + 1) for i, step in enumerate(steps)),
+                npc_decisions="\n".join(line for step in steps for line in step.npc_lines) or "-",
+                world_events="\n".join(line for step in steps for line in step.world_lines) or "-",
                 recent_narrative=recent_narrative,
             )
             sections = dict(context.sections)
@@ -147,7 +138,7 @@ class ChapterRenderer:
                 }
             )
             prompt = self.registry.render("chapter", self.prompt_version, **sections)
-            raw = await self._generate(prompt, on_chunk, max_chars)
+            raw = await self._generate(prompt, on_chunk, max_chars, recent_narrative)
         except LLMError as exc:
             logger.warning("chapter generation failed, using templates: %s", exc)
             self.llm.record_degraded(LLMRole.NARRATIVE, str(exc))
@@ -173,9 +164,7 @@ class ChapterRenderer:
                 degraded=True,
                 debug={
                     "steps": len(steps),
-                    "fact_violations": [
-                        violation.as_dict() for violation in fact_violations
-                    ],
+                    "fact_violations": [violation.as_dict() for violation in fact_violations],
                 },
             )
 
@@ -202,7 +191,11 @@ class ChapterRenderer:
             return None
 
     async def _generate(
-        self, prompt: str, on_chunk: ChunkListener | None, max_chars: int
+        self,
+        prompt: str,
+        on_chunk: ChunkListener | None,
+        max_chars: int,
+        recent_narrative: str,
     ) -> str:
         """Produce the chapter, streaming the prose when someone is watching.
 
@@ -213,9 +206,7 @@ class ChapterRenderer:
         # A chapter is 1500-2500 characters; the router's per-role default is
         # sized for a single scene and would truncate it. The budget the
         # prompt file declares for itself is the one that applies here.
-        budget = self.renderer.style.output_token_budget(
-            max_chars, self._declared_budget()
-        )
+        budget = self.renderer.style.output_token_budget(max_chars, self._declared_budget())
         if on_chunk is None:
             response = await self.llm.generate_text(
                 LLMRole.NARRATIVE,
@@ -223,10 +214,15 @@ class ChapterRenderer:
                 prompt_version=self.prompt_version,
                 max_output_tokens=budget,
             )
-            return response.text
+            prose, beat = split_beat(response.text)
+            prose = strip_repeated_opening(prose, recent_narrative)
+            if beat is None:
+                return prose
+            return f"{prose}\n\n{BEAT_MARKER}\n{beat.model_dump_json()}"
 
         collected: list[str] = []
         emitted = 0
+        opening_offset: int | None = None
         ceiling = int(self.renderer.style.as_prompt_vars(max_chars)["max_length"])
         stream_limit = max(0, ceiling - 180)
         async for chunk in self.llm.stream_text(
@@ -238,17 +234,31 @@ class ChapterRenderer:
             collected.append(chunk)
             full = "".join(collected)
             head, marker, _ = full.partition(BEAT_MARKER)
-            safe = head if marker else full[: max(0, len(full) - len(BEAT_MARKER))]
+            if opening_offset is None:
+                candidate_offset = repeated_opening_length(
+                    head, recent_narrative, final=bool(marker)
+                )
+                if candidate_offset >= 0:
+                    opening_offset = candidate_offset
+            if opening_offset is None:
+                continue
+            visible = head[opening_offset:].lstrip()
+            safe = visible if marker else visible[: max(0, len(visible) - len(BEAT_MARKER))]
             safe = safe[:stream_limit]
             if len(safe) > emitted:
                 await on_chunk(safe[emitted:])
                 emitted = len(safe)
         raw = "".join(collected)
-        prose, _ = split_beat(raw)
+        prose, beat = split_beat(raw)
+        if opening_offset is None:
+            opening_offset = max(0, repeated_opening_length(prose, recent_narrative, final=True))
+        prose = prose[opening_offset:].lstrip()
         final_prose = self.renderer.style.enforce_max_chars(prose, max_chars)
         if len(final_prose) > emitted:
             await on_chunk(final_prose[emitted:])
-        return raw
+        if beat is None:
+            return final_prose
+        return f"{final_prose}\n\n{BEAT_MARKER}\n{beat.model_dump_json()}"
 
     def _elapsed(self, state: WorldStateView, steps: list[ChapterStep]) -> str:
         total = sum(step.minutes for step in steps)

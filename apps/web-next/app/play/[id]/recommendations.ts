@@ -1,6 +1,13 @@
 import type { Choice, Dashboard, Scene } from "./game-types";
 
 const ACTION_SENTENCE_LENGTH = 16;
+const technicalHint = /^(?:ActionType\.)?[A-Z_]+$/;
+
+function readableHint(hint: string | undefined): string | undefined {
+  const value = hint?.trim();
+  if (!value || technicalHint.test(value)) return undefined;
+  return value;
+}
 
 function sentenceChoice(choice: Choice, currentFocus = ""): Choice | undefined {
   const label = choice.label.trim();
@@ -31,7 +38,7 @@ function sentenceChoice(choice: Choice, currentFocus = ""): Choice | undefined {
     };
   }
   if (!label) return undefined;
-  return { ...choice, label };
+  return { ...choice, label, hint: readableHint(choice.hint) };
 }
 
 function unique(choices: Choice[]): Choice[] {

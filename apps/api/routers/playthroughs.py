@@ -382,6 +382,7 @@ async def list_playthroughs(
             if play.ending_key
             else None,
             "release": {"id": release.id, "title": release.title},
+            "settings": _playthrough_settings(play),
             "updated_at": play.updated_at,
         }
         for play, release in rows
@@ -595,6 +596,7 @@ async def playthrough_dashboard(
         ],
         "labels": {
             "relationships": pack.vocabulary.get("relationship_labels", {}),
+            "relationship_tags": pack.vocabulary.get("relationship_tag_labels", {}),
             "statuses": pack.vocabulary.get("status_labels", {}),
             "attributes": {
                 str(item.get("key")): str(item.get("label") or item.get("key"))
@@ -607,6 +609,15 @@ async def playthrough_dashboard(
             "progressions": {
                 str(item.get("key")): str(item.get("label") or item.get("key"))
                 for item in pack.meta.get("progression_definitions", [])
+            },
+            "progression_values": {
+                **{
+                    str(tier.get("key")): str(tier.get("label") or tier.get("key"))
+                    for item in pack.meta.get("progression_definitions", [])
+                    for tier in item.get("tiers", [])
+                },
+                **{realm.key: realm.name for realm in pack.realms.realms},
+                **{stage.key: stage.name for realm in pack.realms.realms for stage in realm.stages},
             },
         },
     }

@@ -31,6 +31,7 @@ describe("AppShell", () => {
       "page",
     );
     await waitFor(() => expect(screen.getByText("林澄")).toBeTruthy());
+    expect(screen.getByRole("link", { name: "账户设置" }).getAttribute("href")).toBe("/settings");
     const account = screen.getByRole("button", { name: "打开账户菜单：林澄" });
     expect(account.getAttribute("aria-expanded")).toBe("false");
     fireEvent.click(account);

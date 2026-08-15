@@ -890,22 +890,101 @@ a {
   gap: 7px;
 }
 
+.playManage,
 .playDelete {
-  width: 42px;
   height: 42px;
-  display: grid;
+  display: inline-flex;
   place-items: center;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 0 12px;
   border: 1px solid var(--line);
-  border-radius: 50%;
+  border-radius: 999px;
   background: transparent;
   color: var(--muted);
   cursor: pointer;
+  font-size: 12px;
+}
+
+.playDelete {
+  width: 42px;
+  padding: 0;
+}
+
+.playManage:hover,
+.playManage.active {
+  border-color: var(--rose);
+  background: var(--surface-soft);
+  color: var(--rose-dark);
 }
 
 .playDelete:hover:not(:disabled) {
   border-color: #c77787;
   background: #fff2f3;
   color: #9e4053;
+}
+
+.playSettings {
+  grid-column: 1 / -1;
+  display: grid;
+  gap: 10px;
+  margin: 0;
+  padding: 16px;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  background: var(--paper);
+}
+
+.playSettings legend {
+  padding: 0 6px;
+  color: var(--ink);
+  font-size: 13px;
+  font-weight: 750;
+}
+
+.playSettings > p {
+  margin: -3px 0 3px;
+  color: var(--muted);
+  font-size: 11px;
+}
+
+.playSettings > div {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.playSettings button {
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 10px 11px;
+  border: 1px solid var(--line);
+  border-radius: 11px;
+  background: var(--surface-raised);
+  color: var(--ink-soft);
+  cursor: pointer;
+  text-align: left;
+}
+
+.playSettings button.selected {
+  border-color: var(--rose);
+  color: var(--rose-dark);
+}
+
+.playSettings button span {
+  min-width: 0;
+  display: grid;
+  gap: 2px;
+}
+
+.playSettings button small {
+  color: var(--muted);
+  font-size: 10px;
+  white-space: nowrap;
 }
 
 /* Release detail and character setup */
@@ -1228,8 +1307,7 @@ a {
   }
 
   .gameShell[data-mobile-view="saves"] .gameSaveRail,
-  .gameShell[data-mobile-view="status"] .gameDashboard,
-  .gameShell[data-mobile-view="settings"] .gameSettings {
+  .gameShell[data-mobile-view="status"] .gameDashboard {
     display: block;
   }
 
@@ -1248,7 +1326,7 @@ a {
     z-index: 8;
     height: 62px;
     display: grid;
-    grid-template-columns: repeat(4, 1fr);
+    grid-template-columns: repeat(3, 1fr);
     border-top: 1px solid var(--line);
     background: rgba(255, 250, 246, 0.96);
     backdrop-filter: blur(14px);
@@ -1404,6 +1482,10 @@ a {
 
   .playCardActions {
     grid-column: 1 / -1;
+  }
+
+  .playSettings > div {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
   .workHero {
@@ -1706,7 +1788,9 @@ a {
 }
 
 .story {
+  min-height: 0;
   padding: 34px clamp(22px, 7vw, 90px) 28px;
+  overscroll-behavior: contain;
   scroll-padding-bottom: 40px;
 }
 
@@ -1930,99 +2014,11 @@ a {
   transform: translateX(102%);
 }
 
-.gameSettings {
-  right: 0;
-  border-left: 1px solid var(--line);
-  background: #f8f1ec;
-  transform: translateX(102%);
-}
-
 .gameShell[data-mobile-view="saves"] .gameSaveRail,
-.gameShell[data-mobile-view="status"] .gameDashboard,
-.gameShell[data-mobile-view="settings"] .gameSettings {
+.gameShell[data-mobile-view="status"] .gameDashboard {
   visibility: visible;
   opacity: 1;
   transform: translateX(0);
-}
-
-.lengthPicker {
-  display: grid;
-  gap: 8px;
-  margin: 28px 0 0;
-  padding: 0;
-  border: 0;
-}
-
-.lengthPicker legend {
-  margin-bottom: 10px;
-  color: var(--ink);
-  font-size: 13px;
-  font-weight: 750;
-}
-
-.lengthPicker > button {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) auto;
-  gap: 5px 10px;
-  padding: 13px;
-  border: 1px solid var(--line);
-  border-radius: 12px;
-  background: var(--surface-raised);
-  color: var(--ink);
-  cursor: pointer;
-  text-align: left;
-}
-
-.lengthPicker > button:hover,
-.lengthPicker > button.selected {
-  border-color: var(--rose);
-}
-
-.lengthPicker > button.selected {
-  background: #fff7fa;
-  color: var(--rose-dark);
-}
-
-.lengthPicker > button span {
-  display: flex;
-  align-items: baseline;
-  justify-content: space-between;
-  gap: 10px;
-}
-
-.lengthPicker > button small,
-.lengthPicker > button em {
-  color: var(--muted);
-  font-size: 10px;
-  font-style: normal;
-}
-
-.lengthPicker > button em {
-  grid-column: 1 / -1;
-  line-height: 1.55;
-}
-
-.storyDangerZone {
-  margin-top: 34px;
-  padding-top: 24px;
-  border-top: 1px solid var(--line);
-}
-
-.storyDangerZone h3 {
-  margin: 0 0 7px;
-  font-size: 13px;
-}
-
-.storyDangerZone p {
-  margin: 0 0 14px;
-  color: var(--muted);
-  font-size: 11px;
-  line-height: 1.65;
-}
-
-.storyDangerZone > div {
-  display: flex;
-  gap: 7px;
 }
 
 .button.danger {
@@ -2059,6 +2055,14 @@ a {
 }
 
 @media (max-width: 800px) {
+  .appFrame.immersive {
+    height: 100dvh;
+    min-height: 0;
+    padding-bottom: 0;
+    overflow: hidden;
+    overscroll-behavior: none;
+  }
+
   .appFrame {
     padding-left: 0;
   }
@@ -2076,6 +2080,10 @@ a {
     flex-direction: row;
     gap: 10px;
     padding: 0 14px;
+  }
+
+  .immersive .topbar {
+    flex: 0 0 64px;
   }
 
   .brand {
@@ -2157,9 +2165,18 @@ a {
     display: none;
   }
 
+  .immersive > main {
+    min-height: 0;
+    height: auto;
+    flex: 1;
+    overflow: hidden;
+  }
+
   .gameShell {
-    height: calc(100dvh - 64px);
+    height: 100%;
+    min-height: 0;
     padding-bottom: 58px;
+    overscroll-behavior: none;
   }
 
   .gameShell .gameCenter {
@@ -2169,7 +2186,9 @@ a {
 
   .gameShell .gameRail {
     width: 100%;
-    height: calc(100% - 58px);
+    height: auto;
+    top: 0;
+    bottom: 58px;
     display: block;
     padding: 22px;
     border: 0;
@@ -2181,6 +2200,7 @@ a {
 
   .gameMobileNav {
     height: 58px;
+    grid-template-columns: repeat(3, 1fr);
   }
 
   .gameStoryToolbar {
