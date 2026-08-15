@@ -9,6 +9,7 @@ from engine.core.config import Settings
 from engine.core.errors import LLMError
 from engine.core.types import LLMRole
 from engine.llm.budget import BudgetedProvider
+from engine.llm.client import LLMClient
 from engine.llm.provider import LLMMessage, LLMRequest
 from engine.llm.providers import CompatibleProvider, ProviderPool, ScriptedProvider, build_provider
 from engine.llm.router import ModelRouter
@@ -37,6 +38,34 @@ def test_default_model_fills_all_text_roles_and_allows_overrides() -> None:
     assert router.choose(LLMRole.NARRATIVE).model == "writer"
     assert router.choose(LLMRole.MEMORY).model == "default"
     assert router.choose(LLMRole.EMBEDDING).model == ""
+
+
+@pytest.mark.asyncio
+async def test_request_switches_are_isolated_by_model_role() -> None:
+    provider = ScriptedProvider(default="ok")
+    client = LLMClient(
+        provider,
+        ModelRouter(
+            Settings(
+                llm_model="writer",
+                narrative_model="writer",
+                director_model="reasoner",
+            )
+        ),
+        registry=None,
+        extra_body={"thinking": {"type": "disabled"}},
+        extra_body_by_role={
+            LLMRole.DIRECTOR: {"thinking": {"type": "enabled"}},
+        },
+    )
+
+    await client.generate_text(LLMRole.NARRATIVE, "write")
+    await client.generate_text(LLMRole.DIRECTOR, "plan")
+
+    assert provider.calls[0].model == "writer"
+    assert provider.calls[0].extra_body == {"thinking": {"type": "disabled"}}
+    assert provider.calls[1].model == "reasoner"
+    assert provider.calls[1].extra_body == {"thinking": {"type": "enabled"}}
 
 
 def test_byok_model_replaces_every_platform_role_override() -> None:

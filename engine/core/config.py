@@ -67,7 +67,11 @@ class Settings(BaseSettings):
     llm_max_repairs: int = 2
     #: JSON merged verbatim into every request body. Vendor switches such as a
     #: thinking-mode toggle live here so no vendor name enters engine code.
+    #: The legacy/global value is also the narrative profile value.
     llm_extra_body: str = ""
+    #: Optional request-body switches for structured reasoning roles. Blank
+    #: inherits ``llm_extra_body`` so old single-model deployments are unchanged.
+    llm_reasoning_extra_body: str = ""
     #: Multiplier applied to every role's output budget. Reasoning models bill
     #: hidden thought against the same budget, so they need a bigger one.
     llm_output_budget_scale: float = 1.0

@@ -212,10 +212,14 @@ async def test_admin_can_manage_and_test_platform_llm_without_secret_echo(
     import time
 
     import database.session as db_session
+    from apps.api.llm_config import load_platform_llm_config
     from apps.api.security import SecretBox, _totp
     from database.models.platform import PlatformLlmConfigORM, UserRoleORM
+    from engine.core.config import Settings
     from engine.core.ids import new_id
+    from engine.core.types import LLMRole
     from engine.llm.providers import ScriptedProvider
+    from engine.llm.router import ModelRouter
 
     administrator = await client.post(
         "/api/v1/auth/register",
@@ -258,7 +262,12 @@ async def test_admin_can_manage_and_test_platform_llm_without_secret_echo(
             "base_url": "https://api.deepseek.com",
             "api_key": production_key,
             "extra_body": {"thinking": {"type": "disabled"}},
-            "reason": "接入生产模型",
+            "narrative_model": "deepseek-chat",
+            "narrative_extra_body": {"thinking": {"type": "disabled"}},
+            "reasoning_enabled": True,
+            "reasoning_model": "deepseek-reasoner",
+            "reasoning_extra_body": {"thinking": {"type": "enabled"}},
+            "reason": "拆分叙事与推理模型",
         },
     )
     assert updated.status_code == 200, updated.text
@@ -272,15 +281,39 @@ async def test_admin_can_manage_and_test_platform_llm_without_secret_echo(
             SecretBox("integration-test-credential-key").decrypt(row.encrypted_secret or "")
             == production_key
         )
+        assert row.reasoning_enabled is True
+        assert row.reasoning_model == "deepseek-reasoner"
+        assert row.reasoning_extra_body == {"thinking": {"type": "enabled"}}
+        effective, _ = await load_platform_llm_config(
+            session,
+            Settings(credential_encryption_key="integration-test-credential-key"),
+        )
+        router = ModelRouter(effective)
+        assert router.choose(LLMRole.NARRATIVE).model == "deepseek-chat"
+        assert router.choose(LLMRole.DIRECTOR).model == "deepseek-reasoner"
+        assert effective.llm_extra_body == '{"thinking": {"type": "disabled"}}'
+        assert effective.llm_reasoning_extra_body == '{"thinking": {"type": "enabled"}}'
 
     monkeypatch.setattr(
         "apps.api.routers.admin.build_provider",
         lambda _settings: ScriptedProvider(default='{"status":"ok"}'),
     )
-    tested = await client.post("/api/v1/admin/llm-config/test", headers={"X-CSRF-Token": csrf})
-    assert tested.status_code == 200, tested.text
-    assert tested.json()["status"] == "ok"
-    assert production_key not in tested.text
+    narrative_test = await client.post(
+        "/api/v1/admin/llm-config/test?profile=narrative",
+        headers={"X-CSRF-Token": csrf},
+    )
+    assert narrative_test.status_code == 200, narrative_test.text
+    assert narrative_test.json()["profile"] == "narrative"
+    assert narrative_test.json()["model"] == "deepseek-chat"
+    assert production_key not in narrative_test.text
+    reasoning_test = await client.post(
+        "/api/v1/admin/llm-config/test?profile=reasoning",
+        headers={"X-CSRF-Token": csrf},
+    )
+    assert reasoning_test.status_code == 200, reasoning_test.text
+    assert reasoning_test.json()["profile"] == "reasoning"
+    assert reasoning_test.json()["model"] == "deepseek-reasoner"
+    assert production_key not in reasoning_test.text
 
 
 async def test_mfa_recovery_code_is_single_use_and_totp_replay_is_rejected(client) -> None:

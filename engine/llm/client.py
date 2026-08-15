@@ -40,6 +40,7 @@ class LLMClient:
         max_retries: int = 1,
         max_repairs: int = 2,
         extra_body: dict[str, Any] | None = None,
+        extra_body_by_role: dict[LLMRole, dict[str, Any]] | None = None,
         truncation_retries: int = 2,
     ) -> None:
         self.provider = provider
@@ -48,6 +49,9 @@ class LLMClient:
         self.max_retries = max_retries
         self.max_repairs = max_repairs
         self.extra_body = dict(extra_body or {})
+        self.extra_body_by_role = {
+            role: dict(value) for role, value in (extra_body_by_role or {}).items()
+        }
         self.truncation_retries = max(0, truncation_retries)
         self.records: list[LLMCallRecord] = []
         #: Budget a role has actually been observed to need, learned at runtime.
@@ -254,7 +258,7 @@ class LLMClient:
                 choice.max_output_tokens, self._budget_floor.get(choice.role, 0)
             ),
             json_mode=json_mode,
-            extra_body=dict(self.extra_body),
+            extra_body=dict(self.extra_body_by_role.get(choice.role, self.extra_body)),
         )
 
     async def _call(

@@ -9,6 +9,12 @@ type PlatformModelConfig = {
   model: string;
   base_url: string;
   extra_body: Record<string, unknown>;
+  narrative_model: string;
+  narrative_extra_body: Record<string, unknown>;
+  reasoning_enabled: boolean;
+  reasoning_model: string;
+  reasoning_extra_body: Record<string, unknown>;
+  role_assignments?: { narrative: string[]; reasoning: string[] };
   key_configured: boolean;
   key_hint: string;
   source: "environment" | "database";
@@ -16,6 +22,7 @@ type PlatformModelConfig = {
 };
 
 type TestResult = {
+  profile: "narrative" | "reasoning";
   provider: string;
   model: string;
   latency_ms: number;
@@ -23,12 +30,19 @@ type TestResult = {
   output_tokens: number;
 };
 
+type BusyAction = "" | "save" | "narrative" | "reasoning";
+
 const EMPTY: PlatformModelConfig = {
   enabled: true,
   provider: "compatible",
   model: "",
   base_url: "",
   extra_body: {},
+  narrative_model: "",
+  narrative_extra_body: {},
+  reasoning_enabled: false,
+  reasoning_model: "",
+  reasoning_extra_body: {},
   key_configured: false,
   key_hint: "",
   source: "environment",
@@ -36,6 +50,14 @@ const EMPTY: PlatformModelConfig = {
 
 function messageOf(exception: unknown): string {
   return exception instanceof Error ? exception.message : "请求没有完成";
+}
+
+function parseJsonObject(value: string, label: string): Record<string, unknown> {
+  const parsed = JSON.parse(value || "{}") as unknown;
+  if (!parsed || Array.isArray(parsed) || typeof parsed !== "object") {
+    throw new Error(`${label}必须是 JSON 对象。`);
+  }
+  return parsed as Record<string, unknown>;
 }
 
 function thinkingEnabled(value: string): boolean {
@@ -50,15 +72,25 @@ function thinkingEnabled(value: string): boolean {
 export default function PlatformModelPanel() {
   const [config, setConfig] = useState<PlatformModelConfig>(EMPTY);
   const [apiKey, setApiKey] = useState("");
-  const [extraBody, setExtraBody] = useState("{}");
+  const [narrativeExtraBody, setNarrativeExtraBody] = useState("{}");
+  const [reasoningExtraBody, setReasoningExtraBody] = useState("{}");
   const [reason, setReason] = useState("");
-  const [busy, setBusy] = useState(false);
+  const [busy, setBusy] = useState<BusyAction>("");
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
 
   function apply(next: PlatformModelConfig) {
-    setConfig(next);
-    setExtraBody(JSON.stringify(next.extra_body ?? {}, null, 2));
+    const normalized = {
+      ...next,
+      narrative_model: next.narrative_model || next.model,
+      narrative_extra_body: next.narrative_extra_body ?? next.extra_body ?? {},
+      reasoning_model: next.reasoning_model || next.narrative_model || next.model,
+      reasoning_extra_body:
+        next.reasoning_extra_body ?? next.narrative_extra_body ?? next.extra_body ?? {},
+    };
+    setConfig(normalized);
+    setNarrativeExtraBody(JSON.stringify(normalized.narrative_extra_body, null, 2));
+    setReasoningExtraBody(JSON.stringify(normalized.reasoning_extra_body, null, 2));
   }
 
   useEffect(() => {
@@ -69,50 +101,54 @@ export default function PlatformModelPanel() {
 
   async function save(event: FormEvent) {
     event.preventDefault();
-    setBusy(true);
+    setBusy("save");
     setError("");
     setMessage("");
     try {
-      const parsed = JSON.parse(extraBody || "{}");
-      if (!parsed || Array.isArray(parsed) || typeof parsed !== "object") {
-        throw new Error("附加请求参数必须是 JSON 对象。");
-      }
+      const narrativeBody = parseJsonObject(narrativeExtraBody, "叙事模型附加请求参数");
+      const reasoningBody = parseJsonObject(reasoningExtraBody, "推理模型附加请求参数");
       const next = await api<PlatformModelConfig>("/admin/llm-config", {
         method: "PUT",
         body: JSON.stringify({
           enabled: config.enabled,
           provider: config.provider,
-          model: config.model,
           base_url: config.base_url,
           api_key: apiKey || undefined,
-          extra_body: parsed,
+          narrative_model: config.narrative_model,
+          narrative_extra_body: narrativeBody,
+          reasoning_enabled: config.reasoning_enabled,
+          reasoning_model: config.reasoning_model,
+          reasoning_extra_body: reasoningBody,
           reason,
         }),
       });
       apply(next);
       setApiKey("");
       setReason("");
-      setMessage("平台模型配置已保存，并会从下一次游戏请求开始生效。");
+      setMessage("模型路由已保存，并会从下一次游戏请求开始生效。");
     } catch (exception) {
       setError(messageOf(exception));
     } finally {
-      setBusy(false);
+      setBusy("");
     }
   }
 
-  async function testConnection() {
-    setBusy(true);
+  async function testConnection(profile: "narrative" | "reasoning") {
+    setBusy(profile);
     setError("");
     setMessage("");
     try {
-      const result = await api<TestResult>("/admin/llm-config/test", { method: "POST" });
+      const result = await api<TestResult>(`/admin/llm-config/test?profile=${profile}`, {
+        method: "POST",
+      });
+      const label = profile === "narrative" ? "叙事模型" : "推理模型";
       setMessage(
-        `连接成功：${result.model} · ${result.latency_ms} ms · ${result.input_tokens + result.output_tokens} tokens。此结果验证网络、密钥和模型名称，不代表完整游戏回合的质量与延迟。`,
+        `${label}连接成功：${result.model} · ${result.latency_ms} ms · ${result.input_tokens + result.output_tokens} tokens。此结果验证网络、密钥和模型名称，不代表完整游戏回合的质量与延迟。`,
       );
     } catch (exception) {
       setError(messageOf(exception));
     } finally {
-      setBusy(false);
+      setBusy("");
     }
   }
 
@@ -120,8 +156,8 @@ export default function PlatformModelPanel() {
     <section className="panel stack" aria-labelledby="platform-model-title">
       <div className="entityToolbar">
         <div>
-          <h2 id="platform-model-title">平台叙事模型</h2>
-          <p>玩家选择“平台额度”时使用。密钥只写入加密存储，页面和接口都不会回显。</p>
+          <h2 id="platform-model-title">平台模型路由</h2>
+          <p>一套加密连接，两种职责。叙事负责玩家可见文本，推理负责结构化决策。</p>
         </div>
         <span className={config.enabled ? "modelStatus modelStatusOn" : "modelStatus"}>
           {config.enabled ? "已启用" : "已停用"}
@@ -164,18 +200,8 @@ export default function PlatformModelPanel() {
             onChange={(event) => setConfig({ ...config, base_url: event.target.value })}
           />
         </label>
-        <label>
-          <span>模型名称</span>
-          <input
-            className="input"
-            required
-            value={config.model}
-            placeholder="deepseek-chat"
-            onChange={(event) => setConfig({ ...config, model: event.target.value })}
-          />
-        </label>
-        <label>
-          <span>API 密钥</span>
+        <label className="modelConnectionKey">
+          <span>共享 API 密钥</span>
           <input
             className="input"
             type="password"
@@ -187,23 +213,118 @@ export default function PlatformModelPanel() {
             onChange={(event) => setApiKey(event.target.value)}
           />
         </label>
-        <label className="modelJsonField">
-          <span>附加请求参数（JSON）</span>
-          <textarea
-            className="textarea"
-            rows={4}
-            value={extraBody}
-            spellCheck={false}
-            onChange={(event) => setExtraBody(event.target.value)}
-          />
-          <small>例如 DeepSeek 关闭思考模式：{`{"thinking":{"type":"disabled"}}`}</small>
-          {config.base_url.includes("api.deepseek.com") && thinkingEnabled(extraBody) && (
-            <small className="modelWarning">
-              当前已启用思考模式。完整游戏会连续调用多个角色，隐藏推理可能耗尽正文 token
-              并显著增加延迟；叙事平台建议设为 disabled。
-            </small>
-          )}
-        </label>
+        <p className="modelConnectionNote">
+          两个档案默认共用上面的供应商、地址与密钥，但请求参数、模型名称和输出预算按职责隔离。
+        </p>
+
+        <div className="modelProfiles">
+          <article className="modelProfileCard">
+            <div className="modelProfileHeader">
+              <div>
+                <small>玩家可见文本</small>
+                <h3>叙事模型</h3>
+              </div>
+              <span>长文本 · 高文采 · 流式输出</span>
+            </div>
+            <p>负责开场、章节正文和场景描写。建议关闭深度思考，把输出预算留给正文。</p>
+            <label>
+              <span>叙事模型名称</span>
+              <input
+                className="input"
+                required
+                value={config.narrative_model}
+                placeholder="deepseek-chat"
+                onChange={(event) => setConfig({ ...config, narrative_model: event.target.value })}
+              />
+            </label>
+            <label className="modelJsonField">
+              <span>叙事附加请求参数（JSON）</span>
+              <textarea
+                className="textarea"
+                rows={5}
+                value={narrativeExtraBody}
+                spellCheck={false}
+                onChange={(event) => setNarrativeExtraBody(event.target.value)}
+              />
+              <small>例如关闭思考模式：{`{"thinking":{"type":"disabled"}}`}</small>
+              {thinkingEnabled(narrativeExtraBody) && (
+                <small className="modelWarning">
+                  叙事档案已启用思考模式，隐藏推理可能消耗正文 Token 并增加首字等待时间。
+                </small>
+              )}
+            </label>
+            <button
+              className="button"
+              type="button"
+              disabled={Boolean(busy)}
+              onClick={() => testConnection("narrative")}
+            >
+              {busy === "narrative" ? "测试中…" : "测试已保存的叙事模型"}
+            </button>
+          </article>
+
+          <article className="modelProfileCard modelProfileReasoning">
+            <div className="modelProfileHeader">
+              <div>
+                <small>后台结构化决策</small>
+                <h3>推理模型</h3>
+              </div>
+              <span>导演 · NPC · 世界维护</span>
+            </div>
+            <p>负责意图识别、导演、NPC、世界维护和记忆提取，优先保证 JSON 与逻辑稳定。</p>
+            <label className="modelToggle">
+              <input
+                type="checkbox"
+                checked={config.reasoning_enabled}
+                onChange={(event) =>
+                  setConfig({
+                    ...config,
+                    reasoning_enabled: event.target.checked,
+                    reasoning_model: config.reasoning_model || config.narrative_model,
+                  })
+                }
+              />
+              使用独立推理模型
+            </label>
+            <label>
+              <span>推理模型名称</span>
+              <input
+                className="input"
+                required={config.reasoning_enabled}
+                disabled={!config.reasoning_enabled}
+                value={config.reasoning_model}
+                placeholder={config.narrative_model || "与叙事模型相同"}
+                onChange={(event) => setConfig({ ...config, reasoning_model: event.target.value })}
+              />
+            </label>
+            <label className="modelJsonField">
+              <span>推理附加请求参数（JSON）</span>
+              <textarea
+                className="textarea"
+                rows={5}
+                disabled={!config.reasoning_enabled}
+                value={reasoningExtraBody}
+                spellCheck={false}
+                onChange={(event) => setReasoningExtraBody(event.target.value)}
+              />
+              <small>未启用独立档案时自动继承叙事配置；启用后可单独打开思考模式。</small>
+            </label>
+            <button
+              className="button"
+              type="button"
+              disabled={Boolean(busy)}
+              onClick={() => testConnection("reasoning")}
+            >
+              {busy === "reasoning" ? "测试中…" : "测试已保存的推理模型"}
+            </button>
+          </article>
+        </div>
+
+        <div className="modelRoleList" aria-label="模型职责路由">
+          <span>叙事：开场、章节、场景正文</span>
+          <span>推理：意图、NPC、导演、世界维护、记忆</span>
+          <span>失败时：确定性规则降级</span>
+        </div>
         <label className="modelReasonField">
           <span>变更理由（写入审计日志）</span>
           <input
@@ -215,11 +336,8 @@ export default function PlatformModelPanel() {
           />
         </label>
         <div className="modelActions">
-          <button className="button primary" disabled={busy}>
-            {busy ? "处理中…" : "保存配置"}
-          </button>
-          <button className="button" type="button" disabled={busy} onClick={testConnection}>
-            测试连接（非完整回合）
+          <button className="button primary" disabled={Boolean(busy)}>
+            {busy === "save" ? "保存中…" : "保存模型路由"}
           </button>
           <small>当前来源：{config.source === "database" ? "管理界面" : "服务器环境变量"}</small>
         </div>

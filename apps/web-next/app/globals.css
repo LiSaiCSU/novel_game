@@ -1282,10 +1282,82 @@ footer {
   font-size: 12px;
 }
 .modelToggle,
+.modelConnectionKey,
+.modelConnectionNote,
+.modelProfiles,
+.modelRoleList,
 .modelJsonField,
 .modelReasonField,
 .modelActions {
   grid-column: 1 / -1;
+}
+.modelConnectionNote {
+  margin: -4px 0 0;
+  border-left: 3px solid var(--rose);
+  padding: 4px 0 4px 12px;
+  color: var(--muted);
+  font-size: 12px;
+  line-height: 1.65;
+}
+.modelProfiles {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+}
+.modelProfileCard {
+  display: grid;
+  align-content: start;
+  gap: 14px;
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  padding: 18px;
+  background: color-mix(in srgb, var(--surface) 92%, var(--rose) 8%);
+}
+.modelProfileReasoning {
+  background: color-mix(in srgb, var(--surface) 92%, #6f89b8 8%);
+}
+.modelProfileCard > p {
+  margin: 0;
+  min-height: 42px;
+  color: var(--muted);
+  font-size: 12px;
+  line-height: 1.7;
+}
+.modelProfileCard > .button {
+  justify-self: start;
+}
+.modelProfileHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 12px;
+}
+.modelProfileHeader h3 {
+  margin: 3px 0 0;
+}
+.modelProfileHeader small,
+.modelProfileHeader > span {
+  color: var(--muted);
+  font-size: 11px;
+}
+.modelProfileHeader > span {
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  padding: 5px 8px;
+  background: var(--surface);
+  white-space: nowrap;
+}
+.modelRoleList {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.modelRoleList span {
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  padding: 6px 10px;
+  color: var(--muted);
+  font-size: 11px;
 }
 .modelToggle {
   display: flex !important;
@@ -1395,6 +1467,9 @@ footer {
     grid-template-columns: 1fr;
   }
   .modelConfigForm {
+    grid-template-columns: 1fr;
+  }
+  .modelProfiles {
     grid-template-columns: 1fr;
   }
   .roleLine {

@@ -18,6 +18,7 @@ from engine.core.locks import (
     InMemoryLockBackend,
     LockBackend,
 )
+from engine.core.types import LLMRole
 from engine.director.director import Director
 from engine.knowledge.service import KnowledgeService
 from engine.llm.client import LLMClient
@@ -39,17 +40,17 @@ from engine.world.consistency import ConsistencyGuard
 from engine.world.steward import WorldSteward
 
 
-def _extra_body(settings: Settings) -> dict[str, Any]:
+def _extra_body(settings: Settings, attribute: str = "llm_extra_body") -> dict[str, Any]:
     """Vendor request-body switches, parsed from configuration only."""
-    raw = (getattr(settings, "llm_extra_body", "") or "").strip()
+    raw = (getattr(settings, attribute, "") or "").strip()
     if not raw:
         return {}
     try:
         parsed = json.loads(raw)
     except json.JSONDecodeError as exc:
-        raise ValueError(f"LLM_EXTRA_BODY is not valid JSON: {exc}") from exc
+        raise ValueError(f"{attribute.upper()} is not valid JSON: {exc}") from exc
     if not isinstance(parsed, dict):
-        raise ValueError("LLM_EXTRA_BODY must be a JSON object")
+        raise ValueError(f"{attribute.upper()} must be a JSON object")
     return parsed
 
 
@@ -70,13 +71,30 @@ def build_orchestrator(
 
         registry = PromptRegistry(Path(settings.prompts_path))
 
+    narrative_extra_body = _extra_body(settings)
+    reasoning_extra_body = (
+        _extra_body(settings, "llm_reasoning_extra_body")
+        if settings.llm_reasoning_extra_body.strip()
+        else narrative_extra_body
+    )
     llm = LLMClient(
         provider if provider is not None else build_provider(settings),
         ModelRouter(settings),
         registry,
         max_retries=settings.llm_max_retries,
         max_repairs=settings.llm_max_repairs,
-        extra_body=_extra_body(settings),
+        extra_body=narrative_extra_body,
+        extra_body_by_role={
+            role: reasoning_extra_body
+            for role in (
+                LLMRole.INTENT,
+                LLMRole.NPC,
+                LLMRole.NPC_MAJOR,
+                LLMRole.DIRECTOR,
+                LLMRole.STEWARD,
+                LLMRole.MEMORY,
+            )
+        },
         truncation_retries=settings.llm_truncation_retries,
     )
 

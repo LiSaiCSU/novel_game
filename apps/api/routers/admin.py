@@ -35,8 +35,10 @@ from database.repositories.sql import SqlUnitOfWork
 from engine.core.config import Settings
 from engine.core.ids import new_id
 from engine.core.logging import get_logger
+from engine.core.types import LLMRole
 from engine.llm.provider import LLMMessage, LLMRequest
 from engine.llm.providers import build_provider
+from engine.llm.router import ModelRouter
 
 router = APIRouter(prefix="/admin", tags=["v1-admin"])
 _ALLOWED_ROLES = frozenset({"player", "creator", "reviewer", "admin"})
@@ -60,23 +62,41 @@ class RolesWrite(BaseModel):
 class PlatformLlmWrite(BaseModel):
     enabled: bool = True
     provider: Literal["openai", "anthropic", "compatible"]
-    model: str = Field(min_length=1, max_length=160)
+    # Legacy aliases remain accepted throughout the v1 compatibility window.
+    model: str = Field(default="", max_length=160)
     base_url: str = Field(default="", max_length=500)
     api_key: str | None = Field(default=None, min_length=8, max_length=1000)
     extra_body: dict[str, Any] = Field(default_factory=dict)
+    narrative_model: str = Field(default="", max_length=160)
+    narrative_extra_body: dict[str, Any] | None = None
+    reasoning_enabled: bool = False
+    reasoning_model: str = Field(default="", max_length=160)
+    reasoning_extra_body: dict[str, Any] = Field(default_factory=dict)
     reason: str = Field(min_length=3, max_length=500)
 
     @model_validator(mode="after")
     def validate_configuration(self) -> PlatformLlmWrite:
-        self.model = self.model.strip()
+        self.narrative_model = (self.narrative_model or self.model).strip()
+        if not self.narrative_model:
+            raise ValueError("必须填写叙事模型名称")
+        self.model = self.narrative_model
+        if self.narrative_extra_body is None:
+            self.narrative_extra_body = dict(self.extra_body)
+        self.extra_body = dict(self.narrative_extra_body)
+        self.reasoning_model = self.reasoning_model.strip()
+        if self.reasoning_enabled and not self.reasoning_model:
+            raise ValueError("启用独立推理模型时必须填写模型名称")
         self.base_url = normalize_public_api_base_url(
             self.base_url, required=self.provider == "compatible"
         )
-        if len(json.dumps(self.extra_body, ensure_ascii=False)) > 8_000:
-            raise ValueError("附加请求参数不能超过 8 KB")
-        reserved = {"model", "messages", "stream"}.intersection(self.extra_body)
-        if reserved:
-            raise ValueError("附加请求参数不能覆盖 model、messages 或 stream")
+        for label, value in (
+            ("叙事模型", self.extra_body),
+            ("推理模型", self.reasoning_extra_body),
+        ):
+            if len(json.dumps(value, ensure_ascii=False)) > 8_000:
+                raise ValueError(f"{label}附加请求参数不能超过 8 KB")
+            if {"model", "messages", "stream"}.intersection(value):
+                raise ValueError(f"{label}附加请求参数不能覆盖 model、messages 或 stream")
         return self
 
 
@@ -121,9 +141,12 @@ async def update_platform_llm_config(
         uow.session.add(row)
     row.enabled = body.enabled
     row.provider = body.provider
-    row.model = body.model
+    row.model = body.narrative_model
     row.base_url = body.base_url
-    row.extra_body = body.extra_body
+    row.extra_body = dict(body.narrative_extra_body or {})
+    row.reasoning_enabled = body.reasoning_enabled
+    row.reasoning_model = body.reasoning_model
+    row.reasoning_extra_body = dict(body.reasoning_extra_body)
     row.updated_by = principal.user_id
     if body.api_key is not None:
         try:
@@ -163,6 +186,7 @@ async def test_platform_llm_config(
     principal: Annotated[Principal, Depends(require_role_csrf("admin"))],
     uow: SqlUnitOfWork = Depends(uow_dep),
     settings: Settings = Depends(settings_dep),
+    profile: Literal["narrative", "reasoning"] = "narrative",
 ) -> dict[str, object]:
     await set_tenant_context(uow.session, principal.user_id)
     await rate_limiter.check(
@@ -177,22 +201,30 @@ async def test_platform_llm_config(
     view = platform_llm_view(settings, row)
     if not view["enabled"]:
         raise HTTPException(status_code=409, detail="platform model is disabled")
-    if not effective.llm_model.strip():
-        raise HTTPException(status_code=409, detail="platform model name is missing")
+    role = LLMRole.NARRATIVE if profile == "narrative" else LLMRole.DIRECTOR
+    choice = ModelRouter(effective).choose(role)
+    if not choice.model.strip():
+        label = "叙事" if profile == "narrative" else "推理"
+        raise HTTPException(status_code=409, detail=f"{label}模型名称未配置")
     provider = build_provider(
         effective.model_copy(update={"llm_timeout_seconds": min(effective.llm_timeout_seconds, 20)})
     )
     if not provider.available:
         raise HTTPException(status_code=409, detail="platform model credential is missing")
     try:
-        extra_body = json.loads(effective.llm_extra_body or "{}")
+        raw_extra_body = (
+            effective.llm_extra_body
+            if profile == "narrative"
+            else effective.llm_reasoning_extra_body or effective.llm_extra_body
+        )
+        extra_body = json.loads(raw_extra_body or "{}")
         response = await provider.generate_text(
             LLMRequest(
-                model=effective.llm_model,
+                model=choice.model,
                 system="Return only valid JSON.",
                 messages=[LLMMessage(content='Return {"status":"ok"}.')],
                 temperature=0,
-                max_output_tokens=96,
+                max_output_tokens=96 if profile == "narrative" else 1024,
                 json_mode=True,
                 extra_body=extra_body if isinstance(extra_body, dict) else {},
             )
@@ -209,7 +241,11 @@ async def test_platform_llm_config(
                 target_type="platform_llm_config",
                 target_id=PLATFORM_LLM_CONFIG_ID,
                 request_id=str(getattr(request.state, "request_id", "")),
-                details={"provider": view["provider"], "model": view["model"]},
+                details={
+                    "profile": profile,
+                    "provider": view["provider"],
+                    "model": choice.model,
+                },
             )
         )
         await uow.commit()
@@ -225,8 +261,9 @@ async def test_platform_llm_config(
             target_id=PLATFORM_LLM_CONFIG_ID,
             request_id=str(getattr(request.state, "request_id", "")),
             details={
+                "profile": profile,
                 "provider": view["provider"],
-                "model": response.model or view["model"],
+                "model": response.model or choice.model,
                 "latency_ms": response.latency_ms,
             },
         )
@@ -234,8 +271,9 @@ async def test_platform_llm_config(
     await uow.commit()
     return {
         "status": "ok",
+        "profile": profile,
         "provider": view["provider"],
-        "model": response.model or view["model"],
+        "model": response.model or choice.model,
         "latency_ms": response.latency_ms,
         "input_tokens": response.usage.prompt_tokens,
         "output_tokens": response.usage.completion_tokens,
