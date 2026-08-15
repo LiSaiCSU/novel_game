@@ -89,10 +89,10 @@ action:
   ACCEPT_QUEST: "你应下了这桩差事。"
   REJECT_QUEST: "你摇头拒绝。"
   USE_SKILL: "你催动{skill}。{effect_note}"
-  CUSTOM: "你做了想做的事。"
+  CUSTOM: "你照自己的办法采取了行动，这一步已经有了结果。"
   # Nothing was attempted - the scene simply holds. Never an accusation.
   idle: "你停在原地，念头转了几转，终究没有落到实处。周围的一切照旧。"
-  DEFAULT: "事情就这样发生了。"
+  DEFAULT: "这次行动已经改变了眼前的局面。"
 
 notes:
   travel: "路上花了{minutes_label}。"

@@ -229,6 +229,7 @@ def content_pack_from_v2(
         "name": package.manifest.title,
         "version": package.manifest.version,
         "language": package.manifest.locale,
+        "player_fields": [item.model_dump(mode="json") for item in package.manifest.player_fields],
         "primary_progression_key": primary_progression,
         "resource_definitions": [item.model_dump(mode="json") for item in document.resources],
         "progression_definitions": [item.model_dump(mode="json") for item in document.progressions],

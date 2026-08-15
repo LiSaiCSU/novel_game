@@ -109,9 +109,84 @@ def _is_repeated_paragraph(candidate: str, recent: list[str]) -> bool:
     return False
 
 
+def _could_be_repeated_paragraph(candidate: str, known: list[str]) -> bool:
+    """Whether an unfinished paragraph still looks copied from known prose."""
+
+    if not candidate:
+        return False
+    return candidate in "".join(known) or any(
+        len(paragraph) >= len(candidate)
+        and SequenceMatcher(
+            None,
+            candidate,
+            paragraph[: len(candidate)],
+            autojunk=False,
+        ).ratio()
+        >= 0.9
+        for paragraph in known
+    )
+
+
+def filter_repeated_paragraphs(
+    text: str,
+    recent_narrative: str,
+    *,
+    final: bool = True,
+) -> str:
+    """Remove copied paragraphs without breaking streaming monotonicity.
+
+    A provider may prepend a sentence and then paste an older scene, or repeat
+    a paragraph later in the same response.  Opening-only filtering misses
+    both cases.  This filter checks every paragraph against recent narrative
+    and against paragraphs already accepted in the current response.
+
+    While streaming, a new paragraph is held for at most 64 comparable
+    characters if it could still be a copy.  Unique prose then continues to
+    stream normally.  Because a paragraph is never exposed while it remains a
+    possible duplicate, later calls only extend the visible string; they never
+    need to retract text the reader has already seen.
+    """
+
+    if not text:
+        return ""
+    known = [
+        _comparable_prose(paragraph)
+        for paragraph in _PARAGRAPH_BREAK.split(recent_narrative)
+        if _comparable_prose(paragraph)
+    ]
+    accepted: list[str] = []
+    accepted_known: list[str] = []
+    start = 0
+    boundaries = list(_PARAGRAPH_BREAK.finditer(text))
+
+    for boundary in boundaries:
+        paragraph = text[start : boundary.start()].strip()
+        comparable = _comparable_prose(paragraph)
+        candidates = [*known, *accepted_known]
+        if paragraph and not _is_repeated_paragraph(comparable, candidates):
+            accepted.append(paragraph)
+            accepted_known.append(comparable)
+        start = boundary.end()
+
+    remainder = text[start:].strip()
+    comparable = _comparable_prose(remainder)
+    candidates = [*known, *accepted_known]
+    if remainder:
+        if final:
+            if not _is_repeated_paragraph(comparable, candidates):
+                accepted.append(remainder)
+        elif len(comparable) >= 64 and not _could_be_repeated_paragraph(
+            comparable, candidates
+        ):
+            accepted.append(remainder)
+
+    return "\n\n".join(accepted).strip()
+
+
 def strip_repeated_opening(text: str, recent_narrative: str) -> str:
-    offset = repeated_opening_length(text, recent_narrative, final=True)
-    return text[max(0, offset) :].lstrip()
+    """Backward-compatible name for full continuation de-duplication."""
+
+    return filter_repeated_paragraphs(text, recent_narrative, final=True)
 
 
 @dataclass(slots=True)
@@ -198,6 +273,9 @@ class NarrativeStyle:
             "target_length": str(target),
             "max_length": str(ceiling),
             "avoid_phrases": self.avoid_list(),
+            "style_guidance": (
+                "\n".join(f"- {item}" for item in self.guidance) if self.guidance else "-"
+            ),
         }
 
     @staticmethod

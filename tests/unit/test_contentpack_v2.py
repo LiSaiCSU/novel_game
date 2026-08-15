@@ -45,6 +45,38 @@ def test_new_official_content_has_a_valid_landscape_cover(key: str) -> None:
         assert image.width * 2 == image.height * 3
 
 
+@pytest.mark.parametrize(
+    "key",
+    (
+        "cultivation_v1",
+        "campus_romance_v1",
+        "tomb_lantern_v1",
+        "fog_harbor_v1",
+        "spirit_pact_v1",
+    ),
+)
+def test_official_content_has_a_three_act_player_first_opening(key: str) -> None:
+    source = load_content_pack(CONTENT, key)
+    blueprint = source.story.get("opening_blueprint", {})
+
+    assert blueprint.get("player_context")
+    assert blueprint.get("choice_gate")
+    assert blueprint.get("humor_rule")
+    assert len(blueprint.get("acts", [])) == 3
+    assert all(act.get("purpose") and act.get("must_show") for act in blueprint["acts"])
+    assert "templates" not in source.narrative_templates
+    assert {"action", "query", "knowledge_hedges", "npc_goal_action"} <= set(
+        source.narrative_templates
+    )
+
+    package = project_v1_as_v2(source)
+    runtime = content_pack_from_v2(package, content_dir=CONTENT)
+    assert runtime.story["opening_blueprint"] == blueprint
+    assert runtime.meta["player_fields"] == [
+        field.model_dump(mode="json") for field in package.manifest.player_fields
+    ]
+
+
 def test_campus_pack_is_full_v2_reference_work() -> None:
     pack = load_content_pack(CONTENT, "campus_romance_v1")
     package = project_v1_as_v2(pack, slug="spring-messages", tags=["校园", "女性向"])

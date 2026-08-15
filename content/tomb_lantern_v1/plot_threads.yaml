@@ -49,7 +49,7 @@ plot_threads:
     scheduled_beats:
       - {at_minutes_from_start: 2160, event_type: FORESHADOWING, beat: 山神庙的供桌被人挪动过，地上多了一道新划痕}
       - {at_minutes_from_start: 5040, event_type: DISCOVERY, beat: 毛三子藏起来的那枚青铜灯枝被翻了出来}
-      - {at_minutes_from_start: 8640, event_type: SECRET_DISCLOSURE, beat: 清鱼当着你的面解开外衣的第一颗扣子}
+      - {at_minutes_from_start: 8640, event_type: SECRET_DISCLOSURE, beat: 清鱼确认门窗和在场人后脱下外褂、背过身，让你核对她背上刺下的九点灯序图}
       - {at_minutes_from_start: 11520, event_type: CONFRONTATION, beat: 灯厅里只剩最后一盏没点，而暗河已经开始上涨}
 
   - key: thread_who_buys_the_hill

@@ -44,10 +44,10 @@ plot_threads:
     unresolved_questions: [九处巢穴是谁清的, 账册上的代号对应着谁, 学院拿得出证据吗]
     foreshadowing: [分殿的人每次进林子前都先去藏书阁查同一片, 营地里晾着不该出现在这个季节的兽皮, 齐燃言的旧图上划线日期全在最近三年]
     related_facts: [fact_high_year_beasts_vanishing, fact_concord_council_buys_the_slaughter, fact_concord_council_marks_beasts_first, fact_beast_ledger_hidden_in_camp, fact_lao_kui_was_expelled, fact_academy_pacts_are_black_market]
-    next_beat_hint: 唐晚意会拦住你，手里攥着借阅登记本，但一句话也不敢先说
+    next_beat_hint: 唐晚意会把借阅登记本摊在你面前，指出同一片林区连续三年被同一批代号查阅，并要求你先替她核对日期
     escalation_pressure: 0.7
     scheduled_beats:
-      - {at_minutes_from_start: 14400, event_type: FORESHADOWING, beat: 唐晚意欲言又止地提起有人反复查同一片林子}
+      - {at_minutes_from_start: 14400, event_type: FORESHADOWING, beat: 唐晚意拿借阅登记本和你逐行核对，确认同一批代号连续三年查过同一片林区}
       - {at_minutes_from_start: 33120, event_type: DISCOVERY, beat: 森林实习途中撞见一处被清空的巢穴}
       - {at_minutes_from_start: 57600, event_type: SECRET_DISCLOSURE, beat: 老魁在酒馆喝多了，说漏了一个代号}
       - {at_minutes_from_start: 74880, event_type: CONFRONTATION, beat: 有人先一步去营地取账册}

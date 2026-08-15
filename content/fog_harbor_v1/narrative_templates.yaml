@@ -1,5 +1,55 @@
-templates:
-  query_status: "你在{location_name}。{time_label}。"
-  query_inventory: "你清点了一遍随身的东西。"
-  query_relationships: "十三个人，你已经开始分得清谁在躲你、谁在等你先开口。"
-  query_quests: "离靠港还有多久，你心里一直在数。"
+npc_goal_action:
+  succeeded: "{character}完成了计划中的一步：{step}"
+  failed: "{character}尝试推进计划，但没有成功：{step}"
+knowledge_hedges: {KNOWN: "可以确认：", BELIEVED: "我相信：", SUSPECTED: "我怀疑：", HEARD: "有人声称：", DISBELIEVED: "我不接受这种说法："}
+labels: {list_separator: "、", present_prefix: "现场人员：", nobody_here: "现场暂时没有其他人。", degraded_notice: "（叙事服务暂时不可用，本回合显示事实摘要）"}
+rejection:
+  header: "这项行动没有完成。"
+  by_reason_code:
+    ITEM_NOT_OWNED: "你没有所需物品。"
+    TARGET_NOT_PRESENT: "对方不在现场。"
+    TARGET_DEAD: "死者无法回应。"
+    LOCATION_UNREACHABLE: "当前无法抵达那里。"
+    LOCATION_LOCKED: "入口已经封闭。"
+    INSUFFICIENT_FUNDS: "你的现金不够。"
+    QUEST_NOT_OFFERED: "这项调查还没有交给你。"
+    AMBIGUOUS_INTENT: "需要说明调查对象、位置或证物。"
+    NOT_PHYSICALLY_POSSIBLE: "现有时间、位置或工具不支持这种做法。"
+  default: "你进行了尝试，但结果不支持原先的打算。"
+action:
+  MOVE: "你从{from_location}前往{to_location}。{travel_note}"
+  MOVE_SAME: "你留在{to_location}重新核对现场。"
+  OBSERVE: "你检查{location}。{observation}"
+  SEARCH: "你按顺序搜查{location}。{search_result}"
+  SEARCH_EMPTY: "你完成搜查，没有发现新的可记录物。"
+  TALK: "你找到{target}，开始谈话。"
+  ASK: "你向{target}核实{topic}。"
+  CONVERSATION: "你与{target}完成了一轮问答。"
+  USE_ITEM: "你使用{item}。{effect_note}"
+  GIVE_ITEM: "你把{item}交给{target}。"
+  PICKUP: "你封存了{item}。"
+  DROP: "你把{item}留在原位。"
+  BUY: "你支付{cost}，取得{item}。"
+  SELL: "你交出{item}，收到{cost}。"
+  HIDE_SUCCESS: "你的行动没有被现场人员发现。"
+  HIDE_FAILED: "有人发现了你的行动。"
+  FOLLOW: "你保持距离跟随{target}。"
+  REST: "你休息了{duration_label}。{recovery_note}"
+  WAIT: "你记录着时间，等了{duration_label}。"
+  ACCEPT_QUEST: "你接下了这项调查。"
+  REJECT_QUEST: "你拒绝接手这项调查。"
+  CUSTOM: "你按自己的判断采取了行动。"
+  idle: "你没有移动证物，现场暂时维持原状。"
+  DEFAULT: "这项行动已经留下结果。"
+notes: {travel: "用时{minutes_label}。", damage: "{target}受了伤。", damage_lethal: "{target}失去生命体征。", recovery: "心神稳定了一些。", effect_none: ""}
+npc: {speaks: "{name}说：‘{line}’", refuses: "{name}拒绝回答，并保留了自己的说法。", silent: "{name}没有回应。", leaves: "{name}离开现场。", approaches: "{name}来到现场。", default: "{name}继续执行自己的安排。"}
+world_event: {prefix: "同一时间，", default: "{description}"}
+duration: {minute: "{n}分钟", hour: "{n}小时", day: "{n}天", month: "{n}个月", year: "{n}年"}
+query:
+  status_header: "【当前处境】"
+  inventory_header: "【随身物品】"
+  inventory_empty: "你没有携带可用物品。"
+  relationships_header: "【船上人员】"
+  relationships_empty: "你还没有可以信任的人。"
+  quests_header: "【调查事项】"
+  quests_empty: "你暂时没有接手调查事项。"

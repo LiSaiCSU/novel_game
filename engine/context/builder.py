@@ -310,9 +310,55 @@ class ContextBuilder:
             lead_text = str(profile.get("no_story_lead", "-"))
         return "\n".join(
             part
-            for part in (str(story.get("premise", "")).strip(), lead_text)
+            for part in (
+                str(story.get("premise", "")).strip(),
+                self.player_configuration(state),
+                lead_text,
+            )
             if part
         ) or "-"
+
+    def player_configuration(self, state: WorldStateView) -> str:
+        """Render creator-defined player fields with labels, never raw keys."""
+
+        rows: list[str] = []
+        for raw in self.pack.meta.get("player_fields", []) or []:
+            if not isinstance(raw, dict):
+                continue
+            key = str(raw.get("key", ""))
+            if not key or key in {"name", "age", "background"}:
+                continue
+            binding = str(raw.get("binding", "property"))
+            if binding == "attribute":
+                value: Any = state.player.attributes.get(key)
+            elif binding == "resource":
+                resource = state.player.resources.get(key, {}) or {}
+                value = resource.get("current") if isinstance(resource, dict) else resource
+            elif binding == "progression":
+                progression = state.player.progressions.get(key, {}) or {}
+                value = progression.get("tier") if isinstance(progression, dict) else progression
+            else:
+                value = state.player.properties.get(key)
+            if value is None or value == "" or value == []:
+                continue
+            choices = {
+                str(choice.get("value")): str(choice.get("label"))
+                for choice in raw.get("choices", []) or []
+                if isinstance(choice, dict) and choice.get("value") is not None
+            }
+            if isinstance(value, list):
+                display = ", ".join(choices.get(str(item), str(item)) for item in value)
+            else:
+                display = choices.get(str(value), str(value))
+            label = str(raw.get("label") or key)
+            rows.append(f"{label}: {display}")
+        background = state.player.background.strip()
+        if background:
+            background_label = str(
+                self.pack.vocabulary.get("player_background_label", "background")
+            )
+            rows.append(f"{background_label}: {background}")
+        return "\n".join(f"- {row}" for row in rows)
 
     def _relationship_consent(
         self, state: WorldStateView, lead_key: str | None = None
@@ -351,6 +397,7 @@ class ContextBuilder:
             "time_label": state.time.label,
             "player_summary": (
                 f"{state.player.name} / {ladder.display(state.player.realm, state.player.realm_stage)}"
+                f" / {self.player_configuration(state) or '-'}"
             ),
             "present_characters": self._present_for_intent(state),
             # The whole map, not just the doorstep. Naming a place the player

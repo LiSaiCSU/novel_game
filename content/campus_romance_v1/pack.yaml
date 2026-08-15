@@ -1,7 +1,7 @@
 key: campus_romance_v1
 name: 春日坂未完通信
 genre: campus_romance
-version: "1.5.0"
+version: "1.6.0"
 engine_min_version: "0.2.0"
 primary_progression_key: education
 attribute_definitions:
@@ -84,7 +84,25 @@ world:
 story:
   title: 春日坂未完通信
   opening_location: international_dorm
-  premise: 你刚搬进留学生宿舍，就收到一封寄错了二十年的未完成信件。收件地址是即将关闭的月见馆，而落款人的名字被撕掉。校庆企划组需要在十二周内修复礼堂、查清旧账并完成最终演出。
+  premise: >
+    这是你到春日坂大学的第一周。课表、垃圾分类表和银行卡申请书已经占满书桌，你还没记熟去食堂的路，
+    先替宿舍签收了一封迟到二十年的信。收件地址是学期末将被关闭的旧礼堂月见馆，落款人的名字却被撕掉了。
+    宿舍邻居陈雨娜正为校庆企划组招人；那群学生只有十二周修复礼堂、查清旧账并完成最终演出。
+    你可以参与，也可以先把自己的留学生活安顿好——但这封信已经把两件事拴在了一起。
+  opening_blueprint:
+    player_context: 先交代玩家是刚到日本的成年女留学生、所学专业、性格倾向和本学期个人目标；她不是为了四位男性角色而来到这里。
+    acts:
+      - purpose: 让新生活先成立
+        must_show: [用拆行李或办理宿舍手续表现玩家专业与性格, 说明她今天原本要完成的一件普通事情]
+        comic_beat: 陈雨娜拿三种颜色的垃圾袋讲分类，讲到最后发现自己把说明书也分错了，两人一起重来
+      - purpose: 认识可依靠的朋友与校园日常
+        must_show: [陈雨娜以宿舍邻居和留学生联络的身份自然出现, 用一件实际帮忙建立两人的熟悉感, 让月见馆先成为校园里真实存在的地方]
+        comic_beat: 企划组招新海报被自动翻译成了“招募月亮维修人员”，错误反而引来一圈围观
+      - purpose: 未完成信把日常推向主线
+        must_show: [拆出二十年前的信但不擅自公开全文, 交代礼堂关闭期限与企划组的现实困难, 玩家第一次接触主线时仍保有拒绝和暂缓的权利]
+        comic_beat: 信件与隐私不作为笑点，趣味只留在众人对错误海报的补救和不同做事习惯上
+    humor_rule: 使用温和的文化错位、社团手忙脚乱和熟人吐槽；不嘲笑口音、国籍、身体、拒绝或私人感情。
+    choice_gate: 玩家知道自己为何在春日坂、陈雨娜是谁、月见馆为什么要关、信件为何不能随便公开，并能判断参与、调查或先处理个人事务各自意味着什么。
   starter_items: [{key: unfinished_letter, quantity: 1}, {key: student_card, quantity: 1}]
   player_template:
     constraints: {gender: female, minimum_age: 18, maximum_age: 24}
@@ -162,7 +180,7 @@ narrative_style:
   language: 中文
   person: 第二人称
   tense: 现在时
-  tone: 清新克制的大学校园群像，具体、自然、有行动推进，避免偶像剧式强迫浪漫
+  tone: 明亮、有生活笑料的大学校园群像；具体自然，人物先是同学和合作者再可能成为恋人，矛盾来自时间、预算、作品选择与各自前途，避免偶像剧式强迫浪漫
   target_length: 1600
   avoid_phrases: [嘴角勾起一抹弧度, 眼中闪过一丝异色, 空气仿佛凝固, 心里微沉, 淡淡地说道]
   phrase_repeat_window: 12
@@ -171,6 +189,9 @@ narrative_style:
     - 每段至少推进礼堂主线、人物目标、线索或关系之一
     - 尊重玩家拒绝，不把嫉妒和控制当作爱
     - 四位主要角色在没有恋爱时也拥有完整的人生选择
+    - 每两三个紧张场景安排一次来自社团协作、语言误会或生活习惯的轻喜剧回弹，但不能靠羞辱和强行卖萌
+    - 先写玩家自己的学业、朋友和个人目标，再写可发展关系；任何角色都不能一见面就围着玩家转
+    - 对话要有任务、立场或误解在变化，禁止只靠脸红、移开视线和欲言又止制造暧昧
 theme: {accent: "#8d5f73", background: "#f7f0eb", surface: "#fffaf6", text: "#30272d"}
 vocabulary:
   profile_labels: {age_suffix: 岁, realm: 身份, root: 专业, faction: 组织, male: 男, female: 女, unspecified: 未指定, story_lead: 重要伙伴, no_story_lead: 尚未建立羁绊, absent: 当前不在场}

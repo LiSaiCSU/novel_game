@@ -1,5 +1,55 @@
-templates:
-  query_status: "你在{location_name}。{time_label}。"
-  query_inventory: "你把身上的家伙又摸了一遍。"
-  query_relationships: "岭上这些人，谁能搭把手谁会捅刀子，你心里有本账。"
-  query_quests: "第九日在往前走，一天也不会多给。"
+npc_goal_action:
+  succeeded: "{character}把这一步做成了：{step}"
+  failed: "{character}动了手，但这一步没做成：{step}"
+knowledge_hedges: {KNOWN: "我认准：", BELIEVED: "我信：", SUSPECTED: "我疑心：", HEARD: "我听人说：", DISBELIEVED: "我不信："}
+labels: {list_separator: "、", present_prefix: "眼前的人：", nobody_here: "这里眼下没人。", degraded_notice: "（叙事服务暂时不可用，本回合显示事实摘要）"}
+rejection:
+  header: "这一步没走通。"
+  by_reason_code:
+    ITEM_NOT_OWNED: "你身上没有那件家伙。"
+    TARGET_NOT_PRESENT: "人不在这里。"
+    TARGET_DEAD: "死人答不了话。"
+    LOCATION_UNREACHABLE: "这条路走不通。"
+    LOCATION_LOCKED: "入口被封着。"
+    INSUFFICIENT_FUNDS: "你身上的钱不够。"
+    QUEST_NOT_OFFERED: "这桩事还轮不到你接。"
+    AMBIGUOUS_INTENT: "得说清楚你要找谁、去哪儿、动哪件东西。"
+    NOT_PHYSICALLY_POSSIBLE: "眼下的地形和家伙办不到。"
+  default: "你试了，事情没有照你的打算走。"
+action:
+  MOVE: "你从{from_location}赶往{to_location}。{travel_note}"
+  MOVE_SAME: "你在{to_location}又转了一圈。"
+  OBSERVE: "你把{location}能看的地方看了一遍。{observation}"
+  SEARCH: "你在{location}动手翻找。{search_result}"
+  SEARCH_EMPTY: "你按规矩找了一遍，没有摸到新东西。"
+  TALK: "你走到{target}跟前开口。"
+  ASK: "你向{target}问起{topic}。"
+  CONVERSATION: "你和{target}把话摆到了桌面上。"
+  USE_ITEM: "你取出{item}用了。{effect_note}"
+  GIVE_ITEM: "你把{item}递给{target}。"
+  PICKUP: "你收起{item}。"
+  DROP: "你把{item}留在原处。"
+  BUY: "你花了{cost}，拿到{item}。"
+  SELL: "你交出{item}，换回{cost}。"
+  HIDE_SUCCESS: "你藏住了，没有人当场发现。"
+  HIDE_FAILED: "你的位置被人看破了。"
+  FOLLOW: "你隔着一段路跟住{target}。"
+  REST: "你歇了{duration_label}。{recovery_note}"
+  WAIT: "你守了{duration_label}。"
+  ACCEPT_QUEST: "你接下这桩事。"
+  REJECT_QUEST: "你把这桩事推了。"
+  CUSTOM: "你照自己的办法试了一步。"
+  idle: "你没有乱动，眼前的局面暂时没变。"
+  DEFAULT: "这一步已经有了结果。"
+notes: {travel: "路上用了{minutes_label}。", damage: "{target}受了伤。", damage_lethal: "{target}倒下后没再起来。", recovery: "气力缓回来一些。", effect_none: ""}
+npc: {speaks: "{name}说：‘{line}’", refuses: "{name}不肯，并把条件摆了出来。", silent: "{name}没有开口。", leaves: "{name}转身走了。", approaches: "{name}朝这边过来。", default: "{name}继续忙自己的事。"}
+world_event: {prefix: "同一时候，", default: "{description}"}
+duration: {minute: "{n}刻", hour: "{n}个时辰", day: "{n}天", month: "{n}个月", year: "{n}年"}
+query:
+  status_header: "【眼下处境】"
+  inventory_header: "【随身家伙】"
+  inventory_empty: "你身上没带东西。"
+  relationships_header: "【岭上认识的人】"
+  relationships_empty: "你在岭上还没有能托底的人。"
+  quests_header: "【手里的事】"
+  quests_empty: "你眼下没有接别人的差事。"

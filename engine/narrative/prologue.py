@@ -26,8 +26,6 @@ from engine.narrative.renderer import BEAT_MARKER, split_beat
 from engine.narrative.style import NarrativeStyle
 from engine.orchestrator.turn import (
     DEFAULT_NARRATIVE_CHARS,
-    MAX_NARRATIVE_CHARS,
-    MIN_NARRATIVE_CHARS,
     StoryBeat,
 )
 from engine.world.state_view import WorldStateView
@@ -57,6 +55,7 @@ class Prologue:
         self.llm = llm
         self.registry = registry
         self.prompt_version = prompt_version
+        self.style = NarrativeStyle(pack)
 
     async def write(
         self,
@@ -90,6 +89,7 @@ class Prologue:
                     f"{state.faction_name(state.player.faction_key) or '-'}"
                 ),
                 player_background=state.player.background or "-",
+                player_configuration=self.context_builder.player_configuration(state) or "-",
                 location=state.location.name if state.location else "-",
                 location_description=(
                     state.location.description if state.location else "-"
@@ -105,9 +105,8 @@ class Prologue:
                     if (loc := state.graph.by_key(key)) is not None
                 )
                 or "-",
-                target_length=self._length_vars(max_chars)[0],
-                max_length=self._length_vars(max_chars)[1],
                 story_premise=str(self.pack.story.get("premise", "")) or "-",
+                opening_blueprint=self._opening_blueprint(),
                 story_lead=self._story_lead(state),
                 relationship_boundaries=(
                     str(self.pack.story.get("relationship_boundaries", "")) or "-"
@@ -115,10 +114,11 @@ class Prologue:
                 visible_facts=visible_facts,
                 plot_hooks="\n".join(
                     f"- {t.name}: {t.next_beat_hint}"
-                    for t in state.plot_threads[:5]
+                    for t in state.plot_threads[:2]
                     if t.next_beat_hint
                 )
                 or "-",
+                **self.style.as_prompt_vars(max_chars),
             )
             # The opening chapter is long by design; the router's per-role
             # default would cut it off. Honour the prompt's own budget.
@@ -159,12 +159,40 @@ class Prologue:
             f"{lead.background}"
         )
 
-    def _length_vars(self, max_chars: int) -> tuple[str, str]:
-        ceiling = max(
-            MIN_NARRATIVE_CHARS,
-            min(MAX_NARRATIVE_CHARS, int(max_chars or DEFAULT_NARRATIVE_CHARS)),
+    def _opening_blueprint(self) -> str:
+        """Render a content-authored onboarding arc without leaking schema keys."""
+
+        blueprint = self.pack.story.get("opening_blueprint", {}) or {}
+        if not isinstance(blueprint, dict):
+            return "Follow the premise: identity, capability, risk, then the first choice."
+        lines: list[str] = []
+        context = str(blueprint.get("player_context", "")).strip()
+        if context:
+            lines.append(f"Player context: {context}")
+        acts = blueprint.get("acts", []) or []
+        for index, raw in enumerate(acts[:3], start=1):
+            if not isinstance(raw, dict):
+                continue
+            purpose = str(raw.get("purpose", "")).strip()
+            events = [str(item).strip() for item in raw.get("must_show", []) or []]
+            line = f"Act {index}"
+            if purpose:
+                line += f" ({purpose})"
+            if events:
+                line += ": " + "; ".join(item for item in events if item)
+            comic = str(raw.get("comic_beat", "")).strip()
+            if comic:
+                line += f". Comic beat: {comic}"
+            lines.append(line)
+        humor = str(blueprint.get("humor_rule", "")).strip()
+        if humor:
+            lines.append(f"Humor boundary: {humor}")
+        gate = str(blueprint.get("choice_gate", "")).strip()
+        if gate:
+            lines.append(f"Choice gate: {gate}")
+        return "\n".join(lines) or (
+            "Follow the premise: identity, capability, risk, then the first choice."
         )
-        return str(max(MIN_NARRATIVE_CHARS, int(ceiling * 0.85))), str(ceiling)
 
     def _output_budget(self, max_chars: int) -> int:
         declared = self.registry.get("prologue", self.prompt_version).max_output_tokens

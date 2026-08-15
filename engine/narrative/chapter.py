@@ -27,7 +27,7 @@ from engine.core.logging import get_logger
 from engine.core.ports import UnitOfWork
 from engine.core.types import LLMRole
 from engine.narrative.renderer import BEAT_MARKER, NarrativeRenderer, split_beat
-from engine.narrative.style import repeated_opening_length, strip_repeated_opening
+from engine.narrative.style import filter_repeated_paragraphs, strip_repeated_opening
 from engine.orchestrator.interrupt import Interrupt
 from engine.orchestrator.turn import DEFAULT_NARRATIVE_CHARS, StoryBeat
 from engine.world.state_view import WorldStateView
@@ -222,7 +222,7 @@ class ChapterRenderer:
 
         collected: list[str] = []
         emitted = 0
-        opening_offset: int | None = None
+        streamed_visible = ""
         ceiling = int(self.renderer.style.as_prompt_vars(max_chars)["max_length"])
         stream_limit = max(0, ceiling - 180)
         async for chunk in self.llm.stream_text(
@@ -234,26 +234,26 @@ class ChapterRenderer:
             collected.append(chunk)
             full = "".join(collected)
             head, marker, _ = full.partition(BEAT_MARKER)
-            if opening_offset is None:
-                candidate_offset = repeated_opening_length(
-                    head, recent_narrative, final=bool(marker)
-                )
-                if candidate_offset >= 0:
-                    opening_offset = candidate_offset
-            if opening_offset is None:
-                continue
-            visible = head[opening_offset:].lstrip()
-            safe = visible if marker else visible[: max(0, len(visible) - len(BEAT_MARKER))]
-            safe = safe[:stream_limit]
+            safe_head = head if marker else head[: max(0, len(head) - len(BEAT_MARKER))]
+            safe = filter_repeated_paragraphs(
+                safe_head,
+                recent_narrative,
+                final=bool(marker),
+            )[:stream_limit]
+            if not safe.startswith(streamed_visible):
+                logger.warning("stream continuation filter became non-monotonic; holding output")
+                safe = streamed_visible
             if len(safe) > emitted:
                 await on_chunk(safe[emitted:])
                 emitted = len(safe)
+                streamed_visible = safe
         raw = "".join(collected)
         prose, beat = split_beat(raw)
-        if opening_offset is None:
-            opening_offset = max(0, repeated_opening_length(prose, recent_narrative, final=True))
-        prose = prose[opening_offset:].lstrip()
+        prose = filter_repeated_paragraphs(prose, recent_narrative, final=True)
         final_prose = self.renderer.style.enforce_max_chars(prose, max_chars)
+        if not final_prose.startswith(streamed_visible):
+            logger.warning("final continuation differs from streamed prose; preserving visible text")
+            final_prose = streamed_visible
         if len(final_prose) > emitted:
             await on_chunk(final_prose[emitted:])
         if beat is None:
