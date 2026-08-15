@@ -1,0 +1,306 @@
+plot_threads:
+  - key: thread_locked_lounge
+    name: 反锁的望海厅
+    status: active
+    importance: 0.99
+    stage: 0
+    participants: [player, gu_shenyi, shao_lingjun, pei_zhaolin, sun_zhaoqing, he_shuqin, tan_wu]
+    unresolved_questions: [一个从内侧反锁的房间怎么会有第二个人进出, 针是谁推的, 那杯温酒在谁手里停过]
+    foreshadowing: [左舷窗内框有两道还没干硬的胶质, 杯口只有一侧有唇印, 出餐记录最后一笔停在两点五十一分]
+    related_facts: [fact_qiao_found_dead, fact_room_locked_from_inside, fact_needle_mark_on_neck, fact_window_tape_residue, fact_two_sedative_vials_missing, fact_tan_wu_handed_off_the_wine]
+    next_beat_hint: 船长会在天亮前要求所有人把随身物品交出来集中保管
+    escalation_pressure: 0.95
+    scheduled_beats:
+      - {at_minutes_from_start: 60, event_type: CONFRONTATION, beat: 船长要求所有人集中到大堂并交出随身物品}
+      - {at_minutes_from_start: 300, event_type: DISCOVERY, beat: 有人注意到左舷窗内框上的胶质残痕}
+      - {at_minutes_from_start: 720, event_type: FACTION_MOVE, beat: 望海厅被重新上锁，钥匙归船长一人保管}
+      - {at_minutes_from_start: 1200, event_type: SECRET_DISCLOSURE, beat: 那杯温酒在出餐口换过手，这件事第一次被说出口}
+      - {at_minutes_from_start: 1800, event_type: CONFRONTATION, beat: 大堂里出现第一次公开的互相指认}
+      - {at_minutes_from_start: 2100, event_type: CONFRONTATION, beat: 雾开始散，靠港前最后一次全员对质}
+
+  - key: thread_1114
+    name: 十年前的1114
+    status: active
+    importance: 0.95
+    stage: 0
+    participants: [player, zhou_yanzhi, pei_zhaolin, mai_zhengqi, shao_lingjun, lu_bingchen]
+    unresolved_questions: [周砚清替谁顶了责任, 那份缺陷报告去了哪里, 谁签字让调查停下来]
+    foreshadowing: [船长室柜子最下层的旧值班簿, 复印卷宗中间少了几页, 一张收款人被涂黑的转账回单]
+    related_facts: [fact_zhou_yanqing_was_scapegoat, fact_pei_altered_duty_log, fact_mai_report_suppressed, fact_shao_took_hush_money, fact_lu_destroyed_records, fact_zhou_yanzhi_false_name]
+    next_beat_hint: 有人会在天亮前问你，十年前那天你在哪里
+    escalation_pressure: 0.8
+    scheduled_beats:
+      - {at_minutes_from_start: 420, event_type: FORESHADOWING, beat: 有人提起今天正好是1114的十周年}
+      - {at_minutes_from_start: 900, event_type: DISCOVERY, beat: 一份不该存在的旧值班簿被人翻了出来}
+      - {at_minutes_from_start: 1440, event_type: SECRET_DISCLOSURE, beat: 麦正岐把压了十年的话说了出来}
+      - {at_minutes_from_start: 1920, event_type: CONFRONTATION, beat: 邵凌钧当众承认自己收过那笔钱}
+
+  - key: thread_dying_man_plan
+    name: 一个将死之人的安排
+    status: active
+    importance: 0.92
+    stage: 0
+    participants: [player, gu_shenyi, lu_bingchen, he_shuqin, an_qiao]
+    unresolved_questions: [死者知不知道自己活不长, 那封委托函是什么时候写的, 股权草案为什么会寄给一个记者]
+    foreshadowing: [药盒晚间格是空的而他从不在晚上服那一格, 委托函落款与病历同一周, 草案是匿名寄出的]
+    related_facts: [fact_qiao_terminal_cancer, fact_escrow_letter_exists, fact_share_transfer_to_outsider, fact_qiao_planned_his_death]
+    next_beat_hint: 医务室那只保险箱的密码，只有两个人知道
+    escalation_pressure: 0.7
+    scheduled_beats:
+      - {at_minutes_from_start: 480, event_type: DISCOVERY, beat: 有人发现分格药盒的晚间格是空的}
+      - {at_minutes_from_start: 1080, event_type: SECRET_DISCLOSURE, beat: 病历从医务室保险箱里被取了出来}
+      - {at_minutes_from_start: 1620, event_type: CONFRONTATION, beat: 陆秉臣被逼到必须解释那封没有拆开的信}
+      - {at_minutes_from_start: 2040, event_type: SECRET_DISCLOSURE, beat: 死者自己的安排第一次被完整说出来}
+
+  - key: thread_who_gains
+    name: 谁得利
+    status: active
+    importance: 0.85
+    stage: 0
+    participants: [player, qiao_wanyin, lu_bingchen, jian_mo, xu_lang, an_qiao]
+    unresolved_questions: [股份最后会落到谁手里, 保险赔不赔, 徐朗那二十分钟去了哪儿]
+    foreshadowing: [录音笔只剩百分之四电量, 保单附加条款里的两年自杀免赔, 头等舱走廊尽头那盏一直在闪的灯]
+    related_facts: [fact_wanyin_is_main_beneficiary, fact_share_transfer_to_outsider, fact_insurer_wants_suicide, fact_xu_lang_left_post, fact_lu_destroyed_records]
+    next_beat_hint: 简墨会抢在所有人之前对你做一次看似随意的笔录
+    escalation_pressure: 0.65
+    scheduled_beats:
+      - {at_minutes_from_start: 180, event_type: QUEST_OFFER, beat: 简墨请你配合做一次简短的问询}
+      - {at_minutes_from_start: 660, event_type: DISCOVERY, beat: 录音笔里那段七分钟的对话被人听到了一部分}
+      - {at_minutes_from_start: 1320, event_type: BETRAYAL, beat: 有人把你说过的话原样转给了另一个人}
+      - {at_minutes_from_start: 1980, event_type: CONFRONTATION, beat: 乔晚吟与徐朗的口径在众人面前对不上}
+
+  - key: thread_your_own_23_minutes
+    name: 你自己的二十三分钟
+    status: active
+    importance: 0.9
+    stage: 0
+    participants: [player, sun_zhaoqing, jian_mo, shao_lingjun, pei_zhaolin]
+    unresolved_questions: [你要不要说实话, 门禁记录会不会替你说话, 谁在带节奏把嫌疑推向你]
+    foreshadowing: [事务长把三点十七分之前的刷卡记录单独打印了一份, 简墨的笔录本上你的名字在第一页, 有人反复问你同一个时间点]
+    related_facts: [fact_player_missing_23_minutes, fact_cctv_corridor_gap, fact_cctv_gap_was_manual]
+    next_beat_hint: 事务长会拿着刷卡记录来核对你自己说过的时间
+    escalation_pressure: 0.85
+    scheduled_beats:
+      - {at_minutes_from_start: 240, event_type: CONFRONTATION, beat: 事务长拿着门禁记录来核对你的自述}
+      - {at_minutes_from_start: 840, event_type: RUMOR_SPREAD, beat: 大堂里开始有人小声说起你那二十三分钟}
+      - {at_minutes_from_start: 1500, event_type: CONFRONTATION, beat: 有人当众要求你解释清楚}
+      - {at_minutes_from_start: 2010, event_type: FACTION_MOVE, beat: 靠港前，船长决定把某个人单独看住}
+
+  - key: thread_second_victim
+    name: 船上还有人要死
+    status: dormant
+    importance: 0.82
+    stage: 0
+    participants: [player, bai_qiuhe, zhou_yanzhi, he_shuqin]
+    unresolved_questions: [白秋禾到底看见了谁, 她收的那笔钱会不会要了她的命, 谁会先找到她]
+    foreshadowing: [她一被问到夜班就先笑一下, 第三条救生艇的绑绳被重新系过, 尾甲板是全船监控唯一照不到的地方]
+    related_facts: [fact_bai_qiuhe_saw_someone, fact_he_shuqin_changed_her_mind, fact_cctv_gap_was_manual]
+    next_beat_hint: 白秋禾会主动躲着你，但她躲的方向是有规律的
+    escalation_pressure: 0.75
+    scheduled_beats:
+      - {at_minutes_from_start: 540, event_type: FORESHADOWING, beat: 白秋禾第二次躲开关于夜班的问题}
+      - {at_minutes_from_start: 1140, event_type: DISCOVERY, beat: 有人在船员舱翻过白秋禾的铺位}
+      - {at_minutes_from_start: 1680, event_type: NPC_APPROACH, beat: 有人约白秋禾到尾甲板单独谈}
+      - {at_minutes_from_start: 1740, event_type: DEATH, beat: 若没有人拦住，白秋禾会从尾甲板消失}
+
+quests:
+  - key: quest_examine_the_body
+    name: 在现场被封之前看清遗体
+    giver: gu_shenyi
+    status: offered
+    goal: {type: investigate, location: sea_view_lounge}
+    constraints: {deadline_minutes: 240}
+    rewards: {relationship: {gu_shenyi: {trust: 10, respect: 8}}}
+    failure_conditions: [deadline_passed, scene_sealed]
+    world_consequences:
+      on_success: {advance_thread: thread_locked_lounge, reveal_fact_chance: {fact_needle_mark_on_neck: 1.0}}
+      on_failure: {tension: 8}
+    plot_thread: thread_locked_lounge
+
+  - key: quest_secure_the_scene
+    name: 保住望海厅的现场
+    giver: shao_lingjun
+    status: offered
+    goal: {type: protect, location: sea_view_lounge}
+    constraints: {deadline_minutes: 720}
+    rewards: {relationship: {shao_lingjun: {trust: 12, respect: 10}}, item: {tape_residue: 1}}
+    failure_conditions: [scene_contaminated, deadline_passed]
+    world_consequences:
+      on_success: {advance_thread: thread_locked_lounge, reveal_fact_chance: {fact_window_tape_residue: 0.8}}
+      on_failure: {tension: 12}
+      if_player_refuses: {reassign_to: [shao_lingjun, sun_zhaoqing], success_chance: 0.4}
+    plot_thread: thread_locked_lounge
+
+  - key: quest_account_for_yourself
+    name: 交代你自己的二十三分钟
+    giver: sun_zhaoqing
+    status: offered
+    goal: {type: statement, target: sun_zhaoqing}
+    constraints: {deadline_minutes: 480}
+    rewards: {relationship: {sun_zhaoqing: {trust: 8, suspicion: -15}}}
+    failure_conditions: [refused_to_answer, contradiction_found]
+    world_consequences:
+      on_success: {advance_thread: thread_your_own_23_minutes}
+      on_failure: {tension: 10, advance_thread: thread_your_own_23_minutes}
+    plot_thread: thread_your_own_23_minutes
+
+  - key: quest_wine_chain
+    name: 追那杯温酒经过的每一双手
+    giver: tan_wu
+    status: offered
+    goal: {type: investigate, locations: [galley, dining_hall, sea_view_lounge]}
+    constraints: {deadline_minutes: 1440}
+    rewards: {item: {warm_wine_cup: 1}, relationship: {tan_wu: {trust: 10}}}
+    failure_conditions: [deadline_passed, records_altered]
+    world_consequences:
+      on_success: {advance_thread: thread_locked_lounge, reveal_fact_chance: {fact_tan_wu_handed_off_the_wine: 1.0}}
+      on_failure: {tension: 10}
+    plot_thread: thread_locked_lounge
+
+  - key: quest_sedative_count
+    name: 核对镇静剂领用记录
+    giver: gu_shenyi
+    status: offered
+    goal: {type: investigate, location: infirmary}
+    constraints: {deadline_minutes: 900}
+    rewards: {item: {sedative_log: 1}}
+    failure_conditions: [deadline_passed, log_removed]
+    world_consequences:
+      on_success: {advance_thread: thread_locked_lounge, reveal_fact_chance: {fact_two_sedative_vials_missing: 1.0}}
+      on_failure: {tension: 6}
+    plot_thread: thread_locked_lounge
+
+  - key: quest_cctv_gap
+    name: 弄清监控为什么黑了四十分钟
+    giver: sun_zhaoqing
+    status: offered
+    goal: {type: investigate, location: purser_office}
+    constraints: {deadline_minutes: 1080}
+    rewards: {item: {cctv_drive: 1}, relationship: {sun_zhaoqing: {trust: 12}}}
+    failure_conditions: [deadline_passed, drive_wiped]
+    world_consequences:
+      on_success: {advance_thread: thread_your_own_23_minutes, reveal_fact_chance: {fact_cctv_gap_was_manual: 0.85}}
+      on_failure: {tension: 10}
+    plot_thread: thread_your_own_23_minutes
+
+  - key: quest_open_the_safe
+    name: 打开医务室的保险箱
+    giver: gu_shenyi
+    status: offered
+    goal: {type: acquire, item: qiao_medical_file, location: infirmary}
+    constraints: {deadline_minutes: 1440}
+    rewards: {item: {qiao_medical_file: 1}}
+    failure_conditions: [deadline_passed, refused_by_doctor]
+    world_consequences:
+      on_success: {advance_thread: thread_dying_man_plan, reveal_fact_chance: {fact_qiao_terminal_cancer: 1.0}}
+      on_failure: {tension: 8}
+      if_player_refuses: {reassign_to: [jian_mo], success_chance: 0.3}
+    plot_thread: thread_dying_man_plan
+
+  - key: quest_duty_log
+    name: 找出1114的原始值班记录
+    giver: zhou_yanzhi
+    status: offered
+    goal: {type: acquire, item: duty_log_1114, location: captain_office}
+    constraints: {deadline_minutes: 1620}
+    rewards: {item: {duty_log_1114: 1}, relationship: {zhou_yanzhi: {trust: 20}}}
+    failure_conditions: [caught_by_captain, deadline_passed]
+    world_consequences:
+      on_success: {advance_thread: thread_1114, reveal_fact_chance: {fact_pei_altered_duty_log: 0.9}}
+      on_failure: {tension: 15}
+      if_player_refuses: {reassign_to: [zhou_yanzhi], success_chance: 0.25}
+    plot_thread: thread_1114
+
+  - key: quest_defect_report
+    name: 让那份被压下的报告见光
+    giver: mai_zhengqi
+    status: offered
+    goal: {type: acquire, item: defect_report, location: engine_room}
+    constraints: {deadline_minutes: 1620}
+    rewards: {item: {defect_report: 1}, relationship: {mai_zhengqi: {trust: 15, respect: 10}}}
+    failure_conditions: [deadline_passed]
+    world_consequences:
+      on_success: {advance_thread: thread_1114, reveal_fact_chance: {fact_mai_report_suppressed: 1.0}}
+      on_failure: {tension: 6}
+    plot_thread: thread_1114
+
+  - key: quest_share_draft
+    name: 弄清股权草案是谁寄出的
+    giver: an_qiao
+    status: offered
+    goal: {type: investigate, locations: [wanyin_cabin, lawyer_cabin, qiao_suite]}
+    constraints: {deadline_minutes: 1500}
+    rewards: {item: {share_transfer_draft: 1}, relationship: {an_qiao: {trust: 12}}}
+    failure_conditions: [deadline_passed, draft_destroyed]
+    world_consequences:
+      on_success: {advance_thread: thread_who_gains, reveal_fact_chance: {fact_share_transfer_to_outsider: 1.0}}
+      on_failure: {tension: 8}
+    plot_thread: thread_who_gains
+
+  - key: quest_escrow_letter
+    name: 让陆秉臣交出那封委托函
+    giver: lu_bingchen
+    status: offered
+    goal: {type: persuade, target: lu_bingchen}
+    constraints: {deadline_minutes: 1800}
+    rewards: {item: {escrow_letter: 1}}
+    failure_conditions: [letter_destroyed, deadline_passed]
+    world_consequences:
+      on_success: {advance_thread: thread_dying_man_plan, reveal_fact_chance: {fact_escrow_letter_exists: 1.0}}
+      on_failure: {tension: 12}
+      if_player_refuses: {reassign_to: [qiao_wanyin, shao_lingjun], success_chance: 0.35}
+    plot_thread: thread_dying_man_plan
+
+  - key: quest_protect_witness
+    name: 在有人找到白秋禾之前保住她
+    giver: bai_qiuhe
+    status: offered
+    goal: {type: protect, target: bai_qiuhe}
+    constraints: {deadline_minutes: 1740}
+    rewards: {relationship: {bai_qiuhe: {trust: 25, affection: 15}, zhou_yanzhi: {respect: 12}}}
+    failure_conditions: [witness_dead, deadline_passed]
+    world_consequences:
+      on_success: {advance_thread: thread_second_victim, reveal_fact_chance: {fact_bai_qiuhe_saw_someone: 0.9}}
+      on_failure: {tension: 30, advance_thread: thread_second_victim}
+      if_player_refuses: {reassign_to: [zhou_yanzhi, shao_lingjun], success_chance: 0.3}
+    plot_thread: thread_second_victim
+
+  - key: quest_clear_your_name
+    name: 洗清你自己的嫌疑
+    giver: jian_mo
+    status: offered
+    goal: {type: exonerate, target: player}
+    constraints: {deadline_minutes: 2160}
+    rewards: {relationship: {jian_mo: {trust: 10, suspicion: -20}}}
+    failure_conditions: [deadline_passed, evidence_against_you]
+    world_consequences:
+      on_success: {advance_thread: thread_your_own_23_minutes}
+      on_failure: {tension: 25}
+    plot_thread: thread_your_own_23_minutes
+
+  - key: quest_publish_1114
+    name: 让1114的真相离开这条船
+    giver: zhou_yanzhi
+    status: offered
+    goal: {type: deliver, target: an_qiao, location: radio_room}
+    constraints: {deadline_minutes: 2160}
+    rewards: {faction_reputation: {bereaved_1114: 40}, relationship: {zhou_yanzhi: {trust: 25}}}
+    failure_conditions: [deadline_passed, materials_seized]
+    world_consequences:
+      on_success: {advance_thread: thread_1114}
+      on_failure: {tension: 20}
+      if_player_refuses: {reassign_to: [an_qiao, zhou_yanzhi], success_chance: 0.3}
+    plot_thread: thread_1114
+
+  - key: quest_name_the_killer
+    name: 在靠港之前指认凶手
+    giver: pei_zhaolin
+    status: offered
+    goal: {type: accuse, location: main_lounge}
+    constraints: {deadline_minutes: 2160}
+    rewards: {faction_reputation: {egret_crew: 20}}
+    failure_conditions: [deadline_passed, no_evidence]
+    world_consequences:
+      on_success: {advance_thread: thread_locked_lounge}
+      on_failure: {tension: 20}
+    plot_thread: thread_locked_lounge

@@ -1,0 +1,194 @@
+location_types:
+  - {key: ship, name: 船}
+  - {key: deck, name: 甲板与通道}
+  - {key: cabin, name: 舱室}
+  - {key: public_room, name: 公共舱}
+  - {key: service, name: 作业区}
+locations:
+  - key: egret_ferry
+    name: 白鹭号
+    type: ship
+    parent: null
+    danger: 2
+    spirit_density: 1
+    description: 一九九八年下水的近海客轮，四层，载客二百二十人。今夜船上连船员算在内只有十四个活人。
+
+  - key: first_class_deck
+    name: 头等舱走廊
+    type: deck
+    parent: egret_ferry
+    danger: 2
+    spirit_density: 1
+    description: 铺着暗红地毯的四层走廊，两端各一个摄像头，中间那一段的灯有一盏在闪。空气里有黄酒和消毒水的味道。
+    travel: {sea_view_lounge: 1, qiao_suite: 1, wanyin_cabin: 1, lawyer_cabin: 1, main_lounge: 3, open_deck: 4}
+
+  - key: sea_view_lounge
+    name: 望海厅
+    type: public_room
+    parent: first_class_deck
+    danger: 3
+    spirit_density: 1
+    description: 头等舱尽头的独立包厢。门闩从内侧插着，钥匙还在锁孔里，两扇舷窗从里面拧死。桌上一杯剩了小半的温黄酒。
+    travel: {first_class_deck: 1}
+
+  - key: qiao_suite
+    name: 乔慕山的套房
+    type: cabin
+    parent: first_class_deck
+    danger: 2
+    spirit_density: 1
+    description: 床没有睡过的痕迹，药盒按早中晚分了三格，第三格是空的。床头柜上压着一张手写的座位表。
+    travel: {first_class_deck: 1}
+
+  - key: wanyin_cabin
+    name: 乔晚吟的舱室
+    type: cabin
+    parent: first_class_deck
+    danger: 1
+    spirit_density: 1
+    description: 桌上摊着三份公司文件和一支还剩百分之四电量的录音笔。烟灰缸里六个烟头，全是同一个牌子。
+    travel: {first_class_deck: 1}
+
+  - key: lawyer_cabin
+    name: 陆秉臣的舱室
+    type: cabin
+    parent: first_class_deck
+    danger: 1
+    spirit_density: 1
+    description: 行李箱有密码锁，锁扣上有新的划痕。垃圾桶里是一沓被撕成小块又混进茶叶渣的纸。
+    travel: {first_class_deck: 1}
+
+  - key: main_lounge
+    name: 大堂酒吧
+    type: public_room
+    parent: egret_ferry
+    danger: 1
+    spirit_density: 1
+    description: 封舱之后所有人被要求待在这里。十几张沙发，一台放着雾天航行提示的电视，没有人看。
+    travel: {first_class_deck: 3, dining_hall: 2, open_deck: 2, crew_corridor: 3, bridge: 4}
+
+  - key: dining_hall
+    name: 餐厅
+    type: public_room
+    parent: egret_ferry
+    danger: 1
+    spirit_density: 1
+    description: 夜宵时段两点收档，桌布还没换。角落一张桌子上留着两个杯子，一个用过一个没有。
+    travel: {main_lounge: 2, galley: 1, crew_corridor: 3}
+
+  - key: galley
+    name: 后厨
+    type: service
+    parent: dining_hall
+    danger: 1
+    spirit_density: 1
+    description: 温酒的水浴锅还插着电，锅里的水是温的。出餐口的记录板上，最后一笔写着两点五十一分。
+    travel: {dining_hall: 1}
+
+  - key: crew_corridor
+    name: 船员通道
+    type: deck
+    parent: egret_ferry
+    danger: 2
+    spirit_density: 1
+    description: 铁质楼梯与裸露的管道，进门要刷工牌。门禁记录仪的绿灯每隔几秒闪一次。
+    travel: {main_lounge: 3, dining_hall: 3, crew_quarters: 2, infirmary: 2, engine_room: 4, purser_office: 2, cargo_hold: 5}
+
+  - key: crew_quarters
+    name: 船员舱
+    type: cabin
+    parent: crew_corridor
+    danger: 1
+    spirit_density: 1
+    description: 六个铺位，四个有人。有一个铺位的枕头下压着一张不属于这条船的工牌。
+    travel: {crew_corridor: 2}
+
+  - key: infirmary
+    name: 医务室
+    type: service
+    parent: crew_corridor
+    danger: 2
+    spirit_density: 1
+    description: 一张诊疗床、一柜药、一个上了密码的小保险箱。镇静剂领用登记本摊在桌上，最后两行的笔迹与前面不同。
+    travel: {crew_corridor: 2}
+
+  - key: engine_room
+    name: 机舱
+    type: service
+    parent: crew_corridor
+    danger: 3
+    spirit_density: 1
+    description: 抛锚待雾期间只有辅机在转，噪音大到必须贴着耳朵说话。工具柜后面塞着一只不属于这里的纸箱。
+    travel: {crew_corridor: 4}
+
+  - key: purser_office
+    name: 事务长办公室
+    type: service
+    parent: crew_corridor
+    danger: 2
+    spirit_density: 1
+    description: 旅客名单、门禁记录和四路监控都在这台机器上。头等舱走廊那一路在两点四十到三点二十之间是黑的。
+    travel: {crew_corridor: 2}
+
+  - key: cargo_hold
+    name: 货舱
+    type: service
+    parent: crew_corridor
+    danger: 3
+    spirit_density: 1
+    description: 冷得能看见自己呼出的白气。集装箱之间的缝隙足够藏一个人，也足够藏一个包。
+    travel: {crew_corridor: 5}
+
+  - key: open_deck
+    name: 露天甲板
+    type: deck
+    parent: egret_ferry
+    danger: 3
+    spirit_density: 1
+    description: 雾浓得看不见船头，栏杆上挂着一层水。每隔两分钟响一次雾笛，响的时候没有人能听清别的声音。
+    travel: {main_lounge: 2, first_class_deck: 4, stern_deck: 3, lifeboat_deck: 2, bridge: 3}
+
+  - key: stern_deck
+    name: 尾甲板
+    type: deck
+    parent: open_deck
+    danger: 4
+    spirit_density: 1
+    description: 全船监控唯一照不到的地方。栏杆比别处矮一截，下面是黑的。
+    travel: {open_deck: 3}
+
+  - key: lifeboat_deck
+    name: 救生艇甲板
+    type: deck
+    parent: open_deck
+    danger: 3
+    spirit_density: 1
+    description: 八条救生艇的帆布罩，其中第三条的绑绳被人重新系过，系法不是船上的规矩。
+    travel: {open_deck: 2}
+
+  - key: bridge
+    name: 驾驶台
+    type: service
+    parent: egret_ferry
+    danger: 2
+    spirit_density: 1
+    description: 雷达上除了自己什么也没有。航海日志摊开着，十一月十四日那一页写了三行又划掉两行。
+    travel: {main_lounge: 4, open_deck: 3, captain_office: 1, radio_room: 1}
+
+  - key: captain_office
+    name: 船长室
+    type: cabin
+    parent: bridge
+    danger: 2
+    spirit_density: 1
+    description: 全船唯一一部还能用的卫星电话锁在这里。柜子最下层放着十年前那本没有交上去的旧值班簿。
+    travel: {bridge: 1}
+
+  - key: radio_room
+    name: 通讯室
+    type: service
+    parent: bridge
+    danger: 2
+    spirit_density: 1
+    description: 甚高频只剩杂音。发报记录上最后一条是凌晨一点四十七分发给公司总部的，内容被涂掉了。
+    travel: {bridge: 1}

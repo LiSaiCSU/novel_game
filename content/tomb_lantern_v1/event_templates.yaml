@@ -1,0 +1,34 @@
+event_types:
+  - {key: MOVE, importance: 0.05, visibility: LOCAL}
+  - {key: CONVERSATION, importance: 0.10, visibility: LOCAL}
+  - {key: TRADE, importance: 0.12, visibility: LOCAL}
+  - {key: DEATH, importance: 1.00, visibility: PUBLIC}
+  - {key: RESCUE, importance: 0.90, visibility: LOCAL}
+  - {key: BETRAYAL, importance: 0.95, visibility: PRIVATE}
+  - {key: PROMISE, importance: 0.55, visibility: PRIVATE}
+  - {key: SECRET_DISCLOSURE, importance: 0.88, visibility: PRIVATE}
+  - {key: ITEM_ACQUIRED, importance: 0.18, visibility: PRIVATE}
+  - {key: QUEST_ACCEPTED, importance: 0.25, visibility: LOCAL}
+  - {key: QUEST_COMPLETED, importance: 0.55, visibility: LOCAL}
+  - {key: QUEST_FAILED, importance: 0.55, visibility: LOCAL}
+  - {key: RELATIONSHIP_SHIFT, importance: 0.20, visibility: PRIVATE}
+  - {key: REJECTED_ACTION, importance: 0.02, visibility: PRIVATE}
+  - {key: OBSERVATION, importance: 0.05, visibility: PRIVATE}
+  - {key: NPC_RETURN, importance: 0.50, visibility: LOCAL}
+  - {key: NPC_DEPARTURE, importance: 0.35, visibility: LOCAL}
+  - {key: NPC_APPROACH, importance: 0.40, visibility: LOCAL}
+  - {key: RUMOR_SPREAD, importance: 0.28, visibility: PUBLIC}
+  - {key: FACTION_MOVE, importance: 0.62, visibility: FACTION}
+  - {key: QUEST_OFFER, importance: 0.32, visibility: LOCAL}
+  - {key: DISCOVERY, importance: 0.60, visibility: PRIVATE}
+  - {key: ENVIRONMENT_SHIFT, importance: 0.55, visibility: PUBLIC}
+  - {key: CONFRONTATION, importance: 0.70, visibility: LOCAL}
+  - {key: RESOURCE_CHANGE, importance: 0.30, visibility: FACTION}
+  - {key: FORESHADOWING, importance: 0.22, visibility: LOCAL}
+  - {key: OFFLINE_WORLD_EVENT, importance: 0.32, visibility: PUBLIC}
+  - {key: SCHEDULE_MOVE, importance: 0.02, visibility: LOCAL}
+offline_templates:
+  - {key: crew_moves_on, lod: [1, 2], weight: 22, scope: character, requires: {character_type: [MAJOR_NPC]}, effects: {move_along_schedule: true}, narrative_hint: 岭上岭下的人各自按自己的算盘走动}
+  - {key: town_rumor, lod: [1, 2], weight: 14, scope: information, requires: {has_public_facts: true}, effects: {spread_information: true}, narrative_hint: 茶馆里的说法又变了一个版本}
+  - {key: mound_progress, lod: [1, 2], weight: 16, scope: faction, requires: {faction_any: true}, effects: {faction_resources: {conscripts: [-0.03, 0]}}, narrative_hint: 封土又矮了一截，抬出来的人又多了几个}
+  - {key: supply_drain, lod: [2, 3], weight: 8, scope: faction, requires: {faction_any: true}, effects: {faction_resources: {silver: [-0.02, 0.01]}}, narrative_hint: 银钱与物料在几方之间悄悄流动}

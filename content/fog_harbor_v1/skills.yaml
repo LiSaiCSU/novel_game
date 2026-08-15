@@ -1,0 +1,14 @@
+skill_categories:
+  - {key: observe, name: 勘察}
+  - {key: talk, name: 交涉}
+  - {key: tech, name: 专业}
+skills:
+  - {key: forensic_eye, name: 现场勘察, category: observe, required_realm: passenger, description: 分得清死后形成的痕迹和死前形成的痕迹。}
+  - {key: interview, name: 问询, category: talk, required_realm: passenger, description: 用两个无害的问题夹住一个要命的问题。}
+  - {key: profiling, name: 侧写, category: talk, required_realm: passenger, description: 从一个人回避的东西反推他真正在保护什么。}
+  - {key: pharmacology, name: 药理, category: tech, required_realm: passenger, description: 认得出剂量、给药途径与起效时间。}
+  - {key: seamanship, name: 航海, category: tech, required_realm: passenger, description: 看得懂航海日志、值班表和锚泊记录。}
+  - {key: mechanics, name: 机械, category: tech, required_realm: passenger, description: 知道哪个部件坏了会死人，也知道谁签字放行了它。}
+  - {key: document_review, name: 文书审阅, category: tech, required_realm: passenger, description: 一眼看出补签、倒签和被替换的那一页。}
+  - {key: access_control, name: 门禁与监控, category: tech, required_realm: passenger, description: 调得出刷卡记录，也看得出记录被人抹过。}
+  - {key: service_craft, name: 餐饮与酒水, category: tech, required_realm: passenger, description: 知道一杯温酒从锅到桌需要几分钟，凉到什么程度。}

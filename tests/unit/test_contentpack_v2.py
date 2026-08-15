@@ -3,6 +3,7 @@ from __future__ import annotations
 from pathlib import Path
 
 import pytest
+from PIL import Image
 
 from apps.authoring.testing import run_author_tests
 from database.memory_uow import MemoryStore, MemoryUnitOfWork
@@ -24,6 +25,24 @@ from engine.world.seeder import PlayerSpec, build_world
 from engine.world.state_view import build_world_state
 
 CONTENT = Path(__file__).resolve().parents[2] / "content"
+
+
+@pytest.mark.parametrize(
+    "key",
+    ("tomb_lantern_v1", "fog_harbor_v1", "spirit_pact_v1"),
+)
+def test_new_official_content_has_a_valid_landscape_cover(key: str) -> None:
+    pack = load_content_pack(CONTENT, key)
+    package = project_v1_as_v2(pack)
+    covers = [asset for asset in package.manifest.assets if asset.kind == "cover"]
+
+    assert len(covers) == 1
+    source = pack.root / "assets" / Path(covers[0].path).name
+    assert source.is_file()
+    with Image.open(source) as image:
+        assert image.format == "PNG"
+        assert image.width >= 1200
+        assert image.width * 2 == image.height * 3
 
 
 def test_campus_pack_is_full_v2_reference_work() -> None:
@@ -53,7 +72,10 @@ def test_campus_pack_is_full_v2_reference_work() -> None:
 
 @pytest.mark.asyncio
 async def test_all_official_content_declares_and_passes_author_tests() -> None:
-    for key in ("cultivation_v1", "campus_romance_v1"):
+    for key in (
+        "cultivation_v1", "campus_romance_v1", "tomb_lantern_v1",
+        "fog_harbor_v1", "spirit_pact_v1",
+    ):
         package = project_v1_as_v2(load_content_pack(CONTENT, key))
         suite = await run_author_tests(package, content_dir=str(CONTENT / key))
 

@@ -1,0 +1,20 @@
+skill_categories:
+  - {key: control, name: 控制系}
+  - {key: power_attack, name: 强攻系}
+  - {key: agility_attack, name: 敏攻系}
+  - {key: defense, name: 防御系}
+  - {key: support, name: 辅助系}
+  - {key: lore, name: 学识}
+skills:
+  - {key: entangle, name: 缠绕, category: control, required_realm: soul_master, description: 星蔓草第一契术。捆住一个人五息，五息之内你要么赢，要么跑。}
+  - {key: parasite, name: 寄生, category: control, required_realm: soul_master, description: 星蔓草紫纹契契术。攀附对方经脉抽取灵息，对方等级越高抽得越慢。}
+  - {key: iron_hide, name: 铁甲, category: defense, required_realm: soul_master, description: 玄铁牛防御契术。硬吃一击不掉血，但接下来三息动不了。}
+  - {key: charge_smash, name: 蛮撞, category: power_attack, required_realm: soul_master, description: 玄铁牛强攻契术。直线冲撞，转向极难，被闪开就是空门。}
+  - {key: shadow_step, name: 影步, category: agility_attack, required_realm: soul_master, description: 影狸敏攻契术。三步之内瞬移到对方背后，用一次要缓很久。}
+  - {key: bell_toll, name: 钟鸣, category: control, required_realm: soul_master, description: 流云钟器命印契术。震荡精神，对精神力低于自己的人才有效。}
+  - {key: guard_channel, name: 护法, category: support, required_realm: soul_master, description: 替缔结灵契的人稳住外泄的灵息。护法者自己不能同时出手。}
+  - {key: beast_appraisal, name: 鉴年, category: lore, required_realm: soul_master, description: 从爪痕、粪便、领地范围与灵息波动判断一头异兽活了多少年。看错一次就是一条命。}
+  - {key: pact_binding, name: 缔契, category: support, required_realm: soul_master, description: 猎杀后一炷香内缔结灵契。契阶越高，需要的精神力与承受力越高，失败即反噬。}
+  - {key: bone_fusion, name: 融骨, category: support, required_realm: soul_master, description: 将灵髓融入自身对应部位。一个部位一辈子只能融一块。}
+  - {key: soul_fusion_skill, name: 组合契术, category: support, required_realm: soul_master, description: 两人以上命印属性相合方可施展，需要长期磨合与绝对信任。}
+  - {key: field_dressing, name: 处理反噬, category: support, required_realm: soul_master, description: 疏导淤积的灵息，缓解反噬，但治标不治本。}

@@ -89,6 +89,24 @@ async def ensure_official_releases(
                 session, settings, asset_store, "campus_romance_v1",
                 "unfinished-spring-messages", ["校园", "恋爱", "女性向"],
             )
+        tomb_dir = settings.content_path / "tomb_lantern_v1"
+        if tomb_dir.is_dir():
+            await _ensure_pack(
+                session, settings, asset_store, "tomb_lantern_v1",
+                "nine-branch-lantern", ["盗墓", "悬疑", "冒险", "民国"],
+            )
+        fog_dir = settings.content_path / "fog_harbor_v1"
+        if fog_dir.is_dir():
+            await _ensure_pack(
+                session, settings, asset_store, "fog_harbor_v1",
+                "egret-in-the-fog", ["剧本杀", "推理", "悬疑", "暴风雪山庄"],
+            )
+        spirit_pact_dir = settings.content_path / "spirit_pact_v1"
+        if spirit_pact_dir.is_dir():
+            await _ensure_pack(
+                session, settings, asset_store, "spirit_pact_v1",
+                "nine-sigil-choices", ["东方玄幻", "学院", "成长", "冒险"],
+            )
         await session.commit()
 
 

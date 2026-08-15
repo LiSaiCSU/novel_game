@@ -1,0 +1,197 @@
+location_types:
+  - {key: mountain, name: 山岭}
+  - {key: town, name: 镇子}
+  - {key: building, name: 屋舍}
+  - {key: room, name: 房间}
+  - {key: outdoor, name: 野地}
+  - {key: camp, name: 营地}
+  - {key: tunnel, name: 地道}
+  - {key: chamber, name: 墓室}
+locations:
+  - key: hanya_ling
+    name: 寒鸦岭
+    type: mountain
+    parent: null
+    danger: 3
+    spirit_density: 1
+    description: 晋陕交界一道黑石梁子，秋后寸草不生，成群的寒鸦落在封土堆上不叫。
+
+  - key: hanya_town
+    name: 寒鸦镇
+    type: town
+    parent: hanya_ling
+    danger: 1
+    spirit_density: 1
+    description: 岭下一条街，两排土房。街口新贴的征夫告示上按满了手印，墨还没干透。
+    travel: {mule_inn: 3, zhang_teahouse: 2, luo_yard: 5, camp_gate: 20, shanshen_temple: 35}
+
+  - key: mule_inn
+    name: 骡马店
+    type: building
+    parent: hanya_town
+    danger: 1
+    spirit_density: 1
+    description: 镇上唯一能住外来人的地方。后院堆着从封土上刨下来的新土，土里混着碎骨和陶片。
+    travel: {hanya_town: 3, zhang_teahouse: 4}
+
+  - key: zhang_teahouse
+    name: 张记茶馆
+    type: building
+    parent: hanya_town
+    danger: 0
+    spirit_density: 1
+    description: 一天到晚坐满等着领工钱的民夫。掌柜的柜台有个夹层，十年没打开过。
+    travel: {hanya_town: 2, mule_inn: 4, luo_yard: 6}
+
+  - key: luo_yard
+    name: 罗家场院
+    type: building
+    parent: hanya_town
+    danger: 1
+    spirit_density: 1
+    description: 罗九娘的地盘，院里码着洛阳铲、绞盘和成捆的麻绳，墙角一口盖着石板的旧井。
+    travel: {hanya_town: 5, zhang_teahouse: 6, ghost_road: 50}
+
+  - key: camp_gate
+    name: 靳部营门
+    type: camp
+    parent: hanya_ling
+    danger: 3
+    spirit_density: 1
+    description: 用民房拆下来的木料扎的营门，两挺机枪冲着岭下的路，进出全凭一张路条。
+    travel: {hanya_town: 20, camp_tent: 3, field_clinic: 5, powder_shed: 6, mound_site: 15}
+
+  - key: camp_tent
+    name: 中军帐
+    type: room
+    parent: camp_gate
+    danger: 3
+    spirit_density: 1
+    description: 帐里摊着一张放大的寒鸦岭测绘图，上面用红笔画了九个圈，其中六个已经涂掉。
+    travel: {camp_gate: 3, field_clinic: 4}
+
+  - key: field_clinic
+    name: 随军医棚
+    type: room
+    parent: camp_gate
+    danger: 2
+    spirit_density: 1
+    description: 塌了一半的帆布棚，地上排着从封土下抬出来的民夫，多数已经不需要药了。
+    travel: {camp_gate: 5, camp_tent: 4}
+
+  - key: powder_shed
+    name: 火药棚
+    type: room
+    parent: camp_gate
+    danger: 4
+    spirit_density: 1
+    description: 离营门六十步，堆着二十四箱军用炸药，账上写的是二十六箱。
+    travel: {camp_gate: 6, mound_site: 12}
+
+  - key: mound_site
+    name: 封土工地
+    type: outdoor
+    parent: hanya_ling
+    danger: 4
+    spirit_density: 1
+    description: 三百个民夫在剥封土，白天不停工。土层里一层夯土一层碎石，偶尔刨出一截人骨没人敢停手。
+    travel: {camp_gate: 15, powder_shed: 12, tomb_mouth: 5, mass_grave: 20}
+
+  - key: mass_grave
+    name: 乱坟岗
+    type: outdoor
+    parent: hanya_ling
+    danger: 2
+    spirit_density: 1
+    description: 岭西背阴坡，埋着历年下地没上来的土夫子。新坟只堆土不立碑，怕官府查。
+    travel: {mound_site: 20, shanshen_temple: 15}
+
+  - key: shanshen_temple
+    name: 山神庙
+    type: building
+    parent: hanya_ling
+    danger: 1
+    spirit_density: 1
+    description: 半塌的小庙，神像的脸被人凿掉了。供桌是整块青石，底下压着东西，压得地面凹下去一寸。
+    travel: {mass_grave: 15, hanya_town: 35, ghost_road: 25}
+
+  - key: ghost_road
+    name: 鬼路
+    type: tunnel
+    parent: hanya_ling
+    danger: 5
+    spirit_density: 1
+    description: 前清挖废的一条采石矿道，进去三百步就要弯腰。放羊的孩子说尽头有风，有风就说明通着别处。
+    travel: {shanshen_temple: 25, luo_yard: 50, tomb_corridor: 40}
+
+  - key: tomb_mouth
+    name: 墓道口
+    type: tunnel
+    parent: hanya_ling
+    danger: 4
+    spirit_density: 1
+    description: 封土剥开露出的青石券门，门缝里塞着十年前的旧木楔，楔子上的斧痕是新磨过的。
+    travel: {mound_site: 5, tomb_corridor: 12}
+
+  - key: tomb_corridor
+    name: 甬道
+    type: tunnel
+    parent: hanya_ling
+    danger: 5
+    spirit_density: 1
+    description: 三十丈长的斜坡甬道，两壁刻满没人认得的离国文字。走到一半，火苗会齐刷刷往回倒。
+    travel: {tomb_mouth: 12, lamp_hall: 8, ghost_road: 40, drain_channel: 15}
+
+  - key: lamp_hall
+    name: 九枝灯厅
+    type: chamber
+    parent: hanya_ling
+    danger: 5
+    spirit_density: 1
+    description: 前室穹顶极高，九座青铜连枝灯分列九个方位，灯盏里的膏油二千年没干。地面踩上去有回声。
+    travel: {tomb_corridor: 8, side_chamber: 6, mercury_river: 10}
+
+  - key: side_chamber
+    name: 耳室
+    type: chamber
+    parent: hanya_ling
+    danger: 4
+    spirit_density: 1
+    description: 陪葬坑，三十具殉人骨骸整齐地面朝主墓室方向跪着。最靠门的一具骨头是新的。
+    travel: {lamp_hall: 6}
+
+  - key: mercury_river
+    name: 水银暗河
+    type: chamber
+    parent: hanya_ling
+    danger: 6
+    spirit_density: 1
+    description: 一条人工凿出的河床，灌的是水银，映着灯火亮得刺眼。河面每到后半夜会悄悄涨起来。
+    travel: {lamp_hall: 10, coffin_platform: 12, drain_channel: 9}
+
+  - key: coffin_platform
+    name: 悬棺台
+    type: chamber
+    parent: hanya_ling
+    danger: 6
+    spirit_density: 1
+    description: 四根青铜链把椁室吊在水银河正上方。链子下面的水银里沉着东西，形状像人。
+    travel: {mercury_river: 12, main_chamber: 5}
+
+  - key: main_chamber
+    name: 主墓室
+    type: chamber
+    parent: hanya_ling
+    danger: 6
+    spirit_density: 1
+    description: 离厉侯的地宫。棺床空着，随葬品摆得整整齐齐，只有正中一个印匣是打开的。
+    travel: {coffin_platform: 5}
+
+  - key: drain_channel
+    name: 排水暗渠
+    type: tunnel
+    parent: hanya_ling
+    danger: 5
+    spirit_density: 1
+    description: 修陵时留下的泄水渠，只有半人高，一直通到岭外。渠壁上的水痕比人还高。
+    travel: {tomb_corridor: 15, mercury_river: 9}

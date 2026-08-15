@@ -1,0 +1,560 @@
+characters:
+  - key: he_shuqin
+    name: 何淑勤
+    type: MAJOR_NPC
+    age: 55
+    gender: female
+    location: qiao_suite
+    realm: passenger
+    realm_stage: aboard
+    stats: {strength: 10, agility: 11, perception: 16, intelligence: 15, willpower: 19, charisma: 13}
+    background: >
+      乔慕山请了六年的私人护理，负责他每天的三格药盒、饮食和作息。
+      她话不多，做事极稳，是全船唯一一个能随时进出那间套房而不会被人多看一眼的人。
+    personality:
+      traits: {composed: 0.92, self_effacing: 0.85, resolute: 0.9, guilt_ridden: 0.75}
+      values: [把答应的事做完, 不连累别人, 死者应有的体面]
+      taboos: [看着别人替自己顶罪]
+      speech_style: 温和、简短、永远先答问题再补一句无关紧要的家常
+      risk_tolerance: 0.4
+    emotion: {dominant: contained, valence: -0.3, arousal: 0.35, intensity: 0.6}
+    long_term_goal: 让十年前的事被翻出来，同时活着回去见自己的女儿
+    short_term_goals: [把注意力引向十年前的当班表, 确认舷窗上的胶带痕迹没有人注意到]
+    schedule:
+      default: work
+      slots:
+        - {phase: deep_night, activity: social, location: main_lounge}
+        - {phase: dawn, activity: work, location: qiao_suite}
+        - {phase: morning, activity: social, location: main_lounge}
+        - {phase: noon, activity: eat, location: dining_hall}
+        - {phase: afternoon, activity: work, location: qiao_suite}
+        - {phase: dusk, activity: social, location: main_lounge}
+        - {phase: night, activity: rest, location: qiao_suite}
+    items: [{key: pill_organizer, qty: 1}]
+    skills: [pharmacology]
+    reputation: {global: 12, by_faction: {qingjiao_shipping: 40}}
+    secret: 针是她推的，是乔慕山亲口求的；但她在最后一刻反悔了，于是把现场做成了密室
+    capabilities: [静脉注射, 进出乔慕山套房, 让所有人忽略自己]
+
+  - key: pei_zhaolin
+    name: 裴昭麟
+    type: MAJOR_NPC
+    age: 47
+    gender: male
+    location: bridge
+    faction: egret_crew
+    faction_rank: 船长
+    realm: command
+    realm_stage: master
+    stats: {strength: 14, agility: 12, perception: 15, intelligence: 15, willpower: 17, charisma: 15}
+    background: >
+      跑了二十三年近海线，十年前的1114他是当班大副。事故之后他升了船长，
+      一次也没有再提过那天晚上。封舱的决定是他下的，谁都不许离开也是他说的。
+    personality:
+      traits: {authoritative: 0.9, evasive: 0.75, dutiful: 0.8}
+      values: [船先靠岸, 秩序, 不在自己船上再死人]
+      taboos: [让旅客靠近驾驶台]
+      speech_style: 命令句，回答敏感问题时会先重复一遍你的提问
+      risk_tolerance: 0.45
+    emotion: {dominant: strained, valence: -0.25, arousal: 0.6, intensity: 0.6}
+    long_term_goal: 把船和船上所有人整整齐齐交给码头，然后继续什么都不说
+    short_term_goals: [控制住大堂里的十几个人, 防止有人碰驾驶台和卫星电话]
+    schedule:
+      default: work
+      slots:
+        - {phase: deep_night, activity: work, location: bridge}
+        - {phase: dawn, activity: work, location: bridge}
+        - {phase: morning, activity: patrol, location: main_lounge}
+        - {phase: noon, activity: work, location: bridge}
+        - {phase: afternoon, activity: work, location: captain_office}
+        - {phase: dusk, activity: patrol, location: open_deck}
+        - {phase: night, activity: work, location: bridge}
+    items: [{key: cabin_master_key, qty: 1}, {key: duty_log_1114, qty: 1}]
+    skills: [seamanship, access_control]
+    reputation: {global: 28, by_faction: {egret_crew: 80}}
+    secret: 十年前那份值班记录是他事后改的，周砚清顶下的责任本该有他一半
+    capabilities: [封舱, 使用卫星电话, 调动全体船员]
+
+  - key: qiao_wanyin
+    name: 乔晚吟
+    type: MAJOR_NPC
+    age: 34
+    gender: female
+    location: wanyin_cabin
+    faction: qingjiao_shipping
+    faction_rank: 副总裁
+    realm: passenger
+    realm_stage: aboard
+    stats: {strength: 10, agility: 11, perception: 15, intelligence: 18, willpower: 17, charisma: 16}
+    background: >
+      死者的独女，也是公司实际在跑业务的那个人。她昨晚和父亲谈崩了，
+      谈的是一份要把股份转给公司以外的人的草案。她没有哭，一次也没有。
+    personality:
+      traits: {controlled: 0.9, ambitious: 0.85, wounded: 0.7}
+      values: [公司要活下去, 该我的就是我的, 不在人前失态]
+      taboos: [当众示弱]
+      speech_style: 精确、克制，反问句多，从不主动提供信息
+      risk_tolerance: 0.55
+    emotion: {dominant: cold, valence: -0.2, arousal: 0.45, intensity: 0.55}
+    long_term_goal: 保住公司与自己的继承顺位，同时弄清父亲最后要做什么
+    short_term_goals: [找回那份股权转让草案, 弄清徐朗为什么离开岗位]
+    schedule:
+      default: work
+      slots:
+        - {phase: deep_night, activity: social, location: main_lounge}
+        - {phase: dawn, activity: work, location: wanyin_cabin}
+        - {phase: morning, activity: social, location: main_lounge}
+        - {phase: noon, activity: eat, location: dining_hall}
+        - {phase: afternoon, activity: work, location: wanyin_cabin}
+        - {phase: dusk, activity: social, location: main_lounge}
+        - {phase: night, activity: rest, location: wanyin_cabin}
+    items: [{key: wanyin_recorder, qty: 1}]
+    skills: [document_review, interview]
+    reputation: {global: 35, by_faction: {qingjiao_shipping: 85}}
+    secret: 她昨晚十一点就知道父亲要把股份转出去，并且给律师打过一通七分钟的电话
+    capabilities: [调得动公司法务, 看得懂财务文件, 出得起任何价]
+
+  - key: lu_bingchen
+    name: 陆秉臣
+    type: MAJOR_NPC
+    age: 52
+    gender: male
+    location: lawyer_cabin
+    faction: qingjiao_shipping
+    faction_rank: 法务总监
+    realm: passenger
+    realm_stage: aboard
+    stats: {strength: 10, agility: 10, perception: 16, intelligence: 18, willpower: 15, charisma: 14}
+    background: >
+      跟了乔慕山十九年，公司所有不能见光的文件都从他手上过一遍。
+      十年前的原始记录是他销毁的，但他留了一份副本——这是他这十年唯一的安全带。
+    personality:
+      traits: {cautious: 0.92, calculating: 0.88, loyal_to_self: 0.8}
+      values: [手上要有底牌, 程序, 活到最后]
+      taboos: [把底牌一次交出去]
+      speech_style: 一句话里三个限定词，绝不给出可被引用的表述
+      risk_tolerance: 0.35
+    emotion: {dominant: wary, valence: -0.15, arousal: 0.5, intensity: 0.5}
+    long_term_goal: 让这三十六小时结束时，自己既没有责任也没有失去筹码
+    short_term_goals: [决定要不要拆开那封委托函, 确认自己房里被翻过什么]
+    schedule:
+      default: work
+      slots:
+        - {phase: deep_night, activity: social, location: main_lounge}
+        - {phase: dawn, activity: work, location: lawyer_cabin}
+        - {phase: morning, activity: social, location: main_lounge}
+        - {phase: noon, activity: eat, location: dining_hall}
+        - {phase: afternoon, activity: work, location: lawyer_cabin}
+        - {phase: dusk, activity: social, location: main_lounge}
+        - {phase: night, activity: rest, location: lawyer_cabin}
+    items: [{key: escrow_letter, qty: 1}, {key: hush_receipt, qty: 1}]
+    skills: [document_review, profiling]
+    reputation: {global: 20, by_faction: {qingjiao_shipping: 70}}
+    secret: 乔慕山留给他一封信，写明若自己死于非自然原因就把十年前的全部材料公开
+    capabilities: [起草与销毁文件, 认得出任何一份被替换的记录, 替公司说话]
+
+  - key: gu_shenyi
+    name: 顾深仪
+    type: MAJOR_NPC
+    age: 39
+    gender: female
+    location: infirmary
+    realm: passenger
+    realm_stage: aboard
+    stats: {strength: 10, agility: 12, perception: 17, intelligence: 17, willpower: 15, charisma: 13}
+    background: >
+      乔慕山的私人医生，三个月前给他出过一份不打算给任何人看的报告。
+      这趟出海她本来只需要每天量两次血压。
+    personality:
+      traits: {precise: 0.9, ethical: 0.8, tired: 0.6}
+      values: [病人的隐私, 数据不能改, 该说的话要说]
+      taboos: [伪造医疗记录]
+      speech_style: 用术语说事实，被追问时会明确指出自己不能回答哪一部分
+      risk_tolerance: 0.4
+    emotion: {dominant: grave, valence: -0.3, arousal: 0.45, intensity: 0.55}
+    long_term_goal: 在不违背医疗保密的前提下，让死因被正确地写下来
+    short_term_goals: [核对镇静剂领用登记本, 决定要不要打开保险箱]
+    schedule:
+      default: work
+      slots:
+        - {phase: deep_night, activity: work, location: sea_view_lounge}
+        - {phase: dawn, activity: work, location: infirmary}
+        - {phase: morning, activity: work, location: infirmary}
+        - {phase: noon, activity: eat, location: dining_hall}
+        - {phase: afternoon, activity: work, location: infirmary}
+        - {phase: dusk, activity: social, location: main_lounge}
+        - {phase: night, activity: rest, location: infirmary}
+    items: [{key: ship_doctor_bag, qty: 1}, {key: sedative_log, qty: 1}]
+    skills: [pharmacology, forensic_eye]
+    reputation: {global: 25, by_faction: {}}
+    secret: 乔慕山三个月前确诊胰腺癌晚期，病历锁在医务室保险箱里
+    capabilities: [尸表检查, 判断给药方式与时间, 打得开保险箱]
+
+  - key: zhou_yanzhi
+    name: 周砚知
+    type: MAJOR_NPC
+    age: 29
+    gender: female
+    location: crew_corridor
+    faction: bereaved_1114
+    faction_rank: 发起人
+    realm: crew
+    realm_stage: on_duty
+    stats: {strength: 11, agility: 14, perception: 16, intelligence: 16, willpower: 18, charisma: 13}
+    background: >
+      用“林知”这个名字应聘上船的乘务员。她哥哥周砚清十年前替整条航线顶了责任，
+      在看守所里自缢。她上船不是为了报仇，是为了那本没有交上去的旧值班簿。
+    personality:
+      traits: {determined: 0.95, vigilant: 0.85, restrained: 0.7}
+      values: [哥哥的名字, 证据而不是说法, 不牵连无辜的人]
+      taboos: [伪造证据]
+      speech_style: 平时是标准的服务用语，谈到1114时忽然变成另一个人
+      risk_tolerance: 0.7
+    emotion: {dominant: tense, valence: -0.35, arousal: 0.6, intensity: 0.65}
+    long_term_goal: 拿到1114的原始值班记录，并让它离开这条船
+    short_term_goals: [进一次船长室, 判断玩家能不能合作]
+    schedule:
+      default: work
+      slots:
+        - {phase: deep_night, activity: work, location: crew_corridor}
+        - {phase: dawn, activity: work, location: dining_hall}
+        - {phase: morning, activity: work, location: main_lounge}
+        - {phase: noon, activity: work, location: dining_hall}
+        - {phase: afternoon, activity: investigate, location: crew_corridor}
+        - {phase: dusk, activity: work, location: main_lounge}
+        - {phase: night, activity: investigate, location: stern_deck}
+    items: [{key: crew_id_fake, qty: 1}, {key: zhou_letter, qty: 1}]
+    skills: [access_control, interview]
+    reputation: {global: 5, by_faction: {bereaved_1114: 95, egret_crew: 30}}
+    secret: 她用的是化名，真实身份是1114替罪二副周砚清的妹妹
+    capabilities: [进得了船员通道, 记得住每个人的动线, 会撬简单的锁]
+
+  - key: mai_zhengqi
+    name: 麦正岐
+    type: MAJOR_NPC
+    age: 44
+    gender: male
+    location: engine_room
+    faction: egret_crew
+    faction_rank: 轮机长
+    realm: officer
+    realm_stage: watch
+    stats: {strength: 15, agility: 12, perception: 14, intelligence: 15, willpower: 16, charisma: 11}
+    background: >
+      十年前他写过一份设备缺陷报告，交上去以后再没有人提起。
+      那之后他不再写任何东西，只在心里记着每一台机器该在什么时候大修。
+    personality:
+      traits: {blunt: 0.85, bitter: 0.7, reliable: 0.85}
+      values: [机器不会说谎, 该修就得修, 欠的账早晚要还]
+      taboos: [再签一次字了事]
+      speech_style: 粗、直、爱用机械打比方，说到十年前会突然沉默很久
+      risk_tolerance: 0.55
+    emotion: {dominant: sullen, valence: -0.3, arousal: 0.4, intensity: 0.5}
+    long_term_goal: 让当年那份被压下去的报告见一次光
+    short_term_goals: [找到自己那份报告的底稿, 确认谁在两点半以后动过货舱门]
+    schedule:
+      default: work
+      slots:
+        - {phase: deep_night, activity: work, location: engine_room}
+        - {phase: dawn, activity: work, location: engine_room}
+        - {phase: morning, activity: eat, location: dining_hall}
+        - {phase: noon, activity: work, location: engine_room}
+        - {phase: afternoon, activity: rest, location: crew_quarters}
+        - {phase: dusk, activity: work, location: engine_room}
+        - {phase: night, activity: work, location: engine_room}
+    items: [{key: defect_report, qty: 1}]
+    skills: [mechanics, seamanship]
+    reputation: {global: 18, by_faction: {egret_crew: 65}}
+    secret: 十年前那场事故的直接原因是他报告过的那台设备，报告被人压了下来
+    capabilities: [认得全船每一处管路, 进得了货舱, 拆得开任何一个箱子]
+
+  - key: sun_zhaoqing
+    name: 孙兆卿
+    type: MAJOR_NPC
+    age: 40
+    gender: male
+    location: purser_office
+    faction: egret_crew
+    faction_rank: 事务长
+    realm: officer
+    realm_stage: watch
+    stats: {strength: 11, agility: 12, perception: 17, intelligence: 15, willpower: 14, charisma: 14}
+    background: >
+      旅客名单、门禁记录、四路监控都归他管。封舱以后他做的第一件事，
+      是把三点十七分之前的所有刷卡记录打印了一份，锁进抽屉。
+    personality:
+      traits: {bureaucratic: 0.85, watchful: 0.8, self_protective: 0.75}
+      values: [记录要全, 责任要清, 不替别人担事]
+      taboos: [把原始记录交给非执法人员]
+      speech_style: 公事公办，喜欢报时间点和编号
+      risk_tolerance: 0.35
+    emotion: {dominant: alert, valence: -0.1, arousal: 0.55, intensity: 0.5}
+    long_term_goal: 让所有事情都能在自己的记录上说得清，包括自己
+    short_term_goals: [弄清头等舱那一路监控为什么黑了四十分钟, 核对每个人的自述时间]
+    schedule:
+      default: work
+      slots:
+        - {phase: deep_night, activity: work, location: purser_office}
+        - {phase: dawn, activity: work, location: purser_office}
+        - {phase: morning, activity: patrol, location: main_lounge}
+        - {phase: noon, activity: work, location: purser_office}
+        - {phase: afternoon, activity: work, location: purser_office}
+        - {phase: dusk, activity: patrol, location: crew_corridor}
+        - {phase: night, activity: work, location: purser_office}
+    items: [{key: passenger_manifest, qty: 1}, {key: cctv_drive, qty: 1}]
+    skills: [access_control, document_review]
+    reputation: {global: 22, by_faction: {egret_crew: 70}}
+    secret: 监控那四十分钟不是故障，是有人用他的账号在两点三十八分做了一次手动切换
+    capabilities: [调取门禁与监控, 核对旅客名单, 开得了大部分舱门]
+
+  - key: xu_lang
+    name: 徐朗
+    type: MAJOR_NPC
+    age: 31
+    gender: male
+    location: first_class_deck
+    faction: qingjiao_shipping
+    faction_rank: 随行司机
+    realm: passenger
+    realm_stage: aboard
+    stats: {strength: 17, agility: 15, perception: 13, intelligence: 11, willpower: 13, charisma: 12}
+    background: >
+      给乔慕山开了四年车，兼做贴身照应。按规矩他整夜应该守在头等舱走廊口，
+      可两点四十之后的二十分钟，他不在那儿。
+    personality:
+      traits: {loyal: 0.8, impulsive: 0.75, evasive: 0.7}
+      values: [老板的安全, 说过的话算数, 不出卖女人]
+      taboos: [说出自己那二十分钟去见了谁]
+      speech_style: 短句，紧张时反复强调同一个细节
+      risk_tolerance: 0.65
+    emotion: {dominant: agitated, valence: -0.4, arousal: 0.7, intensity: 0.65}
+    long_term_goal: 不让自己变成最方便的那个嫌疑人
+    short_term_goals: [和乔晚吟对好口径, 找回落在望海厅门口的东西]
+    schedule:
+      default: patrol
+      slots:
+        - {phase: deep_night, activity: patrol, location: first_class_deck}
+        - {phase: dawn, activity: social, location: main_lounge}
+        - {phase: morning, activity: patrol, location: first_class_deck}
+        - {phase: noon, activity: eat, location: dining_hall}
+        - {phase: afternoon, activity: patrol, location: first_class_deck}
+        - {phase: dusk, activity: social, location: main_lounge}
+        - {phase: night, activity: patrol, location: first_class_deck}
+    items: [{key: rmb, qty: 3000}]
+    skills: [profiling]
+    reputation: {global: 8, by_faction: {qingjiao_shipping: 45}}
+    secret: 案发时段他离岗二十分钟，去见了乔晚吟，两人都不打算承认
+    capabilities: [制得住人, 熟悉头等舱每一扇门, 替人挡话]
+
+  - key: an_qiao
+    name: 安乔
+    type: MAJOR_NPC
+    age: 26
+    gender: female
+    location: main_lounge
+    realm: passenger
+    realm_stage: aboard
+    stats: {strength: 10, agility: 13, perception: 17, intelligence: 16, willpower: 14, charisma: 15}
+    background: >
+      财经记者，上船前收到一份匿名寄来的股权转让草案。她原本只打算做一篇公司治理的稿子，
+      现在她手上这份东西成了动机本身。
+    personality:
+      traits: {curious: 0.92, opportunistic: 0.7, principled: 0.65}
+      values: [第一手材料, 署自己的名, 不编造]
+      taboos: [用没有核实的材料发稿]
+      speech_style: 语速快，习惯把问题拆成三个小问题连着问
+      risk_tolerance: 0.72
+    emotion: {dominant: keyed_up, valence: 0.1, arousal: 0.65, intensity: 0.55}
+    long_term_goal: 带着一份能发得出去、并且经得起核实的稿子下船
+    short_term_goals: [弄清草案是谁寄来的, 抢在保险公司之前拿到第一手笔录]
+    schedule:
+      default: investigate
+      slots:
+        - {phase: deep_night, activity: investigate, location: main_lounge}
+        - {phase: dawn, activity: investigate, location: first_class_deck}
+        - {phase: morning, activity: investigate, location: main_lounge}
+        - {phase: noon, activity: eat, location: dining_hall}
+        - {phase: afternoon, activity: investigate, location: crew_corridor}
+        - {phase: dusk, activity: investigate, location: main_lounge}
+        - {phase: night, activity: rest, location: main_lounge}
+    items: [{key: share_transfer_draft, qty: 1}]
+    skills: [interview, document_review]
+    reputation: {global: 14, by_faction: {}}
+    secret: 那份草案是乔慕山自己在上船前寄给她的，她还不知道寄件人是谁
+    capabilities: [问出别人不想说的话, 认得公司文件的格式, 有能发稿的渠道]
+
+  - key: shao_lingjun
+    name: 邵凌钧
+    type: MAJOR_NPC
+    age: 58
+    gender: male
+    location: main_lounge
+    realm: passenger
+    realm_stage: aboard
+    stats: {strength: 12, agility: 11, perception: 18, intelligence: 17, willpower: 16, charisma: 14}
+    background: >
+      退休三年的刑警，十年前1114的调查组组长。他这趟是自费的旅行，
+      带着一个旧公文包，包里是那起案子的复印卷宗。
+    personality:
+      traits: {methodical: 0.9, ashamed: 0.8, paternal: 0.7}
+      values: [程序, 证据, 迟到的补救也是补救]
+      taboos: [再一次替人写结论]
+      speech_style: 老派、慢，习惯先把已知条件复述一遍再说判断
+      risk_tolerance: 0.5
+    emotion: {dominant: heavy, valence: -0.35, arousal: 0.4, intensity: 0.6}
+    long_term_goal: 在自己还走得动的时候，把十年前那份结论推翻
+    short_term_goals: [保住望海厅的现场, 记录每个人的第一次陈述]
+    schedule:
+      default: investigate
+      slots:
+        - {phase: deep_night, activity: investigate, location: sea_view_lounge}
+        - {phase: dawn, activity: investigate, location: first_class_deck}
+        - {phase: morning, activity: investigate, location: main_lounge}
+        - {phase: noon, activity: eat, location: dining_hall}
+        - {phase: afternoon, activity: investigate, location: main_lounge}
+        - {phase: dusk, activity: investigate, location: purser_office}
+        - {phase: night, activity: rest, location: main_lounge}
+    items: [{key: old_case_file, qty: 1}]
+    skills: [forensic_eye, interview, profiling]
+    reputation: {global: 40, by_faction: {}}
+    secret: 十年前他收过一笔让调查停在“操作失误”四个字上的钱
+    capabilities: [勘查现场, 组织问询, 让所有人下意识听他的]
+
+  - key: jian_mo
+    name: 简墨
+    type: MAJOR_NPC
+    age: 33
+    gender: male
+    location: main_lounge
+    faction: heng_an_insurance
+    faction_rank: 理赔调查员
+    realm: passenger
+    realm_stage: aboard
+    stats: {strength: 11, agility: 12, perception: 16, intelligence: 16, willpower: 13, charisma: 14}
+    background: >
+      恒安保险派来的人，本来只是随船核一份高额意外险的投保信息。
+      三点十七分之后，他的工作变成了替公司找一个不必赔的理由。
+    personality:
+      traits: {pragmatic: 0.85, conflicted: 0.75, thorough: 0.8}
+      values: [条款, 保住饭碗, 心里那点过不去的东西]
+      taboos: [亲手伪造一份结论]
+      speech_style: 保险术语与生活语言混着说，紧张时会开玩笑
+      risk_tolerance: 0.45
+    emotion: {dominant: uneasy, valence: -0.2, arousal: 0.5, intensity: 0.5}
+    long_term_goal: 既不丢工作，又不必在一份自己不信的报告上签字
+    short_term_goals: [赶在所有人之前做一轮问询, 弄清死者有没有自杀的动机]
+    schedule:
+      default: investigate
+      slots:
+        - {phase: deep_night, activity: investigate, location: main_lounge}
+        - {phase: dawn, activity: investigate, location: main_lounge}
+        - {phase: morning, activity: investigate, location: first_class_deck}
+        - {phase: noon, activity: eat, location: dining_hall}
+        - {phase: afternoon, activity: investigate, location: main_lounge}
+        - {phase: dusk, activity: investigate, location: infirmary}
+        - {phase: night, activity: rest, location: main_lounge}
+    items: [{key: insurance_policy, qty: 1}]
+    skills: [interview, document_review]
+    reputation: {global: 6, by_faction: {heng_an_insurance: 75}}
+    secret: 公司已经明确要求他把结论写成自杀，否则这笔赔付会砸掉他的部门
+    capabilities: [调阅投保资料, 做规范笔录, 判断一份陈述值不值钱]
+
+  - key: tan_wu
+    name: 谭五
+    type: MAJOR_NPC
+    age: 45
+    gender: male
+    location: dining_hall
+    faction: egret_crew
+    faction_rank: 餐饮主管
+    realm: crew
+    realm_stage: on_duty
+    stats: {strength: 13, agility: 12, perception: 14, intelligence: 12, willpower: 13, charisma: 13}
+    background: >
+      在白鹭号上做了九年餐饮。那杯温黄酒是他两点四十八分温好的，
+      按规矩该由他亲自送进望海厅——可那天晚上他没有送。
+    personality:
+      traits: {jovial: 0.75, anxious: 0.7, deferential: 0.7}
+      values: [活干得干净, 不得罪客人, 别惹上事]
+      taboos: [承认自己违了规]
+      speech_style: 热络、爱绕圈子，一被追问就开始报菜名
+      risk_tolerance: 0.4
+    emotion: {dominant: nervous, valence: -0.25, arousal: 0.6, intensity: 0.5}
+    long_term_goal: 让自己从这件事里干干净净地摘出去
+    short_term_goals: [把出餐记录改得说得通, 想清楚该不该说出接手的人是谁]
+    schedule:
+      default: work
+      slots:
+        - {phase: deep_night, activity: work, location: galley}
+        - {phase: dawn, activity: work, location: galley}
+        - {phase: morning, activity: work, location: dining_hall}
+        - {phase: noon, activity: work, location: dining_hall}
+        - {phase: afternoon, activity: rest, location: crew_quarters}
+        - {phase: dusk, activity: work, location: dining_hall}
+        - {phase: night, activity: work, location: galley}
+    items: []
+    skills: [service_craft]
+    reputation: {global: 10, by_faction: {egret_crew: 55}}
+    secret: 酒是他温的，但在出餐口被另一个人接手送了进去，他一直没敢说是谁
+    capabilities: [说得清每一杯酒的温度与时间, 进得了后厨与出餐口]
+
+  - key: bai_qiuhe
+    name: 白秋禾
+    type: MAJOR_NPC
+    age: 22
+    gender: female
+    location: dining_hall
+    faction: egret_crew
+    faction_rank: 实习乘务员
+    realm: crew
+    realm_stage: on_duty
+    stats: {strength: 9, agility: 14, perception: 16, intelligence: 12, willpower: 10, charisma: 13}
+    background: >
+      上船第十九天的实习生，负责夜班的头等舱走廊巡视。
+      三点前后她在走廊尽头看见一个背影，然后那个人给了她一沓钱。
+    personality:
+      traits: {timid: 0.85, honest_at_heart: 0.8, easily_swayed: 0.7}
+      values: [不想丢这份工作, 妈妈的医药费, 说实话]
+      taboos: [被人发现自己收了钱]
+      speech_style: 声音小，句尾常带一个“吧”，说谎时会先笑一下
+      risk_tolerance: 0.25
+    emotion: {dominant: frightened, valence: -0.5, arousal: 0.75, intensity: 0.7}
+    long_term_goal: 平安下船，并且不用退回那笔钱
+    short_term_goals: [避开所有问她夜班的人, 把那沓钱藏到没人找得到的地方]
+    schedule:
+      default: work
+      slots:
+        - {phase: deep_night, activity: work, location: dining_hall}
+        - {phase: dawn, activity: work, location: first_class_deck}
+        - {phase: morning, activity: rest, location: crew_quarters}
+        - {phase: noon, activity: work, location: dining_hall}
+        - {phase: afternoon, activity: work, location: main_lounge}
+        - {phase: dusk, activity: work, location: first_class_deck}
+        - {phase: night, activity: work, location: dining_hall}
+    items: [{key: rmb, qty: 1200}]
+    skills: []
+    reputation: {global: 2, by_faction: {egret_crew: 25}}
+    secret: 她看见了三点前后从望海厅方向离开的那个人，并且收了对方一千二百块
+    capabilities: [记得走廊上每一次开门, 进得了头等舱各房间打扫]
+
+relationships:
+  - {a: he_shuqin, b: player, affection: 4, trust: 2, respect: 3, suspicion: 15, familiarity: 6, boundaries: 55}
+  - {a: pei_zhaolin, b: player, affection: 0, trust: 0, respect: 3, suspicion: 40, familiarity: 4, boundaries: 60}
+  - {a: qiao_wanyin, b: player, affection: 0, trust: 0, respect: 4, suspicion: 35, familiarity: 3, boundaries: 60}
+  - {a: lu_bingchen, b: player, affection: 0, trust: 0, respect: 4, suspicion: 45, familiarity: 3, boundaries: 60}
+  - {a: gu_shenyi, b: player, affection: 3, trust: 5, respect: 6, suspicion: 20, familiarity: 8, boundaries: 55}
+  - {a: zhou_yanzhi, b: player, affection: 1, trust: 1, respect: 3, suspicion: 35, familiarity: 4, boundaries: 55}
+  - {a: mai_zhengqi, b: player, affection: 0, trust: 2, respect: 3, suspicion: 25, familiarity: 2, boundaries: 55}
+  - {a: sun_zhaoqing, b: player, affection: 0, trust: 0, respect: 2, suspicion: 50, familiarity: 5, boundaries: 60}
+  - {a: xu_lang, b: player, affection: 0, trust: 0, respect: 2, suspicion: 40, familiarity: 3, boundaries: 55}
+  - {a: an_qiao, b: player, affection: 6, trust: 3, respect: 4, suspicion: 20, familiarity: 6, boundaries: 50}
+  - {a: shao_lingjun, b: player, affection: 5, trust: 4, respect: 6, suspicion: 30, familiarity: 5, boundaries: 55}
+  - {a: jian_mo, b: player, affection: 2, trust: 1, respect: 3, suspicion: 45, familiarity: 4, boundaries: 55}
+  - {a: tan_wu, b: player, affection: 3, trust: 1, respect: 2, suspicion: 20, familiarity: 5, boundaries: 55}
+  - {a: bai_qiuhe, b: player, affection: 2, trust: 1, respect: 2, fear: 25, suspicion: 30, familiarity: 4, boundaries: 55}
+  - {a: qiao_wanyin, b: xu_lang, affection: 25, trust: 30, respect: 10, familiarity: 45, boundaries: 45}
+  - {a: he_shuqin, b: gu_shenyi, affection: 15, trust: 35, respect: 40, familiarity: 50, boundaries: 55}
+  - {a: pei_zhaolin, b: mai_zhengqi, affection: -10, trust: 10, respect: 35, suspicion: 55, familiarity: 70, boundaries: 50}
+  - {a: lu_bingchen, b: shao_lingjun, affection: -5, trust: 15, respect: 20, suspicion: 60, familiarity: 30, boundaries: 55}
+  - {a: zhou_yanzhi, b: bai_qiuhe, affection: 20, trust: 15, respect: 10, familiarity: 35, boundaries: 50}
+  - {a: jian_mo, b: qiao_wanyin, affection: 0, trust: 10, respect: 15, suspicion: 40, familiarity: 12, boundaries: 55}

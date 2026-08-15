@@ -1,0 +1,162 @@
+progression_name: 契师等级
+realms:
+  - key: soul_scholar
+    name: 初契者
+    order: 0
+    playable_in_v1: false
+    stages: [{key: early, name: 一至五级, order: 0}, {key: late, name: 六至十级, order: 1}]
+    power_coefficient: 1.0
+    power_per_stage: 0.1
+    max_health: 100
+    health_per_stage: 4
+    max_spiritual_power: 60
+    spiritual_power_per_stage: 10
+    lifespan_years: 80
+    xp_to_next_stage: 900
+    breakthrough_base_chance: 0.55
+    description: 一到十级。满十级猎第一头异兽，第一个契位就此用掉。
+
+  - key: soul_master
+    name: 契师
+    order: 1
+    stages: [{key: early, name: 十一至十五级, order: 0}, {key: late, name: 十六至二十级, order: 1}]
+    power_coefficient: 1.35
+    power_per_stage: 0.12
+    max_health: 118
+    health_per_stage: 6
+    max_spiritual_power: 90
+    spiritual_power_per_stage: 15
+    lifespan_years: 90
+    xp_to_next_stage: 1400
+    breakthrough_base_chance: 0.45
+    description: 十一到二十级。二十级第二契——大多数人一辈子最重要的一次选择就在这里。
+
+  - key: grand_soul_master
+    name: 高阶契师
+    order: 2
+    stages: [{key: early, name: 二十一至二十五级, order: 0}, {key: late, name: 二十六至三十级, order: 1}]
+    power_coefficient: 1.8
+    power_per_stage: 0.14
+    max_health: 140
+    health_per_stage: 7
+    max_spiritual_power: 130
+    spiritual_power_per_stage: 18
+    lifespan_years: 100
+    xp_to_next_stage: 2200
+    breakthrough_base_chance: 0.38
+    description: 二十一到三十级。三十级第三契，也是栖星内院选拔的最低线。
+
+  - key: soul_elder
+    name: 驭印契师
+    order: 3
+    stages: [{key: early, name: 三十一至三十五级, order: 0}, {key: late, name: 三十六至四十级, order: 1}]
+    power_coefficient: 2.4
+    power_per_stage: 0.16
+    max_health: 168
+    health_per_stage: 9
+    max_spiritual_power: 180
+    spiritual_power_per_stage: 22
+    lifespan_years: 120
+    xp_to_next_stage: 3400
+    breakthrough_base_chance: 0.32
+    description: 三十一到四十级。到这一步，万灵议会会开始记住你的名字。
+
+  - key: soul_ancestor
+    name: 纹印契师
+    order: 4
+    stages: [{key: early, name: 四十一至四十五级, order: 0}, {key: late, name: 四十六至五十级, order: 1}]
+    power_coefficient: 3.1
+    power_per_stage: 0.18
+    max_health: 205
+    health_per_stage: 11
+    max_spiritual_power: 240
+    spiritual_power_per_stage: 26
+    lifespan_years: 150
+    xp_to_next_stage: 5200
+    breakthrough_base_chance: 0.27
+    description: 四十一到五十级。五十级第五契，从这里开始灵髓比灵契更难求。
+
+  - key: soul_king
+    name: 御灵契师
+    order: 5
+    stages: [{key: early, name: 五十一至五十五级, order: 0}, {key: late, name: 五十六至六十级, order: 1}]
+    power_coefficient: 4.0
+    power_per_stage: 0.2
+    max_health: 250
+    health_per_stage: 13
+    max_spiritual_power: 310
+    spiritual_power_per_stage: 30
+    lifespan_years: 200
+    xp_to_next_stage: 8000
+    breakthrough_base_chance: 0.22
+    description: 五十一到六十级。一城之内足以自立门户。
+
+  - key: soul_emperor
+    name: 化境契师
+    order: 6
+    stages: [{key: early, name: 六十一至六十五级, order: 0}, {key: late, name: 六十六至七十级, order: 1}]
+    power_coefficient: 5.2
+    power_per_stage: 0.22
+    max_health: 300
+    health_per_stage: 15
+    max_spiritual_power: 390
+    spiritual_power_per_stage: 35
+    lifespan_years: 300
+    xp_to_next_stage: 12000
+    breakthrough_base_chance: 0.18
+    description: 六十一到七十级。两大帝国的军中，这已经是能独领一军的分量。
+
+  - key: soul_saint
+    name: 灵域契师
+    order: 7
+    stages: [{key: early, name: 七十一至七十五级, order: 0}, {key: late, name: 七十六至八十级, order: 1}]
+    power_coefficient: 6.6
+    power_per_stage: 0.24
+    max_health: 360
+    health_per_stage: 18
+    max_spiritual_power: 480
+    spiritual_power_per_stage: 40
+    lifespan_years: 500
+    xp_to_next_stage: 18000
+    breakthrough_base_chance: 0.14
+    description: 七十一到八十级。全大陆能数得过来的人物。
+
+  - key: unity_pact_sage
+    name: 归一契宗
+    order: 8
+    stages: [{key: early, name: 八十一至八十五级, order: 0}, {key: late, name: 八十六至九十级, order: 1}]
+    power_coefficient: 8.2
+    power_per_stage: 0.26
+    max_health: 430
+    health_per_stage: 21
+    max_spiritual_power: 580
+    spiritual_power_per_stage: 46
+    lifespan_years: 700
+    xp_to_next_stage: 26000
+    breakthrough_base_chance: 0.1
+    description: 八十一到九十级。九十级第九契，九个契位到此全部用尽。
+
+  - key: named_pact_sage
+    name: 冠名契宗
+    order: 9
+    stages: [{key: early, name: 九十一级以上, order: 0}]
+    power_coefficient: 10.0
+    power_per_stage: 0.3
+    max_health: 520
+    health_per_stage: 25
+    max_spiritual_power: 700
+    spiritual_power_per_stage: 55
+    lifespan_years: 1000
+    xp_to_next_stage: 0
+    breakthrough_base_chance: 0.05
+    description: 九十一级以上，有资格获封名号。全大陆不足百人。
+spiritual_roots:
+  - {key: starvine_grass, name: 星蔓草, speed: 0.85, breakthrough_mod: 0.05, weight: 5}
+  - {key: black_iron_bull, name: 玄铁牛, speed: 1.0, breakthrough_mod: 0, weight: 3}
+  - {key: flowing_cloud_bell, name: 流云钟, speed: 1.05, breakthrough_mod: -0.02, weight: 2}
+  - {key: shadow_civet, name: 影狸, speed: 1.1, breakthrough_mod: -0.04, weight: 2}
+mental_states:
+  - {key: unstable, name: 心神不宁, min: 0, max: 0.35, breakthrough_mod: -0.15}
+  - {key: steady, name: 心神安定, min: 0.35, max: 0.75, breakthrough_mod: 0}
+  - {key: clear, name: 明镜止水, min: 0.75, max: 1.01, breakthrough_mod: 0.1}
+bottleneck: {gain_on_failure: 6, max: 60, penalty_per_point: 0.004, decay_per_month: 4}

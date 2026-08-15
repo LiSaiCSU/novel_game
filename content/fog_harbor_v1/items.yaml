@@ -1,0 +1,257 @@
+item_types:
+  - {key: evidence, name: 物证}
+  - {key: document, name: 文件}
+  - {key: device, name: 器材}
+  - {key: personal, name: 随身物}
+  - {key: currency, name: 现金}
+rarities:
+  - {key: common, name: 普通, value_multiplier: 1}
+  - {key: restricted, name: 受管控, value_multiplier: 1}
+  - {key: key_item, name: 关键, value_multiplier: 1}
+items:
+  - {key: rmb, name: 现金, type: currency, rarity: common, value: 1, stackable: true, description: 船上刷不了卡的地方，现金还是有用。, effects: {}}
+  - {key: evidence_bag, name: 物证袋, type: personal, rarity: common, value: 0, stackable: true, description: 自封的透明袋，能让一件东西在三十六小时后仍然说得清来路。, effects: {}}
+  - {key: nitrile_gloves, name: 一次性手套, type: personal, rarity: common, value: 0, stackable: true, description: 拿现场任何东西之前该戴上的。不戴，你就成了新的痕迹。, effects: {}}
+
+  - key: warm_wine_cup
+    name: 那杯没喝完的温黄酒
+    type: evidence
+    rarity: key_item
+    value: 0
+    stackable: false
+    description: 白瓷杯，剩下小半杯，杯壁已经凉透。杯口只有一侧有唇印。
+    effects: {reveals_fact: fact_tan_wu_handed_off_the_wine, quest_item: true}
+    metadata:
+      narrative_facts:
+        - 杯中黄酒本身没有任何药物成分，检验会证实这一点。
+        - 杯口只有一侧留有唇印，说明杯子从被端上桌起就没有被转过方向。
+        - 杯壁凉透的程度对应它在桌上放了至少二十五分钟。
+        - 杯托上有一枚不完整的指印，位置在托底，不是端杯的人会留下的地方。
+      narrative_constraints:
+        aliases: [那杯酒, 温黄酒, 杯子]
+        required_when_referenced: [剩下小半杯, 唇印只有一侧]
+        forbidden_when_referenced: [酒里有毒, 检出药物, 死者是被毒死的]
+
+  - key: tape_residue
+    name: 舷窗内侧的胶带残痕
+    type: evidence
+    rarity: key_item
+    value: 0
+    stackable: false
+    description: 从望海厅左舷窗内框刮下来的两道半透明胶质，宽约一厘米，间距与窗闩把手一致。
+    effects: {reveals_fact: fact_window_tape_residue, quest_item: true}
+    metadata:
+      narrative_facts:
+        - 残痕有两道，间距恰好等于窗闩把手的宽度。
+        - 胶质尚未完全干硬，形成时间在数小时以内。
+        - 这说明窗闩是从外侧借助胶带带上的，密室是事后布置的。
+      narrative_constraints:
+        aliases: [胶带痕, 窗上的痕迹]
+        required_when_referenced: [两道, 窗闩把手]
+        forbidden_when_referenced: [陈年旧痕, 是装修留下的]
+
+  - key: sedative_log
+    name: 镇静剂领用登记本
+    type: document
+    rarity: key_item
+    value: 0
+    stackable: false
+    description: 医务室的领用登记，一式两联。最后两行的笔迹与前面明显不同，数目对不上两支。
+    effects: {reveals_fact: fact_two_sedative_vials_missing, quest_item: true}
+    metadata:
+      narrative_facts:
+        - 账面与实存相差两支。
+        - 最后两行的笔迹与前面数十行不同，且没有复核签名。
+        - 登记本本身不能证明是谁取走的，只能证明取走发生在最近三天内。
+      narrative_constraints:
+        aliases: [登记本, 领用记录]
+        required_when_referenced: [少了两支]
+        forbidden_when_referenced: [上面写着名字, 直接指向某个人]
+
+  - key: qiao_medical_file
+    name: 乔慕山的病历
+    type: document
+    rarity: key_item
+    value: 0
+    stackable: false
+    description: 锁在医务室保险箱里的一份三个月前的诊断报告与影像件，出具方不是任何一家公开的医院。
+    effects: {reveals_fact: fact_qiao_terminal_cancer, quest_item: true}
+    metadata:
+      narrative_facts:
+        - 诊断时间是三个月前，结论是胰腺癌晚期，预计生存期六个月以内。
+        - 报告出具方是一家私人诊所，没有进入任何公司体检系统。
+        - 报告末页有死者本人的签字，注明不得告知家属。
+      narrative_constraints:
+        aliases: [病历, 那份报告]
+        required_when_referenced: [三个月前, 不得告知家属]
+        forbidden_when_referenced: [家属早就知道, 公司体检查出来的]
+
+  - key: duty_log_1114
+    name: 1114原始值班记录
+    type: document
+    rarity: key_item
+    value: 0
+    stackable: false
+    description: 一本没有交上去的旧值班簿，十年前十一月十四日那一页上的当班顺序，与公开报告里的不一样。
+    effects: {reveals_fact: fact_pei_altered_duty_log, quest_item: true}
+
+  - key: defect_report
+    name: 设备缺陷报告底稿
+    type: document
+    rarity: key_item
+    value: 0
+    stackable: false
+    description: 麦正岐十年前手写的一式三份底稿，右上角有收文编号，公开卷宗里查不到这个编号。
+    effects: {reveals_fact: fact_mai_report_suppressed, quest_item: true}
+
+  - key: share_transfer_draft
+    name: 股权转让草案
+    type: document
+    rarity: key_item
+    value: 0
+    stackable: false
+    description: 匿名寄给记者的一份未签字草案，受让方一栏填的不是任何一个姓乔的人。
+    effects: {reveals_fact: fact_share_transfer_to_outsider, quest_item: true}
+
+  - key: escrow_letter
+    name: 乔慕山的委托函
+    type: document
+    rarity: key_item
+    value: 0
+    stackable: false
+    description: 火漆完整的信封，正面一行字——若我死于非自然原因，请立即公开随附全部材料。
+    effects: {reveals_fact: fact_escrow_letter_exists, quest_item: true}
+    metadata:
+      narrative_facts:
+        - 信封上的落款日期是三个月前，与病历的诊断时间同一周。
+        - 火漆完整，说明陆秉臣至今没有拆开它。
+      narrative_constraints:
+        aliases: [委托函, 那封信]
+        required_when_referenced: [非自然原因, 火漆完整]
+        forbidden_when_referenced: [已经拆开, 内容早就公开]
+
+  - key: hush_receipt
+    name: 十年前的一笔转账回单
+    type: document
+    rarity: key_item
+    value: 0
+    stackable: false
+    description: 复印件，付款方是青礁航运，收款人姓名被涂黑，但金额与日期没有涂。
+    effects: {reveals_fact: fact_shao_took_hush_money}
+
+  - key: victim_list_1114
+    name: 1114遇难者名单
+    type: document
+    rarity: key_item
+    value: 0
+    stackable: false
+    description: 四十一个名字，按舱位排列。其中一栏的家属联系人姓名，和这条船上某个人的婚前姓名一致。
+    effects: {reveals_fact: fact_he_shuqin_is_bereaved, quest_item: true}
+
+  - key: zhou_letter
+    name: 周砚清狱中的最后一封信
+    type: document
+    rarity: key_item
+    value: 0
+    stackable: false
+    description: 写给妹妹的两页纸，最后一句是——那天晚上不是我一个人在台上。
+    effects: {reveals_fact: fact_zhou_yanqing_was_scapegoat}
+
+  - key: old_case_file
+    name: 1114复印卷宗
+    type: document
+    rarity: common
+    value: 0
+    stackable: false
+    description: 邵凌钧自己留的一套，装订线松了，中间明显少了几页。
+    effects: {}
+
+  - key: insurance_policy
+    name: 高额意外险保单
+    type: document
+    rarity: common
+    value: 0
+    stackable: false
+    description: 保额八千万，受益人一栏是乔晚吟。附加条款里，自杀在两年内免赔。
+    effects: {reveals_fact: fact_wanyin_is_main_beneficiary}
+
+  - key: passenger_manifest
+    name: 旅客与船员名单
+    type: document
+    rarity: restricted
+    value: 0
+    stackable: false
+    description: 今夜在船十四人的完整名单，附身份证件号与舱位。有一栏的证件号在系统里查不到对应记录。
+    effects: {reveals_fact: fact_zhou_yanzhi_false_name}
+
+  - key: cctv_drive
+    name: 监控硬盘
+    type: device
+    rarity: restricted
+    value: 0
+    stackable: false
+    description: 四路监控的本地存储。头等舱走廊那一路在两点四十到三点二十之间没有画面，其余三路正常。
+    effects: {reveals_fact: fact_cctv_corridor_gap, quest_item: true}
+
+  - key: cabin_master_key
+    name: 万能舱门钥匙
+    type: device
+    rarity: restricted
+    value: 0
+    stackable: false
+    description: 全船只有三把，船长、事务长、乘务长各一把。谁在什么时候用过它，机器里有记录。
+    effects: {}
+
+  - key: sat_phone
+    name: 卫星电话
+    type: device
+    rarity: restricted
+    value: 0
+    stackable: false
+    description: 锁在船长室的这一部是全船唯一还能打出去的通讯设备。用一次就会在话单上留一次。
+    effects: {quest_item: true}
+
+  - key: wanyin_recorder
+    name: 乔晚吟的录音笔
+    type: device
+    rarity: key_item
+    value: 0
+    stackable: false
+    description: 电量剩百分之四。最后一段录音有七分钟，开头是一句“爸，你要给的是谁”。
+    effects: {reveals_fact: fact_share_transfer_to_outsider}
+
+  - key: pill_organizer
+    name: 分格药盒
+    type: personal
+    rarity: key_item
+    value: 0
+    stackable: false
+    description: 一周七天、每天三格的药盒。十一月十四日的晚间格是空的，而死者从不在晚上服那一格。
+    effects: {}
+    metadata:
+      narrative_facts:
+        - 十一月十四日的晚间格是空的。
+        - 按照六年来的用药习惯，死者晚间不服这一格的药。
+        - 药盒是由私人护理每周日统一分装的。
+      narrative_constraints:
+        aliases: [药盒, 分格药盒]
+        required_when_referenced: [晚间格是空的]
+        forbidden_when_referenced: [药盒里检出针剂, 药盒就是凶器]
+
+  - key: ship_doctor_bag
+    name: 出诊箱
+    type: device
+    rarity: common
+    value: 0
+    stackable: false
+    description: 医务室的便携箱，装着基本器械与常用药。清点表贴在箱盖内侧。
+    effects: {}
+
+  - key: crew_id_fake
+    name: 化名的船员工牌
+    type: personal
+    rarity: key_item
+    value: 0
+    stackable: false
+    description: 工牌上的名字是林知，照片是本人，入职材料上的身份证号却对不上任何真实记录。
+    effects: {reveals_fact: fact_zhou_yanzhi_false_name}

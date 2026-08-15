@@ -1,0 +1,581 @@
+characters:
+  - key: qi_ranyan
+    name: 齐燃言
+    type: MAJOR_NPC
+    age: 44
+    gender: female
+    location: teachers_office
+    faction: qixing_academy_faction
+    faction_rank: 外院导师
+    realm: unity_pact_sage
+    realm_stage: early
+    spiritual_root: flowing_cloud_bell
+    stats: {strength: 15, agility: 16, perception: 19, intelligence: 18, willpower: 20, charisma: 14}
+    background: >
+      八十三级归一契宗，左臂齐肩而断，从不用假肢。带外院带了十九年，
+      每一届都有学生在她手里被劝住不去吸那个不该吸的环，也每一届都有人不听。
+    personality:
+      traits: {stern: 0.88, protective: 0.85, patient: 0.7, unforgiving_of_waste: 0.9}
+      values: [契位比名次重要, 活着回来, 不拿学生的命换成绩]
+      taboos: [替学生做决定, 让学生独自进深处]
+      speech_style: 用问句代替训话，从不给现成答案，答错了也不骂
+      risk_tolerance: 0.35
+    emotion: {dominant: watchful, valence: -0.05, arousal: 0.35, intensity: 0.45}
+    long_term_goal: 查清高阶异兽消失的原因，并且这一届不再送走任何一个学生
+    short_term_goals: [判断玩家会不会为了内院乱缔契, 弄清穆晋年身上到底出了什么事]
+    schedule:
+      default: work
+      slots:
+        - {phase: dawn, activity: work, location: outer_training_field}
+        - {phase: morning, activity: work, location: outer_training_field}
+        - {phase: noon, activity: eat, location: academy_refectory}
+        - {phase: afternoon, activity: work, location: teachers_office}
+        - {phase: dusk, activity: investigate, location: library_tower}
+        - {phase: night, activity: work, location: teachers_office}
+        - {phase: deep_night, activity: sleep, location: teachers_office}
+    items: [{key: forest_old_map, qty: 1}]
+    skills: [guard_channel, beast_appraisal, field_dressing, bell_toll]
+    reputation: {global: 55, by_faction: {qixing_academy_faction: 88}}
+    secret: 那条手臂是替一个学生挡契术没的，那学生第二年就进了万灵议会供奉厅
+    capabilities: [替墨纹契护法, 一眼看出反噬深浅, 判定异兽契阶]
+
+  - key: mu_jinnian
+    name: 穆晋年
+    type: MAJOR_NPC
+    age: 23
+    gender: male
+    location: outer_training_field
+    faction: qixing_academy_faction
+    faction_rank: 外院首席
+    realm: grand_soul_master
+    realm_stage: late
+    spiritual_root: black_iron_bull
+    stats: {strength: 19, agility: 12, perception: 13, intelligence: 14, willpower: 18, charisma: 13}
+    background: >
+      外院测定榜第一，二十九级三道灵契，其中第三契是黑的——全外院都知道，
+      也全外院都在传他是怎么弄到的。他从不脱外袍，右臂常年缠着药布。
+    personality:
+      traits: {driven: 0.95, prideful: 0.8, concealing: 0.85, decent_underneath: 0.7}
+      values: [不能停下来, 家里等着他的消息, 认账]
+      taboos: [被人看见药布下面的东西]
+      speech_style: 简短，说完就走；被戳到痛处会忽然把话说得很重
+      risk_tolerance: 0.85
+    emotion: {dominant: strained, valence: -0.3, arousal: 0.6, intensity: 0.6}
+    long_term_goal: 撑到大赛结束，拿到内院名额，再想办法处理身上的东西
+    short_term_goals: [找到能压住反噬的药, 不让齐燃言看出破绽]
+    schedule:
+      default: cultivate
+      slots:
+        - {phase: dawn, activity: cultivate, location: outer_training_field}
+        - {phase: morning, activity: cultivate, location: outer_training_field}
+        - {phase: noon, activity: eat, location: academy_refectory}
+        - {phase: afternoon, activity: work, location: arena}
+        - {phase: dusk, activity: cultivate, location: outer_training_field}
+        - {phase: night, activity: rest, location: outer_dorm}
+        - {phase: deep_night, activity: cultivate, location: outer_training_field}
+    items: [{key: pact_ten_thousand_year, qty: 1}, {key: mu_bandage, qty: 1}]
+    skills: [iron_hide, charge_smash]
+    reputation: {global: 40, by_faction: {qixing_academy_faction: 62}}
+    secret: 那个墨契是万灵议会给的，他二十六级就吸了，反噬正在一寸一寸吃掉他的经脉
+    capabilities: [硬扛四十级以下的正面攻击, 外院说话最管用的学生]
+
+  - key: shen_yuluo
+    name: 沈玉落
+    type: MAJOR_NPC
+    age: 21
+    gender: female
+    location: academy_refectory
+    faction: mirror_guild
+    faction_rank: 旁支弟子
+    realm: soul_master
+    realm_stage: late
+    spiritual_root: flowing_cloud_bell
+    stats: {strength: 10, agility: 14, perception: 17, intelligence: 17, willpower: 15, charisma: 17}
+    background: >
+      镜塔商盟旁支，二十级两环，控制系。她比谁都清楚灵契该怎么选，
+      因为她从小被教的就是——你这一辈子的价值，等于你身上那几道灵契加起来的契阶。
+    personality:
+      traits: {calculating: 0.85, poised: 0.85, quietly_desperate: 0.7}
+      values: [宗门的位置, 不做亏本的交易, 体面]
+      taboos: [让人看见她的塔到底有几宝]
+      speech_style: 客气、准确、留三分；真着急的时候反而更慢
+      risk_tolerance: 0.5
+    emotion: {dominant: composed, valence: 0, arousal: 0.45, intensity: 0.5}
+    long_term_goal: 靠这一届的表现从旁支挤进宗门内门
+    short_term_goals: [抢在别人之前定下内圈那头中阶异兽, 判断玩家是对手还是可用的人]
+    schedule:
+      default: cultivate
+      slots:
+        - {phase: dawn, activity: cultivate, location: outer_training_field}
+        - {phase: morning, activity: work, location: library_tower}
+        - {phase: noon, activity: eat, location: academy_refectory}
+        - {phase: afternoon, activity: cultivate, location: outer_training_field}
+        - {phase: dusk, activity: social, location: mirror_guild_envoy_house}
+        - {phase: night, activity: rest, location: outer_dorm}
+        - {phase: deep_night, activity: sleep, location: outer_dorm}
+    items: [{key: mirror_guild_invitation, qty: 1}, {key: year_gauge, qty: 1}]
+    skills: [bell_toll, beast_appraisal, guard_channel]
+    reputation: {global: 32, by_faction: {mirror_guild: 45, qixing_academy_faction: 50}}
+    secret: 她的七面镜塔命印只有五面能够点亮，商盟要求她对外一律宣称全镜齐明
+    capabilities: [测异兽契阶, 调得动镜塔使馆的人手, 替人护法]
+
+  - key: lu_qingchan
+    name: 陆青蝉
+    type: MAJOR_NPC
+    age: 20
+    gender: female
+    location: outer_dorm
+    faction: qixing_academy_faction
+    faction_rank: 外院生
+    realm: soul_master
+    realm_stage: late
+    spiritual_root: shadow_civet
+    stats: {strength: 11, agility: 19, perception: 16, intelligence: 13, willpower: 14, charisma: 12}
+    background: >
+      交不起下个学期的束脩，靠周末给人带路挣钱。她认得无昼森海外缘和内圈的每一条兽道，
+      因为她给猎兽人带过十一次路。
+    personality:
+      traits: {scrappy: 0.9, loyal_when_paid_in_trust: 0.8, ashamed: 0.65}
+      values: [活下去, 欠了就还, 朋友别问来路]
+      taboos: [带人去杀十万年的东西]
+      speech_style: 直、快、爱开玩笑，说到钱就闭嘴
+      risk_tolerance: 0.75
+    emotion: {dominant: guarded, valence: -0.1, arousal: 0.55, intensity: 0.5}
+    long_term_goal: 挣够学费留在栖星，并且不再给猎兽人带路
+    short_term_goals: [接下最后一单带路, 找一个能一起进内圈的搭档]
+    schedule:
+      default: work
+      slots:
+        - {phase: dawn, activity: cultivate, location: outer_training_field}
+        - {phase: morning, activity: work, location: academy_refectory}
+        - {phase: noon, activity: eat, location: academy_refectory}
+        - {phase: afternoon, activity: travel, location: forest_edge}
+        - {phase: dusk, activity: social, location: tavern_broken_blade}
+        - {phase: night, activity: rest, location: outer_dorm}
+        - {phase: deep_night, activity: sleep, location: outer_dorm}
+    items: [{key: hunter_tally, qty: 1}]
+    skills: [shadow_step, beast_appraisal]
+    reputation: {global: 12, by_faction: {qixing_academy_faction: 35, soul_hunters: 40}}
+    secret: 她给猎兽人带过十一次路，其中一次带到的地方后来死了两个栖星学生
+    capabilities: [走通森林内圈, 进得了猎兽人营地, 全外院跑得最快]
+
+  - key: dai_kuan
+    name: 戴宽
+    type: MAJOR_NPC
+    age: 22
+    gender: male
+    location: academy_refectory
+    faction: qixing_academy_faction
+    faction_rank: 外院生
+    realm: soul_master
+    realm_stage: early
+    spiritual_root: black_iron_bull
+    stats: {strength: 17, agility: 10, perception: 12, intelligence: 12, willpower: 17, charisma: 14}
+    background: >
+      十六级，两个青纹契，全外院公认的老好人，也公认没什么前途。
+      他每天最早到训练场，最晚离开，成绩始终在榜单下半截。
+    personality:
+      traits: {steadfast: 0.95, warm: 0.85, self_doubting: 0.7}
+      values: [说到做到, 队友, 不给人添麻烦]
+      taboos: [丢下同伴跑]
+      speech_style: 慢，爱笑，认真起来会一句一句把事情说清楚
+      risk_tolerance: 0.45
+    emotion: {dominant: earnest, valence: 0.25, arousal: 0.4, intensity: 0.45}
+    long_term_goal: 进内院，让那个从没认过他的家族知道他姓什么
+    short_term_goals: [找一支肯要他的队伍, 攒够买一枚紫纹契的钱]
+    schedule:
+      default: cultivate
+      slots:
+        - {phase: dawn, activity: cultivate, location: outer_training_field}
+        - {phase: morning, activity: cultivate, location: outer_training_field}
+        - {phase: noon, activity: eat, location: academy_refectory}
+        - {phase: afternoon, activity: cultivate, location: outer_training_field}
+        - {phase: dusk, activity: social, location: academy_refectory}
+        - {phase: night, activity: rest, location: outer_dorm}
+        - {phase: deep_night, activity: sleep, location: outer_dorm}
+    items: [{key: dai_pendant, qty: 1}, {key: training_weights, qty: 2}]
+    skills: [iron_hide, guard_channel]
+    reputation: {global: 15, by_faction: {qixing_academy_faction: 48}}
+    secret: 他是蓝电霸王龙家族的私生子，族里给过一次钱，条件是永不认亲
+    capabilities: [替人硬挡一击, 连续护法一整夜, 全外院人缘最好]
+
+  - key: bo_zhonghe
+    name: 柏仲和
+    type: MAJOR_NPC
+    age: 68
+    gender: male
+    location: inner_courtyard
+    faction: qixing_academy_faction
+    faction_rank: 内院执事
+    realm: named_pact_sage
+    realm_stage: early
+    spiritual_root: black_iron_bull
+    stats: {strength: 18, agility: 14, perception: 20, intelligence: 19, willpower: 20, charisma: 16}
+    background: >
+      九十二级冠名契宗，管内院选拔管了三十年。他见过太多二十岁就把九个契位用完的天才，
+      所以他的选拔标准里，等级只占三成。
+    personality:
+      traits: {shrewd: 0.9, unhurried: 0.85, exacting: 0.9}
+      values: [底子, 走得远比走得快重要, 学院的名声]
+      taboos: [为了大赛名次破例]
+      speech_style: 慢条斯理，问的问题永远不是你以为他要问的那个
+      risk_tolerance: 0.3
+    emotion: {dominant: measured, valence: 0.05, arousal: 0.25, intensity: 0.4}
+    long_term_goal: 拿到能让北辰动手查万灵议会分殿的实证
+    short_term_goals: [定下这一届三十枚选拔令的去向, 弄清顾婆婆那批灵契的来路]
+    schedule:
+      default: work
+      slots:
+        - {phase: dawn, activity: cultivate, location: inner_courtyard}
+        - {phase: morning, activity: work, location: inner_courtyard}
+        - {phase: noon, activity: work, location: inner_gate}
+        - {phase: afternoon, activity: work, location: inner_courtyard}
+        - {phase: dusk, activity: patrol, location: inner_gate}
+        - {phase: night, activity: work, location: inner_courtyard}
+        - {phase: deep_night, activity: sleep, location: inner_courtyard}
+    items: [{key: inner_token, qty: 3}]
+    skills: [iron_hide, guard_channel, beast_appraisal, bone_fusion]
+    reputation: {global: 70, by_faction: {qixing_academy_faction: 95}}
+    secret: 他早就知道分殿在森林里做什么，但学院一直拿不出能递上去的证据
+    capabilities: [发放内院选拔令, 替墨纹契护法, 一句话定一个学生的去留]
+
+  - key: xu_bingzhou
+    name: 徐冰舟
+    type: MAJOR_NPC
+    age: 24
+    gender: male
+    location: inner_gate
+    faction: qixing_academy_faction
+    faction_rank: 内院生
+    realm: soul_ancestor
+    realm_stage: early
+    spiritual_root: flowing_cloud_bell
+    stats: {strength: 13, agility: 15, perception: 16, intelligence: 16, willpower: 17, charisma: 13}
+    background: >
+      四十二级纹印契师，四道灵契，负责主持这一届的内院选拔考核。
+      他自己是三年前从外院爬进去的，所以他知道外院生会耍哪些花招。
+    personality:
+      traits: {fair: 0.8, cold_on_duty: 0.85, secretly_soft: 0.6}
+      values: [规矩, 给肯拼的人一条路, 不欠人情]
+      taboos: [收东西]
+      speech_style: 公事公办，报条款；私下说话时会突然变得很直白
+      risk_tolerance: 0.4
+    emotion: {dominant: neutral, valence: 0, arousal: 0.35, intensity: 0.4}
+    long_term_goal: 在大赛上代表内院出场，证明外院爬上来的人不比嫡系差
+    short_term_goals: [核定三十个选拔名额, 盯住穆晋年的状态]
+    schedule:
+      default: work
+      slots:
+        - {phase: dawn, activity: cultivate, location: inner_courtyard}
+        - {phase: morning, activity: work, location: inner_gate}
+        - {phase: noon, activity: work, location: arena}
+        - {phase: afternoon, activity: work, location: inner_gate}
+        - {phase: dusk, activity: work, location: arena}
+        - {phase: night, activity: rest, location: inner_courtyard}
+        - {phase: deep_night, activity: sleep, location: inner_courtyard}
+    items: [{key: inner_token, qty: 2}]
+    skills: [bell_toll, guard_channel]
+    reputation: {global: 38, by_faction: {qixing_academy_faction: 72}}
+    secret: 去年他放过一个不该过的人，那人现在在万灵议会分殿当差
+    capabilities: [主持考核, 评定外院生实力, 进出内院不受限]
+
+  - key: granny_gu
+    name: 顾婆婆
+    type: MAJOR_NPC
+    age: 71
+    gender: female
+    location: spirit_pact_hall
+    faction: qixing_academy_faction
+    faction_rank: 灵契堂执事
+    realm: soul_king
+    realm_stage: late
+    spiritual_root: starvine_grass
+    stats: {strength: 8, agility: 9, perception: 18, intelligence: 16, willpower: 17, charisma: 11}
+    background: >
+      在灵契堂配了四十年环。她记得每一个在这里缔契失败的孩子叫什么名字，
+      堂中八根柱子上的字，有一半是她亲手刻的。
+    personality:
+      traits: {weary: 0.85, kind: 0.75, complicit: 0.6}
+      values: [孩子别死在堂里, 账面上要过得去, 少说话]
+      taboos: [让人在没护法的情况下缔契]
+      speech_style: 絮叨，讲的都是别人的旧事，其实每一件都在提醒你
+      risk_tolerance: 0.25
+    emotion: {dominant: tired, valence: -0.15, arousal: 0.25, intensity: 0.4}
+    long_term_goal: 在退下来之前把那批来路不明的灵契处理干净
+    short_term_goals: [劝住又一个想越阶缔契的学生, 拖住来查账的人]
+    schedule:
+      default: work
+      slots:
+        - {phase: dawn, activity: work, location: spirit_pact_hall}
+        - {phase: morning, activity: work, location: spirit_pact_hall}
+        - {phase: noon, activity: eat, location: academy_refectory}
+        - {phase: afternoon, activity: work, location: spirit_pact_hall}
+        - {phase: dusk, activity: work, location: spirit_pact_hall}
+        - {phase: night, activity: rest, location: spirit_pact_hall}
+        - {phase: deep_night, activity: sleep, location: spirit_pact_hall}
+    items: [{key: pact_hundred_year, qty: 2}, {key: backlash_salve, qty: 3}]
+    skills: [pact_binding, guard_channel, field_dressing]
+    reputation: {global: 30, by_faction: {qixing_academy_faction: 68}}
+    secret: 学院这三年配发的青纹契里，有一批是从猎兽人手上低价收来的
+    capabilities: [主持缔契, 判断一个人扛不扛得住某个契阶, 配得出化淤膏]
+
+  - key: tang_wanyi
+    name: 唐晚意
+    type: MAJOR_NPC
+    age: 19
+    gender: female
+    location: library_tower
+    faction: qixing_academy_faction
+    faction_rank: 藏书阁学徒
+    realm: soul_master
+    realm_stage: early
+    spiritual_root: flowing_cloud_bell
+    stats: {strength: 7, agility: 10, perception: 19, intelligence: 18, willpower: 13, charisma: 12}
+    background: >
+      体弱到进不了训练场，被安排在藏书阁登记借阅。她把每一条记录都记在脑子里，
+      包括谁在哪一天查过哪一片林子。
+    personality:
+      traits: {observant: 0.95, timid: 0.8, meticulous: 0.9}
+      values: [记录不能改, 有人肯听她说话, 不惹麻烦]
+      taboos: [伪造借阅记录]
+      speech_style: 声音很小，但说出来的每个日期都精确到日
+      risk_tolerance: 0.2
+    emotion: {dominant: nervous, valence: -0.1, arousal: 0.45, intensity: 0.45}
+    long_term_goal: 让自己在这所只看实力的学院里有一个待得住的位置
+    short_term_goals: [弄清为什么总有人查同一片林子, 找一个不会笑话她的人说这件事]
+    schedule:
+      default: work
+      slots:
+        - {phase: dawn, activity: rest, location: library_tower}
+        - {phase: morning, activity: work, location: library_tower}
+        - {phase: noon, activity: eat, location: academy_refectory}
+        - {phase: afternoon, activity: work, location: library_tower}
+        - {phase: dusk, activity: work, location: library_tower}
+        - {phase: night, activity: rest, location: library_tower}
+        - {phase: deep_night, activity: sleep, location: library_tower}
+    items: [{key: wanyi_notebook, qty: 1}, {key: library_pass, qty: 1}]
+    skills: [beast_appraisal]
+    reputation: {global: 6, by_faction: {qixing_academy_faction: 30}}
+    secret: 她发现分殿的人每次进森林之前，都会先来查同一片林子的异兽志
+    capabilities: [调得出所有借阅记录, 记得每一个查过林子的名字, 认得异兽志上的古字]
+
+  - key: hong_shu
+    name: 洪枢
+    type: MAJOR_NPC
+    age: 35
+    gender: male
+    location: council_branch
+    faction: concord_council
+    faction_rank: 分殿供奉
+    realm: soul_emperor
+    realm_stage: early
+    spiritual_root: shadow_civet
+    stats: {strength: 14, agility: 18, perception: 18, intelligence: 16, willpower: 15, charisma: 17}
+    background: >
+      六十三级化境契师，笑起来很和气，是分殿负责在外面走动的那张脸。
+      森林里哪一头值得动手，是他说了算。
+    personality:
+      traits: {affable: 0.9, ruthless: 0.85, patient: 0.8}
+      values: [殿里的差事, 不留尾巴, 好苗子值得投资]
+      taboos: [让分殿的账被外人看见]
+      speech_style: 永远先夸你两句，然后把条件说得像是在替你着想
+      risk_tolerance: 0.6
+    emotion: {dominant: genial, valence: 0.3, arousal: 0.4, intensity: 0.45}
+    long_term_goal: 完成主教交办的王者灵髓，换一个回议会总部的位置
+    short_term_goals: [在大赛前收编两到三个外院苗子, 处理掉猎兽人营地的账]
+    schedule:
+      default: social
+      slots:
+        - {phase: dawn, activity: cultivate, location: council_branch}
+        - {phase: morning, activity: social, location: city_market}
+        - {phase: noon, activity: social, location: tavern_broken_blade}
+        - {phase: afternoon, activity: work, location: council_offepact_hall}
+        - {phase: dusk, activity: social, location: qixing_city}
+        - {phase: night, activity: travel, location: hunter_camp}
+        - {phase: deep_night, activity: sleep, location: council_branch}
+    items: [{key: beast_marker, qty: 4}, {key: pact_thousand_year, qty: 1}]
+    skills: [shadow_step, beast_appraisal, guard_channel]
+    reputation: {global: 25, by_faction: {concord_council: 80, soul_hunters: 55}}
+    secret: 三年来森林里被清空的高阶异兽，每一头都是他先去标记的
+    capabilities: [拿得出紫纹契, 调动猎兽人, 替人越阶护法]
+
+  - key: yan_zhi
+    name: 严织
+    type: MAJOR_NPC
+    age: 41
+    gender: female
+    location: council_offepact_hall
+    faction: concord_council
+    faction_rank: 分殿主教
+    realm: soul_saint
+    realm_stage: late
+    spiritual_root: flowing_cloud_bell
+    stats: {strength: 12, agility: 14, perception: 19, intelligence: 20, willpower: 19, charisma: 18}
+    background: >
+      七十九级灵域契师，掌栖星分殿六年。她极少露面，一旦露面，
+      对面的人往往已经没有可以拒绝的余地了。
+    personality:
+      traits: {imperious: 0.9, far_sighted: 0.9, cold: 0.85}
+      values: [议会总部的秩序, 结果, 人各有价]
+      taboos: [向学院让步]
+      speech_style: 慢、轻、不容置疑；从不提高音量
+      risk_tolerance: 0.55
+    emotion: {dominant: serene, valence: 0.1, arousal: 0.25, intensity: 0.5}
+    long_term_goal: 取得一块王者灵髓送回议会总部
+    short_term_goals: [压住猎兽配额超支的事, 在大赛前拿下栖星最好的那几个苗子]
+    schedule:
+      default: work
+      slots:
+        - {phase: dawn, activity: cultivate, location: council_offepact_hall}
+        - {phase: morning, activity: work, location: council_offepact_hall}
+        - {phase: noon, activity: work, location: council_offepact_hall}
+        - {phase: afternoon, activity: social, location: council_branch}
+        - {phase: dusk, activity: work, location: council_offepact_hall}
+        - {phase: night, activity: work, location: council_offepact_hall}
+        - {phase: deep_night, activity: sleep, location: council_offepact_hall}
+    items: [{key: concord_council_seal, qty: 2}, {key: soul_bone_arm, qty: 1}]
+    skills: [bell_toll, guard_channel, bone_fusion]
+    reputation: {global: 45, by_faction: {concord_council: 92}}
+    secret: 她要那块王者灵髓，是为了一个已经躺了四年、还没死透的人
+    capabilities: [拿得出灵髓与墨纹契, 调动分殿全部人手, 让一个学生在大陆上再无立足之地]
+
+  - key: lao_kui
+    name: 老魁
+    type: MAJOR_NPC
+    age: 52
+    gender: male
+    location: hunter_camp
+    faction: soul_hunters
+    faction_rank: 头目
+    realm: soul_king
+    realm_stage: early
+    spiritual_root: black_iron_bull
+    stats: {strength: 18, agility: 13, perception: 16, intelligence: 13, willpower: 16, charisma: 13}
+    background: >
+      五十三级御灵契师，三十年前也在栖星读过外院，第二年被除名。
+      他现在带三十二个人在森林边上讨生活，杀什么全看买主给多少。
+    personality:
+      traits: {gruff: 0.85, pragmatic: 0.85, superstitious: 0.6}
+      values: [兄弟的分成, 收钱办事, 别碰不该碰的]
+      taboos: [杀十万年的东西]
+      speech_style: 粗，爱骂人，讲到当年的学院会突然安静
+      risk_tolerance: 0.7
+    emotion: {dominant: irritable, valence: -0.2, arousal: 0.5, intensity: 0.5}
+    long_term_goal: 做完万灵议会这一单，带钱散伙
+    short_term_goals: [把账册藏好, 让手下别再往深处走]
+    schedule:
+      default: work
+      slots:
+        - {phase: dawn, activity: work, location: hunter_camp}
+        - {phase: morning, activity: work, location: forest_inner}
+        - {phase: noon, activity: eat, location: hunter_camp}
+        - {phase: afternoon, activity: work, location: forest_inner}
+        - {phase: dusk, activity: social, location: hunter_camp}
+        - {phase: night, activity: social, location: tavern_broken_blade}
+        - {phase: deep_night, activity: sleep, location: hunter_camp}
+    items: [{key: beast_ledger, qty: 1}, {key: hunting_net, qty: 5}]
+    skills: [charge_smash, beast_appraisal, iron_hide]
+    reputation: {global: -30, by_faction: {soul_hunters: 90}}
+    secret: 三年前他被除名，是因为他那一届有两个同学死在他带的路上
+    capabilities: [调动三十二个猎手, 认得内圈每一头异兽, 弄得到任何契阶的兽尸]
+
+  - key: qi_lanzhou
+    name: 祁澜洲
+    type: MAJOR_NPC
+    age: 26
+    gender: male
+    location: mirror_guild_envoy_house
+    faction: mirror_guild
+    faction_rank: 使者
+    realm: soul_elder
+    realm_stage: late
+    spiritual_root: flowing_cloud_bell
+    stats: {strength: 11, agility: 14, perception: 17, intelligence: 18, willpower: 15, charisma: 19}
+    background: >
+      三十九级驭印契师，镜塔商盟嫡系。这趟来栖星名义上是观赛，
+      实际上是替宗门在这一届外院里挑一个控制系。
+    personality:
+      traits: {courteous: 0.9, transactional: 0.85, self_aware: 0.7}
+      values: [宗门的利益, 明码标价, 不骗人但也不全说]
+      taboos: [强迫别人接受条件]
+      speech_style: 温文，把交易说得像邀请，条件永远放在最后一句
+      risk_tolerance: 0.45
+    emotion: {dominant: pleasant, valence: 0.25, arousal: 0.35, intensity: 0.4}
+    long_term_goal: 带一个够格的控制系回宗门，稳住自己在嫡系里的位置
+    short_term_goals: [评估玩家与沈玉落, 弄清沈玉落的塔到底有几宝]
+    schedule:
+      default: social
+      slots:
+        - {phase: dawn, activity: cultivate, location: mirror_guild_envoy_house}
+        - {phase: morning, activity: social, location: mirror_guild_envoy_house}
+        - {phase: noon, activity: social, location: qixing_city}
+        - {phase: afternoon, activity: social, location: arena}
+        - {phase: dusk, activity: social, location: mirror_guild_envoy_house}
+        - {phase: night, activity: rest, location: mirror_guild_envoy_house}
+        - {phase: deep_night, activity: sleep, location: mirror_guild_envoy_house}
+    items: [{key: mirror_guild_invitation, qty: 3}, {key: gold_soul_coin, qty: 400}]
+    skills: [bell_toll, guard_channel, beast_appraisal]
+    reputation: {global: 35, by_faction: {mirror_guild: 78}}
+    secret: 宗门给他的指标是带回一个控制系，带不回去他自己就要被换掉
+    capabilities: [出得起紫纹契的价, 替人护法, 一句话请动镜塔使馆的人]
+
+  - key: mo_shanzi
+    name: 莫三子
+    type: MAJOR_NPC
+    age: 20
+    gender: male
+    location: city_market
+    realm: soul_master
+    realm_stage: early
+    spiritual_root: shadow_civet
+    stats: {strength: 10, agility: 16, perception: 15, intelligence: 14, willpower: 11, charisma: 16}
+    background: >
+      在集市上卖“森林深处坐标”的。他手上的消息有真有假，
+      真的那部分是从猎兽人那儿听来的，假的那部分是他自己编的。
+    personality:
+      traits: {glib: 0.9, cowardly: 0.75, sentimental: 0.5}
+      values: [现钱, 不惹狠人, 老主顾]
+      taboos: [亲自进内圈]
+      speech_style: 一句真话夹三句吹牛，被拆穿了就笑着换个价
+      risk_tolerance: 0.35
+    emotion: {dominant: chipper, valence: 0.3, arousal: 0.5, intensity: 0.4}
+    long_term_goal: 攒够钱在城里盘一间铺子，再也不用进森林
+    short_term_goals: [把手上那条内圈坐标卖出去, 弄清猎兽人营地最近在忙什么]
+    schedule:
+      default: work
+      slots:
+        - {phase: dawn, activity: rest, location: city_market}
+        - {phase: morning, activity: work, location: city_market}
+        - {phase: noon, activity: work, location: city_market}
+        - {phase: afternoon, activity: work, location: city_market}
+        - {phase: dusk, activity: social, location: tavern_broken_blade}
+        - {phase: night, activity: social, location: tavern_broken_blade}
+        - {phase: deep_night, activity: sleep, location: city_market}
+    items: [{key: gold_soul_coin, qty: 60}, {key: soul_power_pill, qty: 6}]
+    skills: [beast_appraisal]
+    reputation: {global: -5, by_faction: {}}
+    secret: 他卖出去的坐标里有三成是编的，已经害死过一支四人队
+    capabilities: [弄得到各种消息, 认得城里所有黑市门路, 买得到丹药]
+
+relationships:
+  - {a: qi_ranyan, b: player, affection: 8, trust: 10, respect: 6, familiarity: 25, boundaries: 60}
+  - {a: mu_jinnian, b: player, affection: 0, trust: 2, respect: 5, suspicion: 15, familiarity: 18, boundaries: 55}
+  - {a: shen_yuluo, b: player, affection: 3, trust: 2, respect: 8, suspicion: 20, familiarity: 20, boundaries: 55}
+  - {a: lu_qingchan, b: player, affection: 10, trust: 6, respect: 4, familiarity: 30, boundaries: 50}
+  - {a: dai_kuan, b: player, affection: 14, trust: 12, respect: 5, familiarity: 32, boundaries: 50}
+  - {a: bo_zhonghe, b: player, affection: 0, trust: 0, respect: 2, familiarity: 2, boundaries: 65}
+  - {a: xu_bingzhou, b: player, affection: 1, trust: 2, respect: 3, familiarity: 6, boundaries: 55}
+  - {a: granny_gu, b: player, affection: 12, trust: 8, respect: 3, familiarity: 22, boundaries: 50}
+  - {a: tang_wanyi, b: player, affection: 5, trust: 4, respect: 3, familiarity: 10, boundaries: 55}
+  - {a: hong_shu, b: player, affection: 5, trust: 0, respect: 4, suspicion: 10, familiarity: 3, boundaries: 50}
+  - {a: yan_zhi, b: player, affection: 0, trust: 0, respect: 1, suspicion: 5, familiarity: 0, boundaries: 65}
+  - {a: lao_kui, b: player, affection: 0, trust: 0, respect: 2, suspicion: 30, familiarity: 1, boundaries: 55}
+  - {a: qi_lanzhou, b: player, affection: 6, trust: 2, respect: 5, familiarity: 2, boundaries: 55}
+  - {a: mo_shanzi, b: player, affection: 6, trust: 1, respect: 2, familiarity: 8, boundaries: 50}
+  - {a: mu_jinnian, b: qi_ranyan, affection: 15, trust: 20, respect: 60, fear: 35, familiarity: 55, boundaries: 60}
+  - {a: shen_yuluo, b: qi_lanzhou, affection: 5, trust: 10, respect: 40, fear: 25, familiarity: 30, boundaries: 60}
+  - {a: lu_qingchan, b: lao_kui, affection: -10, trust: 20, respect: 15, fear: 40, familiarity: 45, boundaries: 50}
+  - {a: dai_kuan, b: lu_qingchan, affection: 25, trust: 30, respect: 15, familiarity: 40, boundaries: 50}
+  - {a: hong_shu, b: lao_kui, affection: 5, trust: 35, respect: 10, familiarity: 50, boundaries: 50}
+  - {a: granny_gu, b: bo_zhonghe, affection: 20, trust: 30, respect: 65, fear: 30, familiarity: 70, boundaries: 55}
+  - {a: hong_shu, b: mu_jinnian, affection: 10, trust: 25, respect: 15, familiarity: 35, boundaries: 50}

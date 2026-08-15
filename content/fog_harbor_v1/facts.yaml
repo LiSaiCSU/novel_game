@@ -1,0 +1,333 @@
+facts:
+  - key: fact_qiao_found_dead
+    statement: 乔慕山在十一月十四日凌晨三点十七分被发现死于从内侧反锁的望海厅
+    truth_value: true
+    scope: WORLD
+    sensitivity: 0.1
+    related: [sea_view_lounge, qingjiao_shipping]
+    initial_knowledge:
+      player: {state: KNOWN, confidence: 1, source: WITNESSED}
+      pei_zhaolin: {state: KNOWN, confidence: 1, source: WITNESSED}
+      he_shuqin: {state: KNOWN, confidence: 1, source: WITNESSED}
+      gu_shenyi: {state: KNOWN, confidence: 1, source: WITNESSED}
+      qiao_wanyin: {state: KNOWN, confidence: 1, source: WITNESSED}
+      lu_bingchen: {state: KNOWN, confidence: 1, source: WITNESSED}
+      sun_zhaoqing: {state: KNOWN, confidence: 1, source: WITNESSED}
+      shao_lingjun: {state: KNOWN, confidence: 1, source: WITNESSED}
+      jian_mo: {state: KNOWN, confidence: 1, source: WITNESSED}
+      an_qiao: {state: KNOWN, confidence: 1, source: WITNESSED}
+      xu_lang: {state: KNOWN, confidence: 1, source: WITNESSED}
+      zhou_yanzhi: {state: KNOWN, confidence: 1, source: WITNESSED}
+      mai_zhengqi: {state: KNOWN, confidence: 1, source: TOLD_BY}
+      tan_wu: {state: KNOWN, confidence: 1, source: TOLD_BY}
+      bai_qiuhe: {state: KNOWN, confidence: 1, source: WITNESSED}
+
+  - key: fact_fog_holds_the_ship
+    statement: 浓雾散去与靠港约在三十六小时后，在此之前无人能离船，警方也上不来
+    truth_value: true
+    scope: WORLD
+    sensitivity: 0.1
+    related: [egret_ferry, pei_zhaolin]
+    initial_knowledge:
+      player: {state: KNOWN, confidence: 1, source: TOLD_BY}
+      pei_zhaolin: {state: KNOWN, confidence: 1, source: SEED}
+      sun_zhaoqing: {state: KNOWN, confidence: 1, source: SEED}
+      mai_zhengqi: {state: KNOWN, confidence: 1, source: SEED}
+      zhou_yanzhi: {state: KNOWN, confidence: 1, source: TOLD_BY}
+      tan_wu: {state: KNOWN, confidence: 1, source: TOLD_BY}
+      bai_qiuhe: {state: KNOWN, confidence: 1, source: TOLD_BY}
+      qiao_wanyin: {state: KNOWN, confidence: 1, source: TOLD_BY}
+      lu_bingchen: {state: KNOWN, confidence: 1, source: TOLD_BY}
+      he_shuqin: {state: KNOWN, confidence: 1, source: TOLD_BY}
+      gu_shenyi: {state: KNOWN, confidence: 1, source: TOLD_BY}
+      shao_lingjun: {state: KNOWN, confidence: 1, source: TOLD_BY}
+      jian_mo: {state: KNOWN, confidence: 1, source: TOLD_BY}
+      an_qiao: {state: KNOWN, confidence: 1, source: TOLD_BY}
+      xu_lang: {state: KNOWN, confidence: 1, source: TOLD_BY}
+
+  - key: fact_needle_mark_on_neck
+    statement: 死者左颈侧有一处新鲜针孔，周围无挣扎痕迹
+    truth_value: true
+    scope: WORLD
+    sensitivity: 0.6
+    related: [sea_view_lounge, gu_shenyi]
+    initial_knowledge:
+      player: {state: KNOWN, confidence: 0.9, source: WITNESSED}
+      gu_shenyi: {state: KNOWN, confidence: 1, source: WITNESSED}
+      he_shuqin: {state: KNOWN, confidence: 1, source: SEED}
+      shao_lingjun: {state: KNOWN, confidence: 0.9, source: WITNESSED}
+      pei_zhaolin: {state: SUSPECTED, confidence: 0.5, source: TOLD_BY}
+      jian_mo: {state: HEARD, confidence: 0.6, source: RUMOR}
+
+  - key: fact_room_locked_from_inside
+    statement: 望海厅的门闩从内侧插着，钥匙留在锁孔，两扇舷窗从内侧拧死
+    truth_value: true
+    scope: WORLD
+    sensitivity: 0.2
+    related: [sea_view_lounge]
+    initial_knowledge:
+      player: {state: KNOWN, confidence: 1, source: WITNESSED}
+      pei_zhaolin: {state: KNOWN, confidence: 1, source: WITNESSED}
+      sun_zhaoqing: {state: KNOWN, confidence: 1, source: WITNESSED}
+      shao_lingjun: {state: KNOWN, confidence: 1, source: WITNESSED}
+      gu_shenyi: {state: KNOWN, confidence: 1, source: WITNESSED}
+      jian_mo: {state: KNOWN, confidence: 1, source: WITNESSED}
+      an_qiao: {state: KNOWN, confidence: 1, source: WITNESSED}
+      he_shuqin: {state: KNOWN, confidence: 1, source: SEED}
+
+  - key: fact_window_tape_residue
+    statement: 望海厅左舷窗内框留有两道新鲜胶带残痕，说明密室是事后从外侧布置的
+    truth_value: true
+    scope: WORLD
+    sensitivity: 0.95
+    related: [sea_view_lounge, tape_residue]
+    initial_knowledge:
+      he_shuqin: {state: KNOWN, confidence: 1, source: SEED}
+
+  - key: fact_qiao_terminal_cancer
+    statement: 乔慕山三个月前确诊胰腺癌晚期，预计生存期不足半年
+    truth_value: true
+    scope: PERSONAL
+    sensitivity: 0.95
+    related: [gu_shenyi, infirmary, qingjiao_shipping]
+    initial_knowledge:
+      gu_shenyi: {state: KNOWN, confidence: 1, source: DOCUMENT}
+      he_shuqin: {state: KNOWN, confidence: 0.95, source: TOLD_BY}
+      lu_bingchen: {state: SUSPECTED, confidence: 0.6, source: INFERRED}
+
+  - key: fact_qiao_planned_his_death
+    statement: 乔慕山自己安排了这场看起来像他杀的死亡，为的是逼出十年前的真相
+    truth_value: true
+    scope: WORLD
+    sensitivity: 1.0
+    related: [he_shuqin, lu_bingchen, escrow_letter]
+    initial_knowledge:
+      he_shuqin: {state: KNOWN, confidence: 1, source: WITNESSED}
+      lu_bingchen: {state: SUSPECTED, confidence: 0.45, source: INFERRED}
+
+  - key: fact_he_shuqin_pushed_the_needle
+    statement: 推针的人是何淑勤
+    truth_value: true
+    scope: WORLD
+    sensitivity: 1.0
+    subject: he_shuqin
+    related: [he_shuqin, sea_view_lounge]
+    initial_knowledge:
+      he_shuqin: {state: KNOWN, confidence: 1, source: SEED}
+
+  - key: fact_he_shuqin_is_bereaved
+    statement: 何淑勤的婚前姓名在1114遇难者家属栏上，她丈夫是四十一人之一
+    truth_value: true
+    scope: PERSONAL
+    sensitivity: 1.0
+    subject: he_shuqin
+    related: [he_shuqin, bereaved_1114, victim_list_1114]
+    initial_knowledge:
+      he_shuqin: {state: KNOWN, confidence: 1, source: SEED}
+      zhou_yanzhi: {state: SUSPECTED, confidence: 0.35, source: INFERRED}
+
+  - key: fact_he_shuqin_changed_her_mind
+    statement: 何淑勤在最后一刻反悔了，她想活下去，于是把现场做成密室并把线索引向船长
+    truth_value: true
+    scope: WORLD
+    sensitivity: 1.0
+    subject: he_shuqin
+    related: [he_shuqin, pei_zhaolin, sea_view_lounge]
+    initial_knowledge:
+      he_shuqin: {state: KNOWN, confidence: 1, source: SEED}
+
+  - key: fact_two_sedative_vials_missing
+    statement: 医务室镇静剂领用登记本上账实相差两支
+    truth_value: true
+    scope: FACTION
+    sensitivity: 0.8
+    related: [infirmary, sedative_log, gu_shenyi]
+    initial_knowledge:
+      gu_shenyi: {state: KNOWN, confidence: 0.9, source: DOCUMENT}
+      he_shuqin: {state: KNOWN, confidence: 1, source: SEED}
+      bai_qiuhe: {state: HEARD, confidence: 0.3, source: RUMOR}
+
+  - key: fact_pei_altered_duty_log
+    statement: 十年前1114的值班记录是裴昭麟事后改的
+    truth_value: true
+    scope: PERSONAL
+    sensitivity: 1.0
+    subject: pei_zhaolin
+    related: [pei_zhaolin, captain_office, duty_log_1114]
+    initial_knowledge:
+      pei_zhaolin: {state: KNOWN, confidence: 1, source: SEED}
+      mai_zhengqi: {state: SUSPECTED, confidence: 0.6, source: INFERRED}
+      lu_bingchen: {state: KNOWN, confidence: 0.8, source: DOCUMENT}
+      shao_lingjun: {state: SUSPECTED, confidence: 0.55, source: INFERRED}
+
+  - key: fact_zhou_yanqing_was_scapegoat
+    statement: 周砚清是1114的替罪者，事故的直接责任不在他
+    truth_value: true
+    scope: WORLD
+    sensitivity: 0.9
+    related: [zhou_yanzhi, pei_zhaolin, mai_zhengqi]
+    initial_knowledge:
+      pei_zhaolin: {state: KNOWN, confidence: 0.95, source: WITNESSED}
+      mai_zhengqi: {state: BELIEVED, confidence: 0.85, source: INFERRED}
+      zhou_yanzhi: {state: BELIEVED, confidence: 0.9, source: DOCUMENT}
+      shao_lingjun: {state: KNOWN, confidence: 0.85, source: DOCUMENT}
+      lu_bingchen: {state: KNOWN, confidence: 0.9, source: DOCUMENT}
+      he_shuqin: {state: BELIEVED, confidence: 0.8, source: TOLD_BY}
+
+  - key: fact_shao_took_hush_money
+    statement: 邵凌钧十年前收过一笔让调查停在操作失误四个字上的钱
+    truth_value: true
+    scope: PERSONAL
+    sensitivity: 1.0
+    subject: shao_lingjun
+    related: [shao_lingjun, lu_bingchen, hush_receipt]
+    initial_knowledge:
+      shao_lingjun: {state: KNOWN, confidence: 1, source: SEED}
+      lu_bingchen: {state: KNOWN, confidence: 0.9, source: DOCUMENT}
+
+  - key: fact_mai_report_suppressed
+    statement: 麦正岐十年前提交的设备缺陷报告被人压下，公开卷宗里查不到收文编号
+    truth_value: true
+    scope: FACTION
+    sensitivity: 0.85
+    subject: mai_zhengqi
+    related: [mai_zhengqi, defect_report, qingjiao_shipping]
+    initial_knowledge:
+      mai_zhengqi: {state: KNOWN, confidence: 1, source: SEED}
+      pei_zhaolin: {state: KNOWN, confidence: 0.8, source: WITNESSED}
+      lu_bingchen: {state: KNOWN, confidence: 0.9, source: DOCUMENT}
+
+  - key: fact_zhou_yanzhi_false_name
+    statement: 乘务员林知的真实身份是周砚清的妹妹周砚知，入职材料上的证件号是假的
+    truth_value: true
+    scope: PERSONAL
+    sensitivity: 1.0
+    subject: zhou_yanzhi
+    related: [zhou_yanzhi, passenger_manifest, crew_id_fake]
+    initial_knowledge:
+      zhou_yanzhi: {state: KNOWN, confidence: 1, source: SEED}
+      sun_zhaoqing: {state: SUSPECTED, confidence: 0.4, source: DOCUMENT}
+
+  - key: fact_share_transfer_to_outsider
+    statement: 乔慕山准备把自己的股份转给公司与家族以外的人
+    truth_value: true
+    scope: FACTION
+    sensitivity: 0.9
+    related: [qiao_wanyin, lu_bingchen, share_transfer_draft]
+    initial_knowledge:
+      lu_bingchen: {state: KNOWN, confidence: 1, source: DOCUMENT}
+      qiao_wanyin: {state: KNOWN, confidence: 0.9, source: WITNESSED}
+      an_qiao: {state: KNOWN, confidence: 0.7, source: DOCUMENT}
+      he_shuqin: {state: SUSPECTED, confidence: 0.5, source: WITNESSED}
+
+  - key: fact_wanyin_is_main_beneficiary
+    statement: 乔晚吟是遗产与八千万意外险的最大受益人
+    truth_value: true
+    scope: WORLD
+    sensitivity: 0.4
+    subject: qiao_wanyin
+    related: [qiao_wanyin, jian_mo, insurance_policy]
+    initial_knowledge:
+      qiao_wanyin: {state: KNOWN, confidence: 1, source: DOCUMENT}
+      jian_mo: {state: KNOWN, confidence: 1, source: DOCUMENT}
+      lu_bingchen: {state: KNOWN, confidence: 1, source: DOCUMENT}
+      an_qiao: {state: SUSPECTED, confidence: 0.6, source: INFERRED}
+
+  - key: fact_escrow_letter_exists
+    statement: 乔慕山留给陆秉臣一封写明若自己死于非自然原因即公开全部材料的委托函
+    truth_value: true
+    scope: PERSONAL
+    sensitivity: 0.95
+    related: [lu_bingchen, escrow_letter]
+    initial_knowledge:
+      lu_bingchen: {state: KNOWN, confidence: 1, source: DOCUMENT}
+
+  - key: fact_lu_destroyed_records
+    statement: 陆秉臣十年前销毁了原始检修与验伤记录，但私留了一份副本
+    truth_value: true
+    scope: PERSONAL
+    sensitivity: 0.95
+    subject: lu_bingchen
+    related: [lu_bingchen, qingjiao_shipping]
+    initial_knowledge:
+      lu_bingchen: {state: KNOWN, confidence: 1, source: SEED}
+      shao_lingjun: {state: SUSPECTED, confidence: 0.5, source: INFERRED}
+      qiao_wanyin: {state: SUSPECTED, confidence: 0.4, source: INFERRED}
+
+  - key: fact_xu_lang_left_post
+    statement: 案发时段徐朗离开了头等舱走廊岗位二十分钟，去见了乔晚吟
+    truth_value: true
+    scope: PERSONAL
+    sensitivity: 0.85
+    related: [xu_lang, qiao_wanyin, first_class_deck]
+    initial_knowledge:
+      xu_lang: {state: KNOWN, confidence: 1, source: SEED}
+      qiao_wanyin: {state: KNOWN, confidence: 1, source: SEED}
+      bai_qiuhe: {state: SUSPECTED, confidence: 0.45, source: WITNESSED}
+
+  - key: fact_bai_qiuhe_saw_someone
+    statement: 白秋禾在三点前后看见有人从望海厅方向离开，对方给了她一千二百块
+    truth_value: true
+    scope: PERSONAL
+    sensitivity: 0.9
+    subject: bai_qiuhe
+    related: [bai_qiuhe, first_class_deck, he_shuqin]
+    initial_knowledge:
+      bai_qiuhe: {state: KNOWN, confidence: 1, source: WITNESSED}
+      he_shuqin: {state: KNOWN, confidence: 1, source: SEED}
+
+  - key: fact_tan_wu_handed_off_the_wine
+    statement: 那杯温酒由谭五在两点四十八分温好，却在出餐口被另一个人接手送进望海厅
+    truth_value: true
+    scope: FACTION
+    sensitivity: 0.8
+    related: [tan_wu, galley, warm_wine_cup]
+    initial_knowledge:
+      tan_wu: {state: KNOWN, confidence: 1, source: WITNESSED}
+      he_shuqin: {state: KNOWN, confidence: 1, source: SEED}
+      bai_qiuhe: {state: SUSPECTED, confidence: 0.4, source: WITNESSED}
+
+  - key: fact_insurer_wants_suicide
+    statement: 恒安保险要求简墨把结论做成自杀以规避八千万赔付
+    truth_value: true
+    scope: FACTION
+    sensitivity: 0.9
+    subject: jian_mo
+    related: [jian_mo, heng_an_insurance]
+    initial_knowledge:
+      jian_mo: {state: KNOWN, confidence: 1, source: DOCUMENT}
+
+  - key: fact_cctv_corridor_gap
+    statement: 头等舱走廊那一路监控在两点四十到三点二十之间没有画面
+    truth_value: true
+    scope: FACTION
+    sensitivity: 0.7
+    related: [purser_office, sun_zhaoqing, cctv_drive]
+    initial_knowledge:
+      sun_zhaoqing: {state: KNOWN, confidence: 1, source: DOCUMENT}
+      pei_zhaolin: {state: KNOWN, confidence: 0.7, source: TOLD_BY}
+      he_shuqin: {state: KNOWN, confidence: 0.8, source: SEED}
+
+  - key: fact_cctv_gap_was_manual
+    statement: 那四十分钟不是故障，是有人在两点三十八分用事务长账号做了一次手动切换
+    truth_value: true
+    scope: FACTION
+    sensitivity: 0.95
+    related: [purser_office, sun_zhaoqing]
+    initial_knowledge:
+      sun_zhaoqing: {state: KNOWN, confidence: 0.85, source: DOCUMENT}
+      he_shuqin: {state: KNOWN, confidence: 1, source: SEED}
+
+  - key: fact_player_missing_23_minutes
+    statement: 玩家在两点四十到三点零三之间的行踪没有任何人能够证明
+    truth_value: true
+    scope: PERSONAL
+    sensitivity: 0.8
+    subject: player
+    related: [player, sun_zhaoqing, jian_mo]
+    initial_knowledge:
+      player: {state: KNOWN, confidence: 1, source: SEED}
+      sun_zhaoqing: {state: SUSPECTED, confidence: 0.55, source: DOCUMENT}
+      jian_mo: {state: SUSPECTED, confidence: 0.45, source: INFERRED}
+      shao_lingjun: {state: SUSPECTED, confidence: 0.5, source: INFERRED}
+      pei_zhaolin: {state: SUSPECTED, confidence: 0.4, source: INFERRED}

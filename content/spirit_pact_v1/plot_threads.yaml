@@ -1,0 +1,292 @@
+plot_threads:
+  - key: thread_second_pact
+    name: 第二个契位
+    status: active
+    importance: 0.98
+    stage: 0
+    participants: [player, qi_ranyan, granny_gu, shen_yuluo, lu_qingchan, dai_kuan]
+    unresolved_questions: [拿一枚安全的青纹契立刻进选拔, 还是空着契位去内圈赌一头中阶的, 谁肯替你护法]
+    foreshadowing: [灵契堂八根柱子上刻满缔契失败者的名字, 顾婆婆每次配契前都要多问一句你几级, 齐燃言桌上那张旧林图有九个红点被划掉]
+    related_facts: [fact_pact_binding_is_permanent, fact_player_is_nineteen_levels, fact_thousand_beast_in_inner_pact, fact_only_one_can_take_the_thousand_beast, fact_overleveled_pact_causes_backlash]
+    next_beat_hint: 顾婆婆会通知你，学院这一批配发的青纹契只剩最后四枚
+    escalation_pressure: 0.9
+    scheduled_beats:
+      - {at_minutes_from_start: 1440, event_type: QUEST_OFFER, beat: 灵契堂通知你本届青纹契只剩四枚，先到先得}
+      - {at_minutes_from_start: 10080, event_type: CONFRONTATION, beat: 外院晋级考核，二十级以下的人被当众念了名字}
+      - {at_minutes_from_start: 28800, event_type: DISCOVERY, beat: 森林实习开始，内圈那头六低阶异兽第一次被人亲眼看见}
+      - {at_minutes_from_start: 40320, event_type: BETRAYAL, beat: 有人抢先一步去了水潭}
+      - {at_minutes_from_start: 50400, event_type: CONFRONTATION, beat: 内院选拔当天，你身上有几道灵契、什么颜色，所有人都看得见}
+
+  - key: thread_inner_gate
+    name: 内院那道门
+    status: active
+    importance: 0.92
+    stage: 0
+    participants: [player, bo_zhonghe, xu_bingzhou, qi_ranyan, mu_jinnian, shen_yuluo]
+    unresolved_questions: [三十枚选拔令会给谁, 柏仲和真正在挑什么, 等级不够还有没有别的路]
+    foreshadowing: [柏仲和问每个人的问题都不一样, 徐冰舟去年放过一个不该过的人, 石像下面的路每年都有人走不完]
+    related_facts: [fact_inner_trial_needs_thirty_levels, fact_tournament_in_sixty_days, fact_xu_bingzhou_passed_someone]
+    next_beat_hint: 徐冰舟会在比武场随机挑人试手，被挑中的人当场就被评了一次
+    escalation_pressure: 0.75
+    scheduled_beats:
+      - {at_minutes_from_start: 7200, event_type: NPC_APPROACH, beat: 徐冰舟在比武场挑人试手}
+      - {at_minutes_from_start: 21600, event_type: QUEST_OFFER, beat: 齐燃言问你要不要她的保荐，以及你打算拿什么去换}
+      - {at_minutes_from_start: 43200, event_type: DISCOVERY, beat: 三十枚选拔令的名单流了出来}
+      - {at_minutes_from_start: 50400, event_type: CONFRONTATION, beat: 内院选拔，柏仲和亲自坐在门口}
+      - {at_minutes_from_start: 86400, event_type: CONFRONTATION, beat: 精英大赛开幕}
+
+  - key: thread_forest_emptied
+    name: 被清空的森林
+    status: active
+    importance: 0.88
+    stage: 0
+    participants: [player, qi_ranyan, tang_wanyi, lao_kui, hong_shu, bo_zhonghe, lu_qingchan]
+    unresolved_questions: [九处巢穴是谁清的, 账册上的代号对应着谁, 学院拿得出证据吗]
+    foreshadowing: [分殿的人每次进林子前都先去藏书阁查同一片, 营地里晾着不该出现在这个季节的兽皮, 齐燃言的旧图上划线日期全在最近三年]
+    related_facts: [fact_high_year_beasts_vanishing, fact_concord_council_buys_the_slaughter, fact_concord_council_marks_beasts_first, fact_beast_ledger_hidden_in_camp, fact_lao_kui_was_expelled, fact_academy_pacts_are_black_market]
+    next_beat_hint: 唐晚意会拦住你，手里攥着借阅登记本，但一句话也不敢先说
+    escalation_pressure: 0.7
+    scheduled_beats:
+      - {at_minutes_from_start: 14400, event_type: FORESHADOWING, beat: 唐晚意欲言又止地提起有人反复查同一片林子}
+      - {at_minutes_from_start: 33120, event_type: DISCOVERY, beat: 森林实习途中撞见一处被清空的巢穴}
+      - {at_minutes_from_start: 57600, event_type: SECRET_DISCLOSURE, beat: 老魁在酒馆喝多了，说漏了一个代号}
+      - {at_minutes_from_start: 74880, event_type: CONFRONTATION, beat: 有人先一步去营地取账册}
+
+  - key: thread_mu_jinnian
+    name: 首席身上的墨契
+    status: active
+    importance: 0.85
+    stage: 0
+    participants: [player, mu_jinnian, qi_ranyan, hong_shu, xu_bingzhou]
+    unresolved_questions: [他那枚墨契哪儿来的, 他还能撑多久, 他会不会在大赛上当场废掉]
+    foreshadowing: [他右臂常年缠着药布而且从不脱外袍, 药布上的血是暗紫色的, 洪枢每次来学院都会先找他]
+    related_facts: [fact_mu_jinnian_backlash, fact_mu_pact_came_from_concord_council, fact_overleveled_pact_causes_backlash]
+    next_beat_hint: 你会在深夜的训练场上撞见他一个人在压什么东西
+    escalation_pressure: 0.72
+    scheduled_beats:
+      - {at_minutes_from_start: 5760, event_type: FORESHADOWING, beat: 深夜训练场，穆晋年一个人跪在地上很久没有起来}
+      - {at_minutes_from_start: 25920, event_type: SECRET_DISCLOSURE, beat: 药布掉了下来，底下的东西不是外伤}
+      - {at_minutes_from_start: 46080, event_type: CONFRONTATION, beat: 洪枢来学院催他兑现入殿的承诺}
+      - {at_minutes_from_start: 79200, event_type: RESCUE, beat: 大赛前夜，他的反噬压不住了}
+
+  - key: thread_squad
+    name: 一支肯要你的队伍
+    status: active
+    importance: 0.8
+    stage: 0
+    participants: [player, dai_kuan, lu_qingchan, shen_yuluo, tang_wanyi]
+    unresolved_questions: [谁愿意把后背交给你, 队伍缺的是控制还是防御, 组合契术磨得出来吗]
+    foreshadowing: [戴宽每天最早到训练场也最晚走, 陆青蝉周末总是不在, 沈玉落从不和同一个人练第二次]
+    related_facts: [fact_dai_kuan_bloodline, fact_lu_qingchan_guides_hunters, fact_shen_yuluo_five_treasures, fact_only_one_can_take_the_thousand_beast]
+    next_beat_hint: 戴宽会很不好意思地问你，大赛的队伍要不要算他一个
+    escalation_pressure: 0.6
+    scheduled_beats:
+      - {at_minutes_from_start: 4320, event_type: QUEST_OFFER, beat: 戴宽问你要不要一起组队}
+      - {at_minutes_from_start: 28800, event_type: PROMISE, beat: 森林实习中有人替你挡了一次}
+      - {at_minutes_from_start: 62640, event_type: CONFRONTATION, beat: 队伍里为了谁该拿那个契位吵了起来}
+      - {at_minutes_from_start: 72000, event_type: PROMISE, beat: 怪物小队最后定员}
+
+  - key: thread_who_owns_you
+    name: 谁想买下你
+    status: active
+    importance: 0.78
+    stage: 0
+    participants: [player, hong_shu, yan_zhi, qi_lanzhou, shen_yuluo, mo_shanzi]
+    unresolved_questions: [万灵议会开的价是什么, 镜塔商盟的请柬背面写着什么, 你身上的契印别人看得见多少]
+    foreshadowing: [洪枢第一次见你就说得出你几级, 请柬是琉璃做的却没有落款, 分殿供奉厅的空牌位比满牌位多]
+    related_facts: [fact_mirror_guild_needs_a_control_type, fact_yan_zhi_wants_a_bone, fact_bone_is_for_a_dying_person, fact_mu_pact_came_from_concord_council, fact_qi_ranyan_lost_arm_for_a_student]
+    next_beat_hint: 洪枢会在集市上很巧地遇见你，并且知道你缺什么
+    escalation_pressure: 0.65
+    scheduled_beats:
+      - {at_minutes_from_start: 8640, event_type: NPC_APPROACH, beat: 洪枢在集市上很巧地遇见你}
+      - {at_minutes_from_start: 30240, event_type: QUEST_OFFER, beat: 镜塔商盟的请柬送到了外院宿舍}
+      - {at_minutes_from_start: 54720, event_type: QUEST_OFFER, beat: 分殿开出具体的条件——一枚紫纹契，外加一块灵髓}
+      - {at_minutes_from_start: 83520, event_type: CONFRONTATION, beat: 大赛前，所有想买你的人都要一个答复}
+
+quests:
+  - key: quest_reach_twenty
+    name: 把灵息练到二十级
+    giver: qi_ranyan
+    status: offered
+    goal: {type: cultivate, target_level: 20}
+    constraints: {deadline_minutes: 10080}
+    rewards: {relationship: {qi_ranyan: {trust: 6, respect: 5}}}
+    failure_conditions: [deadline_passed]
+    world_consequences:
+      on_success: {advance_thread: thread_second_pact}
+      on_failure: {tension: 6}
+    plot_thread: thread_second_pact
+
+  - key: quest_appraise_the_beast
+    name: 弄清水潭边那头异兽到底几年
+    giver: lu_qingchan
+    status: offered
+    goal: {type: investigate, locations: [forest_edge, forest_inner, library_tower]}
+    constraints: {deadline_minutes: 28800}
+    rewards: {relationship: {lu_qingchan: {trust: 10}}, item: {year_gauge: 1}}
+    failure_conditions: [deadline_passed, wrong_appraisal]
+    world_consequences:
+      on_success: {advance_thread: thread_second_pact, reveal_fact_chance: {fact_thousand_beast_in_inner_pact: 1.0}}
+      on_failure: {tension: 8}
+      if_player_refuses: {reassign_to: [shen_yuluo], success_chance: 0.6}
+    plot_thread: thread_second_pact
+
+  - key: quest_second_pact
+    name: 定下你的第二个契位
+    giver: granny_gu
+    status: offered
+    goal: {type: decide, options: [take_the_hundred_year_now, hunt_the_six_hundred_year, leave_the_slot_empty]}
+    constraints: {deadline_minutes: 50400}
+    rewards: {faction_reputation: {qixing_academy_faction: 8}}
+    failure_conditions: [deadline_passed, absorption_failed]
+    world_consequences:
+      on_success: {advance_thread: thread_second_pact}
+      on_failure: {tension: 15, advance_thread: thread_second_pact}
+      if_player_refuses: {reassign_to: [shen_yuluo, dai_kuan], success_chance: 0.55}
+    plot_thread: thread_second_pact
+
+  - key: quest_find_guards
+    name: 找齐替你护法的人
+    giver: dai_kuan
+    status: offered
+    goal: {type: recruit, count: 3}
+    constraints: {deadline_minutes: 40320}
+    rewards: {relationship: {dai_kuan: {trust: 12, affection: 8}}}
+    failure_conditions: [deadline_passed, refused_by_all]
+    world_consequences:
+      on_success: {advance_thread: thread_squad}
+      on_failure: {tension: 10}
+    plot_thread: thread_squad
+
+  - key: quest_yield_the_pact
+    name: 把那个契位让出去
+    giver: dai_kuan
+    status: offered
+    goal: {type: decide, options: [take_it_yourself, yield_to_teammate]}
+    constraints: {deadline_minutes: 50400}
+    rewards: {relationship: {dai_kuan: {trust: 30, affection: 25, respect: 20}}}
+    failure_conditions: [deadline_passed]
+    world_consequences:
+      on_success: {advance_thread: thread_squad}
+      on_failure: {tension: 8}
+    plot_thread: thread_squad
+
+  - key: quest_black_pact_gamble
+    name: 万年一赌
+    giver: qi_ranyan
+    status: offered
+    goal: {type: ritual, location: forest_deep, item: pact_ten_thousand_year}
+    constraints: {deadline_minutes: 79200, requires_guards: 3, min_realm: grand_soul_master}
+    rewards: {item: {pact_ten_thousand_year: 1}}
+    failure_conditions: [guards_missing, absorption_failed, deadline_passed, killed_by_beast]
+    world_consequences:
+      on_success: {advance_thread: thread_second_pact, reveal_fact_chance: {fact_black_beast_in_deep_forest: 1.0}}
+      on_failure: {tension: 35, advance_thread: thread_mu_jinnian}
+      if_player_refuses: {reassign_to: [shen_yuluo], success_chance: 0.15}
+    plot_thread: thread_second_pact
+
+  - key: quest_team_formation
+    name: 凑齐一支怪物小队
+    giver: dai_kuan
+    status: offered
+    goal: {type: recruit, count: 6}
+    constraints: {deadline_minutes: 72000}
+    rewards: {faction_reputation: {qixing_academy_faction: 15}}
+    failure_conditions: [deadline_passed, squad_broke_up]
+    world_consequences:
+      on_success: {advance_thread: thread_squad}
+      on_failure: {tension: 12}
+    plot_thread: thread_squad
+
+  - key: quest_inner_trial
+    name: 通过内院选拔
+    giver: xu_bingzhou
+    status: offered
+    goal: {type: trial, location: inner_gate}
+    constraints: {deadline_minutes: 50400, requires_item: inner_token}
+    rewards: {item: {inner_token: 1}, faction_reputation: {qixing_academy_faction: 30}}
+    failure_conditions: [deadline_passed, level_too_low, no_recommendation]
+    world_consequences:
+      on_success: {advance_thread: thread_inner_gate}
+      on_failure: {tension: 18, advance_thread: thread_inner_gate}
+    plot_thread: thread_inner_gate
+
+  - key: quest_get_recommendation
+    name: 拿到齐燃言的保荐
+    giver: qi_ranyan
+    status: offered
+    goal: {type: persuade, target: qi_ranyan}
+    constraints: {deadline_minutes: 43200}
+    rewards: {relationship: {qi_ranyan: {trust: 15, respect: 12}}}
+    failure_conditions: [deadline_passed, trust_broken]
+    world_consequences:
+      on_success: {advance_thread: thread_inner_gate}
+      on_failure: {tension: 10}
+    plot_thread: thread_inner_gate
+
+  - key: quest_library_records
+    name: 查清是谁在反复借阅同一片林子
+    giver: tang_wanyi
+    status: offered
+    goal: {type: investigate, location: library_tower}
+    constraints: {deadline_minutes: 33120}
+    rewards: {item: {wanyi_notebook: 1}, relationship: {tang_wanyi: {trust: 15, affection: 10}}}
+    failure_conditions: [records_seized, deadline_passed]
+    world_consequences:
+      on_success: {advance_thread: thread_forest_emptied, reveal_fact_chance: {fact_concord_council_marks_beasts_first: 1.0}}
+      on_failure: {tension: 8}
+    plot_thread: thread_forest_emptied
+
+  - key: quest_forest_ledger
+    name: 把猎兽账册带出营地
+    giver: bo_zhonghe
+    status: offered
+    goal: {type: acquire, item: beast_ledger, location: hunter_camp}
+    constraints: {deadline_minutes: 74880}
+    rewards: {item: {beast_ledger: 1}, faction_reputation: {qixing_academy_faction: 35}}
+    failure_conditions: [caught_in_camp, ledger_burned, deadline_passed]
+    world_consequences:
+      on_success: {advance_thread: thread_forest_emptied, reveal_fact_chance: {fact_concord_council_buys_the_slaughter: 0.9}}
+      on_failure: {tension: 25}
+      if_player_refuses: {reassign_to: [qi_ranyan, lu_qingchan], success_chance: 0.3}
+    plot_thread: thread_forest_emptied
+
+  - key: quest_save_mu_jinnian
+    name: 压住穆晋年的反噬
+    giver: qi_ranyan
+    status: offered
+    goal: {type: rescue, target: mu_jinnian}
+    constraints: {deadline_minutes: 79200}
+    rewards: {relationship: {mu_jinnian: {trust: 25, respect: 20}, qi_ranyan: {respect: 15}}}
+    failure_conditions: [deadline_passed, refused_help]
+    world_consequences:
+      on_success: {advance_thread: thread_mu_jinnian, reveal_fact_chance: {fact_mu_pact_came_from_concord_council: 0.8}}
+      on_failure: {tension: 20, advance_thread: thread_mu_jinnian}
+    plot_thread: thread_mu_jinnian
+
+  - key: quest_concord_council_offer
+    name: 答复万灵议会开出的条件
+    giver: hong_shu
+    status: offered
+    goal: {type: decide, options: [accept_offering, refuse, stall]}
+    constraints: {deadline_minutes: 83520}
+    rewards: {item: {pact_thousand_year: 1, concord_council_seal: 1}}
+    failure_conditions: [deadline_passed]
+    world_consequences:
+      on_success: {advance_thread: thread_who_owns_you}
+      on_failure: {tension: 12}
+      if_player_refuses: {reassign_to: [mu_jinnian, shen_yuluo], success_chance: 0.7}
+    plot_thread: thread_who_owns_you
+
+  - key: quest_elite_tournament
+    name: 打完精英大赛
+    giver: bo_zhonghe
+    status: offered
+    goal: {type: event, location: arena}
+    constraints: {deadline_minutes: 86400}
+    rewards: {faction_reputation: {qixing_academy_faction: 50}}
+    failure_conditions: [deadline_passed, squad_disqualified, crippled]
+    world_consequences:
+      on_success: {advance_thread: thread_inner_gate}
+      on_failure: {tension: 30}
+    plot_thread: thread_inner_gate

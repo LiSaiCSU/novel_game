@@ -1,0 +1,98 @@
+action_plan: {max_total_minutes: 240}
+time_costs:
+  TALK: {min: 3, max: 25}
+  ASK: {min: 3, max: 30}
+  CONVERSATION: {min: 5, max: 40}
+  OBSERVE: {min: 2, max: 15}
+  SEARCH: {min: 10, max: 60}
+  FOLLOW: {min: 5, max: 30}
+  HIDE: {min: 3, max: 30}
+  MOVE_LOCAL: {min: 1, max: 12}
+  MOVE_REGIONAL: {min: 3, max: 20}
+  USE_ITEM: {min: 1, max: 20}
+  USE_SKILL: {min: 10, max: 60}
+  GIVE_ITEM: {min: 1, max: 6}
+  STEAL: {min: 5, max: 30}
+  ATTACK: {min: 1, max: 10}
+  DEFEND: {min: 1, max: 10}
+  BUY: {min: 3, max: 15}
+  SELL: {min: 3, max: 15}
+  PICKUP: {min: 1, max: 5}
+  DROP: {min: 1, max: 3}
+  REST: {min: 30, max: 240}
+  WAIT: {min: 5, max: 120}
+  ACCEPT_QUEST: {min: 1, max: 6}
+  REJECT_QUEST: {min: 1, max: 3}
+  CUSTOM: {min: 3, max: 60}
+  SECLUSION_MAX_MINUTES: 2160
+relationship:
+  dimensions: [affection, trust, respect, fear, hatred, suspicion, dependency, familiarity]
+  ranges:
+    affection: {min: -100, max: 100, default: 0}
+    trust: {min: -100, max: 100, default: 0}
+    respect: {min: -100, max: 100, default: 0}
+    fear: {min: 0, max: 100, default: 0}
+    hatred: {min: 0, max: 100, default: 0}
+    suspicion: {min: 0, max: 100, default: 25}
+    dependency: {min: 0, max: 100, default: 0}
+    familiarity: {min: 0, max: 100, default: 0}
+    boundaries: {min: 0, max: 100, default: 55}
+  max_delta_per_event: {trivial: 2, minor: 6, major: 20, life_changing: 45}
+  familiarity_gain_per_interaction: 2
+  decay_per_month_without_contact: {familiarity: 1, affection: 1, suspicion: 1}
+social:
+  base_success: 0.26
+  weights: {trust: 0.005, affection: 0.002, respect: 0.003, familiarity: 0.002, hatred: -0.005, suspicion: -0.006, charisma: 0.01, reputation: 0.001}
+  request_size_penalty: {trivial: 0, small: 0.1, moderate: 0.3, large: 0.55, extreme: 0.9}
+  risk_penalty_weight: 0.6
+  value_conflict_penalty: 0.5
+  taboo_hard_refuse: true
+  first_meeting_penalty: 0.12
+  min: 0.01
+  max: 0.95
+economy: {currency_key: rmb, currency_name: 现金, buy_markup: 1, sell_discount: 0.5, haggle_max_shift: 0.1, reputation_price_weight: 0.001}
+inventory: {max_slots: 20, max_weight: 0}
+information:
+  spread_chance_per_day: {PUBLIC: 0.9, LOCAL: 0.6, FACTION: 0.4, PRIVATE: 0, SECRET: 0}
+  confidence_decay_per_hop: 0.15
+memory:
+  top_k: 12
+  min_importance: 0.1
+  recency_half_life_minutes: 480
+  decay_floor: 0.1
+  retrieval_weights: {similarity: 0.3, importance: 0.3, recency: 0.2, relationship: 0.1, context: 0.1}
+  always_remember_event_types: [PROMISE, SECRET_DISCLOSURE, BETRAYAL, RESCUE, DEATH, CONFRONTATION]
+narrative:
+  tension_start: 55
+  tension_decay_per_day: 4
+  tension_gain_by_importance: 14
+  high_threshold: 78
+  max_consecutive_high_turns: 3
+  bands:
+    - {key: daily, name: 待雾, min: 0, max: 25}
+    - {key: progress, name: 问话, min: 25, max: 55}
+    - {key: tense, name: 对质, min: 55, max: 78}
+    - {key: climax, name: 指认, min: 78, max: 101}
+director:
+  min_interval_turns: 2
+  high_importance_override: 0.85
+  max_events_per_day: 12
+  max_schedule_delay_minutes: 120
+  allowed_event_types: [NPC_RETURN, NPC_DEPARTURE, NPC_APPROACH, RUMOR_SPREAD, FACTION_MOVE, QUEST_OFFER, DISCOVERY, ENVIRONMENT_SHIFT, CONFRONTATION, FORESHADOWING, SECRET_DISCLOSURE, PROMISE, BETRAYAL, RESCUE, DEATH]
+simulation:
+  tick_minutes: {lod1: 30, lod2: 120, lod3: 480}
+  max_materialized_events_per_jump: 96
+  npc_goal_action_interval_minutes: 90
+  faction_drift_per_week: {resources: {min: 0, max: 0}, military_power: {min: 0, max: 0}, reputation: {min: -1, max: 1}}
+  offline_event_chance_per_week: {lod1: 0.6, lod2: 0.35, lod3: 0.15}
+auto_advance:
+  max_steps: 4
+  max_minutes: 120
+  npc_llm_per_step: 0
+  interrupt_importance: 0.7
+  interrupt_health_loss: 0.15
+  engaging_actions: [TALK, ASK, SEARCH, OBSERVE]
+  hostile_actions: [ATTACK, STEAL]
+  offer_events: [QUEST_OFFER, CONFRONTATION, SECRET_DISCLOSURE, BETRAYAL, DEATH]
+consistency: {strict: true, checks: [alive, location, inventory, knowledge, faction, time]}
+reputation: {ranges: {global: {min: -100, max: 100}, faction: {min: -100, max: 100}}}

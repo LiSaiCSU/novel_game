@@ -1,0 +1,214 @@
+location_types:
+  - {key: continent, name: 大陆}
+  - {key: city, name: 城}
+  - {key: academy, name: 学院}
+  - {key: building, name: 楼舍}
+  - {key: ground, name: 场地}
+  - {key: wilderness, name: 荒野}
+  - {key: sect, name: 宗门驻地}
+locations:
+  - key: canglan_continent
+    name: 苍澜大陆
+    type: continent
+    parent: null
+    danger: 3
+    spirit_density: 5
+    description: 万灵议会凌驾于北辰与南曜两大帝国之上，宗门林立，契师以九契为一生的上限。
+
+  - key: qixing_city
+    name: 栖星城
+    type: city
+    parent: canglan_continent
+    danger: 1
+    spirit_density: 5
+    description: 因学院而生的城，满街都是等着被学院筛掉的年轻人和等着捡漏的商人。
+    travel: {qixing_academy: 10, city_market: 6, tavern_broken_blade: 8, council_branch: 12, soul_bone_shop: 7, mirror_guild_envoy_house: 14}
+
+  - key: qixing_academy
+    name: 栖星学院·外院
+    type: academy
+    parent: qixing_city
+    danger: 1
+    spirit_density: 6
+    description: 只收怪物的地方。外院占了整整半座山坡，内院的门在山坡尽头，八十年没换过。
+    travel: {qixing_city: 10, outer_dorm: 3, outer_training_field: 4, academy_refectory: 3, teachers_office: 5, library_tower: 6, arena: 5, spirit_pact_hall: 7, inner_gate: 9}
+
+  - key: outer_dorm
+    name: 外院宿舍
+    type: building
+    parent: qixing_academy
+    danger: 0
+    spirit_density: 6
+    description: 六人一间，墙上贴着历届灵息测定榜。你的名字在这一届的第十七位，后面写着十九级。
+    travel: {qixing_academy: 3, academy_refectory: 2, outer_training_field: 5}
+
+  - key: outer_training_field
+    name: 外院训练场
+    type: ground
+    parent: qixing_academy
+    danger: 1
+    spirit_density: 7
+    description: 天不亮就有人在跑负重圈。场边那排石桩上留着几十年来各种命印砸出来的坑。
+    travel: {qixing_academy: 4, outer_dorm: 5, arena: 4}
+
+  - key: academy_refectory
+    name: 大食堂
+    type: building
+    parent: qixing_academy
+    danger: 0
+    spirit_density: 5
+    description: 全学院消息流通最快的地方。谁昨天进了森林、谁的契没缔成、谁被内院看中了，一顿饭就能听全。
+    travel: {qixing_academy: 3, outer_dorm: 2}
+
+  - key: teachers_office
+    name: 教师楼
+    type: building
+    parent: qixing_academy
+    danger: 0
+    spirit_density: 6
+    description: 齐燃言的屋子在最里头，门永远开着一条缝，桌上常年摊着一张无昼森海的旧图。
+    travel: {qixing_academy: 5, library_tower: 4}
+
+  - key: library_tower
+    name: 藏书阁
+    type: building
+    parent: qixing_academy
+    danger: 0
+    spirit_density: 6
+    description: 三层，第二层锁着异兽志与历年缔契记录。借阅要登记，登记本由唐晚意保管。
+    travel: {qixing_academy: 6, teachers_office: 4}
+
+  - key: arena
+    name: 比武场
+    type: ground
+    parent: qixing_academy
+    danger: 2
+    spirit_density: 7
+    description: 外院生的排名在这里换。约斗有规矩：不许伤命印，不许废契位，其余随便。
+    travel: {qixing_academy: 5, outer_training_field: 4, inner_gate: 6}
+
+  - key: spirit_pact_hall
+    name: 灵契堂
+    type: building
+    parent: qixing_academy
+    danger: 1
+    spirit_density: 8
+    description: 学院统一配发灵契的地方，顾婆婆守着。堂中八根柱子刻着历届缔契失败者的名字。
+    travel: {qixing_academy: 7, inner_gate: 5}
+
+  - key: inner_gate
+    name: 内院门
+    type: ground
+    parent: qixing_academy
+    danger: 2
+    spirit_density: 9
+    description: 门两侧立着栖星七杰的石像，八十年风吹雨打，面目都磨平了。外院生从石像底下走过去，能走进门的九个里不到一个。
+    travel: {qixing_academy: 9, arena: 6, spirit_pact_hall: 5, inner_courtyard: 2}
+
+  - key: inner_courtyard
+    name: 内院庭院
+    type: ground
+    parent: qixing_academy
+    danger: 3
+    spirit_density: 10
+    description: 里面的人很少出来。院中一口古井，据说是当年七怪修炼时留下的，井水冰得刺骨。
+    travel: {inner_gate: 2}
+
+  - key: city_market
+    name: 栖星城集市
+    type: ground
+    parent: qixing_city
+    danger: 1
+    spirit_density: 4
+    description: 卖异兽材料、护法香、廉价丹药，也卖真假参半的“森林深处坐标”。
+    travel: {qixing_city: 6, soul_bone_shop: 3, tavern_broken_blade: 4}
+
+  - key: soul_bone_shop
+    name: 灵髓行
+    type: building
+    parent: qixing_city
+    danger: 2
+    spirit_density: 5
+    description: 柜台后面锁着三块灵髓，最贵的一块千年臂骨标价两千金叶，挂了四年没卖出去。
+    travel: {qixing_city: 7, city_market: 3}
+
+  - key: tavern_broken_blade
+    name: 断刃酒馆
+    type: building
+    parent: qixing_city
+    danger: 2
+    spirit_density: 4
+    description: 佣契师和猎兽人碰头的地方。哪片林子出了千年货、哪支队伍没回来，这里最先知道。
+    travel: {qixing_city: 8, city_market: 4, forest_edge: 60}
+
+  - key: council_branch
+    name: 万灵议会·栖星分殿
+    type: sect
+    parent: qixing_city
+    danger: 3
+    spirit_density: 8
+    description: 白玉阶梯，殿门常开。分殿从不缺灵契——问题在于它拿什么换。
+    travel: {qixing_city: 12, council_offepact_hall: 2}
+
+  - key: council_offepact_hall
+    name: 分殿供奉厅
+    type: building
+    parent: council_branch
+    danger: 3
+    spirit_density: 9
+    description: 墙上一排空着的供奉牌位，每一块底下都刻着入职年份和命印。空位比满位多。
+    travel: {council_branch: 2}
+
+  - key: mirror_guild_envoy_house
+    name: 镜塔商盟使馆
+    type: sect
+    parent: qixing_city
+    danger: 1
+    spirit_density: 7
+    description: 大赛前各大宗门都在城里设了驻地。镜塔商盟这一处最讲究，也最会挑人。
+    travel: {qixing_city: 14}
+
+  - key: forest_edge
+    name: 无昼森海·外缘
+    type: wilderness
+    parent: canglan_continent
+    danger: 4
+    spirit_density: 9
+    description: 十年、几十年的低阶异兽在这一带，学院实习都从这里开始。地上到处是被翻过的兽窝。
+    travel: {tavern_broken_blade: 60, qixing_academy: 70, hunter_camp: 25, forest_inner: 90}
+
+  - key: hunter_camp
+    name: 猎兽人营地
+    type: wilderness
+    parent: canglan_continent
+    danger: 5
+    spirit_density: 8
+    description: 二十几顶帐篷，挂着晾干的兽皮。老魁的人在这儿一守就是三年，官府从来不管。
+    travel: {forest_edge: 25, forest_inner: 70}
+
+  - key: forest_inner
+    name: 无昼森海·内圈
+    type: wilderness
+    parent: canglan_continent
+    danger: 6
+    spirit_density: 11
+    description: 百年到千年的异兽在这一层。树冠合拢，白天也要点火把，声音传不出三十步。
+    travel: {forest_edge: 90, hunter_camp: 70, forest_deep: 150}
+
+  - key: forest_deep
+    name: 无昼森海·深处
+    type: wilderness
+    parent: canglan_continent
+    danger: 8
+    spirit_density: 14
+    description: 高阶异兽的地盘。进这里的规矩只有一条——要么带够护法的人，要么别进。
+    travel: {forest_inner: 150, lake_of_bones: 60}
+
+  - key: lake_of_bones
+    name: 白骨湖
+    type: wilderness
+    parent: canglan_continent
+    danger: 10
+    spirit_density: 18
+    description: 湖底沉着数不清的兽骨，有些大得不像这个世上该有的东西。湖面上没有一只鸟。
+    travel: {forest_deep: 60}

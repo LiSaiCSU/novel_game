@@ -1,0 +1,102 @@
+factions:
+  - key: qixing_academy_faction
+    name: 栖星学院
+    type: academy
+    headquarters: inner_courtyard
+    description: 只收怪物。外院管筛人，内院管把活下来的那几个练成能上大陆最高台面的东西。
+    resources: {gold_soul_coin: 260000, pact_quota: 6}
+    member_count: 340
+    territory: [qixing_academy, outer_dorm, outer_training_field, academy_refectory, teachers_office, library_tower, arena, spirit_pact_hall, inner_gate, inner_courtyard]
+    military_power: 60
+    reputation: 75
+    leader: bo_zhonghe
+    alliances: []
+    enemies: [soul_hunters]
+    goals: [在精英大赛上再拿一次名次, 查清无昼森海高阶异兽被清空的原因]
+    internal_conflicts: [外院配发的灵契来路不明, 该不该为了成绩放学生去深处冒险]
+    metadata: {}
+
+  - key: concord_council
+    name: 万灵议会
+    type: theocracy
+    headquarters: council_offepact_hall
+    description: 凌驾于两大帝国之上的契师圣地。它给得起任何人想要的灵契，代价写在供奉契约的背面。
+    resources: {gold_soul_coin: 9000000, marked_beasts: 14}
+    member_count: 120
+    territory: [council_branch, council_offepact_hall]
+    military_power: 95
+    reputation: 50
+    leader: yan_zhi
+    alliances: []
+    enemies: [qixing_academy_faction]
+    goals: [在大赛前收编三名以上有墨契潜质的年轻契师, 取得一块王者灵髓]
+    internal_conflicts: [分殿的猎兽配额早已超出议会总部批准的数目]
+    metadata: {}
+
+  - key: mirror_guild
+    name: 镜塔商盟
+    type: sect
+    headquarters: mirror_guild_envoy_house
+    description: 控制系第一宗门，靠联姻与择徒维持血脉与命印的纯度。
+    resources: {gold_soul_coin: 1200000}
+    member_count: 60
+    territory: [mirror_guild_envoy_house]
+    military_power: 55
+    reputation: 60
+    leader: qi_lanzhou
+    alliances: []
+    enemies: [concord_council]
+    goals: [在这一届栖星外院里物色一名控制系苗子, 压过万灵议会在大赛上的风头]
+    internal_conflicts: [旁支子弟的镜面点亮不全, 商盟却要求对外宣称全镜齐明]
+    metadata: {}
+
+  - key: haotian_sect
+    name: 昊天宗
+    type: sect
+    headquarters: qixing_city
+    description: 曾经的大陆第一宗门，如今在栖星城只剩一间挂着旧匾的院子和两个守门的老人。
+    resources: {gold_soul_coin: 30000}
+    member_count: 9
+    territory: [qixing_city]
+    military_power: 30
+    reputation: 25
+    leader: null
+    alliances: [qixing_academy_faction]
+    enemies: [concord_council]
+    goals: [找一个愿意扛昊天锤的后人, 不在这一代断掉传承]
+    internal_conflicts: [该不该向万灵议会低头换资源]
+    metadata: {}
+
+  - key: soul_hunters
+    name: 猎兽人
+    type: outlaw
+    headquarters: hunter_camp
+    description: 不入宗门、不受管辖的猎兽队。他们不缔契，只把异兽当货卖——买主给多少，他们就杀多少。
+    resources: {gold_soul_coin: 180000, pelts: 400}
+    member_count: 32
+    territory: [hunter_camp, forest_edge, forest_inner]
+    military_power: 45
+    reputation: -35
+    leader: lao_kui
+    alliances: [concord_council]
+    enemies: [qixing_academy_faction]
+    goals: [做完万灵议会这一单就散伙, 不让学院的人查到营地的账]
+    internal_conflicts: [有人开始觉得杀十万年的东西会遭报应]
+    metadata: {}
+
+  - key: blue_lightning_clan
+    name: 蓝电霸王龙家族
+    type: clan
+    headquarters: qixing_city
+    description: 老牌兽命印家族，血脉浓度决定地位，旁支与私生子从不入族谱。
+    resources: {gold_soul_coin: 700000}
+    member_count: 48
+    territory: [qixing_city]
+    military_power: 50
+    reputation: 40
+    leader: null
+    alliances: []
+    enemies: []
+    goals: [在大赛上让族中子弟露脸, 处理掉几桩不体面的血脉旧账]
+    internal_conflicts: [是否承认那个在栖星读外院的孩子]
+    metadata: {}

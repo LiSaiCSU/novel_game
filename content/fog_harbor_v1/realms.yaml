@@ -1,0 +1,49 @@
+progression_name: 船上位置
+realms:
+  - key: passenger
+    name: 旅客
+    order: 0
+    stages: [{key: aboard, name: 在船, order: 0}]
+    power_coefficient: 1.0
+    max_health: 100
+    max_spiritual_power: 0
+    lifespan_years: 85
+    xp_to_next_stage: 0
+    breakthrough_base_chance: 0
+    description: 买票上船的人，去不了船员通道以下的任何地方。
+  - key: crew
+    name: 船员
+    order: 1
+    stages: [{key: on_duty, name: 当值, order: 0}]
+    power_coefficient: 1.0
+    max_health: 100
+    max_spiritual_power: 0
+    lifespan_years: 85
+    xp_to_next_stage: 0
+    breakthrough_base_chance: 0
+    description: 有工牌，进得了后厨、船员舱和货舱。
+  - key: officer
+    name: 高级船员
+    order: 2
+    stages: [{key: watch, name: 值班, order: 0}]
+    power_coefficient: 1.0
+    max_health: 100
+    max_spiritual_power: 0
+    lifespan_years: 85
+    xp_to_next_stage: 0
+    breakthrough_base_chance: 0
+    description: 拿得到万能钥匙，看得到门禁与监控记录。
+  - key: command
+    name: 船长
+    order: 3
+    stages: [{key: master, name: 在任, order: 0}]
+    power_coefficient: 1.0
+    max_health: 100
+    max_spiritual_power: 0
+    lifespan_years: 85
+    xp_to_next_stage: 0
+    breakthrough_base_chance: 0
+    description: 封舱、通讯、靠港，这条船上他说了算——至少在警察上来之前。
+spiritual_roots: [{key: unspecified, name: 未标注, speed: 1.0, breakthrough_mod: 0, weight: 1}]
+mental_states: [{key: steady, name: 稳住, min: 0, max: 1.01, breakthrough_mod: 0}]
+bottleneck: {gain_on_failure: 0, max: 0, penalty_per_point: 0, decay_per_month: 0}

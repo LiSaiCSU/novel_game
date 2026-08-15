@@ -1,0 +1,339 @@
+facts:
+  - key: fact_pact_binding_is_permanent
+    statement: 灵契一旦缔结即占据一个契位，终生不可更换，一个人一生只有九个契位
+    truth_value: true
+    scope: WORLD
+    sensitivity: 0.05
+    related: [canglan_continent, spirit_pact_hall]
+    initial_knowledge:
+      player: {state: KNOWN, confidence: 1, source: SEED}
+      qi_ranyan: {state: KNOWN, confidence: 1, source: SEED}
+      granny_gu: {state: KNOWN, confidence: 1, source: SEED}
+      bo_zhonghe: {state: KNOWN, confidence: 1, source: SEED}
+      shen_yuluo: {state: KNOWN, confidence: 1, source: SEED}
+      mu_jinnian: {state: KNOWN, confidence: 1, source: SEED}
+      dai_kuan: {state: KNOWN, confidence: 1, source: SEED}
+      lu_qingchan: {state: KNOWN, confidence: 1, source: SEED}
+      xu_bingzhou: {state: KNOWN, confidence: 1, source: SEED}
+      hong_shu: {state: KNOWN, confidence: 1, source: SEED}
+      yan_zhi: {state: KNOWN, confidence: 1, source: SEED}
+      qi_lanzhou: {state: KNOWN, confidence: 1, source: SEED}
+      tang_wanyi: {state: KNOWN, confidence: 1, source: SEED}
+      lao_kui: {state: KNOWN, confidence: 1, source: SEED}
+      mo_shanzi: {state: KNOWN, confidence: 1, source: SEED}
+
+  - key: fact_tournament_in_sixty_days
+    statement: 全大陆高级契师学院精英大赛在六十天后开幕，内院选拔在第三十五天
+    truth_value: true
+    scope: WORLD
+    sensitivity: 0.05
+    related: [qixing_academy, arena, inner_gate]
+    initial_knowledge:
+      player: {state: KNOWN, confidence: 1, source: DOCUMENT}
+      qi_ranyan: {state: KNOWN, confidence: 1, source: DOCUMENT}
+      bo_zhonghe: {state: KNOWN, confidence: 1, source: DOCUMENT}
+      xu_bingzhou: {state: KNOWN, confidence: 1, source: DOCUMENT}
+      mu_jinnian: {state: KNOWN, confidence: 1, source: DOCUMENT}
+      shen_yuluo: {state: KNOWN, confidence: 1, source: DOCUMENT}
+      dai_kuan: {state: KNOWN, confidence: 1, source: DOCUMENT}
+      lu_qingchan: {state: KNOWN, confidence: 1, source: DOCUMENT}
+      qi_lanzhou: {state: KNOWN, confidence: 1, source: DOCUMENT}
+      hong_shu: {state: KNOWN, confidence: 1, source: DOCUMENT}
+      yan_zhi: {state: KNOWN, confidence: 1, source: DOCUMENT}
+
+  - key: fact_inner_trial_needs_thirty_levels
+    statement: 内院选拔的最低线是三十级三契，且必须由外院导师联名保荐
+    truth_value: true
+    scope: FACTION
+    sensitivity: 0.2
+    related: [inner_gate, bo_zhonghe, xu_bingzhou]
+    initial_knowledge:
+      player: {state: KNOWN, confidence: 0.9, source: RUMOR}
+      bo_zhonghe: {state: KNOWN, confidence: 1, source: SEED}
+      xu_bingzhou: {state: KNOWN, confidence: 1, source: SEED}
+      qi_ranyan: {state: KNOWN, confidence: 1, source: SEED}
+      mu_jinnian: {state: KNOWN, confidence: 1, source: TOLD_BY}
+      shen_yuluo: {state: KNOWN, confidence: 1, source: TOLD_BY}
+
+  - key: fact_overleveled_pact_causes_backlash
+    statement: 缔结远超自身等级的灵契会留下反噬，反噬累积到极限会当场废掉大半契位
+    truth_value: true
+    scope: WORLD
+    sensitivity: 0.3
+    related: [spirit_pact_hall, granny_gu, qi_ranyan]
+    initial_knowledge:
+      player: {state: KNOWN, confidence: 0.85, source: RUMOR}
+      qi_ranyan: {state: KNOWN, confidence: 1, source: WITNESSED}
+      granny_gu: {state: KNOWN, confidence: 1, source: WITNESSED}
+      bo_zhonghe: {state: KNOWN, confidence: 1, source: WITNESSED}
+      mu_jinnian: {state: KNOWN, confidence: 1, source: WITNESSED}
+      hong_shu: {state: KNOWN, confidence: 1, source: SEED}
+      yan_zhi: {state: KNOWN, confidence: 1, source: SEED}
+      shen_yuluo: {state: BELIEVED, confidence: 0.8, source: TOLD_BY}
+      dai_kuan: {state: BELIEVED, confidence: 0.7, source: RUMOR}
+
+  - key: fact_mu_jinnian_backlash
+    statement: 穆晋年二十六级就吸了万年墨契，反噬正在一寸寸毁掉他的经脉
+    truth_value: true
+    scope: PERSONAL
+    sensitivity: 1.0
+    subject: mu_jinnian
+    related: [mu_jinnian, mu_bandage, hong_shu]
+    initial_knowledge:
+      mu_jinnian: {state: KNOWN, confidence: 1, source: SEED}
+      hong_shu: {state: KNOWN, confidence: 1, source: WITNESSED}
+      qi_ranyan: {state: SUSPECTED, confidence: 0.6, source: INFERRED}
+      xu_bingzhou: {state: SUSPECTED, confidence: 0.45, source: INFERRED}
+
+  - key: fact_mu_pact_came_from_concord_council
+    statement: 穆晋年那枚墨契是万灵议会分殿给的，条件是大赛后入殿供奉
+    truth_value: true
+    scope: PERSONAL
+    sensitivity: 1.0
+    subject: mu_jinnian
+    related: [mu_jinnian, hong_shu, concord_council]
+    initial_knowledge:
+      mu_jinnian: {state: KNOWN, confidence: 1, source: SEED}
+      hong_shu: {state: KNOWN, confidence: 1, source: SEED}
+      yan_zhi: {state: KNOWN, confidence: 0.9, source: TOLD_BY}
+
+  - key: fact_black_beast_in_deep_forest
+    statement: 无昼森海深处西北向的裂谷里，盘着一头约八千年的异兽
+    truth_value: true
+    scope: WORLD
+    sensitivity: 0.9
+    related: [forest_deep, hong_shu, lao_kui]
+    initial_knowledge:
+      hong_shu: {state: KNOWN, confidence: 0.95, source: WITNESSED}
+      lao_kui: {state: KNOWN, confidence: 0.9, source: WITNESSED}
+      qi_ranyan: {state: SUSPECTED, confidence: 0.55, source: DOCUMENT}
+      lu_qingchan: {state: HEARD, confidence: 0.4, source: RUMOR}
+      mo_shanzi: {state: HEARD, confidence: 0.35, source: RUMOR}
+
+  - key: fact_thousand_beast_in_inner_pact
+    statement: 内圈东南向的水潭边有一头约中阶的异兽，契阶刚好适合二十级的人
+    truth_value: true
+    scope: WORLD
+    sensitivity: 0.7
+    related: [forest_inner, lu_qingchan, shen_yuluo]
+    initial_knowledge:
+      lu_qingchan: {state: KNOWN, confidence: 0.9, source: WITNESSED}
+      shen_yuluo: {state: KNOWN, confidence: 0.8, source: DOCUMENT}
+      lao_kui: {state: KNOWN, confidence: 0.85, source: WITNESSED}
+      mo_shanzi: {state: SUSPECTED, confidence: 0.5, source: RUMOR}
+      qi_ranyan: {state: KNOWN, confidence: 0.75, source: DOCUMENT}
+
+  - key: fact_only_one_can_take_the_thousand_beast
+    statement: 那头六低阶异兽只够一个人缔结，而这一届至少有三个人盯着它
+    truth_value: true
+    scope: WORLD
+    sensitivity: 0.6
+    related: [forest_inner, shen_yuluo, dai_kuan, player]
+    initial_knowledge:
+      shen_yuluo: {state: KNOWN, confidence: 0.9, source: INFERRED}
+      lu_qingchan: {state: KNOWN, confidence: 0.85, source: INFERRED}
+      qi_ranyan: {state: KNOWN, confidence: 0.9, source: INFERRED}
+      dai_kuan: {state: SUSPECTED, confidence: 0.5, source: RUMOR}
+
+  - key: fact_high_year_beasts_vanishing
+    statement: 最近三年，无昼森海里被记录过的高阶异兽巢穴有九处被清空
+    truth_value: true
+    scope: WORLD
+    sensitivity: 0.75
+    related: [forest_deep, qi_ranyan, forest_old_map]
+    initial_knowledge:
+      qi_ranyan: {state: KNOWN, confidence: 0.95, source: WITNESSED}
+      bo_zhonghe: {state: KNOWN, confidence: 0.9, source: DOCUMENT}
+      lao_kui: {state: KNOWN, confidence: 1, source: WITNESSED}
+      hong_shu: {state: KNOWN, confidence: 1, source: SEED}
+      tang_wanyi: {state: SUSPECTED, confidence: 0.6, source: DOCUMENT}
+
+  - key: fact_concord_council_buys_the_slaughter
+    statement: 清空森林的是猎兽人，出钱下单的是万灵议会栖星分殿
+    truth_value: true
+    scope: FACTION
+    sensitivity: 0.95
+    related: [concord_council, soul_hunters, beast_ledger]
+    initial_knowledge:
+      lao_kui: {state: KNOWN, confidence: 1, source: SEED}
+      hong_shu: {state: KNOWN, confidence: 1, source: SEED}
+      yan_zhi: {state: KNOWN, confidence: 1, source: SEED}
+      bo_zhonghe: {state: BELIEVED, confidence: 0.8, source: INFERRED}
+      qi_ranyan: {state: SUSPECTED, confidence: 0.6, source: INFERRED}
+
+  - key: fact_yan_zhi_wants_a_bone
+    statement: 严织主教真正要的是一块王者灵髓，猎兽只是顺路
+    truth_value: true
+    scope: PERSONAL
+    sensitivity: 1.0
+    subject: yan_zhi
+    related: [yan_zhi, lake_of_bones, concord_council]
+    initial_knowledge:
+      yan_zhi: {state: KNOWN, confidence: 1, source: SEED}
+      hong_shu: {state: KNOWN, confidence: 0.85, source: TOLD_BY}
+
+  - key: fact_bone_is_for_a_dying_person
+    statement: 那块王者灵髓是为了一个躺了四年、还没死透的人
+    truth_value: true
+    scope: PERSONAL
+    sensitivity: 1.0
+    subject: yan_zhi
+    related: [yan_zhi]
+    initial_knowledge:
+      yan_zhi: {state: KNOWN, confidence: 1, source: SEED}
+
+  - key: fact_academy_pacts_are_black_market
+    statement: 学院这三年配发给外院生的青纹契里，有一批是从猎兽人手上低价收来的
+    truth_value: true
+    scope: FACTION
+    sensitivity: 0.9
+    related: [granny_gu, spirit_pact_hall, soul_hunters]
+    initial_knowledge:
+      granny_gu: {state: KNOWN, confidence: 1, source: SEED}
+      lao_kui: {state: KNOWN, confidence: 0.9, source: WITNESSED}
+      bo_zhonghe: {state: SUSPECTED, confidence: 0.65, source: INFERRED}
+
+  - key: fact_shen_yuluo_five_treasures
+    statement: 沈玉落的七面镜塔命印只有五面能够点亮，商盟要求她对外宣称全镜齐明
+    truth_value: true
+    scope: PERSONAL
+    sensitivity: 1.0
+    subject: shen_yuluo
+    related: [shen_yuluo, mirror_guild, qi_lanzhou]
+    initial_knowledge:
+      shen_yuluo: {state: KNOWN, confidence: 1, source: SEED}
+      qi_lanzhou: {state: SUSPECTED, confidence: 0.5, source: INFERRED}
+
+  - key: fact_mirror_guild_needs_a_control_type
+    statement: 镜塔商盟给祁澜洲的指标是从这一届带回一名控制系，带不回去他自己被换掉
+    truth_value: true
+    scope: PERSONAL
+    sensitivity: 0.85
+    subject: qi_lanzhou
+    related: [qi_lanzhou, mirror_guild, shen_yuluo, player]
+    initial_knowledge:
+      qi_lanzhou: {state: KNOWN, confidence: 1, source: SEED}
+      shen_yuluo: {state: SUSPECTED, confidence: 0.6, source: INFERRED}
+
+  - key: fact_dai_kuan_bloodline
+    statement: 戴宽是蓝电霸王龙家族的私生子，族里给过一次钱，条件是永不认亲
+    truth_value: true
+    scope: PERSONAL
+    sensitivity: 1.0
+    subject: dai_kuan
+    related: [dai_kuan, blue_lightning_clan, dai_pendant]
+    initial_knowledge:
+      dai_kuan: {state: KNOWN, confidence: 1, source: SEED}
+
+  - key: fact_lu_qingchan_guides_hunters
+    statement: 陆青蝉给猎兽人带过十一次路，其中一次带到的地方后来死了两个栖星学生
+    truth_value: true
+    scope: PERSONAL
+    sensitivity: 1.0
+    subject: lu_qingchan
+    related: [lu_qingchan, soul_hunters, lao_kui]
+    initial_knowledge:
+      lu_qingchan: {state: KNOWN, confidence: 1, source: SEED}
+      lao_kui: {state: KNOWN, confidence: 1, source: SEED}
+      mo_shanzi: {state: SUSPECTED, confidence: 0.45, source: RUMOR}
+
+  - key: fact_qi_ranyan_lost_arm_for_a_student
+    statement: 齐燃言的左臂是替一个学生挡契术没的，那学生第二年进了万灵议会供奉厅
+    truth_value: true
+    scope: PERSONAL
+    sensitivity: 0.95
+    subject: qi_ranyan
+    related: [qi_ranyan, concord_council, council_offepact_hall]
+    initial_knowledge:
+      qi_ranyan: {state: KNOWN, confidence: 1, source: SEED}
+      bo_zhonghe: {state: KNOWN, confidence: 0.9, source: WITNESSED}
+      granny_gu: {state: KNOWN, confidence: 0.85, source: WITNESSED}
+      hong_shu: {state: KNOWN, confidence: 0.8, source: TOLD_BY}
+
+  - key: fact_xu_bingzhou_passed_someone
+    statement: 徐冰舟去年在选拔中放过一个不合格的人，那人现在在万灵议会分殿当差
+    truth_value: true
+    scope: PERSONAL
+    sensitivity: 0.95
+    subject: xu_bingzhou
+    related: [xu_bingzhou, concord_council, inner_gate]
+    initial_knowledge:
+      xu_bingzhou: {state: KNOWN, confidence: 1, source: SEED}
+      hong_shu: {state: KNOWN, confidence: 0.8, source: WITNESSED}
+
+  - key: fact_concord_council_marks_beasts_first
+    statement: 分殿的人每次进森林之前，都会先到藏书阁查同一片林子的异兽志
+    truth_value: true
+    scope: FACTION
+    sensitivity: 0.7
+    related: [tang_wanyi, library_tower, hong_shu]
+    initial_knowledge:
+      tang_wanyi: {state: KNOWN, confidence: 0.9, source: WITNESSED}
+      hong_shu: {state: KNOWN, confidence: 1, source: SEED}
+
+  - key: fact_mo_shanzi_sells_fake_coordinates
+    statement: 莫三子卖出去的森林坐标有三成是编的，已经害死过一支四人队
+    truth_value: true
+    scope: PERSONAL
+    sensitivity: 0.85
+    subject: mo_shanzi
+    related: [mo_shanzi, city_market, forest_inner]
+    initial_knowledge:
+      mo_shanzi: {state: KNOWN, confidence: 1, source: SEED}
+      lu_qingchan: {state: SUSPECTED, confidence: 0.55, source: INFERRED}
+      lao_kui: {state: SUSPECTED, confidence: 0.5, source: RUMOR}
+
+  - key: fact_lao_kui_was_expelled
+    statement: 老魁三十年前是栖星外院生，因为带路害死两名同学被除名
+    truth_value: true
+    scope: PERSONAL
+    sensitivity: 0.9
+    subject: lao_kui
+    related: [lao_kui, qixing_academy, hunter_camp]
+    initial_knowledge:
+      lao_kui: {state: KNOWN, confidence: 1, source: SEED}
+      bo_zhonghe: {state: KNOWN, confidence: 0.9, source: WITNESSED}
+      granny_gu: {state: KNOWN, confidence: 0.85, source: WITNESSED}
+
+  - key: fact_black_pact_needs_three_guards
+    statement: 墨纹契的缔结需要至少三名护法者连续护持一整夜，中途中断即当场爆体
+    truth_value: true
+    scope: WORLD
+    sensitivity: 0.4
+    related: [qi_ranyan, granny_gu, bo_zhonghe]
+    initial_knowledge:
+      qi_ranyan: {state: KNOWN, confidence: 1, source: WITNESSED}
+      granny_gu: {state: KNOWN, confidence: 1, source: WITNESSED}
+      bo_zhonghe: {state: KNOWN, confidence: 1, source: WITNESSED}
+      hong_shu: {state: KNOWN, confidence: 1, source: WITNESSED}
+      yan_zhi: {state: KNOWN, confidence: 1, source: SEED}
+      shen_yuluo: {state: KNOWN, confidence: 0.8, source: DOCUMENT}
+      mu_jinnian: {state: KNOWN, confidence: 1, source: WITNESSED}
+
+  - key: fact_beast_ledger_hidden_in_camp
+    statement: 猎兽人三年来的流水账册就藏在营地里，老魁随身不离
+    truth_value: true
+    scope: FACTION
+    sensitivity: 0.9
+    related: [lao_kui, hunter_camp, beast_ledger]
+    initial_knowledge:
+      lao_kui: {state: KNOWN, confidence: 1, source: SEED}
+      lu_qingchan: {state: SUSPECTED, confidence: 0.5, source: WITNESSED}
+      hong_shu: {state: KNOWN, confidence: 0.8, source: INFERRED}
+
+  - key: fact_player_is_nineteen_levels
+    statement: 玩家上周测定为十九级，再升一级就到二十级第二契的门槛
+    truth_value: true
+    scope: PERSONAL
+    sensitivity: 0.2
+    subject: player
+    related: [player, outer_dorm, qi_ranyan]
+    initial_knowledge:
+      player: {state: KNOWN, confidence: 1, source: DOCUMENT}
+      qi_ranyan: {state: KNOWN, confidence: 1, source: DOCUMENT}
+      shen_yuluo: {state: KNOWN, confidence: 0.9, source: DOCUMENT}
+      mu_jinnian: {state: KNOWN, confidence: 0.9, source: DOCUMENT}
+      dai_kuan: {state: KNOWN, confidence: 0.9, source: DOCUMENT}
+      lu_qingchan: {state: KNOWN, confidence: 0.9, source: DOCUMENT}
+      granny_gu: {state: KNOWN, confidence: 1, source: DOCUMENT}
+      xu_bingzhou: {state: KNOWN, confidence: 0.8, source: DOCUMENT}

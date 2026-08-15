@@ -1,0 +1,285 @@
+facts:
+  - key: fact_blast_in_nine_days
+    statement: 靳部将在九日后用炸药炸开主墓道
+    truth_value: true
+    scope: WORLD
+    sensitivity: 0.2
+    related: [jin_brigade, mound_site, tomb_mouth]
+    initial_knowledge:
+      player: {state: KNOWN, confidence: 1, source: SEED}
+      jin_shaoheng: {state: KNOWN, confidence: 1, source: DOCUMENT}
+      liu_erchui: {state: KNOWN, confidence: 1, source: TOLD_BY}
+      bai_su: {state: KNOWN, confidence: 1, source: TOLD_BY}
+      luo_jiuniang: {state: KNOWN, confidence: 0.95, source: TOLD_BY}
+      zhou_maichen: {state: KNOWN, confidence: 0.95, source: TOLD_BY}
+      xu_wenqing: {state: KNOWN, confidence: 0.9, source: DOCUMENT}
+      zhang_kuaizui: {state: HEARD, confidence: 0.7, source: RUMOR}
+      tie_gou: {state: HEARD, confidence: 0.6, source: RUMOR}
+      wang_pojiu: {state: HEARD, confidence: 0.6, source: RUMOR}
+
+  - key: fact_father_never_came_up
+    statement: 十年前玩家的父亲带队下寒鸦岭陵后再没上来
+    truth_value: true
+    scope: PERSONAL
+    sensitivity: 0.4
+    subject: player
+    related: [player, chen_quezi, tomb_corridor]
+    initial_knowledge:
+      player: {state: KNOWN, confidence: 1, source: SEED}
+      chen_quezi: {state: KNOWN, confidence: 1, source: WITNESSED}
+      zhang_kuaizui: {state: KNOWN, confidence: 0.9, source: WITNESSED}
+      luo_jiuniang: {state: KNOWN, confidence: 0.85, source: TOLD_BY}
+      shen_yan: {state: KNOWN, confidence: 0.9, source: INFERRED}
+
+  - key: fact_half_map_incomplete
+    statement: 玩家手上的灯图只有一半，另外五个灯位在撕走的那半张上
+    truth_value: true
+    scope: PERSONAL
+    sensitivity: 0.6
+    subject: player
+    related: [player, half_lamp_map, other_half_map]
+    initial_knowledge:
+      player: {state: KNOWN, confidence: 1, source: SEED}
+      shen_yan: {state: SUSPECTED, confidence: 0.55, source: INFERRED}
+      luo_jiuniang: {state: SUSPECTED, confidence: 0.5, source: RUMOR}
+
+  - key: fact_nine_lamps_hold_the_hill
+    statement: 九枝灯按定序点燃能稳住山腹，强取或错序会引来水银倒灌
+    truth_value: true
+    scope: WORLD
+    sensitivity: 0.9
+    related: [lamp_hall, mercury_river, hanya_ling]
+    initial_knowledge:
+      qing_yu: {state: KNOWN, confidence: 1, source: SEED}
+      bai_su: {state: KNOWN, confidence: 0.95, source: TOLD_BY}
+      chen_quezi: {state: BELIEVED, confidence: 0.85, source: WITNESSED}
+      zhou_maichen: {state: BELIEVED, confidence: 0.8, source: DOCUMENT}
+      shen_yan: {state: SUSPECTED, confidence: 0.6, source: INFERRED}
+      xu_wenqing: {state: SUSPECTED, confidence: 0.5, source: DOCUMENT}
+      jin_shaoheng: {state: DISBELIEVED, confidence: 0.7, source: RUMOR}
+
+  - key: fact_lamp_order_on_qingyu_back
+    statement: 九盏灯的点灯次序刺在清鱼背上，守灯人从不把次序写在纸上
+    truth_value: true
+    scope: PERSONAL
+    sensitivity: 1.0
+    subject: qing_yu
+    related: [qing_yu, lamp_keepers, lamp_hall]
+    initial_knowledge:
+      qing_yu: {state: KNOWN, confidence: 1, source: SEED}
+      bai_su: {state: KNOWN, confidence: 0.9, source: WITNESSED}
+
+  - key: fact_bai_su_is_lamp_keeper
+    statement: 随军医官白素是守灯人最后一支
+    truth_value: true
+    scope: PERSONAL
+    sensitivity: 1.0
+    subject: bai_su
+    related: [bai_su, qing_yu, lamp_keepers]
+    initial_knowledge:
+      bai_su: {state: KNOWN, confidence: 1, source: SEED}
+      qing_yu: {state: KNOWN, confidence: 1, source: SEED}
+
+  - key: fact_father_still_in_tomb
+    statement: 玩家父亲的遗骨还沉在悬棺台下的水银里
+    truth_value: true
+    scope: PERSONAL
+    sensitivity: 0.95
+    related: [coffin_platform, chen_quezi, player]
+    initial_knowledge:
+      chen_quezi: {state: KNOWN, confidence: 0.9, source: WITNESSED}
+      shen_yan: {state: SUSPECTED, confidence: 0.5, source: INFERRED}
+      qing_yu: {state: SUSPECTED, confidence: 0.45, source: INFERRED}
+
+  - key: fact_chen_cut_the_rope
+    statement: 十年前是陈瘸子割断了那根绳子
+    truth_value: true
+    scope: PERSONAL
+    sensitivity: 1.0
+    subject: chen_quezi
+    related: [chen_quezi, tomb_corridor, player]
+    initial_knowledge:
+      chen_quezi: {state: KNOWN, confidence: 1, source: SEED}
+      shen_yan: {state: SUSPECTED, confidence: 0.65, source: INFERRED}
+      mao_sanzi: {state: HEARD, confidence: 0.3, source: RUMOR}
+
+  - key: fact_father_ordered_the_cut
+    statement: 割绳是玩家的父亲自己在下面喊出来的，为了把上面的人推出去
+    truth_value: true
+    scope: PERSONAL
+    sensitivity: 1.0
+    related: [chen_quezi, player, tomb_corridor]
+    initial_knowledge:
+      chen_quezi: {state: KNOWN, confidence: 1, source: WITNESSED}
+
+  - key: fact_shen_master_left_below
+    statement: 沈砚的师父十年前被留在耳室里没能上来
+    truth_value: true
+    scope: PERSONAL
+    sensitivity: 0.9
+    subject: shen_yan
+    related: [shen_yan, side_chamber, chen_quezi]
+    initial_knowledge:
+      shen_yan: {state: KNOWN, confidence: 1, source: SEED}
+      chen_quezi: {state: KNOWN, confidence: 0.85, source: WITNESSED}
+
+  - key: fact_luo_sold_the_map
+    statement: 罗九娘已收下靳部三百块定金，答应把玩家手里的半张灯图交出去
+    truth_value: true
+    scope: FACTION
+    sensitivity: 0.85
+    subject: luo_jiuniang
+    related: [luo_jiuniang, jin_shaoheng, half_lamp_map]
+    initial_knowledge:
+      luo_jiuniang: {state: KNOWN, confidence: 1, source: SEED}
+      jin_shaoheng: {state: KNOWN, confidence: 1, source: DOCUMENT}
+      tie_gou: {state: SUSPECTED, confidence: 0.5, source: INFERRED}
+      wang_pojiu: {state: HEARD, confidence: 0.4, source: RUMOR}
+
+  - key: fact_zhou_wants_the_lamps
+    statement: 周麦臣的买主要的是那九盏灯，而不是离侯玺
+    truth_value: true
+    scope: PERSONAL
+    sensitivity: 0.9
+    subject: zhou_maichen
+    related: [zhou_maichen, lamp_hall, zhou_syndicate]
+    initial_knowledge:
+      zhou_maichen: {state: KNOWN, confidence: 1, source: DOCUMENT}
+      wang_pojiu: {state: SUSPECTED, confidence: 0.4, source: WITNESSED}
+      qing_yu: {state: SUSPECTED, confidence: 0.5, source: INFERRED}
+
+  - key: fact_liu_sold_two_crates
+    statement: 火药棚账上少的两箱炸药是刘二锤私卖给周麦臣的人的
+    truth_value: true
+    scope: FACTION
+    sensitivity: 0.9
+    subject: liu_erchui
+    related: [liu_erchui, powder_shed, zhou_maichen]
+    initial_knowledge:
+      liu_erchui: {state: KNOWN, confidence: 1, source: SEED}
+      zhou_maichen: {state: KNOWN, confidence: 0.85, source: WITNESSED}
+      bai_su: {state: SUSPECTED, confidence: 0.55, source: INFERRED}
+
+  - key: fact_xu_papers_forged
+    statement: 徐问卿手里的公文与关防是他自己刻的
+    truth_value: true
+    scope: PERSONAL
+    sensitivity: 0.95
+    subject: xu_wenqing
+    related: [xu_wenqing, antiquity_bureau]
+    initial_knowledge:
+      xu_wenqing: {state: KNOWN, confidence: 1, source: SEED}
+
+  - key: fact_jin_will_be_purged
+    statement: 靳绍衡若交不出货，九日之后就要被上峰清算
+    truth_value: true
+    scope: PERSONAL
+    sensitivity: 0.9
+    subject: jin_shaoheng
+    related: [jin_shaoheng, jin_brigade]
+    initial_knowledge:
+      jin_shaoheng: {state: KNOWN, confidence: 1, source: DOCUMENT}
+      zhou_maichen: {state: SUSPECTED, confidence: 0.6, source: INFERRED}
+      bai_su: {state: SUSPECTED, confidence: 0.45, source: INFERRED}
+
+  - key: fact_conscript_deaths_unreported
+    statement: 封土第三层已经压死七名民夫，一个也没有上报
+    truth_value: true
+    scope: FACTION
+    sensitivity: 0.9
+    related: [mound_site, jin_brigade, tie_gou]
+    initial_knowledge:
+      bai_su: {state: KNOWN, confidence: 1, source: WITNESSED}
+      liu_erchui: {state: KNOWN, confidence: 0.9, source: WITNESSED}
+      jin_shaoheng: {state: KNOWN, confidence: 0.8, source: TOLD_BY}
+      luo_jiuniang: {state: KNOWN, confidence: 0.75, source: TOLD_BY}
+      xu_wenqing: {state: SUSPECTED, confidence: 0.6, source: INFERRED}
+
+  - key: fact_tiegou_brother_dead
+    statement: 铁狗的弟弟已经死在封土第三层，罗九娘知道却没告诉他
+    truth_value: true
+    scope: PERSONAL
+    sensitivity: 0.95
+    related: [tie_gou, luo_jiuniang, mound_site]
+    initial_knowledge:
+      luo_jiuniang: {state: KNOWN, confidence: 0.9, source: TOLD_BY}
+      bai_su: {state: KNOWN, confidence: 0.95, source: WITNESSED}
+
+  - key: fact_ghost_road_reaches_corridor
+    statement: 鬼路矿道的尽头能摸到甬道，不必经过封土工地
+    truth_value: true
+    scope: WORLD
+    sensitivity: 0.6
+    related: [ghost_road, tomb_corridor, mao_sanzi]
+    initial_knowledge:
+      mao_sanzi: {state: KNOWN, confidence: 0.9, source: WITNESSED}
+      chen_quezi: {state: KNOWN, confidence: 0.85, source: WITNESSED}
+      luo_jiuniang: {state: SUSPECTED, confidence: 0.5, source: RUMOR}
+      shen_yan: {state: SUSPECTED, confidence: 0.45, source: INFERRED}
+
+  - key: fact_bronze_branch_hidden
+    statement: 一枚青铜灯枝被藏在山神庙供桌底下
+    truth_value: true
+    scope: PERSONAL
+    sensitivity: 0.8
+    subject: mao_sanzi
+    related: [mao_sanzi, shanshen_temple, bronze_branch]
+    initial_knowledge:
+      mao_sanzi: {state: KNOWN, confidence: 1, source: SEED}
+      qing_yu: {state: SUSPECTED, confidence: 0.4, source: INFERRED}
+
+  - key: fact_mercury_rises_at_night
+    statement: 水银暗河每到后半夜会上涨半尺，天亮前退回去
+    truth_value: true
+    scope: WORLD
+    sensitivity: 0.5
+    related: [mercury_river, drain_channel]
+    initial_knowledge:
+      qing_yu: {state: KNOWN, confidence: 1, source: SEED}
+      chen_quezi: {state: KNOWN, confidence: 0.9, source: WITNESSED}
+      bai_su: {state: KNOWN, confidence: 0.8, source: TOLD_BY}
+      shen_yan: {state: HEARD, confidence: 0.4, source: RUMOR}
+
+  - key: fact_lamp_hall_floor_is_hollow
+    statement: 九枝灯厅的地面是空的，底下就是排水暗渠
+    truth_value: true
+    scope: WORLD
+    sensitivity: 0.7
+    related: [lamp_hall, drain_channel]
+    initial_knowledge:
+      chen_quezi: {state: KNOWN, confidence: 0.9, source: WITNESSED}
+      qing_yu: {state: KNOWN, confidence: 1, source: SEED}
+      xu_wenqing: {state: SUSPECTED, confidence: 0.4, source: DOCUMENT}
+
+  - key: fact_seal_is_a_copy
+    statement: 摆在主墓室印匣里的离侯玺是后世仿制，真玺封在悬棺台的椁内
+    truth_value: true
+    scope: WORLD
+    sensitivity: 0.95
+    related: [main_chamber, coffin_platform, li_seal]
+    initial_knowledge:
+      qing_yu: {state: KNOWN, confidence: 0.85, source: SEED}
+      xu_wenqing: {state: SUSPECTED, confidence: 0.6, source: DOCUMENT}
+      shen_yan: {state: SUSPECTED, confidence: 0.4, source: INFERRED}
+
+  - key: fact_letter_in_teahouse
+    statement: 玩家父亲十年前托张快嘴寄的信从没寄出，还压在茶馆柜台夹层里
+    truth_value: true
+    scope: PERSONAL
+    sensitivity: 0.7
+    subject: zhang_kuaizui
+    related: [zhang_kuaizui, zhang_teahouse, chen_letter, player]
+    initial_knowledge:
+      zhang_kuaizui: {state: KNOWN, confidence: 1, source: SEED}
+
+  - key: fact_wang_reports_to_zhou
+    statement: 骡马店的王婆酒把住店人的底细报给周麦臣换烟土
+    truth_value: true
+    scope: PERSONAL
+    sensitivity: 0.75
+    subject: wang_pojiu
+    related: [wang_pojiu, zhou_maichen, mule_inn]
+    initial_knowledge:
+      wang_pojiu: {state: KNOWN, confidence: 1, source: SEED}
+      zhou_maichen: {state: KNOWN, confidence: 1, source: SEED}
+      zhang_kuaizui: {state: SUSPECTED, confidence: 0.5, source: INFERRED}

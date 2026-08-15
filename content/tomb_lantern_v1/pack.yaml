@@ -1,0 +1,290 @@
+key: tomb_lantern_v1
+name: 寒鸦岭·九枝灯
+genre: tomb_raiding
+version: "1.0.0"
+engine_min_version: "0.2.0"
+primary_progression_key: tomb_craft
+attribute_definitions:
+  - {key: nerve, label: 胆识, type: number}
+  - {key: eyesight, label: 眼力, type: number}
+  - {key: craft, label: 手艺, type: number}
+  - {key: connections, label: 人脉, type: number}
+resource_definitions:
+  - {key: health, label: 健康, minimum: 0, maximum: 100, default: 100}
+  - {key: stamina, label: 气力, minimum: 0, maximum: 100, default: 80}
+  - {key: lamp_oil, label: 灯油, minimum: 0, maximum: 100, default: 60}
+progression_definitions:
+  - key: tomb_craft
+    label: 盗行阶
+    tiers:
+      - {key: greenhand, label: 生手, order: 0}
+      - {key: veteran, label: 老手, order: 1}
+      - {key: headman, label: 把头, order: 2}
+      - {key: lampkeeper, label: 掌灯人, order: 3}
+  - key: hill_standing
+    label: 寒鸦岭声望
+    tiers:
+      - {key: outsider, label: 外来人, order: 0}
+      - {key: known_face, label: 混了脸熟, order: 1}
+      - {key: trusted, label: 说得上话, order: 2}
+player_fields:
+  - {key: name, label: 姓名, type: text, required: true}
+  - {key: age, label: 年龄, type: integer, required: true, default: 26, minimum: 18, maximum: 55}
+  - key: lineage
+    label: 门路
+    type: choice
+    required: true
+    default: xieling
+    choices:
+      - {value: xieling, label: 卸岭·力气与人手}
+      - {value: mojin, label: 摸金·望气与规矩}
+      - {value: banshan, label: 搬山·机关与毒物}
+      - {value: faqiu, label: 发丘·印信与文书}
+  - key: reason
+    label: 你为什么回寒鸦岭
+    type: choice
+    required: true
+    default: father
+    choices:
+      - {value: father, label: 找我爹剩下的那点骨头}
+      - {value: map, label: 把那半张灯图对上}
+      - {value: stop, label: 不能让他们把这座山炸塌}
+      - {value: money, label: 捞一笔就走}
+  - {key: interests, label: 随身本事, type: tags, required: false, default: []}
+  - {key: personal_goal, label: 这九天里你最想做到的事, type: text, required: true, default: 弄清十年前那晚到底出了什么事}
+  - {key: background, label: 这十年你在哪儿, type: text, required: false}
+language: zh-CN
+assets:
+  - key: nine_branch_lantern_cover
+    kind: cover
+    path: official/tomb_lantern_v1/nine-branch-lantern-cover-v1.png
+    alt: 寒鸦岭山腹的幽暗墓道中，九盏青铜连枝灯依次亮起
+author_tests:
+  - key: opening_knowledge_boundary
+    name: 开场时守灯人的秘密不在玩家手上
+    scenario: main_story
+    assertions:
+      - {path: player.location, op: eq, expected: mule_inn}
+      - {path: knowledge.player.fact_blast_in_nine_days, op: eq, expected: KNOWN}
+      - {path: knowledge.player.fact_lamp_order_on_qingyu_back, op: eq, expected: UNKNOWN}
+      - {path: knowledge.qing_yu.fact_lamp_order_on_qingyu_back, op: eq, expected: KNOWN}
+      - {path: knowledge.chen_quezi.fact_father_ordered_the_cut, op: eq, expected: KNOWN}
+      - {path: knowledge.player.fact_father_ordered_the_cut, op: eq, expected: UNKNOWN}
+  - key: endings_locked_at_start
+    name: 所有结局在开场时都未解锁
+    scenario: main_story
+    assertions:
+      - {path: endings.ending_lamps_answered.available, op: eq, expected: false}
+      - {path: endings.ending_bones_carried_home.available, op: eq, expected: false}
+      - {path: endings.ending_nine_days_over.available, op: eq, expected: false}
+  - key: lamp_ending_requires_both_lines
+    name: 九灯结局需要同时点齐灯与拦下炸药
+    scenario: main_story
+    player:
+      name: 测试玩家
+      age: 30
+      gender: unspecified
+    fixtures:
+      quests: {quest_light_the_nine: completed, quest_stop_the_blast: completed}
+    assertions:
+      - {path: endings.ending_lamps_answered.available, op: eq, expected: true}
+      - {path: endings.ending_sold_the_lamps.available, op: eq, expected: false}
+      - {path: endings.ending_walked_out_empty.available, op: eq, expected: false}
+world:
+  name: 寒鸦岭·离侯陵
+  description: >
+    民国二十三年深秋，晋陕交界的寒鸦岭。岭下埋着战国离国最后一位国君离厉侯的陵。
+    当地世代传一句话——九枝灯不灭，寒鸦岭不塌。陵中九盏青铜连枝灯按定序分列九处，
+    灯被强取或次序点错，山腹里那条水银暗河就会倒灌，陵、岭和岭上的镇子一起陷下去。
+    十年前玩家的父亲带一队土夫子下过这座陵，只有瘸腿的陈老头爬了出来，从此装疯。
+    如今靳绍衡旅长带兵进驻，强征民夫剥封土，限九日内炸开主墓道取走离侯玺换一批军火；
+    上海掮客周麦臣带着买主的定金住进了骡马店；古物保管所的徐问卿只带来一纸公文和一箱拓片。
+  start_location: mule_inn
+  world_seed_default: hanya-1934
+story:
+  title: 寒鸦岭·九枝灯
+  opening_location: mule_inn
+  premise: >
+    你下骡子的时候，寒鸦镇的天已经黑到看不清人脸。镇口贴着靳部的征夫告示，
+    墨还没干透；骡马店后院堆着从封土上刨下来的新土，土里混着碎骨。
+    你怀里揣着父亲留下的半张九枝灯图，另外半张十年前跟着他一起下了地。
+    九天之后，靳部的炸药会把主墓道掀开。在那之前，你得弄清楚十年前那一夜谁割了绳子，
+    找齐九盏灯的位置和点灯的次序，并且决定——这座山，最后到底归谁。
+  starter_items:
+    - {key: half_lamp_map, quantity: 1}
+    - {key: wind_lantern, quantity: 1}
+    - {key: fire_stick, quantity: 1}
+    - {key: dayang, quantity: 8}
+  player_template:
+    constraints: {minimum_age: 18, maximum_age: 55}
+    properties: {hill_status: outsider}
+  relationship_boundaries: >
+    可发展的关系限于成年人之间，且必须建立在共同经历与明确表达之上。
+    不写露骨性描写，不把胁迫、控制、债务或救命之恩美化成感情；被拒绝之后不得反复施压。
+  endings:
+    - key: ending_lamps_answered
+      type: other
+      title: 九灯归位
+      priority: 95
+      epilogue: >
+        第九盏灯亮起来的时候，甬道里那股一直往人后颈上吹的阴风忽然停了。
+        暗河的水银退回河床，像一条被喂饱的兽重新卧下。你们从鬼路爬出山口时，
+        靳部的炸药还堆在封土上，没人再敢点。寒鸦岭还在原地，镇子还在原地，
+        岭下那些名字终于有人肯写下来。你把半张灯图烧了——它已经不需要有人再找了。
+      condition:
+        op: and
+        args:
+          - {op: eq, args: [{op: get, args: [quests.quest_light_the_nine.status]}, completed]}
+          - {op: eq, args: [{op: get, args: [quests.quest_stop_the_blast.status]}, completed]}
+    - key: ending_bones_carried_home
+      type: bond
+      title: 背他上来
+      priority: 88
+      epilogue: >
+        父亲剩下的不多，一副骨头、一只停在丑时三刻的怀表、半张被水泡烂的灯图。
+        你把他背出鬼路的时候天正好亮，陈瘸子在洞口站着，一句话没说，只把拐扔了。
+        十年前他喊的那一声“割”，你终于听懂了：那不是抛弃，是他在下面用最后一口气
+        把上面的人推出去。你没有把这句话告诉任何人，只在坟前压了一块山里的石头。
+      condition:
+        op: and
+        args:
+          - {op: eq, args: [{op: get, args: [quests.quest_recover_father.status]}, completed]}
+          - {op: eq, args: [{op: get, args: [quests.quest_get_out_alive.status]}, completed]}
+    - key: ending_hill_kept
+      type: other
+      title: 山还在，玺不走
+      priority: 78
+      epilogue: >
+        炸药最终没有响。徐问卿那张自己刻的关防终究派上了用场——不是因为它真，
+        而是因为在场所有人都需要一张纸来收场。离侯玺被封进箱子押去省城，
+        路上会不会被换掉，谁也不敢保证。但寒鸦岭没塌，封土下面那七个人被起了出来，
+        名字一个一个写进了民夫册子。你留在岭上看了三天雪，才下山。
+      condition:
+        op: and
+        args:
+          - {op: eq, args: [{op: get, args: [quests.quest_stop_the_blast.status]}, completed]}
+          - {op: eq, args: [{op: get, args: [quests.quest_seal_decision.status]}, completed]}
+          - {op: ne, args: [{op: get, args: [quests.quest_light_the_nine.status]}, completed]}
+    - key: ending_sold_the_lamps
+      type: other
+      title: 灯换了钱
+      priority: 45
+      epilogue: >
+        周麦臣的箱子装得很整齐，九枝灯用棉花裹着，一枝一格。他数给你的大洋是真的，
+        码头上的船也是真的。船开出去第三天，你听见有人说寒鸦岭塌了半边，
+        压住了岭下两个村子。你没有回头，也没有再点过灯——夜里睡觉必须留一盏，
+        否则总有水声从枕头底下过。
+      condition:
+        op: and
+        args:
+          - {op: eq, args: [{op: get, args: [quests.quest_seal_decision.status]}, completed]}
+          - {op: ne, args: [{op: get, args: [quests.quest_stop_the_blast.status]}, completed]}
+    - key: ending_buried_with_it
+      type: other
+      title: 陪它一起塌
+      priority: 30
+      epilogue: >
+        第九日午时，封土上的炸药响了三声。第四声不是炸药，是山自己的声音。
+        水银从暗渠一路顶上来，把甬道灌成一条亮得吓人的河。你最后看见的是灯厅顶上
+        那圈没点着的铜枝，像九只没睁开的眼睛。寒鸦岭陷下去的时候，
+        岭上没有一个人来得及喊出第二个字。
+      # world.minute is the absolute world clock. 开局 405720（民国23年10月12日 擦黑），
+      # 第九日午时 = 405720 + 12960 = 418680。
+      condition:
+        op: and
+        args:
+          - {op: gte, args: [{op: get, args: [world.minute]}, 418680]}
+          - {op: ne, args: [{op: get, args: [quests.quest_stop_the_blast.status]}, completed]}
+          - {op: ne, args: [{op: get, args: [quests.quest_get_out_alive.status]}, completed]}
+    - key: ending_walked_out_empty
+      type: independent
+      title: 空手下岭
+      priority: 20
+      epilogue: >
+        你什么也没带走：没有玺，没有灯，没有骨头，连那半张图都在暗渠里泡烂了。
+        罗九娘替你在骡子上绑好行李，说了句“活着就不算亏”。下岭第一个岔路口，
+        你回头看了一眼寒鸦岭。它还立在那儿，像十年前一样黑，像十年前一样什么都不说。
+        这一次，至少你知道自己是走下来的，不是被人抬下来的。
+      condition:
+        op: and
+        args:
+          - {op: eq, args: [{op: get, args: [quests.quest_get_out_alive.status]}, completed]}
+          - {op: ne, args: [{op: get, args: [quests.quest_light_the_nine.status]}, completed]}
+          - {op: ne, args: [{op: get, args: [quests.quest_recover_father.status]}, completed]}
+    - key: ending_nine_days_over
+      type: other
+      title: 第九日之后
+      priority: 5
+      hidden_until_available: false
+      epilogue: >
+        九天到了。无论你查到多少、拦下多少、又留下多少没做完的事，
+        寒鸦岭都不会再等下一个人。往后镇上说起这件事，版本会有很多个，
+        每个版本里都有一个从外面回来的人，和一盏没人说得清点没点着的灯。
+      condition: {op: gte, args: [{op: get, args: [world.minute]}, 418680]}
+narrative_style:
+  language: 中文
+  person: 第二人称
+  tense: 现在时
+  tone: 民国乱世的盗墓冒险，粗粝、写实、紧绷；重感官细节与手上活计，凶险来自人心、时限与地下的物理规律，而非鬼怪
+  target_length: 1800
+  avoid_phrases:
+    - 嘴角勾起一抹弧度
+    - 眼中闪过一丝异色
+    - 空气仿佛凝固
+    - 心里微沉
+    - 淡淡地说道
+    - 目光扫过
+    - 又落回
+    - 喉结动了动
+    - 一时却又抓不住头绪
+    - 总觉得哪里有些不对
+    - 风卷着
+    - 冷汗涔涔
+    - 汗毛倒竖
+    - 头皮发麻
+    - 阴风阵阵
+  phrase_repeat_window: 12
+  phrase_repeat_threshold: 2
+  guidance:
+    - 每一段至少推进以下之一——九日倒计时、灯序线索、父亲的下落、某个人的动机，或一个不可逆的后果
+    - 地下的危险要讲物理——缺氧、塌方、水银蒸气、绳子长度、灯油还剩多少，而不是靠“不祥的预感”
+    - 写具体的手上活计：怎么下铲、怎么打盗洞、怎么试毒、怎么系绳结、怎么护住灯不被穿堂风吹灭
+    - 每个人都在为自己的活路算账；没有纯粹的好人和坏人，但有明确的底线和背叛
+    - 不写鬼神显灵。所有看起来像鬼的东西，最后都要能被一个具体的解释接住
+theme: {accent: "#8a5a2b", background: "#efe6d6", surface: "#fbf6ec", text: "#2b241c"}
+vocabulary:
+  profile_labels: {age_suffix: 岁, realm: 盗行阶, root: 门路, faction: 帮口, male: 男, female: 女, unspecified: 未指定, story_lead: 同路人, no_story_lead: 还没有人肯与你同路, absent: 当前不在场}
+  relationship_labels: {affection: 交情, trust: 信任, respect: 敬重, fear: 忌惮, hatred: 仇怨, suspicion: 疑心, dependency: 倚仗, familiarity: 熟识, boundaries: 分寸}
+  action_aliases:
+    MOVE: [去, 前往, 走向, 回到, 进入, 下, 摸进, 赶往, 出山]
+    TALK: [聊, 交谈, 说话, 搭话, 找]
+    ASK: [问, 询问, 打听, 套话, 请教]
+    OBSERVE: [看, 观察, 打量, 查看, 望气, 留意]
+    SEARCH: [搜, 搜索, 翻找, 摸, 探, 挖, 掘, 打盗洞, 起土, 撬]
+    FOLLOW: [跟, 跟着, 盯]
+    HIDE: [躲, 藏, 隐蔽, 猫着]
+    USE_ITEM: [用, 使, 点, 点灯, 打开, 试, 拓]
+    GIVE_ITEM: [给, 送, 交给, 递给, 贿]
+    PICKUP: [捡, 拾, 拿起, 收起]
+    DROP: [丢, 扔, 放下]
+    STEAL: [偷, 摸走, 顺, 掉包]
+    ATTACK: [打, 动手, 砍, 开枪]
+    DEFEND: [挡, 护住, 抵住]
+    BUY: [买, 换, 雇]
+    SELL: [卖, 出手, 销]
+    USE_SKILL: [用本事, 施展, 使手艺]
+    REST: [歇, 休息, 睡, 打盹]
+    WAIT: [等, 等待, 守着]
+    ACCEPT_QUEST: [接, 接下, 答应, 应了]
+    REJECT_QUEST: [拒绝, 不接, 回绝, 推了]
+  method_aliases: {persuade: [劝, 说服], comfort: [安慰, 宽慰], promise: [承诺, 答应, 立字据], threaten: [吓, 威胁, 逼], bribe: [塞钱, 打点, 使银子], negotiate: [商量, 谈, 讲价], indirect_questioning: [试探, 套话, 绕着问]}
+  query_aliases: {QUERY_STATUS: [我的状态, 状态, 我怎么样], QUERY_INVENTORY: [家伙, 我的东西, 包里有什么], QUERY_RELATIONSHIPS: [人物关系, 都有谁, 关系], QUERY_QUESTS: [手上的事, 任务, 还欠着什么]}
+  request_size_hints: {extreme: [全部, 一切, 整座山], large: [替我下地, 都给我, 把人都调来], moderate: [帮我, 陪我走一趟], small: [问一句, 看一眼, 借个火]}
+  refusal_words: [不, 不成, 不干, 拒绝, 算了, 免谈]
+  plan_connectors: [然后, 接着, 随后, 再, 完了]
+  continue_words: [继续, 继续。, 接着说, 让故事继续, "..."]
+  entity_aliases: {镇上: hanya_town, 茶馆: zhang_teahouse, 客栈: mule_inn, 骡马店: mule_inn, 营里: camp_gate, 工地: mound_site, 庙里: shanshen_temple, 鬼路: ghost_road, 灯厅: lamp_hall, 主墓室: main_chamber, 暗河: mercury_river}
+  status_labels: {offered: 有人托付, active: 手上正做, completed: 了结了, failed: 砸了, expired: 过了时候, taken_by_other: 让别人抢了, rejected: 推掉了}
+  ambiguity_messages: {empty_input: 说清楚你要做什么。, move_target_unknown: 说明白你要去哪个知道的地方。, conversation_target_unknown: 说清楚你要跟在场的谁说话。, item_unknown: 说清楚你要用身上哪一件东西。}
+  time_units: {分钟: 1, 刻: 15, 时辰: 120, 小时: 60, 天: 1440, 日: 1440}
+  time_words: {一刻: 15, 半个时辰: 60, 一个时辰: 120, 半天: 360, 一天: 1440, 一夜: 600, 三天: 4320}

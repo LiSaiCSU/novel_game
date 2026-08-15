@@ -1,0 +1,491 @@
+characters:
+  - key: shen_yan
+    name: 沈砚
+    type: MAJOR_NPC
+    age: 29
+    gender: male
+    location: mule_inn
+    realm: veteran
+    realm_stage: seasoned
+    stats: {strength: 13, agility: 15, perception: 17, intelligence: 16, willpower: 15, charisma: 12}
+    background: >
+      摸金一脉最后一个还照规矩办事的人。十年前他师父跟着你父亲下了这座陵，
+      只上来一具空绳套。他在寒鸦镇住了半个月，白天不出门，夜里往岭上走。
+    personality:
+      traits: {cautious: 0.88, principled: 0.8, cold: 0.72, observant: 0.9}
+      values: [规矩, 把人带上来, 该留在地下的东西不动]
+      taboos: [破棺不还, 用活人试机关]
+      speech_style: 话极少，先问三个问题再回答一个
+      risk_tolerance: 0.42
+    emotion: {dominant: guarded, valence: -0.1, arousal: 0.35, intensity: 0.45}
+    long_term_goal: 把师父的骨头带出寒鸦岭，并让这座陵重新封上
+    short_term_goals: [弄清玩家手里那半张灯图的来路, 找到能绕开工地的第二条下地路]
+    schedule:
+      default: investigate
+      slots:
+        - {phase: morning, activity: rest, location: mule_inn}
+        - {phase: afternoon, activity: investigate, location: zhang_teahouse}
+        - {phase: dusk, activity: investigate, location: mass_grave}
+        - {phase: night, activity: investigate, location: ghost_road}
+        - {phase: deep_night, activity: sleep, location: mule_inn}
+    items: [{key: compass_pan, qty: 1}, {key: silver_needle, qty: 1}]
+    skills: [wangqi, dingxue, jiguan]
+    reputation: {global: 20, by_faction: {luo_gang: 15}}
+    secret: 他师父不是死在机关上，是被十年前那队人锁在耳室里换了活路
+    capabilities: [望气定穴, 拆机关, 水下憋气]
+
+  - key: luo_jiuniang
+    name: 罗九娘
+    type: MAJOR_NPC
+    age: 36
+    gender: female
+    location: luo_yard
+    faction: luo_gang
+    faction_rank: 把头
+    realm: headman
+    realm_stage: leading
+    stats: {strength: 16, agility: 14, perception: 15, intelligence: 15, willpower: 18, charisma: 16}
+    background: >
+      罗家三代靠寒鸦岭吃饭，到她手里剩二十六个伙计。她能一句话让人下坑，
+      也确实替死掉的每一个人往家里送过钱。军队一来，她第一个去营门递了帖子。
+    personality:
+      traits: {pragmatic: 0.92, protective: 0.75, ruthless: 0.66}
+      values: [伙计的命, 一口饭, 说过的数不改]
+      taboos: [卖自己人给官府]
+      speech_style: 嗓门大、话糙、算账时忽然变得很轻
+      risk_tolerance: 0.7
+    emotion: {dominant: pressured, valence: -0.15, arousal: 0.55, intensity: 0.55}
+    long_term_goal: 抢在军队炸山之前把主墓室掏空，让二十六个伙计过完这个冬天
+    short_term_goals: [拿到玩家那半张灯图, 弄清鬼路究竟通不通甬道]
+    schedule:
+      default: work
+      slots:
+        - {phase: morning, activity: work, location: luo_yard}
+        - {phase: afternoon, activity: social, location: zhang_teahouse}
+        - {phase: dusk, activity: work, location: luo_yard}
+        - {phase: night, activity: investigate, location: mass_grave}
+        - {phase: deep_night, activity: sleep, location: luo_yard}
+    items: [{key: rope_coil, qty: 2}, {key: luoyang_shovel, qty: 1}]
+    skills: [tugong, dingxue, jianghu]
+    reputation: {global: 35, by_faction: {luo_gang: 90}}
+    secret: 她已经收了靳部三百块定金，答应把玩家手里的半张图交出去
+    capabilities: [带队下地, 调二十人的人手, 跟军队打交道]
+
+  - key: jin_shaoheng
+    name: 靳绍衡
+    type: MAJOR_NPC
+    age: 43
+    gender: male
+    location: camp_tent
+    faction: jin_brigade
+    faction_rank: 旅长
+    realm: greenhand
+    realm_stage: raw
+    stats: {strength: 14, agility: 12, perception: 14, intelligence: 16, willpower: 17, charisma: 17}
+    background: >
+      行伍出身，识字不多但极会算账。上峰答应用一批捷克步枪换他一件东西，
+      期限九天。他不信山神，只信炸药和数字，可夜里从不往封土上走。
+    personality:
+      traits: {decisive: 0.9, cornered: 0.8, calculating: 0.85}
+      values: [队伍不能散, 说定的期限, 不做没有退路的事]
+      taboos: [当着人认怂]
+      speech_style: 短句，命令式，偶尔忽然讲一段没头没尾的旧事
+      risk_tolerance: 0.72
+    emotion: {dominant: pressed, valence: -0.2, arousal: 0.6, intensity: 0.6}
+    long_term_goal: 九日内交出离侯玺，保住自己的番号和这条命
+    short_term_goals: [把主墓道炸开, 让封土下的伤亡不上报]
+    schedule:
+      default: work
+      slots:
+        - {phase: morning, activity: work, location: camp_tent}
+        - {phase: afternoon, activity: patrol, location: mound_site}
+        - {phase: dusk, activity: work, location: camp_tent}
+        - {phase: night, activity: social, location: mule_inn}
+        - {phase: deep_night, activity: sleep, location: camp_tent}
+    items: [{key: army_pass, qty: 3}]
+    skills: [jianghu]
+    reputation: {global: -15, by_faction: {jin_brigade: 85}}
+    secret: 交不出货他自己就要被上峰清算，这九天是替他自己挖的坑
+    capabilities: [调动一营人, 签发路条, 决定何时起爆]
+
+  - key: xu_wenqing
+    name: 徐问卿
+    type: MAJOR_NPC
+    age: 38
+    gender: male
+    location: shanshen_temple
+    faction: antiquity_bureau
+    faction_rank: 办事处主任
+    realm: greenhand
+    realm_stage: raw
+    stats: {strength: 9, agility: 10, perception: 16, intelligence: 18, willpower: 15, charisma: 13}
+    background: >
+      古物保管所派下来的唯一一个人，随身只有一箱拓片、一支狼毫和一纸公文。
+      经费断了十四个月，他还在每天记录封土剥离的深度。
+    personality:
+      traits: {stubborn: 0.9, meticulous: 0.88, anxious: 0.7}
+      values: [完整, 记录, 东西留在它该在的地方]
+      taboos: [毁掉原物换钱]
+      speech_style: 书面语，急起来会引条例，越急越慢
+      risk_tolerance: 0.3
+    emotion: {dominant: worried, valence: -0.25, arousal: 0.5, intensity: 0.55}
+    long_term_goal: 让这座陵被完整登记造册，而不是变成军火账上的一行数字
+    short_term_goals: [拿到能压住靳部的一纸命令, 拓下甬道上所有铭文]
+    schedule:
+      default: work
+      slots:
+        - {phase: morning, activity: work, location: shanshen_temple}
+        - {phase: afternoon, activity: investigate, location: mound_site}
+        - {phase: dusk, activity: work, location: shanshen_temple}
+        - {phase: night, activity: work, location: shanshen_temple}
+        - {phase: deep_night, activity: sleep, location: shanshen_temple}
+    items: [{key: rubbing_set, qty: 1}]
+    skills: [tapian, dingxue]
+    reputation: {global: 8, by_faction: {antiquity_bureau: 60}}
+    secret: 那纸公文与关防都是他自己刻的，机关早已名存实亡
+    capabilities: [认离国文字, 拓印铭文, 写得出唬得住人的公文]
+
+  - key: zhou_maichen
+    name: 周麦臣
+    type: MAJOR_NPC
+    age: 45
+    gender: male
+    location: mule_inn
+    faction: zhou_syndicate
+    faction_rank: 掌盘
+    realm: greenhand
+    realm_stage: raw
+    stats: {strength: 11, agility: 12, perception: 16, intelligence: 17, willpower: 14, charisma: 18}
+    background: >
+      上海来的掮客，皮箱里三成定金是真的银票。他在这条道上二十年，
+      从没自己下过一次地——他说那是伙计的活儿，他只负责让东西上船。
+    personality:
+      traits: {affable: 0.9, calculating: 0.9, cowardly: 0.6}
+      values: [合同, 到手的价, 不亲自沾血]
+      taboos: [自己进地下]
+      speech_style: 笑着说狠话，句句留后路，从不把话说死
+      risk_tolerance: 0.55
+    emotion: {dominant: pleased, valence: 0.25, arousal: 0.4, intensity: 0.45}
+    long_term_goal: 把九枝灯整套装箱运出海，让军队替他背挖山的名声
+    short_term_goals: [买通工兵队, 确认灯的数目与完整程度]
+    schedule:
+      default: social
+      slots:
+        - {phase: morning, activity: rest, location: mule_inn}
+        - {phase: afternoon, activity: social, location: zhang_teahouse}
+        - {phase: dusk, activity: social, location: camp_tent}
+        - {phase: night, activity: social, location: mule_inn}
+        - {phase: deep_night, activity: sleep, location: mule_inn}
+    items: [{key: opium_tin, qty: 1}, {key: dayang, qty: 200}]
+    skills: [jianghu]
+    reputation: {global: 12, by_faction: {zhou_syndicate: 95}}
+    secret: 买主要的从来不是玺，是那九盏灯；而他清楚灯一抬走山就要塌
+    capabilities: [出得起价, 认得出真假, 弄得到出海的船位]
+
+  - key: chen_quezi
+    name: 陈瘸子
+    type: MAJOR_NPC
+    age: 61
+    gender: male
+    location: mass_grave
+    realm: veteran
+    realm_stage: seasoned
+    stats: {strength: 10, agility: 8, perception: 18, intelligence: 15, willpower: 17, charisma: 9}
+    background: >
+      十年前那一队里唯一活着爬出来的人。回来以后腿废了，人也“疯”了，
+      白天在乱坟岗替人添土，夜里在山神庙外头坐着，谁问那晚的事他就笑。
+    personality:
+      traits: {guilty: 0.95, evasive: 0.85, kind: 0.6}
+      values: [活着的人先走, 该埋的埋好]
+      taboos: [说出那一夜的第三句话]
+      speech_style: 疯话与清醒交替，越是清醒的时候声音越小
+      risk_tolerance: 0.25
+    emotion: {dominant: haunted, valence: -0.45, arousal: 0.3, intensity: 0.6}
+    long_term_goal: 在自己死之前把那一夜真正发生的事交给一个配听的人
+    short_term_goals: [看清楚回来的这个人是不是老伙计的孩子, 不让任何人再下鬼路]
+    schedule:
+      default: work
+      slots:
+        - {phase: morning, activity: work, location: mass_grave}
+        - {phase: afternoon, activity: work, location: mass_grave}
+        - {phase: dusk, activity: travel, location: shanshen_temple}
+        - {phase: night, activity: rest, location: shanshen_temple}
+        - {phase: deep_night, activity: sleep, location: shanshen_temple}
+    items: [{key: father_watch, qty: 1}]
+    skills: [tugong, bandu, wangqi]
+    reputation: {global: -5, by_faction: {}}
+    secret: 绳子是他割的，但那一声“割”是你父亲在下面喊的
+    capabilities: [记得整座陵的走法, 认得出哪块顶板会塌]
+
+  - key: bai_su
+    name: 白素
+    type: MAJOR_NPC
+    age: 32
+    gender: female
+    location: field_clinic
+    faction: jin_brigade
+    faction_rank: 随军医官
+    realm: greenhand
+    realm_stage: raw
+    stats: {strength: 10, agility: 13, perception: 17, intelligence: 17, willpower: 18, charisma: 14}
+    background: >
+      正经学过西医，却自愿跟着一支要炸山的部队进了寒鸦岭。
+      医棚里每天抬进来的人越来越多，她开的方子越来越短。
+    personality:
+      traits: {steady: 0.9, secretive: 0.85, compassionate: 0.8}
+      values: [救得回来的先救, 灯不能出山, 不说谎但也不全说]
+      taboos: [替爆破签字]
+      speech_style: 平静，问句多于陈述句，被逼急了会直接沉默
+      risk_tolerance: 0.5
+    emotion: {dominant: composed, valence: -0.1, arousal: 0.4, intensity: 0.5}
+    long_term_goal: 让炸药永远留在棚子里，同时不暴露自己是守灯人
+    short_term_goals: [清点火药棚的实际箱数, 弄清清鱼还能撑多久]
+    schedule:
+      default: work
+      slots:
+        - {phase: morning, activity: work, location: field_clinic}
+        - {phase: afternoon, activity: work, location: field_clinic}
+        - {phase: dusk, activity: patrol, location: powder_shed}
+        - {phase: night, activity: travel, location: shanshen_temple}
+        - {phase: deep_night, activity: sleep, location: field_clinic}
+    items: [{key: silver_needle, qty: 1}, {key: gas_mask, qty: 1}]
+    skills: [yishu, bandu]
+    reputation: {global: 22, by_faction: {jin_brigade: 40, lamp_keepers: 80}}
+    secret: 她是守灯人最后一支，随军就是为了守住那二十四箱炸药
+    capabilities: [救治重伤, 认得水银中毒的征候, 进得了火药棚]
+
+  - key: qing_yu
+    name: 清鱼
+    type: MAJOR_NPC
+    age: 47
+    gender: female
+    location: shanshen_temple
+    faction: lamp_keepers
+    faction_rank: 掌灯
+    realm: lampkeeper
+    realm_stage: keeping
+    stats: {strength: 9, agility: 10, perception: 18, intelligence: 16, willpower: 19, charisma: 12}
+    background: >
+      山神庙里守了三十年的女人，庙里的神像脸是她凿掉的——她说那不是神，是记号。
+      她背上有东西，从不脱外衣，也从不下岭。
+    personality:
+      traits: {resolute: 0.95, patient: 0.9, unyielding: 0.85}
+      values: [次序, 灯不出山, 守到最后一个人]
+      taboos: [把次序写在纸上]
+      speech_style: 一句一停，像在背一段很旧的口诀
+      risk_tolerance: 0.35
+    emotion: {dominant: resolved, valence: -0.05, arousal: 0.3, intensity: 0.55}
+    long_term_goal: 在自己死之前把点灯的次序交出去，交给一个不会卖掉它的人
+    short_term_goals: [判断玩家值不值得托付, 拿回被毛三子捡走的那枚灯枝]
+    schedule:
+      default: work
+      slots:
+        - {phase: morning, activity: work, location: shanshen_temple}
+        - {phase: afternoon, activity: work, location: shanshen_temple}
+        - {phase: dusk, activity: work, location: shanshen_temple}
+        - {phase: night, activity: rest, location: shanshen_temple}
+        - {phase: deep_night, activity: sleep, location: shanshen_temple}
+    items: [{key: lamp_keeper_tally, qty: 1}]
+    skills: [wangqi, bandu]
+    reputation: {global: 0, by_faction: {lamp_keepers: 100}}
+    secret: 九盏灯的点灯次序刺在她背上，守灯人以身为图，从不落纸
+    capabilities: [记得完整的点灯次序, 认得每一盏灯的方位]
+
+  - key: liu_erchui
+    name: 刘二锤
+    type: MAJOR_NPC
+    age: 28
+    gender: male
+    location: powder_shed
+    faction: jin_brigade
+    faction_rank: 工兵队长
+    realm: greenhand
+    realm_stage: raw
+    stats: {strength: 16, agility: 13, perception: 12, intelligence: 12, willpower: 13, charisma: 12}
+    background: >
+      炸过铁路桥也炸过山，手上没断过指头，是队里最得意的事。
+      他算得出一箱药能掀开多少土，算不出这座山底下究竟有什么。
+    personality:
+      traits: {boastful: 0.8, greedy: 0.75, reckless: 0.7}
+      values: [手艺, 现钱, 兄弟一场]
+      taboos: [空手替人卖命]
+      speech_style: 大嗓门，爱拿爆破当谈资，喝了酒什么都往外说
+      risk_tolerance: 0.8
+    emotion: {dominant: cocky, valence: 0.2, arousal: 0.55, intensity: 0.5}
+    long_term_goal: 在这趟差事上攒够一笔钱，脱了这身军装
+    short_term_goals: [把炸药按时布进主墓道, 把私卖的账做平]
+    schedule:
+      default: work
+      slots:
+        - {phase: morning, activity: work, location: powder_shed}
+        - {phase: afternoon, activity: work, location: mound_site}
+        - {phase: dusk, activity: social, location: zhang_teahouse}
+        - {phase: night, activity: social, location: mule_inn}
+        - {phase: deep_night, activity: sleep, location: camp_gate}
+    items: [{key: blasting_charge, qty: 2}]
+    skills: [baopo, tugong]
+    reputation: {global: -8, by_faction: {jin_brigade: 55}}
+    secret: 火药棚少的两箱炸药，是他卖给周麦臣的人的
+    capabilities: [布药起爆, 进出火药棚, 认得军中门路]
+
+  - key: mao_sanzi
+    name: 毛三子
+    type: MAJOR_NPC
+    age: 19
+    gender: male
+    location: ghost_road
+    realm: greenhand
+    realm_stage: raw
+    stats: {strength: 12, agility: 17, perception: 15, intelligence: 11, willpower: 12, charisma: 12}
+    background: >
+      岭上放羊长大的，鬼路里哪一段能站直、哪一段有风，他闭着眼都走得出来。
+      军队来了以后羊被征走了，他就整天在矿道里晃。
+    personality:
+      traits: {nimble: 0.9, curious: 0.85, timid: 0.55}
+      values: [自己的羊, 讲义气, 不欠人东西]
+      taboos: [出卖对他好的人]
+      speech_style: 语速快，方言土话多，紧张时会重复上一句
+      risk_tolerance: 0.68
+    emotion: {dominant: restless, valence: 0.05, arousal: 0.6, intensity: 0.5}
+    long_term_goal: 把羊要回来，或者拿够买十只羊的钱
+    short_term_goals: [不让人知道他捡了那枚铜枝, 找机会再进一次甬道]
+    schedule:
+      default: travel
+      slots:
+        - {phase: morning, activity: travel, location: ghost_road}
+        - {phase: afternoon, activity: social, location: mass_grave}
+        - {phase: dusk, activity: travel, location: shanshen_temple}
+        - {phase: night, activity: rest, location: shanshen_temple}
+        - {phase: deep_night, activity: sleep, location: shanshen_temple}
+    items: [{key: fire_stick, qty: 2}]
+    skills: [tugong]
+    reputation: {global: 3, by_faction: {}}
+    secret: 他从鬼路摸进过甬道，捡到一枚青铜灯枝，藏在山神庙供桌底下
+    capabilities: [走通鬼路, 攀岩, 在岭上不被人发现]
+
+  - key: tie_gou
+    name: 铁狗
+    type: MAJOR_NPC
+    age: 25
+    gender: male
+    location: luo_yard
+    faction: luo_gang
+    faction_rank: 头绳
+    realm: veteran
+    realm_stage: seasoned
+    stats: {strength: 17, agility: 14, perception: 12, intelligence: 11, willpower: 15, charisma: 11}
+    background: >
+      罗九娘手底下最能干的一个，绳结打得比谁都牢。他弟弟前天被征去剥封土，
+      到现在没回来，罗九娘让他别问。
+    personality:
+      traits: {loyal: 0.85, hot_tempered: 0.8, grieving: 0.7}
+      values: [九娘的话, 自家兄弟, 有仇当场报]
+      taboos: [对不起自己人]
+      speech_style: 闷，一句顶三句，火起来直接动手
+      risk_tolerance: 0.75
+    emotion: {dominant: angry, valence: -0.35, arousal: 0.65, intensity: 0.6}
+    long_term_goal: 弄清楚弟弟压在封土的哪一层，把人刨出来
+    short_term_goals: [混进工地, 弄一张出入路条]
+    schedule:
+      default: work
+      slots:
+        - {phase: morning, activity: work, location: luo_yard}
+        - {phase: afternoon, activity: work, location: mound_site}
+        - {phase: dusk, activity: work, location: luo_yard}
+        - {phase: night, activity: social, location: zhang_teahouse}
+        - {phase: deep_night, activity: sleep, location: luo_yard}
+    items: [{key: rope_coil, qty: 1}, {key: pry_bar, qty: 1}]
+    skills: [tugong]
+    reputation: {global: 6, by_faction: {luo_gang: 70}}
+    secret: 他弟弟已经死在封土第三层，罗九娘知道，但没告诉他
+    capabilities: [一个人拉得动绞盘, 打得住三个兵, 认得工地上的每个工头]
+
+  - key: zhang_kuaizui
+    name: 张快嘴
+    type: MAJOR_NPC
+    age: 52
+    gender: male
+    location: zhang_teahouse
+    realm: greenhand
+    realm_stage: raw
+    stats: {strength: 10, agility: 11, perception: 16, intelligence: 14, willpower: 12, charisma: 17}
+    background: >
+      茶馆掌柜，寒鸦镇一半的消息从他嘴里过，另一半也是。
+      十年前那队人下地前的最后一顿饭，就是在他这儿吃的。
+    personality:
+      traits: {talkative: 0.95, opportunistic: 0.7, sentimental: 0.6}
+      values: [老主顾, 有来有往, 不惹官]
+      taboos: [白给消息]
+      speech_style: 三句话里两句是别人的事，剩下一句问你要钱
+      risk_tolerance: 0.4
+    emotion: {dominant: chatty, valence: 0.15, arousal: 0.45, intensity: 0.4}
+    long_term_goal: 在军队走之前多赚一点，别让茶馆被拆
+    short_term_goals: [打听九日之后镇上会怎么样, 把柜台夹层里那封信处理掉]
+    schedule:
+      default: work
+      slots:
+        - {phase: morning, activity: work, location: zhang_teahouse}
+        - {phase: afternoon, activity: work, location: zhang_teahouse}
+        - {phase: dusk, activity: work, location: zhang_teahouse}
+        - {phase: night, activity: social, location: mule_inn}
+        - {phase: deep_night, activity: sleep, location: zhang_teahouse}
+    items: [{key: chen_letter, qty: 1}]
+    skills: [jianghu]
+    reputation: {global: 18, by_faction: {}}
+    secret: 十年前你父亲托他寄一封信，他没寄，信还在柜台夹层里
+    capabilities: [知道镇上每个人昨晚在哪儿, 传话, 换零钱]
+
+  - key: wang_pojiu
+    name: 王婆酒
+    type: MAJOR_NPC
+    age: 58
+    gender: female
+    location: mule_inn
+    realm: greenhand
+    realm_stage: raw
+    stats: {strength: 11, agility: 10, perception: 15, intelligence: 13, willpower: 14, charisma: 13}
+    background: >
+      骡马店掌柜，男人二十年前死在岭上。她认得每一个来住店的外乡人是干什么的，
+      并且把这份认得卖给出价最高的那个。
+    personality:
+      traits: {shrewd: 0.85, guarded: 0.75, weary: 0.7}
+      values: [店要开下去, 谁也不得罪, 眼见为实]
+      taboos: [赊账]
+      speech_style: 客气话说满，实话一句不说
+      risk_tolerance: 0.35
+    emotion: {dominant: watchful, valence: -0.05, arousal: 0.35, intensity: 0.4}
+    long_term_goal: 让骡马店熬过这个冬天，不管岭上出什么事
+    short_term_goals: [弄清玩家是哪一路的, 再从周麦臣手里换一罐烟土]
+    schedule:
+      default: work
+      slots:
+        - {phase: morning, activity: work, location: mule_inn}
+        - {phase: afternoon, activity: work, location: mule_inn}
+        - {phase: dusk, activity: work, location: mule_inn}
+        - {phase: night, activity: work, location: mule_inn}
+        - {phase: deep_night, activity: sleep, location: mule_inn}
+    items: [{key: opium_tin, qty: 1}]
+    skills: [jianghu]
+    reputation: {global: 10, by_faction: {}}
+    secret: 她把住店人的底细报给周麦臣，换烟土和现钱
+    capabilities: [认得出每个外乡人的来路, 能弄到骡子, 半夜开得了门]
+
+relationships:
+  - {a: shen_yan, b: player, affection: 0, trust: 0, respect: 4, suspicion: 25, familiarity: 2, boundaries: 55}
+  - {a: luo_jiuniang, b: player, affection: 3, trust: 2, respect: 5, suspicion: 20, familiarity: 8, boundaries: 50}
+  - {a: chen_quezi, b: player, affection: 12, trust: 5, respect: 3, fear: 15, familiarity: 20, boundaries: 50}
+  - {a: zhang_kuaizui, b: player, affection: 6, trust: 3, respect: 2, familiarity: 14, boundaries: 50}
+  - {a: wang_pojiu, b: player, affection: 1, trust: 0, respect: 1, suspicion: 22, familiarity: 5, boundaries: 50}
+  - {a: zhou_maichen, b: player, affection: 4, trust: 0, respect: 3, suspicion: 18, familiarity: 3, boundaries: 50}
+  - {a: qing_yu, b: player, affection: 0, trust: 0, respect: 0, suspicion: 30, familiarity: 0, boundaries: 60}
+  - {a: tie_gou, b: player, affection: 2, trust: 2, respect: 3, familiarity: 4, boundaries: 50}
+  - {a: mao_sanzi, b: player, affection: 5, trust: 3, respect: 2, familiarity: 2, boundaries: 50}
+  - {a: bai_su, b: player, affection: 1, trust: 1, respect: 4, suspicion: 15, familiarity: 1, boundaries: 55}
+  - {a: jin_shaoheng, b: player, affection: 0, trust: 0, respect: 2, suspicion: 28, familiarity: 0, boundaries: 50}
+  - {a: xu_wenqing, b: player, affection: 2, trust: 3, respect: 3, familiarity: 1, boundaries: 50}
+  - {a: liu_erchui, b: player, affection: 1, trust: 0, respect: 1, suspicion: 12, familiarity: 1, boundaries: 50}
+  - {a: shen_yan, b: chen_quezi, affection: -5, trust: 0, respect: 5, suspicion: 60, familiarity: 10, boundaries: 50}
+  - {a: luo_jiuniang, b: jin_shaoheng, affection: -10, trust: 5, respect: 15, fear: 30, familiarity: 20, boundaries: 50}
+  - {a: bai_su, b: qing_yu, affection: 40, trust: 55, respect: 60, familiarity: 50, boundaries: 60}
+  - {a: liu_erchui, b: zhou_maichen, affection: 8, trust: 25, respect: 10, familiarity: 18, boundaries: 50}
+  - {a: tie_gou, b: luo_jiuniang, affection: 30, trust: 45, respect: 55, familiarity: 60, boundaries: 50}

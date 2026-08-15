@@ -1,0 +1,157 @@
+item_types:
+  - {key: tool, name: 家伙}
+  - {key: supply, name: 物料}
+  - {key: document, name: 文书}
+  - {key: relic, name: 明器}
+  - {key: token, name: 信物}
+  - {key: currency, name: 钱}
+rarities:
+  - {key: common, name: 常见, value_multiplier: 1}
+  - {key: fine, name: 讲究, value_multiplier: 3}
+  - {key: key_item, name: 要紧, value_multiplier: 1}
+items:
+  - {key: dayang, name: 银元, type: currency, rarity: common, value: 1, stackable: true, description: 民国二十三年在寒鸦镇能买动人的东西。, effects: {}}
+
+  - key: half_lamp_map
+    name: 半张九枝灯图
+    type: document
+    rarity: key_item
+    value: 0
+    stackable: false
+    description: 父亲留下的半张桑皮纸，画着九个方位里的四个，撕口整齐得像是有人当场撕开的。
+    effects: {reveals_fact: fact_half_map_incomplete, quest_item: true}
+    metadata:
+      narrative_facts:
+        - 纸上只画出九个灯位中的四个，另外五个在撕走的那半张上。
+        - 撕口平整，是有人用手当场撕开，而不是年久破损。
+        - 背面有一行极小的字——先点最低的那一盏。
+        - 纸角被水泡过一次，晕开的墨里能看出一个未写完的姓。
+      narrative_constraints:
+        aliases: [灯图, 半张图, 那半张灯图]
+        required_when_referenced: [四个灯位, 撕口]
+        forbidden_when_referenced: [九个灯位齐全, 完整的地图, 标着主墓室]
+
+  - key: other_half_map
+    name: 另半张九枝灯图
+    type: document
+    rarity: key_item
+    value: 0
+    stackable: false
+    description: 剩下的五个灯位画在这半张上。纸面泡过水银，字迹烧糊了一角。
+    effects: {reveals_fact: fact_half_map_incomplete, quest_item: true}
+    metadata:
+      narrative_facts:
+        - 这半张画出剩下的五个灯位，但没有任何点灯的先后次序。
+        - 纸背被水银蚀出细密的针孔，对着光能看见九个点排成一个不规则的圈。
+      narrative_constraints:
+        aliases: [另半张, 剩下那半张]
+        required_when_referenced: [五个灯位]
+        forbidden_when_referenced: [写着次序, 标明先后]
+
+  - key: father_watch
+    name: 父亲的怀表
+    type: token
+    rarity: key_item
+    value: 0
+    stackable: false
+    description: 铜壳怀表，表面裂了一道，指针停在丑时三刻。表盖内侧刻着一个名字，被人用刀划过。
+    effects: {reveals_fact: fact_father_never_came_up}
+    metadata:
+      narrative_facts:
+        - 指针停在丑时三刻，也就是凌晨两点四十五分前后。
+        - 表盖内侧刻的名字被利器划过，只剩下最后一个字。
+        - 表壳缝里嵌着灰白色的细粒，那不是泥，是干透的水银垢。
+      narrative_constraints:
+        aliases: [怀表, 那块表]
+        required_when_referenced: [丑时三刻]
+        forbidden_when_referenced: [表还在走, 名字清晰可辨]
+
+  - key: chen_letter
+    name: 十年前那封没寄出的信
+    type: document
+    rarity: key_item
+    value: 0
+    stackable: false
+    description: 火漆没开过。信封上的地址写了一半，后半截被涂掉，重新写了“寒鸦镇张记转”。
+    effects: {reveals_fact: fact_letter_in_teahouse, quest_item: true}
+    metadata:
+      narrative_facts:
+        - 火漆完整，说明这十年里没有人拆开过它。
+        - 收信地址被改过一次，原来的地址被涂成一团黑。
+        - 信封右下角有一枚很淡的拇指印，是用灯灰按上去的。
+      narrative_constraints:
+        aliases: [那封信, 家书]
+        required_when_referenced: [火漆完整]
+        forbidden_when_referenced: [信里写着, 读完之后]
+
+  - key: bronze_branch
+    name: 青铜灯枝
+    type: relic
+    rarity: key_item
+    value: 400
+    stackable: false
+    description: 从某一盏连枝灯上折下来的一枝，断口是新的。枝身上铸着一个数目字。
+    effects: {reveals_fact: fact_nine_lamps_hold_the_hill}
+    metadata:
+      narrative_facts:
+        - 断口是新的，说明这枝是最近才被人从灯上折下来的。
+        - 枝身内侧铸着一个离国数目字，对应它原本所在的那一盏灯。
+        - 灯枝拿在手里比看上去重得多，中间是实心的。
+      narrative_constraints:
+        aliases: [铜枝, 那枝灯]
+        required_when_referenced: [断口是新的]
+        forbidden_when_referenced: [整盏灯, 一套九枝]
+
+  - key: li_seal
+    name: 离侯玺
+    type: relic
+    rarity: key_item
+    value: 20000
+    stackable: false
+    description: 白玉螭钮，印面四个离国古字。分量比同样大小的玉轻了一点点。
+    effects: {reveals_fact: fact_seal_is_a_copy, quest_item: true}
+    metadata:
+      narrative_facts:
+        - 分量比同尺寸的白玉略轻，玉质在灯下透着一层不该有的匀。
+        - 螭钮的爪部有一道极细的补痕，是后世修补留下的。
+      narrative_constraints:
+        aliases: [玺, 那方印]
+        required_when_referenced: [分量偏轻]
+        forbidden_when_referenced: [确凿无疑的真品, 一眼就知道是真的]
+
+  - key: li_tomb_record
+    name: 离陵录残卷
+    type: document
+    rarity: key_item
+    value: 3000
+    stackable: false
+    description: 竹简抄本，记着修陵时的工料与人数，也记着九盏灯是怎么摆的。缺了写次序的那几支。
+    effects: {reveals_fact: fact_nine_lamps_hold_the_hill}
+
+  - key: lamp_keeper_tally
+    name: 守灯人铜牌
+    type: token
+    rarity: key_item
+    value: 0
+    stackable: false
+    description: 巴掌大的铜牌，一面是九个凹点，一面磨得没有任何字。守灯人代代相传的凭据。
+    effects: {reveals_fact: fact_bai_su_is_lamp_keeper}
+
+  - {key: luoyang_shovel, name: 洛阳铲, type: tool, rarity: common, value: 12, stackable: false, description: 半圆形铲头，一杆到底能带上来一柱完整的土。, effects: {}}
+  - {key: compass_pan, name: 定穴罗盘, type: tool, rarity: fine, value: 60, stackable: false, description: 老盘子，磁针略微偏南，用惯的人知道该往回扳几分。, effects: {}}
+  - {key: wind_lantern, name: 防风马灯, type: tool, rarity: common, value: 8, stackable: false, description: 玻璃罩子有一道裂纹，用铁丝箍着。地下最要紧的家伙。, effects: {}}
+  - {key: tung_oil, name: 桐油, type: supply, rarity: common, value: 3, stackable: true, description: 一葫芦够点一夜。地下没有油，人就得摸黑往外爬。, effects: {}}
+  - {key: fire_stick, name: 火折子, type: supply, rarity: common, value: 1, stackable: true, description: 竹管里塞的火纸，吹一口就着，风一大就废。, effects: {}}
+  - {key: rope_coil, name: 麻绳盘, type: tool, rarity: common, value: 10, stackable: true, description: 三十丈一盘，罗家自己搓的，比洋绳耐磨。, effects: {}}
+  - {key: pry_bar, name: 撬棍, type: tool, rarity: common, value: 6, stackable: false, description: 一头扁一头尖，撬棺撬门也砸得死人。, effects: {}}
+  - {key: cinnabar_line, name: 朱砂线, type: supply, rarity: fine, value: 20, stackable: true, description: 浸过朱砂的棉线，老规矩用来标退路，其实真正的用处是黑暗里摸得着。, effects: {}}
+  - {key: glutinous_bag, name: 糯米袋, type: supply, rarity: common, value: 4, stackable: true, description: 老辈传下的规矩物，遇上尸气发黑。信不信是一回事，带不带是另一回事。, effects: {}}
+  - {key: nose_cloth, name: 湿布口罩, type: supply, rarity: common, value: 2, stackable: true, description: 浸了醋的粗布，挡得住一点尸气，挡不住水银。, effects: {}}
+  - {key: silver_needle, name: 银针, type: tool, rarity: fine, value: 25, stackable: true, description: 试毒也扎穴，白素和沈砚各带着一套，用法完全不同。, effects: {}}
+  - {key: gas_mask, name: 军用防毒面罩, type: tool, rarity: fine, value: 150, stackable: false, description: 德式旧货，滤罐只剩四十分钟的量。在水银暗河边上，这四十分钟就是全部。, effects: {}}
+  - {key: blasting_charge, name: 军用炸药包, type: supply, rarity: key_item, value: 0, stackable: true, description: 一箱十二包，够把三丈厚的青石券门掀开，也够把顶板震塌。, effects: {quest_item: true}}
+  - {key: army_pass, name: 出入路条, type: token, rarity: common, value: 0, stackable: true, description: 靳部签发，没有它连封土工地的边都靠不上。, effects: {}}
+  - {key: rubbing_set, name: 拓片与拓具, type: document, rarity: fine, value: 40, stackable: false, description: 徐问卿那一箱，装着他十四个月来从寒鸦岭上拓下的每一个字。, effects: {}}
+  - {key: mercury_crystal, name: 水银结晶, type: relic, rarity: fine, value: 80, stackable: true, description: 暗河边石缝里刮下来的灰白色硬壳。带在身上就是慢性中毒。, effects: {}}
+  - {key: jade_pillow, name: 玉枕, type: relic, rarity: fine, value: 900, stackable: false, description: 耳室里的随葬品，玉色发乌。出手快，来路也最好查。, effects: {}}
+  - {key: opium_tin, name: 烟土罐, type: supply, rarity: fine, value: 120, stackable: true, description: 在寒鸦镇比银元好使，能换到消息，也能换到人。, effects: {}}

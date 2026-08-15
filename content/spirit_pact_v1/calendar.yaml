@@ -1,0 +1,31 @@
+epoch_label: 苍澜历
+epoch_year: 2708
+minutes_per_hour: 60
+hours_per_day: 24
+days_per_month: 30
+months_per_year: 12
+shichen:
+  - {key: midnight, name: 子夜, start_hour: 0, end_hour: 5}
+  - {key: morning, name: 上午, start_hour: 5, end_hour: 12}
+  - {key: afternoon, name: 下午, start_hour: 12, end_hour: 18}
+  - {key: evening, name: 入夜, start_hour: 18, end_hour: 24}
+day_phases:
+  - {key: deep_night, name: 深夜, start_hour: 0, end_hour: 5}
+  - {key: dawn, name: 卯时晨课, start_hour: 5, end_hour: 7}
+  - {key: morning, name: 上午, start_hour: 7, end_hour: 11}
+  - {key: noon, name: 晌午, start_hour: 11, end_hour: 13}
+  - {key: afternoon, name: 下午, start_hour: 13, end_hour: 17}
+  - {key: dusk, name: 黄昏, start_hour: 17, end_hour: 19}
+  - {key: night, name: 夜里, start_hour: 19, end_hour: 24}
+seasons:
+  - {key: spring, name: 春, months: [3, 4, 5]}
+  - {key: summer, name: 夏, months: [6, 7, 8]}
+  - {key: autumn, name: 秋, months: [9, 10, 11]}
+  - {key: winter, name: 冬, months: [12, 1, 2]}
+month_names: [一月, 二月, 三月, 四月, 五月, 六月, 七月, 八月, 九月, 十月, 十一月, 十二月]
+start_year: 2708
+start_month: 5
+start_day: 3
+start_hour: 7
+start_minute: 0
+format: "苍澜历{year}年{month_name}{day}日 {phase}"

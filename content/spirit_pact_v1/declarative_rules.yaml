@@ -1,0 +1,70 @@
+rules:
+  # 修炼换进度，代价是精神力。急着冲级的人会发现自己没有余力应付别的事。
+  - key: cultivation_drains_spirit
+    trigger: after_action
+    condition:
+      op: eq
+      args:
+        - {op: get, args: [action.action_type]}
+        - CULTIVATE
+    effects:
+      - {op: adjust_player_resource, field: spirit, value: -8}
+
+  # 强行冲级是本作最直接的反噬来源：每一次都在往那条 85 的线上加码。
+  - key: forcing_a_breakthrough_adds_backlash
+    trigger: after_action
+    condition:
+      op: eq
+      args:
+        - {op: get, args: [action.action_type]}
+        - BREAKTHROUGH
+    effects:
+      - {op: adjust_player_resource, field: backlash, value: 8}
+      - {op: adjust_player_resource, field: spirit, value: -15}
+
+  # 契术烧的是灵息。灵息见底就只能靠身体硬扛，这在森林里通常意味着撤退。
+  - key: fighting_costs_soul_power
+    trigger: after_action
+    condition:
+      op: in
+      args:
+        - {op: get, args: [action.action_type]}
+        - [ATTACK, USE_SKILL, DEFEND]
+    effects:
+      - {op: adjust_player_resource, field: soul_power, value: -14}
+      - {op: adjust_player_resource, field: spirit, value: -3}
+
+  - key: searching_costs_spirit
+    trigger: after_action
+    condition:
+      op: in
+      args:
+        - {op: get, args: [action.action_type]}
+        - [SEARCH, FOLLOW, HIDE, STEAL]
+    effects:
+      - {op: adjust_player_resource, field: spirit, value: -3}
+
+  # 深处的异兽威压会持续磨人。想在里面多待一会儿，就得先有本钱。
+  - key: deep_forest_presses_on_you
+    trigger: after_action
+    condition:
+      op: in
+      args:
+        - {op: get, args: [player.location]}
+        - [forest_deep, lake_of_bones]
+    effects:
+      - {op: adjust_player_resource, field: spirit, value: -4}
+      - {op: adjust_player_resource, field: backlash, value: 1}
+
+  # 休息是唯一能真正把反噬压回去的手段，而时间是六十天里最稀缺的东西。
+  - key: rest_recovers_and_settles_backlash
+    trigger: after_action
+    condition:
+      op: in
+      args:
+        - {op: get, args: [action.action_type]}
+        - [REST, WAIT]
+    effects:
+      - {op: adjust_player_resource, field: soul_power, value: 60}
+      - {op: adjust_player_resource, field: spirit, value: 25}
+      - {op: adjust_player_resource, field: backlash, value: -2}

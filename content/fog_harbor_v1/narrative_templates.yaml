@@ -1,0 +1,5 @@
+templates:
+  query_status: "你在{location_name}。{time_label}。"
+  query_inventory: "你清点了一遍随身的东西。"
+  query_relationships: "十三个人，你已经开始分得清谁在躲你、谁在等你先开口。"
+  query_quests: "离靠港还有多久，你心里一直在数。"

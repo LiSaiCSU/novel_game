@@ -1,0 +1,32 @@
+rules:
+  - key: prying_raises_heat
+    trigger: after_action
+    condition:
+      op: in
+      args:
+        - {op: get, args: [action.action_type]}
+        - [SEARCH, STEAL, HIDE, FOLLOW]
+    effects:
+      - {op: adjust_player_resource, field: heat, value: 5}
+      - {op: adjust_player_resource, field: composure, value: -4}
+
+  - key: questioning_wears_you_down
+    trigger: after_action
+    condition:
+      op: in
+      args:
+        - {op: get, args: [action.action_type]}
+        - [ASK, CONVERSATION, TALK]
+    effects:
+      - {op: adjust_player_resource, field: composure, value: -2}
+
+  - key: sitting_it_out_restores_composure
+    trigger: after_action
+    condition:
+      op: in
+      args:
+        - {op: get, args: [action.action_type]}
+        - [REST, WAIT]
+    effects:
+      - {op: adjust_player_resource, field: composure, value: 12}
+      - {op: adjust_player_resource, field: heat, value: -2}

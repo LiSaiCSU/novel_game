@@ -123,6 +123,9 @@ database/          SQLAlchemy 模型、仓储、RLS 与 Alembic 迁移
 content/
   cultivation_v1/ 《七日血契》官方作品
   campus_romance_v1/ 《春日坂未完通信》官方作品
+  tomb_lantern_v1/ 《寒鸦岭·九枝灯》官方作品
+  fog_harbor_v1/   《雾锁白鹭号》官方作品
+  spirit_pact_v1/  《苍澜契约·九印抉择》官方作品
 tests/             unit、integration 与确定性的 LLM 边界契约测试
 docs/              架构、策略、决策和部署文档
 ```

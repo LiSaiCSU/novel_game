@@ -1,0 +1,292 @@
+plot_threads:
+  - key: thread_nine_day_fuse
+    name: 九日引信
+    status: active
+    importance: 0.99
+    stage: 0
+    participants: [player, jin_shaoheng, liu_erchui, bai_su, luo_jiuniang, xu_wenqing]
+    unresolved_questions: [炸药能不能在起爆前被拦下, 靳绍衡为什么一定要卡在第九天, 山塌下来会不会连镇子一起埋]
+    foreshadowing: [中军帐的测绘图上九个红圈已经涂掉六个, 火药棚账上二十六箱实际只有二十四箱, 民夫剥土的进度比布告上快了两天]
+    related_facts: [fact_blast_in_nine_days, fact_jin_will_be_purged, fact_liu_sold_two_crates, fact_nine_lamps_hold_the_hill]
+    next_beat_hint: 靳部会在第一天夜里派人到骡马店查问所有外乡人的来路
+    escalation_pressure: 0.95
+    scheduled_beats:
+      - {at_minutes_from_start: 720, event_type: FACTION_MOVE, beat: 靳部夜查骡马店，收缴所有没有路条的人的行李}
+      - {at_minutes_from_start: 2880, event_type: ENVIRONMENT_SHIFT, beat: 封土剥到第三层，青石券门的顶角露了出来}
+      - {at_minutes_from_start: 5760, event_type: CONFRONTATION, beat: 徐问卿带着公文闯进中军帐要求停工，被扣在营里}
+      - {at_minutes_from_start: 8640, event_type: FACTION_MOVE, beat: 工兵队开始往主墓道布药，营门戒严}
+      - {at_minutes_from_start: 11520, event_type: CONFRONTATION, beat: 起爆前最后一次点验，火药棚少的两箱被查出来}
+      - {at_minutes_from_start: 12960, event_type: ENVIRONMENT_SHIFT, beat: 第九日午时起爆，寒鸦岭开始下沉}
+
+  - key: thread_fathers_bones
+    name: 父亲的骨头
+    status: active
+    importance: 0.93
+    stage: 0
+    participants: [player, chen_quezi, shen_yan, zhang_kuaizui]
+    unresolved_questions: [那一夜绳子是谁割的, 为什么割, 父亲的骨头究竟在哪一层]
+    foreshadowing: [陈瘸子替乱坟岗添的新土总是多一堆, 怀表停在丑时三刻, 茶馆柜台夹层压得台面翘起一线]
+    related_facts: [fact_father_never_came_up, fact_chen_cut_the_rope, fact_father_ordered_the_cut, fact_father_still_in_tomb, fact_letter_in_teahouse, fact_shen_master_left_below]
+    next_beat_hint: 陈瘸子会在乱坟岗认出你走路的姿势，然后转身就走
+    escalation_pressure: 0.6
+    scheduled_beats:
+      - {at_minutes_from_start: 1440, event_type: NPC_APPROACH, beat: 陈瘸子在乱坟岗远远看着你，等你先开口}
+      - {at_minutes_from_start: 4320, event_type: DISCOVERY, beat: 茶馆柜台夹层里的那封信被人动过}
+      - {at_minutes_from_start: 7200, event_type: SECRET_DISCLOSURE, beat: 陈瘸子承认绳子是他割的，但只肯说到这一句}
+      - {at_minutes_from_start: 10080, event_type: SECRET_DISCLOSURE, beat: 那一声“割”究竟是谁喊的，终于有人说出来}
+
+  - key: thread_lamp_order
+    name: 灯序
+    status: active
+    importance: 0.9
+    stage: 0
+    participants: [player, qing_yu, bai_su, mao_sanzi, shen_yan]
+    unresolved_questions: [九盏灯该按什么次序点, 清鱼凭什么把次序交给一个外人, 少了一枝的那盏灯还算不算数]
+    foreshadowing: [清鱼从不脱外衣也从不下岭, 山神庙供桌底下的地面凹了一寸, 白素每天傍晚都往火药棚方向走一趟]
+    related_facts: [fact_nine_lamps_hold_the_hill, fact_lamp_order_on_qingyu_back, fact_bai_su_is_lamp_keeper, fact_bronze_branch_hidden, fact_lamp_hall_floor_is_hollow, fact_mercury_rises_at_night]
+    next_beat_hint: 清鱼会先问你一个跟灯毫无关系的问题，答案决定她说不说下去
+    escalation_pressure: 0.7
+    scheduled_beats:
+      - {at_minutes_from_start: 2160, event_type: FORESHADOWING, beat: 山神庙的供桌被人挪动过，地上多了一道新划痕}
+      - {at_minutes_from_start: 5040, event_type: DISCOVERY, beat: 毛三子藏起来的那枚青铜灯枝被翻了出来}
+      - {at_minutes_from_start: 8640, event_type: SECRET_DISCLOSURE, beat: 清鱼当着你的面解开外衣的第一颗扣子}
+      - {at_minutes_from_start: 11520, event_type: CONFRONTATION, beat: 灯厅里只剩最后一盏没点，而暗河已经开始上涨}
+
+  - key: thread_who_buys_the_hill
+    name: 谁在买这座山
+    status: active
+    importance: 0.85
+    stage: 0
+    participants: [player, zhou_maichen, jin_shaoheng, xu_wenqing, wang_pojiu, liu_erchui]
+    unresolved_questions: [买主真正要的是什么, 玺是真是假, 徐问卿那张公文压不压得住军队]
+    foreshadowing: [周麦臣的合同上写着玺，箱子却按九格分隔, 王婆酒每天傍晚往周麦臣房里送一次热水, 徐问卿的关防印色比公文新]
+    related_facts: [fact_zhou_wants_the_lamps, fact_seal_is_a_copy, fact_xu_papers_forged, fact_liu_sold_two_crates, fact_wang_reports_to_zhou]
+    next_beat_hint: 周麦臣会主动请你喝一杯，并且第一句话就说得出你父亲的名字
+    escalation_pressure: 0.62
+    scheduled_beats:
+      - {at_minutes_from_start: 1080, event_type: QUEST_OFFER, beat: 周麦臣开价买你手里的半张灯图}
+      - {at_minutes_from_start: 4320, event_type: DISCOVERY, beat: 有人看见周麦臣的箱子内衬按九格分隔}
+      - {at_minutes_from_start: 7920, event_type: BETRAYAL, beat: 王婆酒把你这几天的行踪原原本本报了上去}
+      - {at_minutes_from_start: 10800, event_type: CONFRONTATION, beat: 靳绍衡发现合同上的东西和买主要的不是一件}
+
+  - key: thread_conscripts
+    name: 封土下面的人
+    status: active
+    importance: 0.8
+    stage: 0
+    participants: [player, tie_gou, luo_jiuniang, bai_su, jin_shaoheng]
+    unresolved_questions: [封土下究竟压了多少人, 罗九娘为什么瞒着铁狗, 有没有人肯把名字写下来]
+    foreshadowing: [医棚里的伤员越来越多而药越来越少, 罗九娘让铁狗别问, 工地上停工的哨声整整两天没有响过]
+    related_facts: [fact_conscript_deaths_unreported, fact_tiegou_brother_dead, fact_blast_in_nine_days]
+    next_beat_hint: 铁狗会来求你替他弄一张能进工地的路条
+    escalation_pressure: 0.68
+    scheduled_beats:
+      - {at_minutes_from_start: 2880, event_type: QUEST_OFFER, beat: 铁狗托你替他弄一张出入路条}
+      - {at_minutes_from_start: 6480, event_type: DISCOVERY, beat: 封土第三层刨出第七具民夫的尸体}
+      - {at_minutes_from_start: 9360, event_type: SECRET_DISCLOSURE, beat: 铁狗知道了弟弟的下落，也知道了是谁瞒着他}
+      - {at_minutes_from_start: 12240, event_type: CONFRONTATION, beat: 民夫在起爆前罢工，靳部下令弹压}
+
+  - key: thread_half_map
+    name: 另外半张图
+    status: active
+    importance: 0.76
+    stage: 0
+    participants: [player, luo_jiuniang, shen_yan, jin_shaoheng, chen_quezi]
+    unresolved_questions: [另外半张图在谁手上, 罗九娘会不会把你的那半张交出去, 图上到底有没有次序]
+    foreshadowing: [撕口平整得像是当场撕开的, 罗九娘算账时忽然压低声音, 沈砚问你的第一句话就是纸从哪儿来]
+    related_facts: [fact_half_map_incomplete, fact_luo_sold_the_map, fact_ghost_road_reaches_corridor]
+    next_beat_hint: 罗九娘会请你去场院喝一碗酒，酒里没有毒，人心里有
+    escalation_pressure: 0.55
+    scheduled_beats:
+      - {at_minutes_from_start: 1800, event_type: NPC_APPROACH, beat: 沈砚在骡马店门口拦下你，只问纸的来路}
+      - {at_minutes_from_start: 5400, event_type: BETRAYAL, beat: 罗家场院那一夜，有人翻过你的行李}
+      - {at_minutes_from_start: 9000, event_type: DISCOVERY, beat: 另外半张图出现在它最不该出现的地方}
+      - {at_minutes_from_start: 12240, event_type: PROMISE, beat: 有人拿另外半张图跟你换一件你不愿意给的东西}
+
+quests:
+  - key: quest_get_a_pass
+    name: 弄一张出入路条
+    giver: tie_gou
+    status: offered
+    goal: {type: acquire, item: army_pass}
+    constraints: {deadline_minutes: 4320}
+    rewards: {relationship: {tie_gou: {trust: 8, affection: 5}}}
+    failure_conditions: [deadline_passed]
+    world_consequences:
+      on_success: {advance_thread: thread_conscripts}
+      on_failure: {tension: 4}
+      if_player_refuses: {reassign_to: [luo_jiuniang], success_chance: 0.4}
+    plot_thread: thread_conscripts
+
+  - key: quest_read_the_mound
+    name: 摸清封土工地的进度
+    giver: shen_yan
+    status: offered
+    goal: {type: investigate, location: mound_site}
+    constraints: {deadline_minutes: 2880}
+    rewards: {relationship: {shen_yan: {trust: 6, respect: 5}}}
+    failure_conditions: [deadline_passed]
+    world_consequences:
+      on_success: {advance_thread: thread_nine_day_fuse, reveal_fact_chance: {fact_conscript_deaths_unreported: 0.7}}
+      on_failure: {tension: 5}
+    plot_thread: thread_nine_day_fuse
+
+  - key: quest_open_the_drawer
+    name: 打开茶馆柜台的夹层
+    giver: zhang_kuaizui
+    status: offered
+    goal: {type: acquire, item: chen_letter, location: zhang_teahouse}
+    constraints: {deadline_minutes: 5760}
+    rewards: {item: {chen_letter: 1}}
+    failure_conditions: [evidence_destroyed, deadline_passed]
+    world_consequences:
+      on_success: {advance_thread: thread_fathers_bones, reveal_fact_chance: {fact_letter_in_teahouse: 1.0}}
+      on_failure: {tension: 3}
+    plot_thread: thread_fathers_bones
+
+  - key: quest_make_chen_talk
+    name: 让陈瘸子把那一夜说完
+    giver: chen_quezi
+    status: offered
+    goal: {type: persuade, target: chen_quezi}
+    constraints: {deadline_minutes: 10080}
+    rewards: {item: {father_watch: 1}, relationship: {chen_quezi: {trust: 20}}}
+    failure_conditions: [deadline_passed, trust_broken]
+    world_consequences:
+      on_success: {advance_thread: thread_fathers_bones, reveal_fact_chance: {fact_father_ordered_the_cut: 0.9}}
+      on_failure: {tension: 6, advance_thread: thread_fathers_bones}
+    plot_thread: thread_fathers_bones
+
+  - key: quest_walk_the_ghost_road
+    name: 走通鬼路
+    giver: mao_sanzi
+    status: offered
+    goal: {type: investigate, locations: [ghost_road, tomb_corridor]}
+    constraints: {deadline_minutes: 7200}
+    rewards: {relationship: {mao_sanzi: {trust: 10, affection: 6}}}
+    failure_conditions: [deadline_passed, cave_in]
+    world_consequences:
+      on_success: {advance_thread: thread_half_map, reveal_fact_chance: {fact_ghost_road_reaches_corridor: 1.0}}
+      on_failure: {tension: 8}
+      if_player_refuses: {reassign_to: [tie_gou, luo_jiuniang], success_chance: 0.35}
+    plot_thread: thread_half_map
+
+  - key: quest_find_the_branch
+    name: 找回那枚青铜灯枝
+    giver: qing_yu
+    status: offered
+    goal: {type: acquire, item: bronze_branch, location: shanshen_temple}
+    constraints: {deadline_minutes: 6480}
+    rewards: {relationship: {qing_yu: {trust: 12, respect: 8}}}
+    failure_conditions: [item_lost, deadline_passed]
+    world_consequences:
+      on_success: {advance_thread: thread_lamp_order, reveal_fact_chance: {fact_bronze_branch_hidden: 1.0}}
+      on_failure: {tension: 6}
+    plot_thread: thread_lamp_order
+
+  - key: quest_count_the_crates
+    name: 点清火药棚的箱数
+    giver: bai_su
+    status: offered
+    goal: {type: investigate, location: powder_shed}
+    constraints: {deadline_minutes: 8640, requires_item: army_pass}
+    rewards: {relationship: {bai_su: {trust: 12, respect: 6}}}
+    failure_conditions: [caught_by_guards, deadline_passed]
+    world_consequences:
+      on_success: {advance_thread: thread_who_buys_the_hill, reveal_fact_chance: {fact_liu_sold_two_crates: 0.85}}
+      on_failure: {tension: 10}
+    plot_thread: thread_who_buys_the_hill
+
+  - key: quest_keep_the_map
+    name: 守住你那半张灯图
+    giver: shen_yan
+    status: offered
+    goal: {type: protect, item: half_lamp_map}
+    constraints: {deadline_minutes: 9000}
+    rewards: {item: {other_half_map: 1}}
+    failure_conditions: [item_lost, item_sold]
+    world_consequences:
+      on_success: {advance_thread: thread_half_map}
+      on_failure: {tension: 12, advance_thread: thread_who_buys_the_hill}
+      if_player_refuses: {reassign_to: [luo_jiuniang], success_chance: 0.2}
+    plot_thread: thread_half_map
+
+  - key: quest_name_the_dead
+    name: 把封土下的名字写下来
+    giver: xu_wenqing
+    status: offered
+    goal: {type: record, location: mound_site, count: 7}
+    constraints: {deadline_minutes: 11520}
+    rewards: {faction_reputation: {antiquity_bureau: 15}, relationship: {tie_gou: {respect: 10}}}
+    failure_conditions: [deadline_passed, records_seized]
+    world_consequences:
+      on_success: {advance_thread: thread_conscripts, reveal_fact_chance: {fact_conscript_deaths_unreported: 1.0}}
+      on_failure: {tension: 8}
+    plot_thread: thread_conscripts
+
+  - key: quest_stop_the_blast
+    name: 拦下第九日的炸药
+    giver: bai_su
+    status: offered
+    goal: {type: prevent, target: blasting_charge, location: powder_shed}
+    constraints: {deadline_minutes: 12960}
+    rewards: {faction_reputation: {lamp_keepers: 25}, relationship: {bai_su: {trust: 20, respect: 15}}}
+    failure_conditions: [deadline_passed, charges_placed]
+    world_consequences:
+      on_success: {advance_thread: thread_nine_day_fuse}
+      on_failure: {tension: 25, advance_thread: thread_nine_day_fuse}
+      if_player_refuses: {reassign_to: [bai_su, xu_wenqing], success_chance: 0.15}
+    plot_thread: thread_nine_day_fuse
+
+  - key: quest_light_the_nine
+    name: 按次序点齐九枝灯
+    giver: qing_yu
+    status: offered
+    goal: {type: ritual, location: lamp_hall, count: 9}
+    constraints: {deadline_minutes: 12960, requires_knowledge: fact_lamp_order_on_qingyu_back}
+    rewards: {faction_reputation: {lamp_keepers: 40}}
+    failure_conditions: [wrong_order, deadline_passed, mercury_flood]
+    world_consequences:
+      on_success: {advance_thread: thread_lamp_order}
+      on_failure: {tension: 30, advance_thread: thread_nine_day_fuse}
+    plot_thread: thread_lamp_order
+
+  - key: quest_recover_father
+    name: 把父亲带上来
+    giver: chen_quezi
+    status: offered
+    goal: {type: recover, location: coffin_platform}
+    constraints: {deadline_minutes: 12960}
+    rewards: {relationship: {chen_quezi: {trust: 25, affection: 20}, shen_yan: {trust: 15}}}
+    failure_conditions: [deadline_passed, mercury_flood]
+    world_consequences:
+      on_success: {advance_thread: thread_fathers_bones}
+      on_failure: {tension: 15}
+    plot_thread: thread_fathers_bones
+
+  - key: quest_seal_decision
+    name: 决定离侯玺的去处
+    giver: xu_wenqing
+    status: offered
+    goal: {type: decide, options: [hand_to_bureau, sell_to_zhou, give_to_jin, leave_it_below]}
+    constraints: {deadline_minutes: 12960}
+    rewards: {faction_reputation: {antiquity_bureau: 20}}
+    failure_conditions: [deadline_passed]
+    world_consequences:
+      on_success: {advance_thread: thread_who_buys_the_hill}
+      on_failure: {tension: 10}
+      if_player_refuses: {reassign_to: [zhou_maichen, jin_shaoheng], success_chance: 0.6}
+    plot_thread: thread_who_buys_the_hill
+
+  - key: quest_get_out_alive
+    name: 在第九日之前活着离山
+    giver: luo_jiuniang
+    status: offered
+    goal: {type: escape, location: hanya_town}
+    constraints: {deadline_minutes: 12960}
+    rewards: {item: {dayang: 60}}
+    failure_conditions: [deadline_passed, buried]
+    world_consequences:
+      on_success: {advance_thread: thread_nine_day_fuse}
+      on_failure: {tension: 30}
+    plot_thread: thread_nine_day_fuse

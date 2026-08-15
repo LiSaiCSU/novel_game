@@ -1,0 +1,53 @@
+progression_name: 盗行阶
+realms:
+  - key: greenhand
+    name: 生手
+    order: 0
+    stages: [{key: raw, name: 头一回下地, order: 0}]
+    power_coefficient: 1.0
+    max_health: 100
+    max_spiritual_power: 0
+    lifespan_years: 75
+    xp_to_next_stage: 0
+    breakthrough_base_chance: 0
+    description: 认得铲、认得绳，别的全靠命。
+  - key: veteran
+    name: 老手
+    order: 1
+    stages: [{key: seasoned, name: 走过几趟, order: 0}]
+    power_coefficient: 1.1
+    max_health: 105
+    max_spiritual_power: 0
+    lifespan_years: 75
+    xp_to_next_stage: 0
+    breakthrough_base_chance: 0
+    description: 下过地也上得来，知道什么时候该扔下东西就跑。
+  - key: headman
+    name: 把头
+    order: 2
+    stages: [{key: leading, name: 带得动人, order: 0}]
+    power_coefficient: 1.2
+    max_health: 110
+    max_spiritual_power: 0
+    lifespan_years: 75
+    xp_to_next_stage: 0
+    breakthrough_base_chance: 0
+    description: 一句话能让十几号人跟着下坑，也得替这十几号人收尸。
+  - key: lampkeeper
+    name: 掌灯人
+    order: 3
+    stages: [{key: keeping, name: 守灯, order: 0}]
+    power_coefficient: 1.25
+    max_health: 110
+    max_spiritual_power: 0
+    lifespan_years: 75
+    xp_to_next_stage: 0
+    breakthrough_base_chance: 0
+    description: 不是本事高，是知道哪些东西碰不得，并且愿意用一辈子看着它。
+spiritual_roots:
+  - {key: xieling, name: 卸岭, speed: 1.0, breakthrough_mod: 0, weight: 1}
+  - {key: mojin, name: 摸金, speed: 1.0, breakthrough_mod: 0, weight: 1}
+  - {key: banshan, name: 搬山, speed: 1.0, breakthrough_mod: 0, weight: 1}
+  - {key: faqiu, name: 发丘, speed: 1.0, breakthrough_mod: 0, weight: 1}
+mental_states: [{key: steady, name: 稳得住, min: 0, max: 1.01, breakthrough_mod: 0}]
+bottleneck: {gain_on_failure: 0, max: 0, penalty_per_point: 0, decay_per_month: 0}

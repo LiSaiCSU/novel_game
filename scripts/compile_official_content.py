@@ -13,7 +13,10 @@ from engine.core.config import get_settings
 
 async def compile_official_content() -> None:
     settings = get_settings()
-    for key in ("cultivation_v1", "campus_romance_v1"):
+    for key in (
+        "cultivation_v1", "campus_romance_v1", "tomb_lantern_v1",
+        "fog_harbor_v1", "spirit_pact_v1",
+    ):
         package = project_v1_as_v2(load_content_pack(settings.content_path, key))
         release = compile_package(package)
         suite = await run_author_tests(

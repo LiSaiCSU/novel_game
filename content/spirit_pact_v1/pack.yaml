@@ -1,0 +1,354 @@
+key: spirit_pact_v1
+name: 苍澜契约·九印抉择
+genre: eastern_fantasy_academy
+version: "1.0.0"
+engine_min_version: "0.2.0"
+primary_progression_key: soul_rank
+language: zh-CN
+assets:
+  - key: nine_sigil_choices_cover
+    kind: cover
+    path: official/spirit_pact_v1/nine-sigil-choices-cover-v1.png
+    alt: 苍翠森海前，年轻契师仰望九枚悬浮契印，准备踏上学院试炼
+attribute_definitions:
+  - {key: spirit_strength, label: 精神强度, type: number}
+  - {key: soul_control, label: 灵息控制, type: number}
+  - {key: combat_sense, label: 战斗直觉, type: number}
+  - {key: endurance, label: 承受力, type: number}
+resource_definitions:
+  # 灵息：战斗与契术的燃料，休息可以回满。
+  - {key: soul_power, label: 灵息, minimum: 0, maximum: 100, default: 100}
+  # 精神力：缔契、鉴年、扛威压用的，恢复得比灵息慢得多。
+  - {key: spirit, label: 精神力, minimum: 0, maximum: 100, default: 40}
+  # 反噬：越阶缔契与强行冲级的欠账，积满 85 直接触发走火入魔结局。
+  - {key: backlash, label: 反噬, minimum: 0, maximum: 100, default: 0}
+progression_definitions:
+  # 运行时以第一条 progression 的 tiers 作为等级阶梯，且玩家从 tiers[0] 起步。
+  # 玩家开局十九级，已在契师阶——初契者阶属于入学前的经历，不列入本作阶梯。
+  - key: soul_rank
+    label: 契师等级
+    tiers:
+      - {key: soul_master, label: 契师, order: 0}
+      - {key: grand_soul_master, label: 高阶契师, order: 1}
+      - {key: soul_elder, label: 驭印契师, order: 2}
+      - {key: soul_ancestor, label: 纹印契师, order: 3}
+      - {key: soul_king, label: 御灵契师, order: 4}
+      - {key: soul_emperor, label: 化境契师, order: 5}
+      - {key: soul_saint, label: 灵域契师, order: 6}
+      - {key: unity_pact_sage, label: 归一契宗, order: 7}
+      - {key: named_pact_sage, label: 冠名契宗, order: 8}
+  - key: spirit_pacts
+    label: 已获灵契
+    tiers:
+      - {key: one_pact, label: 一契, order: 0}
+      - {key: two_pacts, label: 二契, order: 1}
+      - {key: three_pacts, label: 三契, order: 2}
+      - {key: four_pacts, label: 四契, order: 3}
+  - key: qixing_standing
+    label: 栖星评定
+    tiers:
+      - {key: outer_student, label: 外院生, order: 0}
+      - {key: candidate, label: 内院候选, order: 1}
+      - {key: inner_student, label: 内院生, order: 2}
+      - {key: monster, label: 怪物, order: 3}
+player_fields:
+  - {key: name, label: 姓名, type: text, required: true}
+  - {key: age, label: 年龄, type: integer, required: true, default: 20, minimum: 18, maximum: 26}
+  - key: martial_soul
+    label: 你的命印
+    type: choice
+    required: true
+    default: starvine_grass
+    choices:
+      - {value: starvine_grass, label: 星蔓草·控制系·公认最弱，上限全看你敢缔结多深的契}
+      - {value: black_iron_bull, label: 玄铁牛·强攻兼防御·容错最高，出手最慢}
+      - {value: flowing_cloud_bell, label: 流云钟·器命印·控制与辅助，怕近身}
+      - {value: shadow_civet, label: 影狸·敏攻系·打得快，也死得快}
+  - key: innate_soul_power
+    label: 先天灵息
+    type: choice
+    required: true
+    default: level_three
+    choices:
+      - {value: level_one, label: 一级·常人，你是靠命撑到今天的}
+      - {value: level_three, label: 三级·中上，学院愿意在你身上花时间}
+      - {value: level_five, label: 五级·天才，所有人都在等着看你摔下来}
+  - key: why_qixing
+    label: 你为什么非进内院不可
+    type: choice
+    required: true
+    default: prove_it
+    choices:
+      - {value: prove_it, label: 证明弱命印也能走到冠名之境}
+      - {value: family_debt, label: 家里把你抵给了别人，进内院是唯一的解约方式}
+      - {value: someone, label: 为了再见到一个已经进了内院的人}
+      - {value: revenge, label: 无昼森海里死了人，你要知道是谁干的}
+  - {key: interests, label: 你额外练过的东西, type: tags, required: false, default: []}
+  - {key: background, label: 进栖星之前, type: text, required: false}
+author_tests:
+  - key: opening_knowledge_boundary
+    name: 开场时高阶异兽的位置不在玩家手里
+    scenario: main_story
+    assertions:
+      - {path: player.location, op: eq, expected: outer_dorm}
+      - {path: knowledge.player.fact_tournament_in_sixty_days, op: eq, expected: KNOWN}
+      - {path: knowledge.player.fact_black_beast_in_deep_forest, op: eq, expected: UNKNOWN}
+      - {path: knowledge.hong_shu.fact_black_beast_in_deep_forest, op: eq, expected: KNOWN}
+      - {path: knowledge.player.fact_mu_jinnian_backlash, op: eq, expected: UNKNOWN}
+      - {path: knowledge.mu_jinnian.fact_mu_jinnian_backlash, op: eq, expected: KNOWN}
+      - {path: knowledge.player.fact_pact_binding_is_permanent, op: eq, expected: KNOWN}
+  - key: player_starts_as_soul_master
+    name: 玩家从契师阶而非初契者阶开局
+    scenario: main_story
+    assertions:
+      - {path: player.progressions.soul_rank.tier, op: eq, expected: soul_master}
+      - {path: player.resources.soul_power, op: exists}
+      - {path: player.resources.backlash, op: exists}
+      - {path: player.resources.spirit, op: exists}
+      - {path: endings.ending_title_road.available, op: eq, expected: false}
+      - {path: endings.ending_burned_out.available, op: eq, expected: false}
+  - key: backlash_burns_you_out
+    name: 反噬积满直接触发走火入魔结局
+    scenario: main_story
+    player:
+      name: 测试玩家
+      age: 20
+      gender: unspecified
+      resources: {backlash: {current: 90, maximum: 100}}
+    fixtures:
+      quests: {quest_inner_trial: completed, quest_elite_tournament: completed}
+    assertions:
+      - {path: endings.ending_burned_out.available, op: eq, expected: true}
+      - {path: endings.ending_title_road.available, op: eq, expected: false}
+  - key: title_road_needs_a_clean_body
+    name: 冠名之路要求反噬可控
+    scenario: main_story
+    player:
+      name: 测试玩家
+      age: 20
+      gender: unspecified
+      resources: {backlash: {current: 20, maximum: 100}}
+    fixtures:
+      quests: {quest_inner_trial: completed, quest_elite_tournament: completed}
+    assertions:
+      - {path: endings.ending_title_road.available, op: eq, expected: true}
+      - {path: endings.ending_burned_out.available, op: eq, expected: false}
+      - {path: endings.ending_ordinary_graduate.available, op: eq, expected: false}
+world:
+  name: 苍澜大陆·栖星城
+  description: >
+    苍澜大陆，契师的世界。人在成年礼觉醒命印，此后每十级灵息开启一道契位，
+    可以与异兽、古迹或自然灵脉缔结灵契。九契封顶，契位用掉就再也换不回来。
+    灵契依共鸣深度呈青、紫、墨、赤四色；契阶越深，附带的契术越强，
+    强行缔契造成的反噬也越可能当场把人烧成废人。
+    大陆之上，万灵议会凌驾于北辰与南曜两大帝国之上，各大宗门在它的阴影里各自算计；
+    而栖星学院只收怪物，七年一度的全大陆高级契师学院精英大赛，是怪物们唯一被承认的方式。
+    此刻距离栖星七杰的时代已经过去八十余年，他们的石像还立在内院门口，
+    每一届外院生都要从石像下面走过去，然后被门内的人筛掉九成。
+  start_location: outer_dorm
+  world_seed_default: qixing-2708
+story:
+  title: 苍澜契约·九印抉择
+  opening_location: outer_dorm
+  premise: >
+    上周的测定结果贴在外院公告栏上：你，十九级。再有一级就是二十，第二道契位就会开启。
+    你的第一契是学院统一配发的青纹契，平庸得让人一眼看穿；而九个契位，你已经用掉一个。
+    六十天后精英大赛开幕，之前还有内院选拔。所有人都在劝你：赶紧找头低阶异兽把二契补上，
+    先进内院再说。只有齐燃言老师在训练场上问了你一句——
+    “你打算用一辈子九个位置里的第二个，去换一只活不过一百年的畜生吗。”
+    无昼森海深处有更好的东西。也有更多把人埋在那儿的理由。
+  starter_items:
+    - {key: academy_badge, quantity: 1}
+    - {key: pact_hundred_year, quantity: 1}
+    - {key: gold_soul_coin, quantity: 12}
+    - {key: forest_map, quantity: 1}
+  player_template:
+    constraints: {minimum_age: 18, maximum_age: 26}
+    properties: {qixing_standing: outer_student, pacts_bound: 1}
+  relationship_boundaries: >
+    所有可发展关系的角色均为成年人。感情推进必须由明确选择与持续信任支撑，
+    拒绝之后不得反复施压；不写露骨性描写，不把师徒权力、宗门联姻、债务或救命之恩
+    当作换取亲密的筹码。
+  endings:
+    - key: ending_burned_out
+      type: other
+      title: 走火入魔
+      priority: 92
+      epilogue: >
+        反噬是从第三次强行冲级那天开始压不住的。你以为忍过去就是自己的，
+        直到某个清晨你在训练场上抬手，灵契亮起来，然后没有熄灭。
+        墨色的那一道契印烧穿了经脉，齐燃言用仅剩的那条手臂把你按在地上，
+        大喊着让你散功，可你连自己的灵息在往哪里跑都感觉不到了。
+        你活了下来，等级停在原地，九个契位废掉六个。
+        栖星没有开除你——学院从不开除人，只是从此没有人再提起你的名字。
+        后来有新生问起训练场角落里那个总在扫地的人，老生会说：那也曾经是个怪物。
+      condition: {op: gte, args: [{op: get, args: [player.resources.backlash.current]}, 85]}
+    - key: ending_title_road
+      type: other
+      title: 冠名之路的第一级台阶
+      priority: 95
+      epilogue: >
+        精英大赛的最后一场你是被人抬下来的，但你是站着打完的。
+        柏仲和执事在内院门口把令牌递给你的时候只说了一句：
+        “从今天起你不用再从石像底下走过去了，你从旁边走。”
+        真正让你站在这里的不是哪一场胜负，是你在无昼森海里放弃过的那些选择——
+        那些明明伸手就能拿、拿了就能立刻变强、而你忍住没拿的东西。
+        九个位置，你还剩下六个空着。剩下的路很长，但每一步都还是你自己的。
+      condition:
+        op: and
+        args:
+          - {op: eq, args: [{op: get, args: [quests.quest_inner_trial.status]}, completed]}
+          - {op: eq, args: [{op: get, args: [quests.quest_elite_tournament.status]}, completed]}
+          - {op: lt, args: [{op: get, args: [player.resources.backlash.current]}, 60]}
+    - key: ending_black_pact_survivor
+      type: other
+      title: 万年一赌
+      priority: 88
+      epilogue: >
+        那头高阶异兽死的时候，森林深处所有的鸟一起飞了起来。
+        黑色的灵契从它身上升上来，绕着你转了七圈才肯落下——那七圈里，
+        你听见自己的骨头在响。齐燃言、陆青蝉和戴宽三个人替你护了整整一夜的法，
+        戴宽的胳膊被你失控的灵息划开一道到现在都没长好。
+        你成了这一届唯一一个二十几级就带墨契的人。万灵议会的人开始记你的名字，
+        镜塔商盟的请柬第二天就到了。你知道这一契换来的不只是力量，
+        还有一辈子都甩不掉的注视。但你不后悔——契位是自己的，赌注也是自己的。
+      condition:
+        op: and
+        args:
+          - {op: eq, args: [{op: get, args: [quests.quest_black_pact_gamble.status]}, completed]}
+          - {op: lt, args: [{op: get, args: [player.resources.backlash.current]}, 85]}
+    - key: ending_gave_up_the_pact
+      type: bond
+      title: 让契
+      priority: 80
+      epilogue: >
+        那只中阶异兽只够一个人缔结，护法的灵息也只够撑一次。
+        你把位置让了出去，然后站在外圈替他挡了整整两刻钟。
+        他睁开眼的时候，紫色的环在他身上转，而你还是二十级，还是两道灵契，
+        其中一个是学院配发的百年黄货。
+        大赛上你们赢了——不是因为你，也不是因为他，是因为组合契术需要两个人
+        都还活着。多年以后有人问你后不后悔，你说：契位是九个，肯把命交给你的人不是。
+      condition: {op: eq, args: [{op: get, args: [quests.quest_yield_the_pact.status]}, completed]}
+    - key: ending_forest_exposed
+      type: other
+      title: 森林里的账
+      priority: 74
+      epilogue: >
+        账本最后是唐晚意抄出来的——万灵议会分殿三年来在无昼森海标记、猎杀、
+        运走的高阶异兽，一头一头，连日期带经手人。柏仲和把它送去了北辰，
+        严织主教在文书到达前三天就调离了栖星城，什么事都没有。
+        但那之后，森林边缘的猎兽人营地空了，老魁带着人走了，
+        深处那些活了几千年的东西又能安静几年。
+        你没有因此变强一级。你只是终于知道，那年死在森林里的人是怎么死的。
+      condition: {op: eq, args: [{op: get, args: [quests.quest_forest_ledger.status]}, completed]}
+    - key: ending_monster_squad
+      type: bond
+      title: 怪物小队
+      priority: 70
+      epilogue: >
+        七个人，七种命印，三年里换过四次阵型。
+        大赛结束那天你们在比武场中央站成一排，谁也没有赢下全部，
+        但没有任何一支队伍能把你们打散。
+        栖星的规矩从来不是最强的人留下，是能一起活下来的人留下。
+        内院的门在你们身后关上时，戴宽小声说了一句“咱们这队是不是有点丑”，
+        然后所有人都笑了。
+      condition:
+        op: and
+        args:
+          - {op: eq, args: [{op: get, args: [quests.quest_team_formation.status]}, completed]}
+          - {op: eq, args: [{op: get, args: [quests.quest_elite_tournament.status]}, completed]}
+          - {op: ne, args: [{op: get, args: [quests.quest_inner_trial.status]}, completed]}
+    - key: ending_concord_council_offering
+      type: other
+      title: 供奉之位
+      priority: 55
+      epilogue: >
+        万灵议会给的东西是实在的：一枚紫纹契，一块躯干灵髓，
+        一个不必去无昼森海里拿命换的未来。
+        严织主教亲手把供奉信物挂在你颈上时说，孩子，栖星教你怎么当怪物，
+        我们教你怎么当人上人。
+        你签了。第二年你回栖星城办事，路过内院门口那两排石像，
+        没有下马，也没有抬头。
+      condition: {op: eq, args: [{op: get, args: [quests.quest_concord_council_offer.status]}, completed]}
+    - key: ending_ordinary_graduate
+      type: independent
+      title: 一个普通的外院生
+      priority: 10
+      hidden_until_available: false
+      epilogue: >
+        六十天到了。大赛照常开幕，内院照常关着门，无昼森海照常吞掉几个不该进去的人。
+        你还是两道灵契，还是外院生，还是每天从栖星七杰的石像底下走过去。
+        这不算失败——大陆上百分之九十九的契师，一辈子就停在这里。
+        只是你偶尔还会想起齐燃言那句话：你打算用一辈子九个位置里的第二个，
+        去换一只活不过一百年的畜生吗。
+        你到现在也没有回答她。
+      condition: {op: gte, args: [{op: get, args: [world.minute]}, 262500]}
+narrative_style:
+  language: 中文
+  person: 第二人称
+  tense: 现在时
+  tone: 东方玄幻成长冒险，热血但不廉价；数值与代价始终摆在明面上，强弱有清晰的规则，人物为各自的利益争夺同一批资源
+  target_length: 1800
+  avoid_phrases:
+    - 嘴角勾起一抹弧度
+    - 眼中闪过一丝异色
+    - 空气仿佛凝固
+    - 心里微沉
+    - 淡淡地说道
+    - 目光扫过
+    - 深藏功与名
+    - 你成功了
+    - 实力大增
+    - 一股强大的气息
+    - 众人皆惊
+    - 不愧是天才
+    - 从此走上人生巅峰
+  phrase_repeat_window: 12
+  phrase_repeat_threshold: 2
+  guidance:
+    - 每次涉及灵契的场面都必须同时写清三件事——这一契的契阶与颜色、它会占掉第几个契位、以及缔结它要付出的具体代价
+    - 灵契一旦缔结就不可更换。任何角色都不能暗示玩家“以后还能换”，因为规则不允许
+    - 反噬要有可感知的征兆：经脉刺痛、灵息回流不畅、灵契转速不匀、旧伤在阴天发作，而不是只报一个数字
+    - 战斗按规则走：等级差、灵契契阶差、命印系别克制、灵息还剩多少。弱者赢强者必须靠地形、配合、情报或对方的失误
+    - 每个人都在抢同一批高阶异兽。玩家拿到的，就是别人拿不到的；这件事要有人记恨
+    - 不写“主角光环”。玩家没有练过的契术不能突然会用，没有查到的情报不能突然知道
+    - 栖星七杰是八十年前的传说，只作为石像、校史与老师口中的旧事出现，不登场
+theme: {accent: "#3f7d5a", background: "#f2f4ef", surface: "#ffffff", text: "#20261f"}
+vocabulary:
+  profile_labels: {age_suffix: 岁, realm: 契师等级, root: 命印, faction: 门派, power: 灵息, male: 男, female: 女, unspecified: 未指定, story_lead: 同伴, no_story_lead: 你还没有可以托付后背的人, absent: 当前不在场}
+  relationship_labels: {affection: 好感, trust: 信任, respect: 敬重, fear: 忌惮, hatred: 仇怨, suspicion: 提防, dependency: 倚重, familiarity: 熟识, boundaries: 分寸}
+  action_aliases:
+    MOVE: [去, 前往, 走向, 回到, 进入, 赶往, 出发, 潜入]
+    TALK: [聊, 交谈, 说话, 找, 请教]
+    ASK: [问, 询问, 打听, 试探, 请教]
+    OBSERVE: [看, 观察, 打量, 查看, 感知, 留意]
+    SEARCH: [搜, 搜索, 翻找, 寻找, 探查, 追踪]
+    FOLLOW: [跟, 跟着, 尾随]
+    HIDE: [躲, 藏, 隐匿, 屏息]
+    USE_ITEM: [用, 使用, 服下, 吃, 打开, 佩戴]
+    GIVE_ITEM: [给, 送, 交给, 递给]
+    PICKUP: [捡, 拾取, 拿起, 收起]
+    DROP: [丢, 丢弃, 放下]
+    STEAL: [偷, 抢, 夺, 摸走]
+    ATTACK: [打, 攻击, 出手, 比武, 猎杀, 杀]
+    DEFEND: [挡, 防御, 格挡, 护住]
+    USE_SKILL: [放契术, 施展, 用第一契术, 用第二契术, 释放]
+    CULTIVATE: [修炼, 打坐, 冥想, 练功, 汲取灵息]
+    BREAKTHROUGH: [突破, 冲级, 破境, 冲二十级]
+    BUY: [买, 换, 雇]
+    SELL: [卖, 出手]
+    REST: [休息, 睡, 打坐调息, 歇]
+    WAIT: [等, 等待, 守着]
+    ACCEPT_QUEST: [接, 接受, 答应, 应下]
+    REJECT_QUEST: [拒绝, 不接, 回绝, 推了]
+  method_aliases: {persuade: [劝, 说服], comfort: [安慰, 宽慰], promise: [承诺, 答应, 立誓], threaten: [威胁, 逼, 施压], negotiate: [商量, 谈, 讲条件], indirect_questioning: [试探, 套话, 旁敲侧击], challenge: [挑战, 约斗, 讨教]}
+  query_aliases: {QUERY_STATUS: [我的状态, 状态, 我几级了, 我的灵契], QUERY_INVENTORY: [背包, 我的东西, 身上有什么], QUERY_RELATIONSHIPS: [人物关系, 都有谁, 关系], QUERY_QUESTS: [任务, 手上的事, 我在做什么]}
+  request_size_hints: {extreme: [全部, 一切, 整个宗门], large: [替我护法, 把灵契让给我, 陪我进深处], moderate: [帮我, 陪我走一趟, 教我], small: [问一句, 看一眼, 借一下]}
+  refusal_words: [不, 不行, 不干, 拒绝, 算了, 免谈]
+  plan_connectors: [然后, 接着, 随后, 再, 之后]
+  continue_words: [继续, 继续。, 接着说, 让故事继续, "..."]
+  entity_aliases: {宿舍: outer_dorm, 训练场: outer_training_field, 内院: inner_courtyard, 灵契堂: spirit_pact_hall, 比武场: arena, 藏书阁: library_tower, 森林: forest_edge, 大森林: forest_edge, 深处: forest_deep, 万灵议会: council_branch, 集市: city_market, 酒馆: tavern_broken_blade}
+  status_labels: {offered: 有人相邀, active: 进行中, completed: 已完成, failed: 失败, expired: 已过期, taken_by_other: 被人抢先, rejected: 已拒绝}
+  ambiguity_messages: {empty_input: 说清楚你要做什么。, move_target_unknown: 说明白你要去哪个已知的地方。, conversation_target_unknown: 说清楚你要和在场的谁说话。, item_unknown: 说清楚你要用身上哪一件东西。}
+  time_units: {分钟: 1, 刻: 15, 时辰: 120, 小时: 60, 天: 1440, 日: 1440, 月: 43200}
+  time_words: {一刻: 15, 半个时辰: 60, 一个时辰: 120, 半天: 360, 一天: 1440, 一夜: 600, 三天: 4320, 十天: 14400}

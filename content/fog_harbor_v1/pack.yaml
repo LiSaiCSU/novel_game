@@ -1,0 +1,311 @@
+key: fog_harbor_v1
+name: 雾锁白鹭号
+genre: murder_mystery
+version: "1.0.0"
+engine_min_version: "0.2.0"
+primary_progression_key: investigation
+attribute_definitions:
+  - {key: observation, label: 观察, type: number}
+  - {key: deduction, label: 推理, type: number}
+  - {key: persuasion, label: 交涉, type: number}
+  - {key: composure_skill, label: 镇定, type: number}
+resource_definitions:
+  - {key: health, label: 健康, minimum: 0, maximum: 100, default: 100}
+  - {key: composure, label: 心神, minimum: 0, maximum: 100, default: 70}
+  - {key: heat, label: 你身上的嫌疑, minimum: 0, maximum: 100, default: 20}
+progression_definitions:
+  # 运行时以第一条 progression 的 tiers 作为等级阶梯，并把它套用到所有角色身上，
+  # 因此这一条必须与 realms.yaml 的 key 一致，否则船长与船员的身份会被抹平。
+  - key: ship_role
+    label: 船上位置
+    tiers:
+      - {key: passenger, label: 旅客, order: 0}
+      - {key: crew, label: 船员, order: 1}
+      - {key: officer, label: 高级船员, order: 2}
+      - {key: command, label: 船长, order: 3}
+  - key: investigation
+    label: 查案进度
+    tiers:
+      - {key: no_lead, label: 毫无头绪, order: 0}
+      - {key: gathering, label: 有了眉目, order: 1}
+      - {key: narrowing, label: 缩到几个人, order: 2}
+      - {key: naming, label: 可以指认, order: 3}
+  - key: standing
+    label: 你在船上的处境
+    tiers:
+      - {key: unremarkable, label: 不起眼, order: 0}
+      - {key: watched, label: 被盯上了, order: 1}
+      - {key: cornered, label: 众矢之的, order: 2}
+player_fields:
+  - {key: name, label: 姓名, type: text, required: true}
+  - {key: age, label: 年龄, type: integer, required: true, default: 34, minimum: 18, maximum: 70}
+  - key: role_aboard
+    label: 你在白鹭号上的身份
+    type: choice
+    required: true
+    default: ship_doctor
+    choices:
+      - {value: ship_doctor, label: 随船医生·进得了医务室}
+      - {value: steward_chief, label: 乘务长·拿得到万能钥匙}
+      - {value: first_class, label: 头等舱旅客·坐得进那张桌子}
+      - {value: private_lawyer, label: 私人律师·看得懂那些文件}
+  - key: your_stake
+    label: 十年前的“1114”，你是哪一种人
+    type: choice
+    required: true
+    default: victim_kin
+    choices:
+      - {value: victim_kin, label: 你是四十一个人里某一个的家属}
+      - {value: forged_record, label: 你在一份不实的记录上签过字}
+      - {value: hush_money, label: 你收过一笔让你闭嘴的钱}
+      - {value: bystander, label: 你什么也没做，只是恰好在场}
+  - {key: alibi_gap, label: 凌晨两点四十到三点零三，你在做什么, type: text, required: true, default: 我不打算告诉船上任何人}
+  - {key: interests, label: 你比别人更懂的东西, type: tags, required: false, default: []}
+  - {key: background, label: 这十年你怎么过的, type: text, required: false}
+language: zh-CN
+assets:
+  - key: egret_in_the_fog_cover
+    kind: cover
+    path: official/fog_harbor_v1/egret-in-the-fog-cover-v1.png
+    alt: 深夜浓雾包围白鹭号客船，少数舷窗透出不安的暖光
+author_tests:
+  - key: opening_knowledge_boundary
+    name: 开场时真凶的秘密只在真凶手里
+    scenario: main_story
+    assertions:
+      - {path: player.location, op: eq, expected: first_class_deck}
+      - {path: knowledge.player.fact_qiao_found_dead, op: eq, expected: KNOWN}
+      - {path: knowledge.player.fact_player_missing_23_minutes, op: eq, expected: KNOWN}
+      - {path: knowledge.player.fact_he_shuqin_pushed_the_needle, op: eq, expected: UNKNOWN}
+      - {path: knowledge.he_shuqin.fact_he_shuqin_pushed_the_needle, op: eq, expected: KNOWN}
+      - {path: knowledge.he_shuqin.fact_window_tape_residue, op: eq, expected: KNOWN}
+      - {path: knowledge.pei_zhaolin.fact_window_tape_residue, op: eq, expected: UNKNOWN}
+      - {path: knowledge.pei_zhaolin.fact_pei_altered_duty_log, op: eq, expected: KNOWN}
+      - {path: player.progressions.ship_role.tier, op: eq, expected: passenger}
+      - {path: characters.pei_zhaolin.alive, op: eq, expected: true}
+  - key: endings_locked_at_start
+    name: 开场时没有任何结局可用
+    scenario: main_story
+    assertions:
+      - {path: endings.ending_needle_and_mercy.available, op: eq, expected: false}
+      - {path: endings.ending_named_the_wrong_person.available, op: eq, expected: false}
+      - {path: endings.ending_docked_in_silence.available, op: eq, expected: false}
+  - key: best_ending_requires_full_chain
+    name: 最佳结局需要证据链与公开真相同时成立
+    scenario: main_story
+    player:
+      name: 测试玩家
+      age: 34
+      gender: unspecified
+    fixtures:
+      quests:
+        quest_name_the_killer: completed
+        quest_open_the_safe: completed
+        quest_wine_chain: completed
+        quest_publish_1114: completed
+    assertions:
+      - {path: endings.ending_needle_and_mercy.available, op: eq, expected: true}
+      - {path: endings.ending_named_the_wrong_person.available, op: eq, expected: false}
+      - {path: endings.ending_truth_left_the_ship.available, op: eq, expected: false}
+      - {path: endings.ending_killer_named_truth_buried.available, op: eq, expected: false}
+world:
+  name: 白鹭号·雾中锚地
+  description: >
+    二〇一九年十一月十四日凌晨，近海客轮白鹭号在返回青礁港途中撞上十年不遇的浓雾，
+    能见度不足二十米，被迫在离港十二海里处抛锚待雾。三点十七分，头等舱旅客、
+    青礁航运董事长乔慕山被发现死在从内侧反锁的望海厅包厢里——颈侧一处针孔，
+    桌上一杯没喝完的温黄酒，门闩插着，舷窗从里面拧死。船长封舱，雾散靠港约在三十六小时后；
+    在那之前，没有人能离开这条船，也没有警察能上来。
+    十年前的同一天，青礁港“1114”沉船事故死了四十一个人，官方把责任判给二副周砚清，
+    周砚清在看守所自缢。今夜船上这十四个人，全都和那一夜有关——包括你。
+  start_location: first_class_deck
+  world_seed_default: egret-1114
+story:
+  title: 雾锁白鹭号
+  opening_location: first_class_deck
+  premise: >
+    三点二十一分，敲门声把你从床上砸起来。走廊尽头的望海厅门口挤满了人，
+    门闩是从里面插上的，钥匙孔里还留着钥匙，舷窗从内侧拧死——乔慕山坐在那张桌子后面，
+    已经凉了，颈侧一个针眼，杯子里的黄酒剩下小半。船长宣布封舱，雾散靠港要三十六个小时。
+    你和另外十三个人被关在这条船上，其中一个杀了他。
+    麻烦的是，凌晨两点四十到三点零三这二十三分钟，没有人能替你作证。
+  starter_items:
+    - {key: evidence_bag, quantity: 2}
+    - {key: nitrile_gloves, quantity: 1}
+    - {key: rmb, quantity: 800}
+  player_template:
+    constraints: {minimum_age: 18, maximum_age: 70}
+    properties: {standing: unremarkable}
+  relationship_boundaries: >
+    可发展的关系限于成年人之间，并且必须建立在明确表达与持续信任上。
+    不写露骨性描写；不把审讯、要挟、把柄或救命之恩当作感情筹码；
+    对方拒绝之后不得反复施压。未成年人不参与任何感情线。
+  endings:
+    - key: ending_needle_and_mercy
+      type: other
+      title: 针与赦
+      priority: 95
+      epilogue: >
+        雾在早上九点四十散开。你在靠港前二十分钟把话说完了——不是从动机说起，
+        是从舷窗内侧那两道胶带残痕说起，从少了两支的镇静剂说起，从那杯温酒
+        在谁手里停过四十秒说起。何淑勤听完，没有辩解，只问了一句“他自己求的，
+        这也算吗”。你说算，因为她最后改了主意。警察上船的时候，
+        1114的原始值班记录已经在四家媒体的邮箱里。四十一个名字，隔了十年，
+        第一次被读对。
+      condition:
+        op: and
+        args:
+          - {op: eq, args: [{op: get, args: [quests.quest_name_the_killer.status]}, completed]}
+          - {op: eq, args: [{op: get, args: [quests.quest_open_the_safe.status]}, completed]}
+          - {op: eq, args: [{op: get, args: [quests.quest_wine_chain.status]}, completed]}
+          - {op: eq, args: [{op: get, args: [quests.quest_publish_1114.status]}, completed]}
+    - key: ending_killer_named_truth_buried
+      type: other
+      title: 凶手落网，真相沉船
+      priority: 75
+      epilogue: >
+        证据链是完整的：病历、登记本、那杯酒经过的每一双手、舷窗上的胶带。
+        何淑勤被带下船的时候脚步很稳，像是终于放下了什么。
+        可是1114那份原始值班记录始终没有离开这条船——它在谁手里，你心里有数，
+        只是那个人比你更懂怎么让一份纸消失。第二天的新闻里只有一条社会版短讯：
+        知名企业家病逝船上，家属拒绝采访。四十一个名字，又沉了一次。
+      condition:
+        op: and
+        args:
+          - {op: eq, args: [{op: get, args: [quests.quest_name_the_killer.status]}, completed]}
+          - {op: eq, args: [{op: get, args: [quests.quest_open_the_safe.status]}, completed]}
+          - {op: eq, args: [{op: get, args: [quests.quest_wine_chain.status]}, completed]}
+          - {op: ne, args: [{op: get, args: [quests.quest_publish_1114.status]}, completed]}
+    - key: ending_truth_left_the_ship
+      type: other
+      title: 真相下了船
+      priority: 70
+      epilogue: >
+        你没能在靠港前指出那只推针的手。但十年前的值班记录、被压下的缺陷报告、
+        那笔转账回单，全部随着你一起下了跳板。周砚知站在码头上，
+        看着自己哥哥的名字第一次出现在“无过失”三个字后面，一直没有回头。
+        乔慕山的死会被写成一桩悬案，也许永远。可他要的其实就是这个——
+        用一桩查不清的死，换四十一桩查得清的死。
+      condition:
+        op: and
+        args:
+          - {op: eq, args: [{op: get, args: [quests.quest_publish_1114.status]}, completed]}
+          - {op: ne, args: [{op: get, args: [quests.quest_name_the_killer.status]}, completed]}
+    - key: ending_named_the_wrong_person
+      type: other
+      title: 指错了人
+      priority: 50
+      epilogue: >
+        你说得很有道理，船上一半的人都被你说服了。裴昭麟被反绑在餐厅椅子上，
+        一直到警察上船——他确实改过十年前的记录，可他没有碰过那根针。
+        真正推针的那个人站在人群第二排，替你倒了一杯热水，
+        并且在你说出结论的时候，第一个点了头。船靠岸以后，
+        你花了很久才想明白：不是你查错了，是你太急着要一个答案。
+      condition:
+        op: and
+        args:
+          - {op: eq, args: [{op: get, args: [quests.quest_name_the_killer.status]}, completed]}
+          - op: or
+            args:
+              - {op: ne, args: [{op: get, args: [quests.quest_open_the_safe.status]}, completed]}
+              - {op: ne, args: [{op: get, args: [quests.quest_wine_chain.status]}, completed]}
+    - key: ending_second_death
+      type: other
+      title: 船上死的不止一个
+      priority: 60
+      epilogue: >
+        白秋禾是在尾甲板被发现的，栏杆上有她的指纹，甲板上没有第二个人的脚印——
+        雾天的甲板不留脚印。她只是看见了一个从走廊尽头走出来的背影，
+        并且收了那个人一千二百块钱。你原本有整整十个小时可以把她藏起来。
+        靠港以后，两桩案子并成一桩，卷宗很厚，结论很薄。
+      condition: {op: eq, args: [{op: get, args: [quests.quest_protect_witness.status]}, failed]}
+    - key: ending_charged_yourself
+      type: other
+      title: 被带走的是你
+      priority: 40
+      epilogue: >
+        警察要的从来不是真相，是一个能立刻交出去的人。
+        两点四十到三点零三，二十三分钟，没有监控、没有证人、没有一句能说出口的解释；
+        你身上还带着从医务室拿走的东西。简墨在笔录上补了一句“该员情绪异常”，
+        邵凌钧全程没有抬头。跳板很短，走完只要十一秒。
+        你回头看了一眼白鹭号，雾已经散了，船白得像什么都没发生过。
+      condition:
+        op: and
+        args:
+          - {op: gte, args: [{op: get, args: [world.minute]}, 453100]}
+          - {op: ne, args: [{op: get, args: [quests.quest_clear_your_name.status]}, completed]}
+          - {op: ne, args: [{op: get, args: [quests.quest_name_the_killer.status]}, completed]}
+    - key: ending_docked_in_silence
+      type: independent
+      title: 靠港时无人开口
+      priority: 10
+      hidden_until_available: false
+      epilogue: >
+        九点四十，雾散了；十点整，白鹭号靠上青礁港三号泊位。
+        十四个人排队下船，谁也没有多说一个字。这三十六个小时里发生过的争吵、
+        搜查、哭喊和交易，随着跳板收起一起结束。有人拿到了想要的东西，
+        有人失去了最后一次说出口的机会。船上的钟慢了四分钟，从此没有人再去校准它。
+      condition: {op: gte, args: [{op: get, args: [world.minute]}, 453100]}
+narrative_style:
+  language: 中文
+  person: 第二人称
+  tense: 现在时
+  tone: 冷硬克制的封闭空间推理，时间与空间必须精确，对话密度高；恐惧来自被十三个人围着而其中一个在说谎，不来自超自然
+  target_length: 1700
+  avoid_phrases:
+    - 嘴角勾起一抹弧度
+    - 眼中闪过一丝异色
+    - 空气仿佛凝固
+    - 心里微沉
+    - 淡淡地说道
+    - 目光扫过
+    - 若有所思
+    - 意味深长地看了你一眼
+    - 真相只有一个
+    - 一切都说得通了
+    - 冷汗涔涔
+    - 脊背发凉
+  phrase_repeat_window: 12
+  phrase_repeat_threshold: 2
+  guidance:
+    - 每段至少推进以下之一——一条可验证的物证、一个人的时间线、一段十年前的旧事，或一次立场的转变
+    - 时间要写死。谁在几点几分、在哪一层、和谁在一起，必须能被后面的场景检验
+    - 线索必须是玩家能自己复核的东西：登记本上的数字、杯子的温度、监控的时段、门闩的方向
+    - 每个人都在保护一件跟凶案无关的丑事，因此每个人都会说谎，但谎言的形状各不相同
+    - 不给玩家凭空的灵光一现。玩家没有查到的东西，叙述不能替他知道
+    - 不写鬼神、不写超能力。所有反常都要能被一个具体的、船上的解释接住
+theme: {accent: "#3f6f86", background: "#eef1f3", surface: "#ffffff", text: "#1e242a"}
+vocabulary:
+  profile_labels: {age_suffix: 岁, realm: 船上位置, root: 专长, faction: 立场, male: 男, female: 女, unspecified: 未指定, story_lead: 同盟, no_story_lead: 你还没有可以信的人, absent: 当前不在场}
+  relationship_labels: {affection: 好感, trust: 信任, respect: 认可, fear: 畏惧, hatred: 敌意, suspicion: 戒备, dependency: 依赖, familiarity: 熟悉, boundaries: 界限}
+  action_aliases:
+    MOVE: [去, 前往, 走向, 回到, 进入, 下到, 上到]
+    TALK: [聊, 交谈, 说话, 找, 谈谈]
+    ASK: [问, 询问, 追问, 盘问, 打听]
+    OBSERVE: [看, 观察, 打量, 查看, 端详, 留意]
+    SEARCH: [搜, 搜查, 翻, 找, 检查, 勘查, 取证]
+    FOLLOW: [跟, 跟着, 盯]
+    HIDE: [躲, 藏, 避开]
+    USE_ITEM: [用, 使用, 打开, 播放, 翻看, 比对]
+    GIVE_ITEM: [给, 交给, 递给, 出示]
+    PICKUP: [捡, 拿起, 收起, 取走]
+    DROP: [放下, 丢下]
+    STEAL: [偷, 顺走, 摸走, 拿走]
+    ATTACK: [动手, 打, 制服, 按住]
+    DEFEND: [挡, 护住, 拦]
+    USE_SKILL: [施展, 用专业, 做检查]
+    REST: [休息, 睡, 缓一缓, 坐下]
+    WAIT: [等, 等待, 守着]
+    ACCEPT_QUEST: [接受, 答应, 接下]
+    REJECT_QUEST: [拒绝, 不接, 回绝]
+  method_aliases: {persuade: [劝, 说服], comfort: [安抚, 安慰], promise: [保证, 承诺], threaten: [施压, 威胁, 逼], negotiate: [谈条件, 交换, 商量], indirect_questioning: [试探, 兜圈子, 侧面问], confront: [当面对质, 摊牌]}
+  query_aliases: {QUERY_STATUS: [我的状态, 状态, 我现在怎么样], QUERY_INVENTORY: [我带了什么, 随身物品, 包里], QUERY_RELATIONSHIPS: [船上都有谁, 人物关系, 关系], QUERY_QUESTS: [我在查什么, 任务, 手上的线]}
+  request_size_hints: {extreme: [全部, 所有人, 整条船], large: [替我作证, 把东西都交出来], moderate: [帮我, 陪我去], small: [问一句, 看一眼, 借一下]}
+  refusal_words: [不, 不行, 不说, 拒绝, 免谈, 无可奉告]
+  plan_connectors: [然后, 接着, 随后, 再, 之后]
+  continue_words: [继续, 继续。, 接着说, 让故事继续, "..."]
+  entity_aliases: {案发现场: sea_view_lounge, 望海厅: sea_view_lounge, 大堂: main_lounge, 餐厅: dining_hall, 医务室: infirmary, 驾驶台: bridge, 船长室: captain_office, 机舱: engine_room, 甲板: open_deck, 监控室: purser_office}
+  status_labels: {offered: 有人托你, active: 正在查, completed: 查清了, failed: 砸了, expired: 来不及了, taken_by_other: 别人先做了, rejected: 你推掉了}
+  ambiguity_messages: {empty_input: 说清楚你要做什么。, move_target_unknown: 说明白你要去船上哪一处。, conversation_target_unknown: 说清楚你要跟在场的谁说话。, item_unknown: 说清楚你要用手上哪一件东西。}
+  time_units: {分钟: 1, 小时: 60, 天: 1440}
+  time_words: {十分钟: 10, 半小时: 30, 一小时: 60, 两小时: 120, 半天: 360, 一夜: 480}

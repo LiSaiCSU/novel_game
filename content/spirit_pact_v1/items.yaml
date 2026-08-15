@@ -1,0 +1,131 @@
+item_types:
+  - {key: spirit_pact, name: 灵契}
+  - {key: soul_bone, name: 灵髓}
+  - {key: token, name: 信物}
+  - {key: document, name: 文书}
+  - {key: consumable, name: 丹药}
+  - {key: gear, name: 器物}
+  - {key: currency, name: 钱}
+rarities:
+  - {key: common, name: 普通, value_multiplier: 1}
+  - {key: precious, name: 贵重, value_multiplier: 6}
+  - {key: key_item, name: 要紧, value_multiplier: 1}
+items:
+  - {key: gold_soul_coin, name: 金叶, type: currency, rarity: common, value: 1, stackable: true, description: 一枚金叶等于一百银魂币。外院生一个月的补贴是三枚。, effects: {}}
+
+  - key: pact_hundred_year
+    name: 青纹契
+    type: spirit_pact
+    rarity: common
+    value: 200
+    stackable: false
+    description: 黄色。学院统一配发给外院生的那种，安全、便宜、平庸——占掉的却是和墨纹契一样大的一个契位。
+    effects: {occupies_pact_slot: 1, quest_item: true}
+    metadata:
+      narrative_facts:
+        - 颜色为黄色，对应十年至一百年的异兽。
+        - 缔结几乎不会造成反噬，一炷香内即可完成。
+        - 它占用一个契位，而一个人一生只有九个契位，用掉不可更换。
+        - 所附契术威力有限，到高阶契师阶之后基本沦为鸡肋。
+      narrative_constraints:
+        aliases: [青契, 青纹契, 第一契]
+        required_when_referenced: [黄色, 占一个契位]
+        forbidden_when_referenced: [可以换掉, 以后能替换, 威力惊人]
+
+  - key: pact_thousand_year
+    name: 紫纹契
+    type: spirit_pact
+    rarity: precious
+    value: 4000
+    stackable: false
+    description: 紫色。二十级的人拿到它，往后二十年都不必为这一契后悔；但猎它要死人，抢它的人更多。
+    effects: {occupies_pact_slot: 1, quest_item: true}
+    metadata:
+      narrative_facts:
+        - 颜色为紫色，对应一百年至一千年的异兽。
+        - 缔结需要连续护法约一个时辰，期间缔结者毫无防备。
+        - 二十级契师缔结紫纹契属于越阶，会留下可以恢复的反噬。
+        - 它占用一个契位，用掉不可更换。
+      narrative_constraints:
+        aliases: [紫契, 紫纹契]
+        required_when_referenced: [紫色, 需要护法]
+        forbidden_when_referenced: [随手就能吸, 没有代价, 可以换掉]
+
+  - key: pact_ten_thousand_year
+    name: 墨纹契
+    type: spirit_pact
+    rarity: precious
+    value: 60000
+    stackable: false
+    description: 黑色。这一契能让二十几级的人打七十级，也能在缔结的那一夜把他的经脉烧成灰。
+    effects: {occupies_pact_slot: 1, quest_item: true}
+    metadata:
+      narrative_facts:
+        - 颜色为黑色，对应一千年至一万年的异兽。
+        - 低于四十级的人缔结墨纹契属于严重越阶，必然留下长期反噬。
+        - 缔结需要至少三名护法者连续护持一整夜，中途中断即当场爆体。
+        - 它占用一个契位，用掉不可更换。
+        - 佩戴墨契的低阶契师会立刻引来万灵议会与各大宗门的注意。
+      narrative_constraints:
+        aliases: [墨契, 墨纹契]
+        required_when_referenced: [黑色, 严重越阶, 长期反噬]
+        forbidden_when_referenced: [轻松缔结, 毫无后患, 可以换掉]
+
+  - {key: soul_bone_arm, name: 千年右臂骨, type: soul_bone, rarity: precious, value: 2000, stackable: false, description: 一个部位一辈子只能融一块。融进去之前想清楚——它不占契位，但它同样拿不出来。, effects: {occupies_bone_slot: right_arm}}
+  - {key: soul_bone_leg, name: 百年左腿骨, type: soul_bone, rarity: precious, value: 600, stackable: false, description: 加速用的低阶灵髓。灵髓行挂了四年，因为买得起的人看不上。, effects: {occupies_bone_slot: left_leg}}
+
+  - {key: academy_badge, name: 栖星外院徽章, type: token, rarity: common, value: 0, stackable: false, description: 一枚铜制的怪物头徽。掉了要罚，丢两次直接除名。, effects: {}}
+  - {key: inner_token, name: 内院选拔令, type: token, rarity: key_item, value: 0, stackable: false, description: 每届只发三十枚，拿到它才有资格站到内院门前。, effects: {quest_item: true}}
+  - {key: mirror_guild_invitation, name: 镜塔商盟请柬, type: token, rarity: key_item, value: 0, stackable: false, description: 琉璃质地，触手温凉。收下它意味着愿意谈——谈什么，请柬上没写。, effects: {}}
+  - {key: concord_council_seal, name: 万灵议会供奉信物, type: token, rarity: key_item, value: 0, stackable: false, description: 白玉牌，背面留着一处空白，用来刻上供奉者的命印。刻上就摘不下来了。, effects: {quest_item: true}}
+  - {key: hunter_tally, name: 猎兽人凭牌, type: token, rarity: common, value: 0, stackable: false, description: 木牌一面烙着数字。有它才能走进营地而不被当场放倒。, effects: {}}
+  - {key: library_pass, name: 藏书阁二层通行牌, type: token, rarity: common, value: 0, stackable: false, description: 借出异兽志与历年缔契记录的凭证，借阅要登记。, effects: {}}
+
+  - key: beast_ledger
+    name: 猎兽账册
+    type: document
+    rarity: key_item
+    value: 0
+    stackable: false
+    description: 猎兽人三年来的流水账。哪一天、在哪一片、杀了多少年的什么东西、货交给了谁，一笔不落。
+    effects: {reveals_fact: fact_concord_council_buys_the_slaughter, quest_item: true}
+    metadata:
+      narrative_facts:
+        - 账册记录了三年内被猎杀的高阶异兽数量、日期与交货对象代号。
+        - 交货对象一栏用的是代号而非姓名，需要另一份材料才能对上。
+        - 账册本身不足以指认任何具体的人，只能证明规模。
+      narrative_constraints:
+        aliases: [账册, 那本账]
+        required_when_referenced: [代号, 三年]
+        forbidden_when_referenced: [上面写着严织的名字, 直接就能定罪]
+
+  - {key: forest_map, name: 无昼森海图, type: document, rarity: common, value: 20, stackable: false, description: 学院发的标准图，只画到内圈。深处那一片是空白的，图上印着一行小字——不建议前往。, effects: {}}
+  - key: forest_old_map
+    name: 齐燃言的旧林图
+    type: document
+    rarity: key_item
+    value: 0
+    stackable: false
+    description: 用了二十年的手绘图，深处标了十四个红点，其中九个被划掉了。划掉的日期都在最近三年。
+    effects: {reveals_fact: fact_high_year_beasts_vanishing, quest_item: true}
+    metadata:
+      narrative_facts:
+        - 图上十四个红点标的是她当年记录过的高阶异兽巢穴。
+        - 九个红点被划掉，划线旁边注着日期，全部集中在最近三年。
+        - 剩下五个没有划掉的点里，有一个在白骨湖方向。
+      narrative_constraints:
+        aliases: [旧林图, 老师的图]
+        required_when_referenced: [十四个红点, 划掉了九个]
+        forbidden_when_referenced: [标着高阶异兽的准确位置, 一看就知道去哪儿]
+
+  - {key: wanyi_notebook, name: 藏书阁借阅登记本, type: document, rarity: key_item, value: 0, stackable: false, description: 谁在哪一天查过哪一片林子的异兽志，一行一行记着。有几个名字出现得太频繁了。, effects: {}}
+  - {key: dai_pendant, name: 蓝纹玉坠, type: token, rarity: key_item, value: 300, stackable: false, description: 坠身刻着一道极细的电纹。蓝电霸王龙家族的族徽是这个纹样的完整版。, effects: {reveals_fact: fact_dai_kuan_bloodline}}
+  - {key: mu_bandage, name: 染血的药布, type: gear, rarity: key_item, value: 0, stackable: false, description: 缠臂用的，血迹是暗紫色的——那不是外伤流出来的血，是从经脉里逼出来的。, effects: {reveals_fact: fact_mu_jinnian_backlash}}
+
+  - {key: soul_power_pill, name: 凝魂丹, type: consumable, rarity: common, value: 40, stackable: true, description: 一炷香内回满灵息，一天最多两颗，第三颗开始伤根基。, effects: {restore_spiritual_power: 60}}
+  - {key: backlash_salve, name: 化淤膏, type: consumable, rarity: precious, value: 220, stackable: true, description: 疏导淤积的灵息，压得住反噬的症状，压不住反噬本身。, effects: {reduce_backlash: 12}}
+  - {key: beast_marker, name: 标兽香, type: consumable, rarity: precious, value: 180, stackable: true, description: 点燃后三天内，被标记的异兽走到哪儿都留下只有懂行的人闻得出的味道。, effects: {}}
+  - {key: hunting_net, name: 缚兽索, type: gear, rarity: common, value: 90, stackable: true, description: 浸过药的兽筋绳，能困住千年以下的异兽约二十息。, effects: {}}
+  - {key: year_gauge, name: 测年铜盘, type: gear, rarity: precious, value: 800, stackable: false, description: 灵导器的雏形，测异兽契阶误差约两成。两成，在万年这个数量级上就是生死。, effects: {}}
+  - {key: training_weights, name: 负重环, type: gear, rarity: common, value: 15, stackable: true, description: 外院晨课的标配。戴满一年，灵息控制会好一档。, effects: {}}
+  - {key: starvine_seed, name: 星蔓草种, type: gear, rarity: common, value: 1, stackable: true, description: 路边随处可见。星蔓草是公认最废的命印，这句话在栖星被人说了八十年。, effects: {}}

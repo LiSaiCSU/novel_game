@@ -1,0 +1,68 @@
+factions:
+  - key: qingjiao_shipping
+    name: 青礁航运
+    type: corporation
+    headquarters: qiao_suite
+    description: 死者一手做起来的近海航运公司，十年前那场事故之后靠一份薄薄的调查报告活了下来。
+    resources: {market_value: 2400000000}
+    member_count: 5
+    territory: [qiao_suite, wanyin_cabin, lawyer_cabin]
+    military_power: 0
+    reputation: 30
+    leader: qiao_wanyin
+    alliances: [heng_an_insurance]
+    enemies: [bereaved_1114]
+    goals: [把这件事定成病逝或意外, 保住十年前那份调查结论]
+    internal_conflicts: [董事长本来要把股份转给公司以外的人]
+    metadata: {}
+
+  - key: egret_crew
+    name: 白鹭号船员
+    type: ship_crew
+    headquarters: bridge
+    description: 十一名在编船员，今夜只有六个在船。船长封舱之后，他们既是维持秩序的人，也是嫌疑人。
+    resources: {keys: 3}
+    member_count: 6
+    territory: [bridge, captain_office, radio_room, crew_corridor, crew_quarters, engine_room, purser_office, galley]
+    military_power: 2
+    reputation: 15
+    leader: pei_zhaolin
+    alliances: []
+    enemies: []
+    goals: [把船安全靠上青礁港, 不让任何人再出事]
+    internal_conflicts: [船长十年前也在1114的当班表上]
+    metadata: {}
+
+  - key: bereaved_1114
+    name: 1114遇难者家属
+    type: victims_group
+    headquarters: stern_deck
+    description: 四十一个死者留下的人。十年过去，还在坚持的只剩下几个，其中两个今夜就在这条船上。
+    resources: {}
+    member_count: 2
+    territory: [stern_deck]
+    military_power: 0
+    reputation: 5
+    leader: zhou_yanzhi
+    alliances: []
+    enemies: [qingjiao_shipping]
+    goals: [拿到1114的原始值班记录, 让四十一个名字被重新读一次]
+    internal_conflicts: [该要真相，还是该要一条命抵一条命]
+    metadata: {}
+
+  - key: heng_an_insurance
+    name: 恒安保险理赔组
+    type: insurer
+    headquarters: main_lounge
+    description: 死者名下有一份高额意外险，理赔与否取决于这三十六小时里的结论怎么写。
+    resources: {exposure: 80000000}
+    member_count: 1
+    territory: [main_lounge]
+    military_power: 0
+    reputation: 0
+    leader: jian_mo
+    alliances: [qingjiao_shipping]
+    enemies: []
+    goals: [把结论做成自杀, 在警察上船前拿到第一手笔录]
+    internal_conflicts: [调查员自己也不相信公司要的那个结论]
+    metadata: {}

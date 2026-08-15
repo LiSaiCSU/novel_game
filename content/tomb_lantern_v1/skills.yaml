@@ -1,0 +1,14 @@
+skill_categories:
+  - {key: eye, name: 眼学}
+  - {key: hand, name: 手艺}
+  - {key: road, name: 江湖}
+skills:
+  - {key: wangqi, name: 望气, category: eye, required_realm: greenhand, description: 看土色、看草木、看鸦落在哪儿，判断底下埋着什么。}
+  - {key: dingxue, name: 定穴, category: eye, required_realm: greenhand, description: 凭罗盘与地势推墓室方位，少挖二十丈土。}
+  - {key: tugong, name: 土工, category: hand, required_realm: greenhand, description: 打盗洞、支木、辨夯土，塌方前听得出声。}
+  - {key: jiguan, name: 解机关, category: hand, required_realm: greenhand, description: 拆连弩、卸滚石、认得出哪块砖不能踩。}
+  - {key: bandu, name: 辨毒, category: hand, required_realm: greenhand, description: 试尸气、认水银蒸气、知道什么时候必须退出去。}
+  - {key: baopo, name: 爆破, category: hand, required_realm: greenhand, description: 算药量、埋雷管、决定一声响掀开多少土。}
+  - {key: yishu, name: 医术, category: hand, required_realm: greenhand, description: 止血、接骨、处理中毒与缺氧。}
+  - {key: jianghu, name: 江湖话, category: road, required_realm: greenhand, description: 对切口、打点关节、在两拨人中间活下来。}
+  - {key: tapian, name: 拓印, category: eye, required_realm: greenhand, description: 拓铭文、认古文字、把带不走的东西留在纸上。}

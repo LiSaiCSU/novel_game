@@ -1,0 +1,85 @@
+factions:
+  - key: jin_brigade
+    name: 靳部
+    type: warlord_army
+    headquarters: camp_tent
+    description: 陆军第七混成旅一部，奉命进驻寒鸦岭“护陵”，实则限期取物换军火。
+    resources: {silver: 40000, conscripts: 300, explosives: 24}
+    member_count: 420
+    territory: [camp_gate, camp_tent, field_clinic, powder_shed, mound_site]
+    military_power: 80
+    reputation: -20
+    leader: jin_shaoheng
+    alliances: [zhou_syndicate]
+    enemies: []
+    goals: [九日内取出离侯玺, 把封土下的伤亡压下去]
+    internal_conflicts: [工兵队私卖军火, 医棚要求停工救人]
+    metadata: {}
+
+  - key: luo_gang
+    name: 罗家伙计
+    type: tomb_crew
+    headquarters: luo_yard
+    description: 寒鸦岭一带最大的卸岭把式，人手齐、家伙全，三代都靠这座岭吃饭。
+    resources: {silver: 3000, hands: 26}
+    member_count: 26
+    territory: [luo_yard, ghost_road, mass_grave]
+    military_power: 12
+    reputation: 25
+    leader: luo_jiuniang
+    alliances: []
+    enemies: []
+    goals: [赶在军队之前进主墓室, 不让岭上的人被军队白白填进土里]
+    internal_conflicts: [是否该收靳部的定金]
+    metadata: {}
+
+  - key: antiquity_bureau
+    name: 古物保管所寒鸦岭办事处
+    type: administration
+    headquarters: shanshen_temple
+    description: 一个人、一箱拓片、一纸公文构成的“办事处”，经费已经断了十四个月。
+    resources: {silver: 60, rubbings: 1}
+    member_count: 1
+    territory: [shanshen_temple]
+    military_power: 0
+    reputation: 5
+    leader: xu_wenqing
+    alliances: []
+    enemies: [zhou_syndicate]
+    goals: [阻止爆破, 把陵完整登记造册]
+    internal_conflicts: [靠伪造关防办真事算不算失职]
+    metadata: {}
+
+  - key: zhou_syndicate
+    name: 周记洋庄
+    type: dealer
+    headquarters: mule_inn
+    description: 上海来的古董掮客与他背后的海外买主，定金已经付了三成。
+    resources: {silver: 120000}
+    member_count: 4
+    territory: [mule_inn]
+    military_power: 4
+    reputation: 10
+    leader: zhou_maichen
+    alliances: [jin_brigade]
+    enemies: [antiquity_bureau]
+    goals: [把九枝灯整套运出海, 让军队替自己承担挖山的名声]
+    internal_conflicts: [买主要的是灯，合同上写的却是玺]
+    metadata: {}
+
+  - key: lamp_keepers
+    name: 守灯人
+    type: hereditary_guardian
+    headquarters: shanshen_temple
+    description: 替离国守陵的一族，二千年只剩两个人，规矩比人命长。
+    resources: {silver: 0}
+    member_count: 2
+    territory: [shanshen_temple, lamp_hall]
+    military_power: 0
+    reputation: 0
+    leader: qing_yu
+    alliances: []
+    enemies: [zhou_syndicate, jin_brigade]
+    goals: [让九盏灯按定序点着, 死也不能让灯被抬出山]
+    internal_conflicts: [该守着规矩等死，还是把次序交给一个外人]
+    metadata: {}

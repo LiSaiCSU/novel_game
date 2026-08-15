@@ -1,0 +1,5 @@
+templates:
+  query_status: "你在{location_name}。{time_label}。"
+  query_inventory: "你把身上的东西过了一遍。"
+  query_relationships: "外院这些人里，谁肯替你护法、谁在等你摔下来，你心里有数。"
+  query_quests: "距离大赛还有多少天，公告栏上每天换一次数字。"

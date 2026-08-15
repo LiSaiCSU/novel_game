@@ -1,0 +1,40 @@
+rules:
+  - key: digging_costs_stamina
+    trigger: after_action
+    condition:
+      op: in
+      args:
+        - {op: get, args: [action.action_type]}
+        - [SEARCH, FOLLOW, HIDE, USE_SKILL, ATTACK]
+    effects:
+      - {op: adjust_player_resource, field: stamina, value: -6}
+
+  - key: talking_costs_a_little
+    trigger: after_action
+    condition:
+      op: in
+      args:
+        - {op: get, args: [action.action_type]}
+        - [TALK, ASK, CONVERSATION, OBSERVE]
+    effects:
+      - {op: adjust_player_resource, field: stamina, value: -2}
+
+  - key: lantern_burns_oil_underground
+    trigger: after_action
+    condition:
+      op: in
+      args:
+        - {op: get, args: [player.location]}
+        - [tomb_mouth, tomb_corridor, lamp_hall, side_chamber, mercury_river, coffin_platform, main_chamber, drain_channel, ghost_road]
+    effects:
+      - {op: adjust_player_resource, field: lamp_oil, value: -3}
+
+  - key: rest_restores_stamina
+    trigger: after_action
+    condition:
+      op: eq
+      args:
+        - {op: get, args: [action.action_type]}
+        - REST
+    effects:
+      - {op: adjust_player_resource, field: stamina, value: 30}
