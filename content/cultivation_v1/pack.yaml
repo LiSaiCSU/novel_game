@@ -1,7 +1,7 @@
 key: cultivation_v1
 name: 七日血契
 genre: cultivation
-version: "2.4.0"
+version: "2.4.1"
 engine_min_version: "0.2.0"
 primary_progression_key: cultivation
 language: zh-CN
