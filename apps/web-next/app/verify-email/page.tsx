@@ -18,7 +18,7 @@ function VerifyEmailForm() {
   // The signed-in address is authoritative — registration already opened a
   // session — so the field only stays editable when there is no session to
   // read an address from.
-  const [sessionEmail, setSessionEmail] = useState("");
+  const [sessionEmail, setSessionEmail] = useState<string | null>(null);
   const [typedEmail, setTypedEmail] = useState<string | null>(null);
   const [code, setCode] = useState("");
   const [error, setError] = useState("");
@@ -28,8 +28,9 @@ function VerifyEmailForm() {
   const [cooldown, setCooldown] = useState(0);
   const submittedCode = useRef("");
 
-  const email = typedEmail ?? sessionEmail ?? "";
-  const address = (email || linkEmail).trim().toLowerCase();
+  // Once the user has touched the field their value wins, including an empty
+  // one — otherwise clearing the box would silently restore the link address.
+  const address = (typedEmail ?? sessionEmail ?? linkEmail).trim().toLowerCase();
   const shownNotice =
     notice ||
     (justRegistered ? `验证码已发送到你的邮箱，请输入邮件中的 ${CODE_LENGTH} 位数字。` : "");
