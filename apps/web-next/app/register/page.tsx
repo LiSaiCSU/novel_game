@@ -12,16 +12,17 @@ export default function Register() {
     setBusy(true);
     setError("");
     const d = new FormData(e.currentTarget);
+    const email = String(d.get("email") ?? "");
     try {
       await api("/auth/register", {
         method: "POST",
         body: JSON.stringify({
-          email: d.get("email"),
+          email,
           password: d.get("password"),
           display_name: d.get("name"),
         }),
       });
-      router.push("/verify-email?sent=1");
+      router.push(`/verify-email?sent=1&email=${encodeURIComponent(email)}`);
       router.refresh();
     } catch (x) {
       setError((x as Error).message);

@@ -21,6 +21,7 @@ type CurrentUser = {
   display_name: string;
   email: string;
   roles: string[];
+  verified: boolean;
 };
 
 const primaryNavigation = [
@@ -94,6 +95,11 @@ export function AppShell({ children }: { children: ReactNode }) {
   const navigation = user
     ? [...primaryNavigation, { href: "/settings", label: "账户设置", icon: Settings }]
     : primaryNavigation;
+  // Without this an unverified account only ever sees "email verification
+  // required" errors from whichever page it happens to open, with no route
+  // back to the code form.
+  const needsVerification =
+    !!user && !user.verified && !immersive && !isCurrent(pathname, "/verify-email");
 
   return (
     <div className={immersive ? "appFrame immersive" : "appFrame"}>
@@ -185,6 +191,14 @@ export function AppShell({ children }: { children: ReactNode }) {
           </Link>
         )}
       </header>
+      {needsVerification && (
+        <div className="verifyBanner" role="status">
+          <span>邮箱还没有验证，游玩与创作会被拦截。</span>
+          <Link className="textLink" href="/verify-email">
+            输入验证码
+          </Link>
+        </div>
+      )}
       <main id="content">{children}</main>
       {!immersive && (
         <footer>

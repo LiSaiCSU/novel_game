@@ -14,6 +14,14 @@ logger = get_logger("email")
 
 
 async def send_email(settings: Settings, to: str, subject: str, text: str) -> None:
+    """Best-effort delivery.
+
+    Every caller sits after the database commit that the mail describes, so a
+    refused SMTP handshake must not turn a completed registration or password
+    reset into a 500 that tells the user nothing happened.  Failures are
+    logged (without the body, which carries the code) and the user recovers
+    through "resend".
+    """
     queued = await enqueue_job(
         settings,
         "send_email",
@@ -21,7 +29,10 @@ async def send_email(settings: Settings, to: str, subject: str, text: str) -> No
     )
     if queued:
         return
-    await deliver_email(settings, to, subject, text)
+    try:
+        await deliver_email(settings, to, subject, text)
+    except Exception:
+        logger.exception("email delivery failed: to=%s subject=%s", to, subject)
 
 
 async def deliver_email(settings: Settings, to: str, subject: str, text: str) -> None:

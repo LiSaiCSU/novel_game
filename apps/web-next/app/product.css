@@ -439,6 +439,28 @@ a {
   color: var(--muted);
 }
 
+.verifyBanner {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 14px;
+  align-items: center;
+  justify-content: center;
+  padding: 10px 18px;
+  background: #fae8eb;
+  color: #a53e52;
+  font-size: 13px;
+  border-bottom: 1px solid var(--line);
+}
+
+.codeInput {
+  font: 700 30px/1.2 ui-monospace, SFMono-Regular, Menlo, monospace;
+  letter-spacing: 0.5em;
+  /* The tracking is applied after every glyph, including the last one, so
+     without this the digits sit visibly left of centre. */
+  text-indent: 0.5em;
+  text-align: center;
+}
+
 .authFootnote {
   margin: 0;
   font-size: 13px;

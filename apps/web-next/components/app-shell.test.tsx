@@ -24,6 +24,7 @@ describe("AppShell", () => {
       display_name: "林澄",
       email: "lin@example.com",
       roles: ["player", "creator"],
+      verified: true,
     });
     render(<AppShell>故事列表</AppShell>);
 
@@ -49,10 +50,27 @@ describe("AppShell", () => {
       display_name: "审核员",
       email: "reviewer@example.com",
       roles: ["player", "reviewer", "admin"],
+      verified: true,
     });
     render(<AppShell>审核内容</AppShell>);
 
     await waitFor(() => expect(screen.getByRole("link", { name: "审核台" })).toBeTruthy());
     expect(screen.getByRole("link", { name: "管理" })).toBeTruthy();
+  });
+
+  it("routes an unverified account to the verification code form", async () => {
+    apiMock.mockResolvedValue({
+      display_name: "新玩家",
+      email: "new@example.com",
+      roles: ["player"],
+      verified: false,
+    });
+    render(<AppShell>故事列表</AppShell>);
+
+    await waitFor(() =>
+      expect(screen.getByRole("link", { name: "输入验证码" }).getAttribute("href")).toBe(
+        "/verify-email",
+      ),
+    );
   });
 });

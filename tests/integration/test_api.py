@@ -316,6 +316,153 @@ async def test_admin_can_manage_and_test_platform_llm_without_secret_echo(
     assert production_key not in reasoning_test.text
 
 
+@pytest.fixture
+def sent_emails(monkeypatch):
+    """Capture outbound mail so tests can read the verification code."""
+    import apps.api.routers.auth as auth_router
+
+    captured: list[tuple[str, str, str]] = []
+
+    async def capture(_settings, to: str, subject: str, text: str) -> None:
+        captured.append((to, subject, text))
+
+    monkeypatch.setattr(auth_router, "send_email", capture)
+    return captured
+
+
+def _code_from(email_body: str) -> str:
+    import re
+
+    match = re.search(r"验证码是：(\d{4})", email_body)
+    assert match, email_body
+    return match.group(1)
+
+
+async def test_registration_emails_a_four_digit_code_that_verifies_idempotently(
+    client, sent_emails
+) -> None:
+    registered = await client.post(
+        "/api/v1/auth/register",
+        json={
+            "email": "code-player@example.com",
+            "password": "correct-horse-code",
+            "display_name": "验证码玩家",
+        },
+    )
+    assert registered.status_code == 201
+    assert registered.json()["verified"] is False
+    assert len(sent_emails) == 1
+    code = _code_from(sent_emails[0][2])
+    # The link form is gone: nothing in the mail should send the reader to a
+    # URL that carries the secret.
+    assert "token=" not in sent_emails[0][2]
+
+    wrong = await client.post(
+        "/api/v1/auth/verify-email",
+        json={"email": "code-player@example.com", "code": "0000" if code != "0000" else "1111"},
+    )
+    assert wrong.status_code == 400
+    assert wrong.json()["detail"] == "verification code is invalid or expired"
+
+    # Spacing survives a copy out of a mail client.
+    accepted = await client.post(
+        "/api/v1/auth/verify-email",
+        json={"email": "CODE-Player@example.com ", "code": f" {code[:2]} {code[2:]} "},
+    )
+    assert accepted.status_code == 200
+    assert accepted.json()["verified"] is True
+
+    # Reloading the page or double-submitting must not read as a failure.
+    replayed = await client.post(
+        "/api/v1/auth/verify-email",
+        json={"email": "code-player@example.com", "code": code},
+    )
+    assert replayed.status_code == 200
+    assert replayed.json()["verified"] is True
+
+
+async def test_verification_code_burns_after_repeated_wrong_guesses(client, sent_emails) -> None:
+    registered = await client.post(
+        "/api/v1/auth/register",
+        json={
+            "email": "brute-force@example.com",
+            "password": "correct-horse-brute",
+            "display_name": "暴力破解",
+        },
+    )
+    assert registered.status_code == 201
+    code = _code_from(sent_emails[0][2])
+
+    for attempt in range(5):
+        wrong = await client.post(
+            "/api/v1/auth/verify-email",
+            json={"email": "brute-force@example.com", "code": f"{(int(code) + attempt + 1) % 10000:04d}"},
+        )
+        assert wrong.status_code == 400
+
+    # The correct code is now worthless; only a resend recovers the account.
+    burned = await client.post(
+        "/api/v1/auth/verify-email",
+        json={"email": "brute-force@example.com", "code": code},
+    )
+    assert burned.status_code == 400
+
+    resent = await client.post(
+        "/api/v1/auth/verify-email/resend", json={"email": "brute-force@example.com"}
+    )
+    assert resent.status_code == 202
+    assert len(sent_emails) == 2
+    fresh = _code_from(sent_emails[1][2])
+    accepted = await client.post(
+        "/api/v1/auth/verify-email",
+        json={"email": "brute-force@example.com", "code": fresh},
+    )
+    assert accepted.status_code == 200
+
+
+async def test_resend_replaces_the_live_code_and_never_confirms_an_address(
+    client, sent_emails
+) -> None:
+    await client.post(
+        "/api/v1/auth/register",
+        json={
+            "email": "resend-player@example.com",
+            "password": "correct-horse-resend",
+            "display_name": "重发玩家",
+        },
+    )
+    first = _code_from(sent_emails[0][2])
+    resent = await client.post(
+        "/api/v1/auth/verify-email/resend", json={"email": "resend-player@example.com"}
+    )
+    assert resent.status_code == 202
+    second = _code_from(sent_emails[1][2])
+
+    stale = await client.post(
+        "/api/v1/auth/verify-email",
+        json={"email": "resend-player@example.com", "code": first},
+    )
+    assert stale.status_code == 400 or first == second
+
+    unknown = await client.post(
+        "/api/v1/auth/verify-email/resend", json={"email": "nobody@example.com"}
+    )
+    assert unknown.status_code == 202
+    assert len(sent_emails) == 2
+
+    accepted = await client.post(
+        "/api/v1/auth/verify-email",
+        json={"email": "resend-player@example.com", "code": second},
+    )
+    assert accepted.status_code == 200
+
+
+async def test_verification_rejects_malformed_codes_before_touching_the_database(client) -> None:
+    for payload in ({"email": "x@example.com", "code": "12"}, {"email": "x@example.com", "code": "abcd"}):
+        response = await client.post("/api/v1/auth/verify-email", json=payload)
+        assert response.status_code == 422
+
+
 async def test_mfa_recovery_code_is_single_use_and_totp_replay_is_rejected(client) -> None:
     import time
 

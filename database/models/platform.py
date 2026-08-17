@@ -79,6 +79,9 @@ class EmailTokenORM(Base):
     created_at: Mapped[datetime] = mapped_column(sa.DateTime(timezone=True), default=utcnow)
     expires_at: Mapped[datetime] = mapped_column(sa.DateTime(timezone=True), index=True)
     used_at: Mapped[datetime | None] = mapped_column(sa.DateTime(timezone=True), nullable=True)
+    # Short numeric codes need a per-row lockout; the rate limiter alone only
+    # bounds the guess rate, not the total guesses against one live code.
+    attempts: Mapped[int] = mapped_column(sa.Integer, default=0, server_default="0")
 
 
 class ProjectORM(TimestampMixin, Base):

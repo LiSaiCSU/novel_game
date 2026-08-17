@@ -6,7 +6,7 @@ export type ApiProblem = {
 
 const apiMessages: Record<string, string> = {
   "authentication required": "请先登录，再继续这项操作。",
-  "email verification required": "请先打开验证邮件完成邮箱验证。",
+  "email verification required": "请先输入邮件中的验证码完成邮箱验证。",
   "CSRF validation failed": "页面安全凭证已过期，请刷新页面后重试。",
   "insufficient role": "当前账号没有执行这项操作的权限。",
   "administrator MFA enrollment required": "管理员账号需要先启用双重验证。",
@@ -16,8 +16,10 @@ const apiMessages: Record<string, string> = {
   "email is already registered": "这个邮箱已经注册过账号。",
   "account is not active": "账号当前不可用，请联系管理员。",
   "account no longer exists": "这个账号已经不存在。",
+  "verification code is invalid or expired": "验证码不正确或已经过期，请重新获取。",
   "verification token is invalid or expired": "验证链接无效或已经过期。",
   "verification token is invalid": "验证链接无效。",
+  "too many requests": "操作过于频繁，请稍后再试。",
   "reset token is invalid or expired": "重置密码链接无效或已经过期。",
   "reset token is invalid": "重置密码链接无效。",
   "password confirmation failed": "当前密码不正确。",

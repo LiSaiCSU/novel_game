@@ -10,7 +10,7 @@ from urllib.parse import quote
 
 import sqlalchemy as sa
 from fastapi import APIRouter, Depends, HTTPException, Request, Response
-from pydantic import BaseModel, EmailStr, Field
+from pydantic import BaseModel, EmailStr, Field, field_validator
 
 from apps.api.deps import settings_dep, uow_dep
 from apps.api.emailer import send_email
@@ -43,6 +43,12 @@ from engine.core.ids import new_id
 
 router = APIRouter(prefix="/auth", tags=["v1-auth"])
 
+VERIFICATION_CODE_DIGITS = 4
+# One shared message for every failure mode of a verification attempt: a
+# wrong code, an expired code and an unknown address must be indistinguishable
+# so the endpoint cannot be used to enumerate registered addresses.
+INVALID_CODE_DETAIL = "verification code is invalid or expired"
+
 
 class RegisterRequest(BaseModel):
     email: EmailStr
@@ -58,6 +64,27 @@ class LoginRequest(BaseModel):
 
 class TokenRequest(BaseModel):
     token: str = Field(min_length=20, max_length=256)
+
+
+class VerifyEmailRequest(BaseModel):
+    email: EmailStr
+    code: str = Field(min_length=1, max_length=32)
+
+    @field_validator("code")
+    @classmethod
+    def only_digits(cls, value: str) -> str:
+        # Codes are copied out of a mail client, so spaces and full-width
+        # digits arrive routinely. Normalise instead of rejecting.
+        digits = "".join(
+            str(int(character)) for character in value.strip() if character.isdecimal()
+        )
+        if len(digits) != VERIFICATION_CODE_DIGITS:
+            raise ValueError(f"code must contain {VERIFICATION_CODE_DIGITS} digits")
+        return digits
+
+
+class ResendVerificationRequest(BaseModel):
+    email: EmailStr
 
 
 class ForgotPasswordRequest(BaseModel):
@@ -147,6 +174,62 @@ async def _issue_email_token(
         )
     )
     return raw
+
+
+def _code_digest(row_id: str, purpose: str, code: str, settings: Settings) -> str:
+    """Bind a short code to the row that issued it.
+
+    ``email_tokens.token_hash`` is globally unique.  Hashing the bare code
+    would collide across users after a few hundred signups, and hashing
+    ``user + code`` would still collide whenever the same user is re-issued
+    the same code.  The row id makes the digest unique by construction, and
+    lookups go through ``user_id + purpose`` rather than through the digest.
+    """
+    return token_hash(f"{purpose}:{row_id}:{code}", settings.auth_pepper)
+
+
+def _new_verification_code() -> str:
+    return "".join(secrets.choice("0123456789") for _ in range(VERIFICATION_CODE_DIGITS))
+
+
+async def _issue_email_code(
+    uow: SqlUnitOfWork, settings: Settings, user_id: str, purpose: str
+) -> str:
+    """Replace any live code for this purpose with a freshly generated one."""
+    now = datetime.now(UTC)
+    # Only one code may be redeemable at a time. Otherwise "resend" widens the
+    # guessable keyspace instead of replacing it, and a user who resent twice
+    # would not know which of the three mails is the live one.
+    await uow.session.execute(
+        sa.update(EmailTokenORM)
+        .where(
+            EmailTokenORM.user_id == user_id,
+            EmailTokenORM.purpose == purpose,
+            EmailTokenORM.used_at.is_(None),
+        )
+        .values(used_at=now)
+    )
+    row_id = new_id()
+    code = _new_verification_code()
+    uow.session.add(
+        EmailTokenORM(
+            id=row_id,
+            user_id=user_id,
+            purpose=purpose,
+            token_hash=_code_digest(row_id, purpose, code, settings),
+            expires_at=now + timedelta(minutes=settings.email_code_minutes),
+        )
+    )
+    return code
+
+
+def _verification_email_body(code: str, settings: Settings) -> str:
+    return (
+        f"你的邮箱验证码是：{code}\n\n"
+        f"请在 {settings.email_code_minutes} 分钟内回到 "
+        f"{settings.public_app_url.rstrip('/')}/verify-email 输入这个验证码。\n"
+        "如果这不是你的操作，请忽略这封邮件。"
+    )
 
 
 async def _user_view(uow: SqlUnitOfWork, user: UserORM) -> UserView:
@@ -258,42 +341,98 @@ async def register(
     # token and first session rows.  Make the dependency boundary explicit.
     await uow.session.flush()
     uow.session.add(UserRoleORM(id=new_id(), user_id=user.id, role="player"))
-    raw = await _issue_email_token(uow, settings, user.id, "verify_email")
+    code = await _issue_email_code(uow, settings, user.id, "verify_email")
     await _create_session(uow, settings, user, request, response)
     await uow.commit()
-    url = f"{settings.public_app_url.rstrip('/')}/verify-email?token={raw}"
-    await send_email(settings, email, "验证你的叙事世界账号", f"请在有效期内打开：{url}")
+    await send_email(
+        settings, email, "叙界邮箱验证码", _verification_email_body(code, settings)
+    )
     return await _user_view(uow, user)
 
 
 @router.post("/verify-email", response_model=UserView)
 async def verify_email(
-    body: TokenRequest,
+    body: VerifyEmailRequest,
     request: Request,
     uow: SqlUnitOfWork = Depends(uow_dep),
     settings: Settings = Depends(settings_dep),
 ) -> UserView:
+    email = normalize_email(str(body.email))
     await rate_limiter.check(
-        f"verify-email:{_client_ip(request)}", 10, 3600, redis_url=settings.redis_url
+        f"verify-email:{_client_ip(request)}", 30, 3600, redis_url=settings.redis_url
     )
-    digest = token_hash(body.token, settings.auth_pepper)
+    await rate_limiter.check(
+        f"verify-email-account:{token_hash(email, settings.auth_pepper)}",
+        15,
+        900,
+        redis_url=settings.redis_url,
+    )
+    user = await uow.session.scalar(sa.select(UserORM).where(UserORM.email == email))
+    if user is None:
+        raise HTTPException(status_code=400, detail=INVALID_CODE_DETAIL)
+    if user.email_verified_at is not None:
+        # Re-submitting a code that already did its job — a page reload, a
+        # double click, a second tab — is success, not an error.
+        return await _user_view(uow, user)
     token = await uow.session.scalar(
-        sa.select(EmailTokenORM).where(
-            EmailTokenORM.token_hash == digest,
+        sa.select(EmailTokenORM)
+        .where(
+            EmailTokenORM.user_id == user.id,
             EmailTokenORM.purpose == "verify_email",
             EmailTokenORM.used_at.is_(None),
             EmailTokenORM.expires_at > datetime.now(UTC),
         )
+        .order_by(EmailTokenORM.created_at.desc())
+        .with_for_update()
     )
     if token is None:
-        raise HTTPException(status_code=400, detail="verification token is invalid or expired")
-    user = await uow.session.get(UserORM, token.user_id)
-    if user is None:
-        raise HTTPException(status_code=400, detail="verification token is invalid")
-    token.used_at = datetime.now(UTC)
-    user.email_verified_at = datetime.now(UTC)
+        raise HTTPException(status_code=400, detail=INVALID_CODE_DETAIL)
+    now = datetime.now(UTC)
+    if not hmac.compare_digest(
+        _code_digest(token.id, "verify_email", body.code, settings), token.token_hash
+    ):
+        token.attempts += 1
+        if token.attempts >= settings.email_code_max_attempts:
+            token.used_at = now
+        await uow.commit()
+        raise HTTPException(status_code=400, detail=INVALID_CODE_DETAIL)
+    token.used_at = now
+    user.email_verified_at = now
     await uow.commit()
     return await _user_view(uow, user)
+
+
+@router.post("/verify-email/resend", status_code=202)
+async def resend_verification(
+    body: ResendVerificationRequest,
+    request: Request,
+    uow: SqlUnitOfWork = Depends(uow_dep),
+    settings: Settings = Depends(settings_dep),
+) -> dict[str, str]:
+    await rate_limiter.check(
+        f"resend-verification:{_client_ip(request)}", 10, 3600, redis_url=settings.redis_url
+    )
+    email = normalize_email(str(body.email))
+    user = await uow.session.scalar(sa.select(UserORM).where(UserORM.email == email))
+    if user is None or user.email_verified_at is not None or user.status != "active":
+        return {"status": "accepted"}
+    try:
+        await rate_limiter.check(
+            f"resend-verification-account:{token_hash(email, settings.auth_pepper)}",
+            3,
+            600,
+            redis_url=settings.redis_url,
+        )
+    except HTTPException:
+        # A 429 here would answer "is this address registered?". Swallow it:
+        # the limit still holds because no new code is issued or sent.
+        return {"status": "accepted"}
+    code = await _issue_email_code(uow, settings, user.id, "verify_email")
+    await uow.commit()
+    await send_email(
+        settings, email, "叙界邮箱验证码", _verification_email_body(code, settings)
+    )
+    return {"status": "accepted"}
 
 
 @router.post("/login", response_model=UserView)

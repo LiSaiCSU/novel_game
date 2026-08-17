@@ -124,6 +124,10 @@ class Settings(BaseSettings):
     auth_cookie_secure: bool = False
     auth_session_days: int = 30
     email_token_minutes: int = 30
+    # Verification codes are short enough to type from a phone, so they get a
+    # tighter window and a hard per-code guess budget instead of link lifetime.
+    email_code_minutes: int = Field(default=15, ge=1, le=120)
+    email_code_max_attempts: int = Field(default=5, ge=1, le=20)
     auth_pepper: str = "change-me-in-production"
     credential_encryption_key: str = ""
     require_verified_email: bool = True
