@@ -1,7 +1,7 @@
 import { Bookmark, ChevronDown, MapPin, PanelRight, Sparkles } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { ActionComposer } from "./action-composer";
-import type { Choice, Dashboard, Recap, Scene } from "./game-types";
+import type { Choice, Recap, Scene } from "./game-types";
 import { buildActionRecommendations } from "./recommendations";
 
 type Props = {
@@ -9,7 +9,6 @@ type Props = {
   chapters: string[];
   current?: { input: string; narrative: string };
   choices: Choice[];
-  dashboard?: Dashboard;
   beat: string;
   draft: string;
   recap?: Recap;
@@ -31,7 +30,6 @@ export function StoryPanel({
   chapters,
   current,
   choices,
-  dashboard,
   beat,
   draft,
   recap,
@@ -51,8 +49,8 @@ export function StoryPanel({
   const formRef = useRef<HTMLFormElement>(null);
   const [suggestionsOpen, setSuggestionsOpen] = useState(false);
   const recommendations = useMemo(
-    () => buildActionRecommendations(choices, state, dashboard, Boolean(beat)),
-    [beat, choices, dashboard, state],
+    () => buildActionRecommendations(choices, state),
+    [choices, state],
   );
 
   useEffect(() => {
@@ -113,17 +111,16 @@ export function StoryPanel({
             )}
             {recap.recent.length > 0 && <blockquote>{recap.recent.at(-1)?.text}</blockquote>}
             {recap.objectives.length > 0 && (
+              // Reference, not suggestions. Submitting a quest title as an
+              // action ("继续推进X") hands the engine a goal instead of a move,
+              // and the concrete next steps already sit in the suggestion dock.
               <div className="recapObjectives">
-                <b>接下来可以关注</b>
+                <b>还没了结的事</b>
                 {recap.objectives.slice(0, 4).map((objective) => (
-                  <button
-                    key={`${objective.type}-${objective.key}`}
-                    title={objective.hint}
-                    onClick={() => choose(objective.hint || `继续推进${objective.name}`)}
-                  >
+                  <span key={`${objective.type}-${objective.key}`} title={objective.hint}>
                     <span>{objective.name}</span>
                     {objective.hint && <small>{objective.hint}</small>}
-                  </button>
+                  </span>
                 ))}
               </div>
             )}

@@ -62,7 +62,6 @@ export default function Game() {
         chapters={game.chapters}
         current={game.current}
         choices={game.choices}
-        dashboard={game.dashboard}
         beat={game.beat}
         draft={game.draft}
         recap={game.recap}

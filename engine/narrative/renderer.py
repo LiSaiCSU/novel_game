@@ -45,6 +45,22 @@ class NarrativeResult:
     debug: dict[str, object] = field(default_factory=dict)
 
 
+#: A useful option names a person and the actual words to say, which does not
+#: fit the length a bare verb phrase needs. Long enough for a spoken line,
+#: short enough to stay a button.
+MAX_OPTION_CHARS = 60
+
+
+def _option_label(value: object) -> str:
+    """Trim an option to button length without cutting mid-sentence."""
+    label = str(value).strip()
+    if len(label) <= MAX_OPTION_CHARS:
+        return label
+    clipped = label[:MAX_OPTION_CHARS]
+    boundary = max(clipped.rfind(mark) for mark in ("。", "！", "？", "”", "，"))
+    return (clipped[: boundary + 1] if boundary >= MAX_OPTION_CHARS // 2 else clipped).strip()
+
+
 def split_beat(raw: str) -> tuple[str, StoryBeat | None]:
     """Separate scene prose from the trailing beat block.
 
@@ -62,11 +78,12 @@ def split_beat(raw: str) -> tuple[str, StoryBeat | None]:
                 "needs_player": bool(payload.get("needs_player", True)),
                 "question": str(payload.get("question", "")).strip(),
                 "options": [
-                    {"label": str(o)[:40]}
+                    {"label": _option_label(o), "source": "narrator"}
                     if isinstance(o, str)
                     else {
-                        "label": str(o.get("label", ""))[:40],
+                        "label": _option_label(o.get("label", "")),
                         "hint": str(o.get("hint", ""))[:120],
+                        "source": "narrator",
                     }
                     for o in (payload.get("options") or [])[:4]
                 ],

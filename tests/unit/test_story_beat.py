@@ -84,6 +84,43 @@ def test_beat_option_objects_keep_contextual_hints() -> None:
     assert beat.options[0].hint == "承接刚出现的账本线索"
 
 
+def test_narrator_options_are_marked_so_the_client_shows_them_verbatim() -> None:
+    """The player app cannot make an affordance as specific as a written line.
+
+    It needs to know which options were written for this exact moment, so it
+    can present those alone instead of padding them out with generic ones.
+    """
+    raw = (
+        f"刘叔把铁链踢回泥里。\n{BEAT_MARKER}\n"
+        '{"options":[{"label":"我拦住刘叔：“那条狗后来是谁牵走的？”"},"转身回骡马店"]}'
+    )
+    _, beat = split_beat(raw)
+
+    assert beat is not None
+    assert {option.source for option in beat.options} == {"narrator"}
+
+
+def test_a_spoken_option_is_not_cut_off_mid_sentence() -> None:
+    spoken = "我拦住刘叔，把那截铁链亮在他面前：“这上头的记号是我爹划的，你早就认出来了吧？”"
+    raw = f"x\n{BEAT_MARKER}\n" + f'{{"options":[{{"label":"{spoken}"}}]}}'
+
+    _, beat = split_beat(raw)
+
+    assert beat is not None
+    label = beat.options[0].label
+    assert len(label) <= 60
+    assert label[-1] in "。！？”，"
+
+
+def test_engine_fallback_choices_are_labelled_as_such(pack, state) -> None:
+    orchestrator = build_orchestrator(pack=pack, provider=NullProvider())
+
+    choices = orchestrator._recommendations(state, None, None)  # type: ignore[arg-type]
+
+    assert choices
+    assert {choice.source for choice in choices} == {"engine"}
+
+
 def test_latest_story_beat_replaces_generic_location_choices(pack, state) -> None:
     orchestrator = build_orchestrator(pack=pack, provider=NullProvider())
     beat = StoryBeat(

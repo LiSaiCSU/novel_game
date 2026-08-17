@@ -30,9 +30,81 @@ _NAME_CANDIDATE = re.compile(f"[{chr(0x4E00)}-{chr(0x9FFF)}]{{2,4}}")
 _PARAGRAPH_BREAK = re.compile(r"\n[ \t]*\n")
 _PROSE_SPACE = re.compile(r"\s+")
 
+#: Sentence terminators, plus the closing marks that trail them.
+_SENTENCE_END = "。！？!?…"
+_SENTENCE_CLOSERS = "”’」』）)》〉】"
+
+#: A recap sentence is long. Short lines - "他没答应。", a repeated line of
+#: dialogue, a deliberate callback - are how prose actually refers back to
+#: itself, so removing them would damage the writing rather than repair it.
+MIN_SENTENCE_ECHO_CHARS = 30
+SENTENCE_ECHO_RATIO = 0.90
+
 
 def _comparable_prose(text: str) -> str:
     return _PROSE_SPACE.sub("", text).strip()
+
+
+def split_sentences(paragraph: str) -> list[str]:
+    """Cut a paragraph after each terminator, keeping the punctuation.
+
+    The trailing element has no terminator when the paragraph is still being
+    written; callers streaming a response use that to tell a finished sentence
+    from one the model is halfway through.
+    """
+    sentences: list[str] = []
+    start = 0
+    index = 0
+    while index < len(paragraph):
+        if paragraph[index] in _SENTENCE_END:
+            end = index + 1
+            while end < len(paragraph) and paragraph[end] in _SENTENCE_END + _SENTENCE_CLOSERS:
+                end += 1
+            sentences.append(paragraph[start:end])
+            start = end
+            index = end
+        else:
+            index += 1
+    if start < len(paragraph):
+        sentences.append(paragraph[start:])
+    return sentences
+
+
+def _is_complete_sentence(sentence: str) -> bool:
+    stripped = sentence.rstrip(_SENTENCE_CLOSERS)
+    return bool(stripped) and stripped[-1] in _SENTENCE_END
+
+
+def _is_repeated_sentence(candidate: str, known: list[str]) -> bool:
+    """Whether one sentence merely restates a sentence already told.
+
+    Paragraph-level filtering only catches a wholesale paste.  The far more
+    common failure is a new paragraph that re-narrates two or three sentences
+    of what the reader just read before adding anything - which is what makes
+    a chapter feel like it is treading water.
+    """
+    if len(candidate) < MIN_SENTENCE_ECHO_CHARS:
+        return False
+    for sentence in known:
+        if len(sentence) < MIN_SENTENCE_ECHO_CHARS:
+            continue
+        if candidate in sentence or sentence in candidate:
+            return True
+        if (
+            SequenceMatcher(None, candidate, sentence, autojunk=False).ratio()
+            >= SENTENCE_ECHO_RATIO
+        ):
+            return True
+    return False
+
+
+def _known_sentences(paragraphs: list[str]) -> list[str]:
+    return [
+        comparable
+        for paragraph in paragraphs
+        for sentence in split_sentences(paragraph)
+        if (comparable := _comparable_prose(sentence))
+    ]
 
 
 def repeated_opening_length(text: str, recent_narrative: str, *, final: bool = False) -> int:
@@ -96,10 +168,17 @@ def repeated_opening_length(text: str, recent_narrative: str, *, final: bool = F
 
 
 def _is_repeated_paragraph(candidate: str, recent: list[str]) -> bool:
+    """Whether a paragraph adds nothing that has not already been told.
+
+    Deliberately not symmetric.  A candidate contained in known prose is a
+    pure copy.  A candidate that *contains* known prose is a copy plus
+    something new, and belongs to the sentence filter - dropping it whole
+    would throw the new material away with the echo.
+    """
     if len(candidate) < 36:
         return False
     for paragraph in recent:
-        if candidate == paragraph or candidate in paragraph or paragraph in candidate:
+        if candidate == paragraph or candidate in paragraph:
             return True
         if (
             min(len(candidate), len(paragraph)) >= 48
@@ -127,24 +206,51 @@ def _could_be_repeated_paragraph(candidate: str, known: list[str]) -> bool:
     )
 
 
+def _keep_fresh_sentences(
+    paragraph: str, known_sentences: list[str], *, complete_only: bool
+) -> tuple[str, list[str]]:
+    """Drop the sentences of one paragraph that merely retell known prose.
+
+    Returns the surviving text and the comparable form of what survived, so
+    the caller can hold later paragraphs against it too.  When
+    ``complete_only`` is set the still-unfinished trailing sentence is
+    withheld: a half-written sentence cannot be judged, and a streaming caller
+    must never show text it might want back.
+    """
+    kept: list[str] = []
+    accepted: list[str] = []
+    for sentence in split_sentences(paragraph):
+        if complete_only and not _is_complete_sentence(sentence):
+            break
+        comparable = _comparable_prose(sentence)
+        if not comparable:
+            kept.append(sentence)
+            continue
+        if _is_repeated_sentence(comparable, [*known_sentences, *accepted]):
+            continue
+        kept.append(sentence)
+        accepted.append(comparable)
+    return "".join(kept).strip(), accepted
+
+
 def filter_repeated_paragraphs(
     text: str,
     recent_narrative: str,
     *,
     final: bool = True,
 ) -> str:
-    """Remove copied paragraphs without breaking streaming monotonicity.
+    """Remove copied prose without breaking streaming monotonicity.
 
-    A provider may prepend a sentence and then paste an older scene, or repeat
-    a paragraph later in the same response.  Opening-only filtering misses
-    both cases.  This filter checks every paragraph against recent narrative
-    and against paragraphs already accepted in the current response.
+    Three things get removed: a paragraph pasted from recent narrative, a
+    paragraph the response already used once, and individual long sentences
+    that restate something the reader has just been told.  The last of these
+    is the common case - a chapter that opens by summarising the previous one
+    before it gets to anything new.
 
-    While streaming, a new paragraph is held for at most 64 comparable
-    characters if it could still be a copy.  Unique prose then continues to
-    stream normally.  Because a paragraph is never exposed while it remains a
-    possible duplicate, later calls only extend the visible string; they never
-    need to retract text the reader has already seen.
+    While streaming, a new paragraph is held until it has 64 comparable
+    characters that cannot be a copy, and only its finished sentences are
+    exposed.  Because nothing is shown while it might still be a duplicate,
+    later calls only ever extend the visible string.
     """
 
     if not text:
@@ -154,31 +260,47 @@ def filter_repeated_paragraphs(
         for paragraph in _PARAGRAPH_BREAK.split(recent_narrative)
         if _comparable_prose(paragraph)
     ]
+    known_sentences = _known_sentences(
+        [paragraph for paragraph in _PARAGRAPH_BREAK.split(recent_narrative) if paragraph.strip()]
+    )
     accepted: list[str] = []
     accepted_known: list[str] = []
+    accepted_sentences: list[str] = []
     start = 0
     boundaries = list(_PARAGRAPH_BREAK.finditer(text))
 
+    def take(paragraph: str, *, complete_only: bool) -> None:
+        seen_paragraphs = [*known, *accepted_known]
+        if _is_repeated_paragraph(_comparable_prose(paragraph), seen_paragraphs):
+            return
+        # Whatever survives that is a copy plus new material, so the echo is
+        # removed sentence by sentence rather than by discarding the lot.
+        kept, fresh = _keep_fresh_sentences(
+            paragraph, [*known_sentences, *accepted_sentences], complete_only=complete_only
+        )
+        if not kept:
+            return
+        comparable = _comparable_prose(kept)
+        if _is_repeated_paragraph(comparable, seen_paragraphs):
+            return
+        accepted.append(kept)
+        accepted_known.append(comparable)
+        accepted_sentences.extend(fresh)
+
     for boundary in boundaries:
         paragraph = text[start : boundary.start()].strip()
-        comparable = _comparable_prose(paragraph)
-        candidates = [*known, *accepted_known]
-        if paragraph and not _is_repeated_paragraph(comparable, candidates):
-            accepted.append(paragraph)
-            accepted_known.append(comparable)
+        if paragraph:
+            take(paragraph, complete_only=False)
         start = boundary.end()
 
     remainder = text[start:].strip()
-    comparable = _comparable_prose(remainder)
-    candidates = [*known, *accepted_known]
     if remainder:
         if final:
-            if not _is_repeated_paragraph(comparable, candidates):
-                accepted.append(remainder)
-        elif len(comparable) >= 64 and not _could_be_repeated_paragraph(
-            comparable, candidates
+            take(remainder, complete_only=False)
+        elif len(_comparable_prose(remainder)) >= 64 and not _could_be_repeated_paragraph(
+            _comparable_prose(remainder), [*known, *accepted_known]
         ):
-            accepted.append(remainder)
+            take(remainder, complete_only=True)
 
     return "\n\n".join(accepted).strip()
 

@@ -38,6 +38,23 @@ logger = get_logger("chapter")
 #: chapter is finished.
 ChunkListener = Callable[[str], Awaitable[None]]
 
+#: How much of the previous chapter the prompt is shown. It is there so the
+#: opening line can connect to what just happened - not so the model can
+#: summarise it. Handing over whole chapters reliably produces a chapter that
+#: opens by retelling them, and the de-duplication pass then has to delete
+#: prose the reader already watched stream in.
+PROMPT_CONTINUITY_CHARS = 700
+
+
+def _continuity_tail(recent_narrative: str, limit: int = PROMPT_CONTINUITY_CHARS) -> str:
+    """The last few paragraphs of what came before, cut on a paragraph break."""
+    text = recent_narrative.strip()
+    if len(text) <= limit:
+        return text
+    tail = text[-limit:]
+    _, separator, remainder = tail.partition("\n\n")
+    return (remainder if separator else tail).strip()
+
 
 @dataclass(slots=True)
 class ChapterStep:
@@ -105,6 +122,7 @@ class ChapterRenderer:
         *,
         interrupt: Interrupt | None,
         recent_narrative: str,
+        told_already: str = "",
         arc: str = "",
         on_chunk: ChunkListener | None = None,
         max_chars: int = DEFAULT_NARRATIVE_CHARS,
@@ -123,7 +141,7 @@ class ChapterRenderer:
                 resolved_result="\n".join(step.summarise(i + 1) for i, step in enumerate(steps)),
                 npc_decisions="\n".join(line for step in steps for line in step.npc_lines) or "-",
                 world_events="\n".join(line for step in steps for line in step.world_lines) or "-",
-                recent_narrative=recent_narrative,
+                recent_narrative=_continuity_tail(recent_narrative),
             )
             sections = dict(context.sections)
             sections.update(self.renderer.style.as_prompt_vars(max_chars))
@@ -138,7 +156,13 @@ class ChapterRenderer:
                 }
             )
             prompt = self.registry.render("chapter", self.prompt_version, **sections)
-            raw = await self._generate(prompt, on_chunk, max_chars, recent_narrative)
+            # The prompt is given only the tail, to keep the context small and
+            # to give the model less to copy. De-duplication reaches further
+            # back than that: a chapter that re-tells a scene from three
+            # chapters ago is exactly the failure worth catching.
+            raw = await self._generate(
+                prompt, on_chunk, max_chars, told_already or recent_narrative
+            )
         except LLMError as exc:
             logger.warning("chapter generation failed, using templates: %s", exc)
             self.llm.record_degraded(LLMRole.NARRATIVE, str(exc))

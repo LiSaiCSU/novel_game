@@ -70,6 +70,12 @@ class Choice(BaseModel):
     label: str
     hint: str = ""
     action_type: str = ""
+    #: ``narrator`` when the option came out of the chapter that was just
+    #: written, ``engine`` when it is a generic affordance derived from world
+    #: state. The player-facing layer shows narrator options as written and
+    #: never pads them out; it has no way to make an engine affordance as
+    #: specific as a line the narrator wrote knowing who was mid-sentence.
+    source: str = ""
 
 
 class StoryBeat(BaseModel):

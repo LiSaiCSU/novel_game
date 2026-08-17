@@ -26,7 +26,13 @@ export type PlaythroughSettings = {
   presets: NarrativeLengthPreset[];
 };
 
-export type Choice = { label: string; hint?: string; action_type?: string };
+export type Choice = {
+  label: string;
+  hint?: string;
+  action_type?: string;
+  /** "narrator" options are written for this exact moment and shown verbatim. */
+  source?: string;
+};
 
 export type History = { chapters: Array<{ input: string; text: string }>; choices: Choice[] };
 

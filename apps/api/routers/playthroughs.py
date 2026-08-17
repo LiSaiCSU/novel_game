@@ -653,8 +653,17 @@ async def playthrough_recap(
         if segment.kind in {"chapter", "scene", "ending"} and segment.text.strip()
     ]
     last_result = dict(turns[-1].get("result") or {}) if turns else {}
+    # Carry the action type and provenance through. Without them the player
+    # app cannot tell a narrator's written-out action from a bare affordance
+    # label like a character's name, and shows the latter as if it were a
+    # suggestion the player could submit.
     choices = [
-        {"label": str(item.get("label", "")), "hint": str(item.get("hint", ""))}
+        {
+            "label": str(item.get("label", "")),
+            "hint": str(item.get("hint", "")),
+            "action_type": str(item.get("action_type", "")),
+            "source": str(item.get("source", "")),
+        }
         for item in last_result.get("choices", [])
         if isinstance(item, dict) and item.get("label")
     ][:4]

@@ -381,7 +381,8 @@ class GameOrchestrator:
                 state,
                 steps,
                 interrupt=interrupt,
-                recent_narrative=await self._recent_narrative(uow, session.id),
+                recent_narrative=await self._recent_narrative(uow, session.id, limit=2),
+                told_already=await self._recent_narrative(uow, session.id, limit=8),
                 arc=arc,
                 on_chunk=on_chunk,
                 max_chars=request.narrative_max_chars,
@@ -1216,6 +1217,7 @@ class GameOrchestrator:
                         label=npc.display_name,
                         hint=str(ActionType.TALK),
                         action_type=str(ActionType.TALK),
+                        source="engine",
                     )
                 )
         for key in list(state.graph.neighbours(state.location_key()))[:3]:
@@ -1226,10 +1228,16 @@ class GameOrchestrator:
                         label=location.name,
                         hint=str(ActionType.MOVE),
                         action_type=str(ActionType.MOVE),
+                        source="engine",
                     )
                 )
         choices.append(
-            Choice(label="", hint=str(ActionType.CULTIVATE), action_type=str(ActionType.CULTIVATE))
+            Choice(
+                label="",
+                hint=str(ActionType.CULTIVATE),
+                action_type=str(ActionType.CULTIVATE),
+                source="engine",
+            )
         )
         return choices[:8]
 
@@ -1631,8 +1639,12 @@ class GameOrchestrator:
         )
 
     async def _recent_narrative(self, uow: UnitOfWork, session_id: str, limit: int = 4) -> str:
-        segments = await uow.turns.list_narrative(session_id, limit=limit)
-        return "\n\n".join(s.text for s in segments if s.text and s.kind != BEAT_SEGMENT)
+        # Beat segments are bookkeeping and are dropped below, so ask for a
+        # couple extra rows - otherwise the prologue's beat silently costs the
+        # very first chapters one segment of the continuity window.
+        segments = await uow.turns.list_narrative(session_id, limit=limit + 2)
+        prose = [s.text for s in segments if s.text and s.kind != BEAT_SEGMENT]
+        return "\n\n".join(prose[-limit:])
 
     async def _pending_beat(self, uow: UnitOfWork, session_id: str) -> str:
         """What the last chapter left hanging, as plain text.

@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import type { Dashboard, Scene } from "./game-types";
+import type { Scene } from "./game-types";
 import { buildActionRecommendations } from "./recommendations";
 
 const scene: Scene = {
@@ -7,46 +7,50 @@ const scene: Scene = {
   present_characters: [{ name: "朝仓律" }],
 };
 
-const dashboard = {
-  quests: [{ key: "restore", name: "月见馆修复计划", status: "active" }],
-  threads: [
-    {
-      key: "ledger",
-      name: "消失的账本",
-      status: "active",
-      stage: 2,
-      next_beat_hint: "确认旧节目单上的赞助人署名",
-    },
-  ],
-} as Dashboard;
-
 describe("buildActionRecommendations", () => {
-  it("turns legacy person and location labels into editable full actions", () => {
-    const choices = buildActionRecommendations(
-      [
-        { label: "朝仓律", hint: "TALK", action_type: "TALK" },
-        { label: "档案室", hint: "MOVE", action_type: "MOVE" },
-      ],
-      scene,
-      dashboard,
-    );
+  it("shows the narrator's options exactly as written", () => {
+    const narratorOptions = [
+      {
+        label: "我问朝仓律：“你为什么把那页记录撕走？”",
+        hint: "当面追问刚才的隐瞒",
+        source: "narrator",
+      },
+      { label: "我先不揭穿，跟着她去看看档案室。", hint: "换一个角度确认", source: "narrator" },
+    ];
 
-    expect(choices[0].label).toContain("我问朝仓律");
-    expect(choices[0].label).toContain("确认旧节目单上的赞助人署名");
-    expect(choices[0].hint).not.toBe("TALK");
-    expect(choices.some((choice) => choice.label.includes("前往档案室"))).toBe(true);
-    expect(choices.some((choice) => choice.label.includes("月见馆修复计划"))).toBe(true);
-    expect(choices.some((choice) => choice.label.includes("确认旧节目单上的赞助人署名"))).toBe(
-      true,
-    );
+    const choices = buildActionRecommendations(narratorOptions, scene);
+
+    expect(choices.map((choice) => choice.label)).toEqual(narratorOptions.map((o) => o.label));
   });
 
-  it("adds current quests and story-thread hints instead of generic prompts", () => {
-    const choices = buildActionRecommendations([], scene, dashboard);
-
-    expect(choices.some((choice) => choice.label.includes("月见馆修复计划"))).toBe(true);
-    expect(choices.some((choice) => choice.label.includes("确认旧节目单上的赞助人署名"))).toBe(
-      true,
+  it("never pads narrator options out with generic filler", () => {
+    const choices = buildActionRecommendations(
+      [{ label: "我把手里的账本推回去，说这事我不接。", source: "narrator" }],
+      scene,
     );
+
+    expect(choices).toHaveLength(1);
+    expect(choices[0].label).not.toContain("旧礼堂");
+  });
+
+  it("turns bare engine affordances into submittable actions", () => {
+    const choices = buildActionRecommendations(
+      [
+        { label: "朝仓律", hint: "TALK", action_type: "TALK", source: "engine" },
+        { label: "档案室", hint: "MOVE", action_type: "MOVE", source: "engine" },
+      ],
+      scene,
+    );
+
+    expect(choices[0].label).toBe("我叫住朝仓律，把刚才的事问清楚。");
+    expect(choices[0].hint).not.toBe("TALK");
+    expect(choices[1].label).toBe("我现在就去档案室。");
+  });
+
+  it("suggests looking around when the world offered nothing else", () => {
+    const choices = buildActionRecommendations([], scene);
+
+    expect(choices).toHaveLength(1);
+    expect(choices[0].label).toContain("旧礼堂");
   });
 });
