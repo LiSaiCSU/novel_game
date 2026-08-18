@@ -1,7 +1,7 @@
 key: campus_romance_v1
 name: 春日坂未完通信
 genre: campus_romance
-version: "1.6.0"
+version: "1.7.0"
 engine_min_version: "0.2.0"
 primary_progression_key: education
 attribute_definitions:

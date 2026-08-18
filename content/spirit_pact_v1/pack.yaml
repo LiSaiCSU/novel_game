@@ -1,7 +1,7 @@
 key: spirit_pact_v1
 name: 苍澜契约·九印抉择
 genre: eastern_fantasy_academy
-version: "1.1.0"
+version: "1.2.0"
 engine_min_version: "0.2.0"
 primary_progression_key: soul_rank
 language: zh-CN
