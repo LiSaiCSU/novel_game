@@ -110,6 +110,7 @@ def project_v1_as_v2(
         "abilities": pack.skills,
         "quests": pack.quests,
         "plot_threads": pack.plot_threads,
+        "clocks": pack.clocks,
         "event_templates": pack.event_types,
         "offline_templates": pack.offline_templates,
         "npc_templates": pack.npc_templates,

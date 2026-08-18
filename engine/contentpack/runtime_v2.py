@@ -276,6 +276,7 @@ def content_pack_from_v2(
         skills=abilities,
         facts=deepcopy(document.facts),
         plot_threads=deepcopy(document.plot_threads),
+        clocks=deepcopy(document.clocks),
         quests=deepcopy(document.quests),
         event_types=event_types,
         offline_templates=deepcopy(document.offline_templates),

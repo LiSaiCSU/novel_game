@@ -315,6 +315,9 @@ class ContentDocumentV2(StrictModel):
     abilities: list[dict[str, Any]] = Field(default_factory=list)
     quests: list[dict[str, Any]] = Field(default_factory=list)
     plot_threads: list[dict[str, Any]] = Field(default_factory=list)
+    #: Visible pressure attached to those threads. Optional so packages
+    #: published before clocks existed still validate.
+    clocks: list[dict[str, Any]] = Field(default_factory=list)
     event_templates: list[dict[str, Any]] = Field(default_factory=list)
     offline_templates: list[dict[str, Any]] = Field(default_factory=list)
     npc_templates: dict[str, Any] = Field(default_factory=dict)
