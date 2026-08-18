@@ -64,6 +64,9 @@ ALLOWED_EFFECTS = frozenset(
         "quest_status",
         "plot_thread_update",
         "location_flag",
+        # Moves a visible clock by whole segments. Deterministic, authored, and
+        # the only way pack content can change the pressure the player sees.
+        "advance_clock",
     }
 )
 
@@ -84,6 +87,8 @@ class RuleEffect(BaseModel):
     def valid_effect(self) -> RuleEffect:
         if self.op not in ALLOWED_EFFECTS:
             raise ValueError(f"unsupported declarative effect: {self.op}")
+        if self.op == "advance_clock" and not self.target:
+            raise ValueError("advance_clock requires target")
         if self.op in {"set_player_data", "adjust_player_resource"} and not self.field:
             raise ValueError(f"{self.op} requires field")
         if self.op in {"relationship_delta", "plot_thread_update", "location_flag"} and not self.values:

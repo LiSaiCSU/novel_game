@@ -20,6 +20,7 @@ from engine.knowledge.service import Belief, KnowledgeService
 from engine.llm.provider import estimate_tokens
 from engine.memory.embeddings import Embedder
 from engine.memory.retrieval import MemoryRetriever, ScoredMemory
+from engine.world.clocks import clocks_for_prompt
 from engine.world.state_view import WorldStateView
 
 
@@ -185,6 +186,7 @@ class ContextBuilder:
             "world_events": world_events or "-",
             "visible_facts": self._beliefs(beliefs, hedges),
             "inventory_facts": self._inventory_facts(state),
+            "story_clocks": clocks_for_prompt(state),
         }
         built = BuiltContext(sections=sections, included_fact_keys=[b.fact_key for b in beliefs])
         self._enforce_budget(
@@ -231,6 +233,7 @@ class ContextBuilder:
             "story_focus": self._story_focus(state),
             "major_characters": self._major_characters(majors, ladder),
             "plot_threads": self._threads(threads),
+            "story_clocks": clocks_for_prompt(state),
             "recent_events": self._events(important, with_ids=True),
             "outstanding": self._bullets(
                 [f"{q.key}: {q.name} ({q.status})" for q in outstanding]

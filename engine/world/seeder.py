@@ -35,11 +35,13 @@ from engine.core.models import (
     Schedule,
     ScheduleSlot,
     Skill,
+    StoryClock,
     World,
 )
 from engine.core.types import (
     Activity,
     CharacterType,
+    ClockKind,
     DirectorDecisionType,
     DirectorEventStatus,
     FactScope,
@@ -68,6 +70,7 @@ class SeedBundle:
     character_skills: list[CharacterSkill] = field(default_factory=list)
     quests: list[Quest] = field(default_factory=list)
     plot_threads: list[PlotThread] = field(default_factory=list)
+    clocks: list[StoryClock] = field(default_factory=list)
     director_events: list[DirectorEvent] = field(default_factory=list)
     session: GameSession | None = None
 
@@ -130,6 +133,7 @@ def build_world(
     _seed_relationships(pack, bundle)
     _seed_facts(pack, bundle)
     _seed_plot(pack, bundle)
+    _seed_clocks(pack, bundle)
 
     if player is not None:
         pc = bundle.character_by_key(PLAYER_KEY)
@@ -731,6 +735,31 @@ def _seed_plot(pack: ContentPack, bundle: SeedBundle) -> None:
                 ),
                 world_consequences=dict(raw.get("world_consequences", {}) or {}),
                 plot_thread_key=raw.get("plot_thread"),
+            )
+        )
+
+
+def _seed_clocks(pack: ContentPack, bundle: SeedBundle) -> None:
+    """Materialise the pressure the pack declares, so the player can see it."""
+    world_id = bundle.world.id
+    thread_keys = {thread.key for thread in bundle.plot_threads}
+    for raw in pack.clocks:
+        key = str(raw["key"])
+        thread_key = str(raw.get("thread", "") or "")
+        bundle.clocks.append(
+            StoryClock(
+                id=_oid(world_id, "clock", key),
+                world_id=world_id,
+                key=key,
+                name=str(raw.get("name", key)),
+                kind=ClockKind(str(raw.get("kind", "danger"))),
+                segments=int(raw.get("segments", 4)),
+                filled=int(raw.get("filled", 0)),
+                minutes_per_segment=int(raw.get("minutes_per_segment", 0) or 0),
+                started_at_minute=bundle.world.current_minute,
+                thread_key=thread_key if thread_key in thread_keys else "",
+                visible=bool(raw.get("visible", True)),
+                consequence=str(raw.get("consequence", "")),
             )
         )
 

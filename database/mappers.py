@@ -27,6 +27,7 @@ from database.models.orm import (
     RelationshipChangeORM,
     RelationshipORM,
     SkillORM,
+    StoryClockORM,
     WorldORM,
 )
 from engine.core.models import (
@@ -54,10 +55,13 @@ from engine.core.models import (
     Reputation,
     Schedule,
     Skill,
+    StoryClock,
     World,
 )
 from engine.core.types import (
     CharacterType,
+    ClockKind,
+    ClockStatus,
     DirectorDecisionType,
     DirectorEventStatus,
     FactScope,
@@ -654,6 +658,44 @@ def thread_to_orm(model: PlotThread) -> PlotThreadORM:
         next_beat_hint=model.next_beat_hint,
         escalation_pressure=model.escalation_pressure,
         thread_metadata=model.metadata,
+    )
+
+
+def clock_to_domain(row: StoryClockORM) -> StoryClock:
+    return StoryClock(
+        id=row.id,
+        world_id=row.world_id,
+        key=row.key,
+        name=row.name,
+        kind=ClockKind(row.kind),
+        status=ClockStatus(row.status),
+        segments=row.segments,
+        filled=row.filled,
+        minutes_per_segment=row.minutes_per_segment,
+        started_at_minute=row.started_at_minute,
+        thread_key=row.thread_key,
+        visible=row.visible,
+        consequence=row.consequence,
+        metadata=row.clock_metadata or {},
+    )
+
+
+def clock_to_orm(model: StoryClock) -> StoryClockORM:
+    return StoryClockORM(
+        id=model.id,
+        world_id=model.world_id,
+        key=model.key,
+        name=model.name,
+        kind=str(model.kind),
+        status=str(model.status),
+        segments=model.segments,
+        filled=model.filled,
+        minutes_per_segment=model.minutes_per_segment,
+        started_at_minute=model.started_at_minute,
+        thread_key=model.thread_key,
+        visible=model.visible,
+        consequence=model.consequence,
+        clock_metadata=model.metadata,
     )
 
 

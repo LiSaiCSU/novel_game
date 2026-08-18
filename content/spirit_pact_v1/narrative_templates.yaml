@@ -62,3 +62,9 @@ query:
   relationships_empty: "你还没有可以托付后背的人。"
   quests_header: "【正在处理的事】"
   quests_empty: "你暂时没有接下新的安排。"
+clock:
+  line: "- [{kind}] {name} {filled}/{segments}{remaining}{consequence}"
+  remaining: "，还剩{duration}"
+  consequence: "；满格后：{consequence}"
+  kinds: {deadline: 倒计时, danger: 危险逼近, project: 你的进展}
+  none: "-"

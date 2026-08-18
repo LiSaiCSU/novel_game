@@ -40,6 +40,8 @@ async def persist_bundle(session: AsyncSession, bundle: SeedBundle) -> str:
         session.add(m.quest_to_orm(quest))
     for thread in bundle.plot_threads:
         session.add(m.thread_to_orm(thread))
+    for clock in bundle.clocks:
+        session.add(m.clock_to_orm(clock))
     await session.flush()
 
     for rel in bundle.relationships:

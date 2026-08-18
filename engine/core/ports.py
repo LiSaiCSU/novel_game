@@ -29,6 +29,7 @@ from engine.core.models import (
     Relationship,
     RelationshipChange,
     Skill,
+    StoryClock,
     World,
 )
 from engine.core.mutations import ChangeSet
@@ -151,6 +152,12 @@ class PlotThreadRepository(Protocol):
 
 
 @runtime_checkable
+class StoryClockRepository(Protocol):
+    async def get_by_key(self, world_id: str, key: str) -> StoryClock | None: ...
+    async def list_for_world(self, world_id: str) -> list[StoryClock]: ...
+
+
+@runtime_checkable
 class DirectorEventRepository(Protocol):
     async def get(self, director_event_id: str) -> DirectorEvent | None: ...
     async def get_by_dedup_key(self, world_id: str, dedup_key: str) -> DirectorEvent | None: ...
@@ -224,6 +231,9 @@ class UnitOfWork(Protocol):
     def events(self) -> EventRepository: ...
     @property
     def plot_threads(self) -> PlotThreadRepository: ...
+
+    @property
+    def clocks(self) -> StoryClockRepository: ...
     @property
     def director_events(self) -> DirectorEventRepository: ...
     @property

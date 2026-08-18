@@ -108,3 +108,24 @@ quests:
   - {key: quest_fire_report, name: 重做线路检查, giver: kota, status: offered, goal: {type: investigate, location: moonview_hall}, constraints: {deadline_minutes: 70560}, rewards: {relationship: {kota: {trust: 6}}}, failure_conditions: [deadline_passed], world_consequences: {on_success: {advance_thread: thread_missing_budget}}, plot_thread: thread_missing_budget}
   - {key: quest_consent_script, name: 确认剧本授权, giver: emiko, status: offered, goal: {type: consent_review}, constraints: {deadline_minutes: 90720}, rewards: {relationship: {emiko: {respect: 7}}}, failure_conditions: [privacy_breached], world_consequences: {on_success: {advance_thread: thread_unfinished_letter}}, plot_thread: thread_unfinished_letter}
   - {key: quest_final_performance, name: 完成月见馆最终演出, giver: haruto, status: offered, goal: {type: event, location: moonview_hall}, constraints: {deadline_minutes: 120960}, rewards: {faction_reputation: {festival_committee: 20}}, failure_conditions: [deadline_passed, unsafe_venue], world_consequences: {on_success: {advance_thread: thread_save_moonview}, on_failure: {tension: 20}}, plot_thread: thread_save_moonview}
+
+clocks:
+  - key: clock_twelve_weeks
+    name: 十二周
+    kind: deadline
+    thread: thread_save_moonview
+    segments: 12
+    minutes_per_segment: 10080
+    consequence: 学期结束，月见馆按原计划关闭
+  - key: clock_budget_audit
+    name: 旧账被翻出来
+    kind: danger
+    thread: thread_missing_budget
+    segments: 4
+    consequence: 缺口被公开，企划组失去校方支持
+  - key: clock_letter_sender
+    name: 写信人是谁
+    kind: project
+    thread: thread_unfinished_letter
+    segments: 5
+    consequence: 落款被补上，二十年前那件事有了名字

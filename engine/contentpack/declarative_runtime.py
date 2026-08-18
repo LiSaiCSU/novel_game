@@ -13,6 +13,7 @@ from engine.core.ids import PLAYER_KEY, deterministic_id
 from engine.core.models import Relationship
 from engine.core.mutations import ChangeSet
 from engine.relationships.manager import RelationshipManager, band_for_importance
+from engine.world import clocks
 from engine.world.state_view import WorldStateView
 
 
@@ -133,6 +134,13 @@ def _apply_effect(
         quantity = max(1, min(99, int(_value(effect.quantity, context))))
         constructor = mut.inventory_add if effect.op == "inventory_add" else mut.inventory_remove
         change_set.add(constructor(state.player.id, effect.target, quantity, reason))
+        return
+    if effect.op == "advance_clock":
+        clock = next((item for item in state.clocks if item.key == effect.target), None)
+        if clock is not None:
+            delta = int(_value(effect.value, context) or 1)
+            for change in clocks.advance(clock, state, delta, reason):
+                change_set.add(change)
         return
     if effect.op == "quest_status":
         quest = next((item for item in state.active_quests if item.key == effect.target), None)

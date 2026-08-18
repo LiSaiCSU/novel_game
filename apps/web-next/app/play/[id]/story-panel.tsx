@@ -1,7 +1,8 @@
 import { Bookmark, ChevronDown, MapPin, PanelRight, Sparkles } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { ActionComposer } from "./action-composer";
-import type { Choice, Recap, Scene } from "./game-types";
+import { ClockStrip } from "./clock-strip";
+import type { Choice, Recap, Scene, StoryClock } from "./game-types";
 import { buildActionRecommendations } from "./recommendations";
 
 type Props = {
@@ -9,6 +10,7 @@ type Props = {
   chapters: string[];
   current?: { input: string; narrative: string };
   choices: Choice[];
+  clocks: StoryClock[];
   beat: string;
   draft: string;
   recap?: Recap;
@@ -30,6 +32,7 @@ export function StoryPanel({
   chapters,
   current,
   choices,
+  clocks,
   beat,
   draft,
   recap,
@@ -155,6 +158,7 @@ export function StoryPanel({
         </div>
       )}
       <div className="conversationDock">
+        <ClockStrip clocks={clocks} compact />
         {!completed && recommendations.length > 0 && (
           <div className={`decisionArea ${suggestionsOpen ? "open" : ""}`}>
             <button

@@ -38,6 +38,7 @@ describe("StoryPanel reading flow", () => {
       <StoryPanel
         chapters={["上一节正文"]}
         choices={[]}
+        clocks={[]}
         beat=""
         draft=""
         showRecap={false}

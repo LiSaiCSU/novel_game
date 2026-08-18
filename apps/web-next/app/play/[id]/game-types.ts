@@ -26,6 +26,19 @@ export type PlaythroughSettings = {
   presets: NarrativeLengthPreset[];
 };
 
+/** Visible pressure. `filled` already includes whatever the world clock ran down. */
+export type StoryClock = {
+  key: string;
+  name: string;
+  kind: "deadline" | "danger" | "project";
+  segments: number;
+  filled: number;
+  complete: boolean;
+  thread: string;
+  consequence: string;
+  remaining_label: string;
+};
+
 export type Choice = {
   label: string;
   hint?: string;
@@ -70,6 +83,7 @@ export type Dashboard = {
     stage: number;
     next_beat_hint: string;
   }>;
+  clocks: StoryClock[];
   labels: {
     relationships: Record<string, string>;
     statuses: Record<string, string>;

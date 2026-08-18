@@ -19,6 +19,7 @@ from database.models.orm import (
     PlotThreadORM,
     QuestORM,
     RelationshipORM,
+    StoryClockORM,
     WorldORM,
 )
 from engine.core.snapshots import WorldStateSnapshot
@@ -146,6 +147,7 @@ class SqlWorldStateRepository:
                 dialect_name,
                 PlotThreadORM.world_id == world_id,
             ),
+            _branch("clock", StoryClockORM, dialect_name, StoryClockORM.world_id == world_id),
         )
         rows = (await self.session.execute(statement)).all()
         snapshot = WorldStateSnapshot()
@@ -197,5 +199,9 @@ class SqlWorldStateRepository:
             elif kind == "plot_thread":
                 snapshot.plot_threads.append(
                     m.thread_to_domain(PlotThreadORM(**_decode_payload(PlotThreadORM, raw_payload)))
+                )
+            elif kind == "clock":
+                snapshot.clocks.append(
+                    m.clock_to_domain(StoryClockORM(**_decode_payload(StoryClockORM, raw_payload)))
                 )
         return snapshot

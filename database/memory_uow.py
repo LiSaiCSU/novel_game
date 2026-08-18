@@ -35,6 +35,7 @@ from engine.core.models import (
     Relationship,
     RelationshipChange,
     Skill,
+    StoryClock,
     World,
 )
 from engine.core.mutations import ChangeKind, ChangeSet
@@ -64,6 +65,7 @@ class MemoryStore:
         self.events: list[Event] = []
         self.director_events: dict[str, DirectorEvent] = {}
         self.plot_threads: dict[str, PlotThread] = {}
+        self.clocks: dict[str, StoryClock] = {}
         self.sessions: dict[str, GameSession] = {}
         self.turns: dict[str, dict[str, Any]] = {}
         self.turn_traces: dict[str, dict[str, Any]] = {}
@@ -96,6 +98,8 @@ class MemoryStore:
             self.quests[quest.id] = quest
         for thread in bundle.plot_threads:
             self.plot_threads[thread.id] = thread
+        for clock in bundle.clocks:
+            self.clocks[clock.id] = clock
         for director_event in bundle.director_events:
             self.director_events[director_event.id] = director_event
         if bundle.session is not None:
@@ -122,6 +126,7 @@ class MemoryStore:
                 "events",
                 "director_events",
                 "plot_threads",
+                "clocks",
                 "sessions",
                 "turns",
                 "turn_traces",
@@ -441,6 +446,23 @@ class _PlotThreadRepo:
         return rows
 
 
+class _StoryClockRepo:
+    def __init__(self, store: MemoryStore) -> None:
+        self.s = store
+
+    async def get_by_key(self, world_id: str, key: str) -> StoryClock | None:
+        return next(
+            (c for c in self.s.clocks.values() if c.world_id == world_id and c.key == key),
+            None,
+        )
+
+    async def list_for_world(self, world_id: str) -> list[StoryClock]:
+        return sorted(
+            (c for c in self.s.clocks.values() if c.world_id == world_id),
+            key=lambda clock: clock.key,
+        )
+
+
 class _DirectorEventRepo:
     def __init__(self, store: MemoryStore) -> None:
         self.s = store
@@ -603,6 +625,9 @@ class _WorldStateRepo:
             plot_threads=_detach_all(
                 thread for thread in self.s.plot_threads.values() if thread.world_id == world_id
             ),
+            clocks=_detach_all(
+                clock for clock in self.s.clocks.values() if clock.world_id == world_id
+            ),
         )
 
 
@@ -622,6 +647,7 @@ class MemoryUnitOfWork:
         self.quests = _QuestRepo(store)
         self.events = _EventRepo(store)
         self.plot_threads = _PlotThreadRepo(store)
+        self.clocks = _StoryClockRepo(store)
         self.director_events = _DirectorEventRepo(store)
         self.sessions = _SessionRepo(store)
         self.turns = _TurnRepo(store)
@@ -725,6 +751,18 @@ class MemoryUnitOfWork:
             faction = s.factions.get(change.target_id)
             if faction is not None:
                 setattr(faction, change.field, change.after)
+        elif kind is ChangeKind.PLOT_THREAD_SPAWN:
+            s.plot_threads.setdefault(
+                change.target_id, PlotThread.model_validate(change.payload)
+            )
+        elif kind is ChangeKind.CLOCK_SPAWN:
+            s.clocks.setdefault(change.target_id, StoryClock.model_validate(change.payload))
+        elif kind is ChangeKind.CLOCK_UPDATE:
+            clock = s.clocks.get(change.target_id)
+            if clock is not None:
+                for field_name, value in change.payload.items():
+                    if hasattr(clock, field_name):
+                        setattr(clock, field_name, value)
         elif kind is ChangeKind.PLOT_THREAD_UPDATE:
             thread = s.plot_threads.get(change.target_id)
             if thread is not None:

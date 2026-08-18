@@ -122,3 +122,24 @@ quests:
       on_failure: {tension: 20, advance_thread: thread_seven_day_blood_contract}
       if_player_refuses: {reassign_to: [zhao_wuji, lin_qingxue], success_chance: 0.3}
     plot_thread: thread_seven_day_blood_contract
+
+clocks:
+  - key: clock_seven_day_contract
+    name: 七日血契
+    kind: deadline
+    thread: thread_seven_day_blood_contract
+    segments: 7
+    minutes_per_segment: 1440
+    consequence: 血祭阵在赤霞秘境开启时完成，名册上的人一个都跑不掉
+  - key: clock_enforcement_hunt
+    name: 执法堂的追查
+    kind: danger
+    thread: thread_framed_and_hunted
+    segments: 4
+    consequence: 执法堂坐实你的嫌疑，外门再没有你能站的地方
+  - key: clock_array_shards
+    name: 阵契分片
+    kind: project
+    thread: thread_infiltration
+    segments: 5
+    consequence: 分片凑齐，血祭阵可以从阵眼上被拆开

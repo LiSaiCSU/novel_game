@@ -72,6 +72,7 @@ class ContentPack:
     quests: list[dict[str, Any]]
     event_types: list[dict[str, Any]]
     offline_templates: list[dict[str, Any]]
+    clocks: list[dict[str, Any]] = field(default_factory=list)
     narrative_templates: dict[str, Any] = field(default_factory=dict)
     declarative_rules: list[dict[str, Any]] = field(default_factory=list)
     rule_plugin: RulePlugin | None = None
@@ -170,6 +171,7 @@ def load_content_pack(content_dir: Path | str, pack_key: str) -> ContentPack:
         skills=list(raw["skills"].get("skills", [])),
         facts=list(raw["facts"].get("facts", [])),
         plot_threads=list(raw["plot_threads"].get("plot_threads", [])),
+        clocks=list(raw["plot_threads"].get("clocks", [])),
         quests=list(raw["plot_threads"].get("quests", [])),
         event_types=list(raw["event_templates"].get("event_types", [])),
         offline_templates=list(raw["event_templates"].get("offline_templates", [])),

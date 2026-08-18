@@ -53,3 +53,9 @@ query:
   relationships_empty: "你在岭上还没有能托底的人。"
   quests_header: "【手里的事】"
   quests_empty: "你眼下没有接别人的差事。"
+clock:
+  line: "- [{kind}] {name} {filled}/{segments}{remaining}{consequence}"
+  remaining: "，还剩{duration}"
+  consequence: "；满格后：{consequence}"
+  kinds: {deadline: 倒计时, danger: 危险逼近, project: 你的进展}
+  none: "-"

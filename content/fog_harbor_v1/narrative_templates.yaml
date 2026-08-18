@@ -53,3 +53,9 @@ query:
   relationships_empty: "你还没有可以信任的人。"
   quests_header: "【调查事项】"
   quests_empty: "你暂时没有接手调查事项。"
+clock:
+  line: "- [{kind}] {name} {filled}/{segments}{remaining}{consequence}"
+  remaining: "，还剩{duration}"
+  consequence: "；满格后：{consequence}"
+  kinds: {deadline: 倒计时, danger: 危险逼近, project: 你的进展}
+  none: "-"

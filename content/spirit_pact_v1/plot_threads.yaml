@@ -290,3 +290,24 @@ quests:
       on_success: {advance_thread: thread_inner_gate}
       on_failure: {tension: 30}
     plot_thread: thread_inner_gate
+
+clocks:
+  - key: clock_sixty_days
+    name: 精英大赛倒计时
+    kind: deadline
+    thread: thread_second_pact
+    segments: 12
+    minutes_per_segment: 7200
+    consequence: 大赛开始，第二契位无论有没有想清楚都要定下来
+  - key: clock_buyers_patience
+    name: 想买你的人
+    kind: danger
+    thread: thread_who_owns_you
+    segments: 4
+    consequence: 有人替你把契约签了，代价记在你名下
+  - key: clock_forest_answer
+    name: 无昼森海里的答案
+    kind: project
+    thread: thread_forest_emptied
+    segments: 6
+    consequence: 你弄清森海被搬空的原因，也知道第二契该找什么

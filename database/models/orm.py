@@ -426,6 +426,26 @@ class PlotThreadORM(Base):
     thread_metadata: Mapped[dict[str, Any]] = mapped_column(JSONType, default=dict)
 
 
+class StoryClockORM(Base):
+    __tablename__ = "story_clocks"
+    __table_args__ = (sa.UniqueConstraint("world_id", "key", name="uq_clock_world_key"),)
+
+    id: Mapped[str] = mapped_column(sa.String(36), primary_key=True)
+    world_id: Mapped[str] = mapped_column(sa.String(36), index=True)
+    key: Mapped[str] = mapped_column(sa.String(120))
+    name: Mapped[str] = mapped_column(sa.String(200))
+    kind: Mapped[str] = mapped_column(sa.String(20), default="danger")
+    status: Mapped[str] = mapped_column(sa.String(20), default="running", index=True)
+    segments: Mapped[int] = mapped_column(sa.Integer, default=4)
+    filled: Mapped[int] = mapped_column(sa.Integer, default=0)
+    minutes_per_segment: Mapped[int] = mapped_column(sa.Integer, default=0)
+    started_at_minute: Mapped[int] = mapped_column(sa.BigInteger, default=0)
+    thread_key: Mapped[str] = mapped_column(sa.String(120), default="")
+    visible: Mapped[bool] = mapped_column(sa.Boolean, default=True)
+    consequence: Mapped[str] = mapped_column(sa.Text, default="")
+    clock_metadata: Mapped[dict[str, Any]] = mapped_column(JSONType, default=dict)
+
+
 class GameSessionORM(TimestampMixin, Base):
     __tablename__ = "game_sessions"
 

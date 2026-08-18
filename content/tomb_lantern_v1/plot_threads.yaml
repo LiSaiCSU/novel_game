@@ -290,3 +290,32 @@ quests:
       on_success: {advance_thread: thread_nine_day_fuse}
       on_failure: {tension: 30}
     plot_thread: thread_nine_day_fuse
+
+# Visible pressure. A deadline clock fills on the world clock whether or not
+# anyone acts; danger and project clocks only move when something moves them.
+clocks:
+  - key: clock_nine_day_fuse
+    name: 九日引信
+    kind: deadline
+    thread: thread_nine_day_fuse
+    segments: 9
+    minutes_per_segment: 1440
+    consequence: 第九日午时起爆，寒鸦岭连同底下的东西一起沉掉
+  - key: clock_jin_suspicion
+    name: 靳部盯上你
+    kind: danger
+    thread: thread_nine_day_fuse
+    segments: 4
+    consequence: 靳部把你当成外乡奸细直接扣下，路条作废
+  - key: clock_fathers_trail
+    name: 父亲的下落
+    kind: project
+    thread: thread_fathers_bones
+    segments: 6
+    consequence: 你拼齐那一夜的经过，知道绳子是谁割的
+  - key: clock_lamp_order
+    name: 灯序
+    kind: project
+    thread: thread_lamp_order
+    segments: 5
+    consequence: 九枝灯的点法凑齐，主墓道可以走人

@@ -41,6 +41,11 @@ class ChangeKind(StrEnum):
     QUEST_STATUS = "QUEST_STATUS"
     FACTION_FIELD = "FACTION_FIELD"
     PLOT_THREAD_UPDATE = "PLOT_THREAD_UPDATE"
+    #: A thread the content pack never wrote down, opened because the player
+    #: went somewhere the author did not plan for.
+    PLOT_THREAD_SPAWN = "PLOT_THREAD_SPAWN"
+    CLOCK_SPAWN = "CLOCK_SPAWN"
+    CLOCK_UPDATE = "CLOCK_UPDATE"
     WORLD_TIME = "WORLD_TIME"
     WORLD_TENSION = "WORLD_TENSION"
     LOCATION_FLAG = "LOCATION_FLAG"
@@ -290,6 +295,40 @@ def plot_thread_update(thread_id: str, payload: dict[str, Any], reason: str = ""
     return StateChange(
         kind=ChangeKind.PLOT_THREAD_UPDATE,
         target_id=thread_id,
+        payload=payload,
+        reason=reason,
+    )
+
+
+def plot_thread_spawn(thread: Any, reason: str = "") -> StateChange:
+    """Open a storyline mid-game.
+
+    The pack ships the threads its author imagined. A player who decides to
+    take over the coaching inn instead of digging for their father is not off
+    the rails - they have started a story the author did not write, and the
+    director has to be able to see it, weigh it and push it like any other.
+    """
+    return StateChange(
+        kind=ChangeKind.PLOT_THREAD_SPAWN,
+        target_id=thread.id,
+        payload=thread.model_dump(mode="json"),
+        reason=reason,
+    )
+
+
+def clock_spawn(clock: Any, reason: str = "") -> StateChange:
+    return StateChange(
+        kind=ChangeKind.CLOCK_SPAWN,
+        target_id=clock.id,
+        payload=clock.model_dump(mode="json"),
+        reason=reason,
+    )
+
+
+def clock_update(clock_id: str, payload: dict[str, Any], reason: str = "") -> StateChange:
+    return StateChange(
+        kind=ChangeKind.CLOCK_UPDATE,
+        target_id=clock_id,
         payload=payload,
         reason=reason,
     )

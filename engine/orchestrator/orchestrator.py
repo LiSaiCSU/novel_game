@@ -71,6 +71,7 @@ from engine.rng.game_rng import GameRNG, event_rng
 from engine.rules.base import RuleContext
 from engine.rules.engine import RuleEngine
 from engine.simulation.simulator import WorldSimulator
+from engine.world import clocks
 from engine.world.consistency import ConsistencyGuard
 from engine.world.location_graph import LocationGraph
 from engine.world.state_view import WorldStateView, build_world_state
@@ -85,6 +86,16 @@ StepListener = Callable[[int, "ChapterStep"], Awaitable[None]]
 #: Narrative segment kind used to persist a chapter's unanswered question. It
 #: is bookkeeping, not prose, so it never appears in `recent_narrative`.
 BEAT_SEGMENT = "beat"
+
+
+def _at_minute(state: WorldStateView, minute: int) -> WorldStateView:
+    """The same state read as of a later minute.
+
+    Clocks are evaluated against the minute a turn *ends* on. The view still
+    holds the world as it was read at the start, and mutating it would leak
+    a time change into every later reader of the same snapshot.
+    """
+    return replace(state, world=state.world.model_copy(update={"current_minute": minute}))
 
 
 @dataclass(slots=True)
@@ -685,6 +696,13 @@ class GameOrchestrator:
                         reason="turn",
                     )
                 )
+
+            # Deadlines fill from elapsed time, so nothing else would ever
+            # notice one running out. Evaluated against the minute this turn
+            # ends on, not the one it started from.
+            spent = state.world.current_minute + outcome.time_cost_minutes
+            for change in clocks.tick_completed(_at_minute(state, spent)):
+                change_set.add(change)
 
             applied_rules = apply_declarative_rules(d.pack, state, action, outcome, change_set)
             if applied_rules:

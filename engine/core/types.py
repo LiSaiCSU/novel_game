@@ -202,6 +202,27 @@ class ThreadStatus(StrEnum):
     ABANDONED = "abandoned"
 
 
+class ClockKind(StrEnum):
+    """What a visible clock is counting.
+
+    Players cannot plan against pressure they cannot see. A deadline runs on
+    the world clock whatever anyone does; a danger fills when someone else
+    makes progress against the player; a project fills when the player does.
+    """
+
+    DEADLINE = "deadline"
+    DANGER = "danger"
+    PROJECT = "project"
+
+
+class ClockStatus(StrEnum):
+    RUNNING = "running"
+    #: Every segment is filled and whatever it was counting down to has landed.
+    FILLED = "filled"
+    #: Stopped before filling - the player defused it, or it stopped mattering.
+    CLOSED = "closed"
+
+
 class DirectorDecisionType(StrEnum):
     NO_EVENT = "NO_EVENT"
     TRIGGER_EVENT = "TRIGGER_EVENT"

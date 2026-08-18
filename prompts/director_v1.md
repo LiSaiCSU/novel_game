@@ -48,6 +48,13 @@ max_output_tokens: 800
 
 {{major_characters}}
 
+## 当前压力时钟（玩家可见）
+
+{{story_clocks}}
+
+时钟是既有因果的计量，不是触发器。快满的时钟说明这条线的后果就要落地，
+可以优先推进它；但仍然需要具体的参与者和 `causal_basis`。
+
 ## 未结束剧情线程
 
 {{plot_threads}}

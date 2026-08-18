@@ -13,6 +13,7 @@ from engine.core.models import (
     PlotThread,
     Quest,
     Relationship,
+    StoryClock,
     World,
 )
 
@@ -31,3 +32,4 @@ class WorldStateSnapshot:
     relationships: list[Relationship] = field(default_factory=list)
     quests: list[Quest] = field(default_factory=list)
     plot_threads: list[PlotThread] = field(default_factory=list)
+    clocks: list[StoryClock] = field(default_factory=list)

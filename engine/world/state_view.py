@@ -20,6 +20,7 @@ from engine.core.models import (
     PlotThread,
     Quest,
     Relationship,
+    StoryClock,
     World,
 )
 from engine.core.ports import UnitOfWork
@@ -43,6 +44,7 @@ class WorldStateView:
     relationships: dict[str, Relationship] = field(default_factory=dict)
     active_quests: list[Quest] = field(default_factory=list)
     plot_threads: list[PlotThread] = field(default_factory=list)
+    clocks: list[StoryClock] = field(default_factory=list)
 
     # -- helpers ------------------------------------------------------------
     def character_by_id(self, character_id: str | None) -> Character | None:
@@ -164,4 +166,5 @@ async def build_world_state(
         relationships=relationships,
         active_quests=snapshot.quests,
         plot_threads=snapshot.plot_threads,
+        clocks=snapshot.clocks,
     )

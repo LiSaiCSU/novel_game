@@ -14,6 +14,8 @@ from engine.core.ids import new_id
 from engine.core.types import (
     Activity,
     CharacterType,
+    ClockKind,
+    ClockStatus,
     DirectorDecisionType,
     DirectorEventStatus,
     FactScope,
@@ -581,6 +583,68 @@ class PlotThread(Base):
     next_beat_hint: str = ""
     escalation_pressure: float = 0.1
     metadata: dict[str, Any] = Field(default_factory=dict)
+
+
+class StoryClock(Base):
+    """Visible pressure, in segments the player can count.
+
+    The world already knew a blast was nine days out and that a faction was
+    closing in; none of it reached the player, who could only guess how much
+    room they had left. A clock is that same pressure stated as a number of
+    segments, shown in the interface and handed to the narrator so the prose
+    and the dial never disagree.
+
+    A ``DEADLINE`` fills on the world clock alone - ignoring it is itself a
+    choice with a cost. ``DANGER`` and ``PROJECT`` clocks only move when
+    something in the world moves them.
+    """
+
+    id: str = Field(default_factory=new_id)
+    world_id: str = ""
+    key: str
+    name: str
+    kind: ClockKind = ClockKind.DANGER
+    status: ClockStatus = ClockStatus.RUNNING
+    segments: int = Field(default=4, ge=1, le=24)
+    #: Segments filled by events. Time-driven progress is derived, never stored,
+    #: so a clock cannot drift from the world clock it is counting.
+    filled: int = Field(default=0, ge=0)
+    #: 0 means the clock does not move on its own.
+    minutes_per_segment: int = Field(default=0, ge=0)
+    started_at_minute: int = 0
+    thread_key: str = ""
+    #: A hidden clock still runs; it is simply not shown to the player yet.
+    visible: bool = True
+    #: What happens when the last segment fills, in the player's language.
+    consequence: str = ""
+    metadata: dict[str, Any] = Field(default_factory=dict)
+
+    def elapsed_segments(self, world_minute: int) -> int:
+        if self.minutes_per_segment <= 0:
+            return 0
+        elapsed = max(0, world_minute - self.started_at_minute)
+        return elapsed // self.minutes_per_segment
+
+    def filled_at(self, world_minute: int) -> int:
+        """How many segments are filled right now, time included."""
+        if self.status is ClockStatus.CLOSED:
+            return min(self.filled, self.segments)
+        if self.status is ClockStatus.FILLED:
+            return self.segments
+        return min(self.segments, self.filled + self.elapsed_segments(world_minute))
+
+    def is_complete(self, world_minute: int) -> bool:
+        return self.status is not ClockStatus.CLOSED and self.filled_at(world_minute) >= self.segments
+
+    def remaining_minutes(self, world_minute: int) -> int | None:
+        """Wall-clock time left, for a clock that runs on the world clock."""
+        if self.minutes_per_segment <= 0 or self.status is not ClockStatus.RUNNING:
+            return None
+        remaining = self.segments - self.filled_at(world_minute)
+        if remaining <= 0:
+            return 0
+        used = max(0, world_minute - self.started_at_minute) % self.minutes_per_segment
+        return remaining * self.minutes_per_segment - used
 
 
 class NarrativeSegment(Base):

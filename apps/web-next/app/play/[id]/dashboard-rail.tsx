@@ -1,5 +1,6 @@
 import { X } from "lucide-react";
 import { useState } from "react";
+import { ClockStrip } from "./clock-strip";
 import { displayLabel, metric, progressionMetric } from "./game-format";
 import type { Dashboard, Ending, EndingStatus, Scene } from "./game-types";
 
@@ -111,7 +112,25 @@ export function DashboardRail({
 
       {activeTab === "任务" && (
         <section className="railPanel">
-          <p className="eyebrow">当前任务</p>
+          {!!dashboard?.clocks.length && (
+            <>
+              <p className="eyebrow">正在走的钟</p>
+              <ClockStrip clocks={dashboard.clocks} />
+              {dashboard.clocks.some((clock) => clock.consequence) && (
+                <div className="clockLegend">
+                  {dashboard.clocks
+                    .filter((clock) => clock.consequence)
+                    .map((clock) => (
+                      <p key={clock.key}>
+                        <b>{clock.name}</b>满格后：{clock.consequence}
+                      </p>
+                    ))}
+                </div>
+              )}
+              <h2 className="railSection">当前任务</h2>
+            </>
+          )}
+          {!dashboard?.clocks.length && <p className="eyebrow">当前任务</p>}
           {dashboard?.quests.length ? (
             dashboard.quests.map((quest) => (
               <article className="railCard" key={quest.key}>

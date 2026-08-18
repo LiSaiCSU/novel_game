@@ -34,6 +34,7 @@ from engine.core.mutations import ChangeSet, character_field
 from engine.core.types import Visibility
 from engine.endings import build_ending_context, evaluate_endings
 from engine.orchestrator.turn import DEFAULT_NARRATIVE_CHARS
+from engine.world.clocks import clock_views
 from engine.world.seeder import PlayerSpec, build_world
 from engine.world.state_view import build_world_state
 
@@ -594,6 +595,7 @@ async def playthrough_dashboard(
             }
             for thread in state.plot_threads
         ],
+        "clocks": clock_views(state),
         "labels": {
             "relationships": pack.vocabulary.get("relationship_labels", {}),
             "relationship_tags": pack.vocabulary.get("relationship_tag_labels", {}),

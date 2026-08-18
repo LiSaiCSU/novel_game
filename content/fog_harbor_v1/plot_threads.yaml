@@ -304,3 +304,30 @@ quests:
       on_success: {advance_thread: thread_locked_lounge}
       on_failure: {tension: 20}
     plot_thread: thread_locked_lounge
+
+clocks:
+  - key: clock_thirty_six_hours
+    name: 靠港还有三十六小时
+    kind: deadline
+    thread: thread_locked_lounge
+    segments: 12
+    minutes_per_segment: 180
+    consequence: 雾散靠港，警方接手，船上的人各自散去
+  - key: clock_suspicion_on_you
+    name: 二十三分钟的空白
+    kind: danger
+    thread: thread_your_own_23_minutes
+    segments: 4
+    consequence: 你成为船上公认的第一嫌疑人，行动处处被盯
+  - key: clock_second_victim
+    name: 下一个人
+    kind: danger
+    thread: thread_second_victim
+    segments: 4
+    consequence: 尾甲板上再少一个人
+  - key: clock_locked_room
+    name: 望海厅怎么锁上的
+    kind: project
+    thread: thread_locked_lounge
+    segments: 6
+    consequence: 密室的手法被还原，凶手的活动范围缩到一个人

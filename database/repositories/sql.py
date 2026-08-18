@@ -32,6 +32,7 @@ from database.models.orm import (
     RelationshipChangeORM,
     RelationshipORM,
     SkillORM,
+    StoryClockORM,
     TurnORM,
     TurnTraceORM,
     WorldORM,
@@ -58,6 +59,7 @@ from engine.core.models import (
     Relationship,
     RelationshipChange,
     Skill,
+    StoryClock,
     World,
 )
 from engine.core.mutations import ChangeKind, ChangeSet
@@ -404,6 +406,26 @@ class SqlPlotThreadRepo(_Repo):
         return [m.thread_to_domain(r) for r in await self._scalars(stmt)]
 
 
+class SqlStoryClockRepo(_Repo):
+    async def get_by_key(self, world_id: str, key: str) -> StoryClock | None:
+        row = await self._one(
+            sa.select(StoryClockORM).where(
+                StoryClockORM.world_id == world_id, StoryClockORM.key == key
+            )
+        )
+        return m.clock_to_domain(row) if row else None
+
+    async def list_for_world(self, world_id: str) -> list[StoryClock]:
+        return [
+            m.clock_to_domain(row)
+            for row in await self._scalars(
+                sa.select(StoryClockORM)
+                .where(StoryClockORM.world_id == world_id)
+                .order_by(StoryClockORM.key)
+            )
+        ]
+
+
 class SqlDirectorEventRepo(_Repo):
     async def get(self, director_event_id: str) -> DirectorEvent | None:
         row = await self.s.get(DirectorEventORM, director_event_id)
@@ -614,6 +636,7 @@ class SqlUnitOfWork:
         self.quests = SqlQuestRepo(session)
         self.events = SqlEventRepo(session)
         self.plot_threads = SqlPlotThreadRepo(session)
+        self.clocks = SqlStoryClockRepo(session)
         self.director_events = SqlDirectorEventRepo(session)
         self.sessions = SqlSessionRepo(session)
         self.turns = SqlTurnRepo(session)
@@ -758,6 +781,18 @@ class SqlUnitOfWork:
             faction_row = await s.get(FactionORM, change.target_id)
             if faction_row is not None:
                 setattr(faction_row, change.field, change.after)
+        elif kind is ChangeKind.PLOT_THREAD_SPAWN:
+            if await s.get(PlotThreadORM, change.target_id) is None:
+                s.add(m.thread_to_orm(PlotThread.model_validate(change.payload)))
+        elif kind is ChangeKind.CLOCK_SPAWN:
+            if await s.get(StoryClockORM, change.target_id) is None:
+                s.add(m.clock_to_orm(StoryClock.model_validate(change.payload)))
+        elif kind is ChangeKind.CLOCK_UPDATE:
+            clock_row = await s.get(StoryClockORM, change.target_id)
+            if clock_row is not None:
+                for field, value in change.payload.items():
+                    if hasattr(clock_row, field):
+                        setattr(clock_row, field, value)
         elif kind is ChangeKind.PLOT_THREAD_UPDATE:
             thread_row = await s.get(PlotThreadORM, change.target_id)
             if thread_row is not None:
