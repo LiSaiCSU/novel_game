@@ -11,6 +11,7 @@ from __future__ import annotations
 import io
 import json
 from datetime import UTC, datetime, timedelta
+from typing import Any
 
 import sqlalchemy as sa
 from PIL import Image
@@ -136,8 +137,61 @@ async def scan_release(settings: Settings, release_id: str, owner_id: str) -> in
         return len(problems)
 
 
+async def scrub_account(session: Any, user: UserORM, *, reason: str = "") -> None:
+    """Irreversibly erase one account, keeping anonymous integrity records.
+
+    Not a row delete. Published releases may already back other people's
+    playthroughs, audit entries have to outlive the account they describe, and
+    several tables reference ``users.id`` without a cascade - so the personal
+    data goes and the user row stays as a pseudonym. Shared by the scheduled
+    purge and by an administrator erasing an account on request, because two
+    implementations of "delete everything" is one too many.
+    """
+    await session.execute(sa.delete(AuthSessionORM).where(AuthSessionORM.user_id == user.id))
+    await session.execute(sa.delete(EmailTokenORM).where(EmailTokenORM.user_id == user.id))
+    await session.execute(sa.delete(LlmCredentialORM).where(LlmCredentialORM.user_id == user.id))
+    await session.execute(sa.delete(UsageLedgerORM).where(UsageLedgerORM.user_id == user.id))
+    await session.execute(
+        sa.update(PlaythroughORM)
+        .where(PlaythroughORM.user_id == user.id)
+        .values(status="deleted", player_config={})
+    )
+    await session.execute(
+        sa.update(ProjectORM)
+        .where(ProjectORM.owner_id == user.id)
+        .values(status="owner_deleted", share_token_hash=None)
+    )
+    await session.execute(
+        sa.update(ContentReleaseORM)
+        .where(ContentReleaseORM.owner_id == user.id)
+        .values(
+            visibility="private",
+            moderation_status="withdrawn",
+            withdrawn_at=datetime.now(UTC),
+            share_token_hash=None,
+        )
+    )
+    user.email = f"deleted-{user.id}@invalid.local"
+    user.password_hash = "!deleted!"
+    user.display_name = ""
+    user.user_metadata = {}
+    user.platform_quota_monthly = 0
+    user.status = "deleted"
+    user.delete_after = None
+    session.add(
+        AuditLogORM(
+            id=new_id(),
+            actor_id=None,
+            action="account.deleted",
+            target_type="user",
+            target_id=user.id,
+            details={"retained": "pseudonymous integrity records", "reason": reason},
+        )
+    )
+
+
 async def purge_due_accounts(settings: Settings) -> int:
-    """Irreversibly scrub due accounts while preserving anonymous integrity/audit rows."""
+    """Scrub every account whose deletion grace period has expired."""
     maker = db_session.get_sessionmaker(settings)
     async with maker() as session:
         users = (
@@ -154,53 +208,7 @@ async def purge_due_accounts(settings: Settings) -> int:
         )
         for user in users:
             await set_tenant_context(session, user.id)
-            await session.execute(
-                sa.delete(AuthSessionORM).where(AuthSessionORM.user_id == user.id)
-            )
-            await session.execute(sa.delete(EmailTokenORM).where(EmailTokenORM.user_id == user.id))
-            await session.execute(
-                sa.delete(LlmCredentialORM).where(LlmCredentialORM.user_id == user.id)
-            )
-            await session.execute(
-                sa.delete(UsageLedgerORM).where(UsageLedgerORM.user_id == user.id)
-            )
-            await session.execute(
-                sa.update(PlaythroughORM)
-                .where(PlaythroughORM.user_id == user.id)
-                .values(status="deleted", player_config={})
-            )
-            await session.execute(
-                sa.update(ProjectORM)
-                .where(ProjectORM.owner_id == user.id)
-                .values(status="owner_deleted", share_token_hash=None)
-            )
-            await session.execute(
-                sa.update(ContentReleaseORM)
-                .where(ContentReleaseORM.owner_id == user.id)
-                .values(
-                    visibility="private",
-                    moderation_status="withdrawn",
-                    withdrawn_at=datetime.now(UTC),
-                    share_token_hash=None,
-                )
-            )
-            user.email = f"deleted-{user.id}@invalid.local"
-            user.password_hash = "!deleted!"
-            user.display_name = ""
-            user.user_metadata = {}
-            user.platform_quota_monthly = 0
-            user.status = "deleted"
-            user.delete_after = None
-            session.add(
-                AuditLogORM(
-                    id=new_id(),
-                    actor_id=None,
-                    action="account.deleted",
-                    target_type="user",
-                    target_id=user.id,
-                    details={"retained": "pseudonymous integrity records"},
-                )
-            )
+            await scrub_account(session, user)
         await session.commit()
         return len(users)
 

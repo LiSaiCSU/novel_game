@@ -187,7 +187,21 @@ async def test_deleting_an_account_requires_typing_its_address(client) -> None:
         json={"reason": "用户申请注销", "confirm_email": "delete-me@example.com"},
     )
     assert confirmed.status_code == 200, confirmed.text
-    assert (await client.get("/api/v1/admin/users?query=delete-me")).json()["items"] == []
+
+    # The address is gone and the account is dead; the row survives as a
+    # pseudonym because audit entries and other people's playthroughs still
+    # reference it.
+    assert (await client.get("/api/v1/admin/users?query=delete-me@")).json()["items"] == []
+    scrubbed = (await client.get(f"/api/v1/admin/users?query={victim_id}")).json()["items"]
+    assert [item["status"] for item in scrubbed] == ["deleted"]
+    assert scrubbed[0]["email"] == f"deleted-{victim_id}@invalid.local"
+    assert scrubbed[0]["display_name"] == ""
+
+    blocked = await client.post(
+        "/api/v1/auth/login",
+        json={"email": "delete-me@example.com", "password": "correct-horse-player"},
+    )
+    assert blocked.status_code == 401
 
 
 async def test_revoking_sessions_signs_an_account_out_without_blocking_it(client) -> None:

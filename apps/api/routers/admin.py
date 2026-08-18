@@ -29,6 +29,7 @@ from apps.api.platform_settings import (
 from apps.api.rate_limit import rate_limiter
 from apps.api.security import Principal, SecretBox, require_role_csrf, require_roles
 from apps.api.tenancy import set_tenant_context
+from apps.worker.tasks import scrub_account
 from database.models.platform import (
     AuditLogORM,
     AuthSessionORM,
@@ -836,7 +837,13 @@ async def delete_user(
     principal: Annotated[Principal, Depends(require_role_csrf("admin"))],
     uow: SqlUnitOfWork = Depends(uow_dep),
 ) -> dict[str, object]:
-    """Erase an account and everything cascading from it. Irreversible."""
+    """Irreversibly erase an account. Not a row delete - see ``scrub_account``.
+
+    Several tables reference ``users.id`` without a cascade, and published
+    releases may already back other people's playthroughs, so a hard delete
+    both fails and would be wrong. This runs the same scrub the scheduled
+    deletion job runs: personal data goes, the row survives as a pseudonym.
+    """
     await set_tenant_context(uow.session, principal.user_id)
     if user_id == principal.user_id:
         raise HTTPException(status_code=409, detail="administrator cannot delete themselves")
@@ -845,15 +852,15 @@ async def delete_user(
         raise HTTPException(status_code=409, detail="the system account cannot be deleted")
     if body.confirm_email.strip().casefold() != user.email:
         raise HTTPException(status_code=409, detail="confirmation address does not match")
-    # Written before the row disappears: the audit trail has to outlive it.
+    # Recorded before the address is overwritten - the audit trail has to
+    # outlive the account it describes.
     uow.session.add(
         _audit(
             principal, request, "user.deleted", user_id,
             {"email": user.email, "reason": body.reason},
         )
     )
-    await uow.session.flush()
-    await uow.session.delete(user)
+    await scrub_account(uow.session, user, reason=body.reason)
     await uow.commit()
     return {"user_id": user_id, "deleted": True}
 
