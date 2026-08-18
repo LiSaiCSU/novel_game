@@ -592,6 +592,9 @@ async def playthrough_dashboard(
                 "status": str(thread.status),
                 "stage": thread.stage,
                 "next_beat_hint": thread.next_beat_hint,
+                # Threads the player started are worth marking: the point of
+                # opening one is seeing that the world took it seriously.
+                "player_opened": thread.metadata.get("opened_by") == "player",
             }
             for thread in state.plot_threads
         ],

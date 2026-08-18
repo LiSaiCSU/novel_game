@@ -2362,3 +2362,13 @@ a {
 .clockLegend b {
   color: var(--ink-soft);
 }
+
+.ownThread {
+  margin-left: 7px;
+  padding: 1px 6px;
+  border-radius: 999px;
+  background: #e8f4eb;
+  color: #3e6e52;
+  font: 600 10px/1.6 inherit;
+  font-style: normal;
+}

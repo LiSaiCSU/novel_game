@@ -89,6 +89,7 @@ class Settings(BaseSettings):
     prompt_version_npc_decision: str = "v1"
     prompt_version_director: str = "v1"
     prompt_version_world_steward: str = "v1"
+    prompt_version_plot_steward: str = "v1"
     prompt_version_autopilot: str = "v1"
     prompt_version_prologue: str = "v1"
     prompt_version_chapter: str = "v1"

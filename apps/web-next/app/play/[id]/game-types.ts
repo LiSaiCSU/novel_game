@@ -82,6 +82,7 @@ export type Dashboard = {
     status: string;
     stage: number;
     next_beat_hint: string;
+    player_opened: boolean;
   }>;
   clocks: StoryClock[];
   labels: {

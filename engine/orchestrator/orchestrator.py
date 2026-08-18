@@ -36,6 +36,7 @@ from engine.core.mutations import ChangeSet
 from engine.core.ports import UnitOfWork
 from engine.core.types import QUERY_ACTIONS, ActionType, CharacterType, Visibility
 from engine.director.director import Director
+from engine.director.plot_steward import PlotResult, PlotSteward
 from engine.director.tension import TensionModel
 from engine.events.builder import EventBuilder
 from engine.knowledge.service import KnowledgeService
@@ -141,6 +142,7 @@ class OrchestratorDeps:
     chapter: ChapterRenderer
     interrupts: InterruptDetector
     steward: WorldSteward | None = None
+    plot_steward: PlotSteward | None = None
     autopilot: Autopilot | None = None
     prologue: Prologue | None = None
     llm: Any | None = None
@@ -669,8 +671,21 @@ class GameOrchestrator:
                 "debug": {},
             }
 
+        # -- S8b plot steward: did the player change what the story is about? --
+        plot_result: PlotResult | None = None
+        if self._should_review_plot(parsed, outcome, turn_number):
+            with timer.measure("plot"):
+                plot_result = await d.plot_steward.review(
+                    director_state,
+                    player_action=autopilot_reason or request.text,
+                    recent_narrative=recent_narrative,
+                )
+                trace.proposals["plot_steward"] = plot_result.as_dict()
+
         # -- S9 validate2: AI proposals become state, or do not ---------------
         with timer.measure("validate2"):
+            for change in (plot_result.changes if plot_result else []):
+                change_set.add(change)
             if director_result is not None and director_result.validation.accepted:
                 report = await self.proposals.apply_director_decision(
                     uow,
@@ -1207,6 +1222,26 @@ class GameOrchestrator:
             ],
             "events": [e.event_type for e in change_set.events],
         }
+
+    def _should_review_plot(
+        self, parsed: ParsedIntent, outcome: ActionOutcome, turn_number: int
+    ) -> bool:
+        """Whether this turn is worth an extra model call about story shape.
+
+        Asking every turn would double the cost of ordinary play to be told
+        "nothing changed" almost every time. Two cheap signals catch the turns
+        that matter: an action the rules had no verb for - which is what a
+        player reaching past the authored story looks like from here - and an
+        outright refusal. A slow periodic sweep catches gradual drift, where no
+        single turn is a declaration but the player has plainly stopped
+        following the line the pack laid down.
+        """
+        if self.d.plot_steward is None or not self.d.plot_steward.usable():
+            return False
+        if parsed.action.action_type in (ActionType.CUSTOM, ActionType.REJECT_QUEST):
+            return True
+        interval = max(0, int(self.d.pack.rule("narrative.plot_review_interval", 8)))
+        return bool(interval) and turn_number % interval == 0
 
     def _recommendations(
         self,

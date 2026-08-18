@@ -115,6 +115,11 @@ def advance(
     return [mut.clock_update(clock.id, payload, reason=reason)]
 
 
+def close(clock: StoryClock, reason: str) -> StateChange:
+    """Stop a clock that has stopped mattering, without marking it as landed."""
+    return mut.clock_update(clock.id, {"status": str(ClockStatus.CLOSED)}, reason=reason)
+
+
 def tick_completed(state: WorldStateView) -> list[StateChange]:
     """Mark deadline clocks that the world clock has just run out on.
 

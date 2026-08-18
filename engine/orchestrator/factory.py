@@ -20,6 +20,7 @@ from engine.core.locks import (
 )
 from engine.core.types import LLMRole
 from engine.director.director import Director
+from engine.director.plot_steward import PlotSteward
 from engine.knowledge.service import KnowledgeService
 from engine.llm.client import LLMClient
 from engine.llm.providers import build_provider
@@ -179,6 +180,9 @@ def build_orchestrator(
         guard=ConsistencyGuard(pack),
         steward=WorldSteward(
             pack, llm, registry, prompt_version=settings.prompt_version_world_steward
+        ),
+        plot_steward=PlotSteward(
+            pack, llm, registry, prompt_version=settings.prompt_version_plot_steward
         ),
         autopilot=Autopilot(
             pack, llm, registry, prompt_version=settings.prompt_version_autopilot

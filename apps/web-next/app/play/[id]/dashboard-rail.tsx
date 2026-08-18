@@ -144,7 +144,10 @@ export function DashboardRail({
           <h2 className="railSection">剧情进展</h2>
           {dashboard?.threads.map((thread) => (
             <article className="railCard" key={thread.key}>
-              <b>{thread.name}</b>
+              <b>
+                {thread.name}
+                {thread.player_opened && <em className="ownThread">你开的线</em>}
+              </b>
               <span>
                 阶段 {thread.stage} ·{" "}
                 {displayLabel(dashboard.labels.statuses, thread.status, "状态已更新")}
