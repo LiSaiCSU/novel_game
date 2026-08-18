@@ -14,6 +14,12 @@ from pydantic import BaseModel, EmailStr, Field, field_validator
 
 from apps.api.deps import settings_dep, uow_dep
 from apps.api.emailer import send_email
+from apps.api.platform_settings import (
+    ANNOUNCEMENT_KEY,
+    EMPTY_ANNOUNCEMENT,
+    default_monthly_quota,
+    read_setting,
+)
 from apps.api.rate_limit import rate_limiter
 from apps.api.security import (
     Principal,
@@ -333,6 +339,9 @@ async def register(
         password_hash=encoded,
         display_name=body.display_name.strip(),
         locale=body.locale,
+        platform_quota_monthly=await default_monthly_quota(
+            uow, UserORM.platform_quota_monthly.default.arg
+        ),
     )
     uow.session.add(user)
     # PostgreSQL checks these foreign keys during the flush.  The platform
@@ -515,6 +524,14 @@ async def logout(
     _clear_auth_cookies(response, settings)
     response.status_code = 204
     return response
+
+
+@router.get("/announcement")
+async def announcement(
+    uow: SqlUnitOfWork = Depends(uow_dep),
+) -> dict[str, object]:
+    """The operator's current notice, if there is one. Public and uncached."""
+    return await read_setting(uow, ANNOUNCEMENT_KEY, EMPTY_ANNOUNCEMENT)
 
 
 @router.get("/me", response_model=UserView)

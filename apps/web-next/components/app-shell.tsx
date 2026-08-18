@@ -17,6 +17,8 @@ import { usePathname, useRouter } from "next/navigation";
 import { type ReactNode, useEffect, useRef, useState } from "react";
 import { api } from "@/lib/api";
 
+type Announcement = { message: string; level: string; active: boolean };
+
 type CurrentUser = {
   display_name: string;
   email: string;
@@ -44,6 +46,7 @@ export function AppShell({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<CurrentUser>();
   const [authReady, setAuthReady] = useState(false);
   const [accountOpen, setAccountOpen] = useState(false);
+  const [announcement, setAnnouncement] = useState<Announcement>();
   const accountArea = useRef<HTMLDivElement>(null);
   const immersive = /^(?:\/play\/[^/]+|\/creator\/[^/]+)$/.test(pathname);
 
@@ -57,6 +60,18 @@ export function AppShell({ children }: { children: ReactNode }) {
       .finally(() => {
         if (active) setAuthReady(true);
       });
+    return () => {
+      active = false;
+    };
+  }, []);
+
+  useEffect(() => {
+    let active = true;
+    api<Announcement>("/auth/announcement")
+      .then((notice) => {
+        if (active && notice.active) setAnnouncement(notice);
+      })
+      .catch(() => undefined);
     return () => {
       active = false;
     };
@@ -191,6 +206,11 @@ export function AppShell({ children }: { children: ReactNode }) {
           </Link>
         )}
       </header>
+      {announcement && !immersive && (
+        <div className={`siteNotice ${announcement.level}`} role="status">
+          {announcement.message}
+        </div>
+      )}
       {needsVerification && (
         <div className="verifyBanner" role="status">
           <span>邮箱还没有验证，游玩与创作会被拦截。</span>

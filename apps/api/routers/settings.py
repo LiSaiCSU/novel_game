@@ -18,6 +18,7 @@ from apps.api.security import Principal, SecretBox, require_csrf, verified_princ
 from apps.api.tenancy import set_tenant_context
 from apps.jobs import enqueue_job
 from database.models.platform import (
+    AuditLogORM,
     AuthSessionORM,
     ContentReleaseORM,
     DataExportORM,
@@ -100,6 +101,45 @@ async def privacy_preferences(
     if user is None:
         raise HTTPException(status_code=404, detail="account not found")
     return _privacy_view(user)
+
+
+@router.get("/privacy/access-log")
+async def administrator_access_log(
+    principal: Annotated[Principal, Depends(verified_principal)],
+    uow: SqlUnitOfWork = Depends(uow_dep),
+) -> dict[str, object]:
+    """Every time an administrator opened this account's saved stories.
+
+    Support sometimes has to read a player's writing to answer a question
+    about it. Whether that is acceptable rests on the player being able to
+    find out it happened, so the record is theirs to read, not only ours.
+    """
+    await set_tenant_context(uow.session, principal.user_id)
+    rows = (
+        (
+            await uow.session.execute(
+                sa.select(AuditLogORM)
+                .where(
+                    AuditLogORM.target_type == "user",
+                    AuditLogORM.target_id == principal.user_id,
+                    AuditLogORM.action == "user.inspected",
+                )
+                .order_by(AuditLogORM.created_at.desc())
+                .limit(50)
+            )
+        )
+        .scalars()
+        .all()
+    )
+    return {
+        "entries": [
+            {
+                "at": row.created_at,
+                "reason": str((row.details or {}).get("reason", "")),
+            }
+            for row in rows
+        ]
+    }
 
 
 @router.put("/privacy")

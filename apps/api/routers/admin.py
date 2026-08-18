@@ -18,14 +18,24 @@ from apps.api.llm_config import (
     normalize_public_api_base_url,
     platform_llm_view,
 )
+from apps.api.platform_settings import (
+    ANNOUNCEMENT_KEY,
+    DEFAULT_QUOTA_FALLBACK,
+    DEFAULT_QUOTA_KEY,
+    EMPTY_ANNOUNCEMENT,
+    read_setting,
+    write_setting,
+)
 from apps.api.rate_limit import rate_limiter
 from apps.api.security import Principal, SecretBox, require_role_csrf, require_roles
 from apps.api.tenancy import set_tenant_context
 from database.models.platform import (
     AuditLogORM,
+    AuthSessionORM,
     ContentReleaseORM,
     ModerationCaseORM,
     PlatformLlmConfigORM,
+    PlaythroughORM,
     ProductEventORM,
     UsageLedgerORM,
     UserORM,
@@ -57,6 +67,60 @@ class QuotaWrite(BaseModel):
 class RolesWrite(BaseModel):
     roles: set[Literal["player", "creator", "reviewer", "admin"]]
     reason: str = Field(min_length=3, max_length=500)
+
+
+class BulkQuotaWrite(BaseModel):
+    """Set one quota across a whole population of accounts.
+
+    ``expect_users`` is required and must match the number of accounts the
+    filter actually selects. Changing every account on the platform is a
+    reasonable thing to want and a terrible thing to do by accident, so the
+    caller has to have looked at the count first.
+    """
+
+    monthly_tokens: int = Field(ge=0, le=100_000_000)
+    reason: str = Field(min_length=3, max_length=500)
+    scope: Literal["all", "role", "search"] = "all"
+    role: Literal["player", "creator", "reviewer", "admin"] | None = None
+    query: str = Field(default="", max_length=120)
+    expect_users: int = Field(ge=0, le=1_000_000)
+
+    @model_validator(mode="after")
+    def scope_matches_filter(self) -> BulkQuotaWrite:
+        if self.scope == "role" and not self.role:
+            raise ValueError("role scope requires a role")
+        if self.scope == "search" and not self.query.strip():
+            raise ValueError("search scope requires a query")
+        return self
+
+
+class AccountActionWrite(BaseModel):
+    reason: str = Field(min_length=3, max_length=500)
+
+
+class SuspendWrite(AccountActionWrite):
+    suspended: bool
+
+
+class DeleteUserWrite(AccountActionWrite):
+    #: The address, typed out. An id is easy to paste from the wrong row.
+    confirm_email: str = Field(min_length=3, max_length=320)
+
+
+class DefaultQuotaWrite(BaseModel):
+    monthly_tokens: int = Field(ge=0, le=100_000_000)
+    reason: str = Field(min_length=3, max_length=500)
+
+
+class AnnouncementWrite(BaseModel):
+    message: str = Field(default="", max_length=500)
+    level: Literal["info", "warning", "maintenance"] = "info"
+    active: bool = False
+    reason: str = Field(min_length=3, max_length=500)
+
+
+class TakedownWrite(AccountActionWrite):
+    restore: bool = False
 
 
 class PlatformLlmWrite(BaseModel):
@@ -437,6 +501,488 @@ async def set_user_roles(
     )
     await uow.commit()
     return {"user_id": user_id, "roles": sorted(requested)}
+
+
+# ---------------------------------------------------------------------------
+# Population-wide controls
+# ---------------------------------------------------------------------------
+def _user_filter(scope: str, role: str | None, query: str) -> list[Any]:
+    filters: list[Any] = []
+    if scope == "search" and query.strip():
+        needle = f"%{query.strip()}%"
+        filters.append(sa.or_(UserORM.email.ilike(needle), UserORM.display_name.ilike(needle)))
+    elif scope == "role" and role:
+        filters.append(
+            UserORM.id.in_(sa.select(UserRoleORM.user_id).where(UserRoleORM.role == role))
+        )
+    # Never touch the system content account: it owns the official releases and
+    # has no human behind it to notice being suspended or re-quota'd.
+    filters.append(UserORM.status != "system")
+    return filters
+
+
+def _audit(
+    principal: Principal,
+    request: Request,
+    action: str,
+    target_id: str,
+    details: dict[str, Any],
+    target_type: str = "user",
+) -> AuditLogORM:
+    return AuditLogORM(
+        id=new_id(),
+        actor_id=principal.user_id,
+        action=action,
+        target_type=target_type,
+        target_id=target_id,
+        request_id=str(getattr(request.state, "request_id", "")),
+        details=details,
+    )
+
+
+async def _revoke_sessions(uow: SqlUnitOfWork, user_id: str) -> int:
+    result = await uow.session.execute(
+        sa.update(AuthSessionORM)
+        .where(AuthSessionORM.user_id == user_id, AuthSessionORM.revoked_at.is_(None))
+        .values(revoked_at=datetime.now(UTC))
+    )
+    return int(result.rowcount or 0)
+
+
+@router.get("/users/quota/bulk/preview")
+async def preview_bulk_quota(
+    principal: Annotated[Principal, Depends(require_roles("admin"))],
+    uow: SqlUnitOfWork = Depends(uow_dep),
+    scope: Annotated[Literal["all", "role", "search"], Query()] = "all",
+    role: Annotated[str, Query(max_length=32)] = "",
+    query: Annotated[str, Query(max_length=120)] = "",
+) -> dict[str, object]:
+    """How many accounts a bulk change would touch, and a sample of them."""
+    await set_tenant_context(uow.session, principal.user_id)
+    filters = _user_filter(scope, role or None, query)
+    matched = int(
+        await uow.session.scalar(sa.select(sa.func.count()).select_from(UserORM).where(*filters))
+        or 0
+    )
+    sample = (
+        (
+            await uow.session.execute(
+                sa.select(UserORM.email)
+                .where(*filters)
+                .order_by(UserORM.created_at.desc())
+                .limit(5)
+            )
+        )
+        .scalars()
+        .all()
+    )
+    return {"matched": matched, "sample": list(sample)}
+
+
+@router.post("/users/quota/bulk")
+async def set_quota_in_bulk(
+    body: BulkQuotaWrite,
+    request: Request,
+    principal: Annotated[Principal, Depends(require_role_csrf("admin"))],
+    uow: SqlUnitOfWork = Depends(uow_dep),
+) -> dict[str, object]:
+    """Apply one monthly quota to every account the filter selects."""
+    await set_tenant_context(uow.session, principal.user_id)
+    filters = _user_filter(body.scope, body.role, body.query)
+    matched = int(
+        await uow.session.scalar(sa.select(sa.func.count()).select_from(UserORM).where(*filters))
+        or 0
+    )
+    if matched != body.expect_users:
+        raise HTTPException(
+            status_code=409,
+            detail=(
+                f"the filter now matches {matched} accounts, not {body.expect_users}; "
+                "re-read the count and submit again"
+            ),
+        )
+    await uow.session.execute(
+        sa.update(UserORM).where(*filters).values(platform_quota_monthly=body.monthly_tokens)
+    )
+    uow.session.add(
+        _audit(
+            principal,
+            request,
+            "user.quota_bulk_changed",
+            target_id="*",
+            details={
+                "scope": body.scope,
+                "role": body.role,
+                "query": body.query,
+                "monthly_tokens": body.monthly_tokens,
+                "affected": matched,
+                "reason": body.reason,
+            },
+        )
+    )
+    await uow.commit()
+    return {"affected": matched, "monthly_quota": body.monthly_tokens}
+
+
+@router.get("/settings")
+async def read_platform_settings(
+    principal: Annotated[Principal, Depends(require_roles("admin"))],
+    uow: SqlUnitOfWork = Depends(uow_dep),
+) -> dict[str, object]:
+    await set_tenant_context(uow.session, principal.user_id)
+    return {
+        "default_quota": await read_setting(uow, DEFAULT_QUOTA_KEY, DEFAULT_QUOTA_FALLBACK),
+        "announcement": await read_setting(uow, ANNOUNCEMENT_KEY, EMPTY_ANNOUNCEMENT),
+    }
+
+
+@router.put("/settings/default-quota")
+async def set_default_quota(
+    body: DefaultQuotaWrite,
+    request: Request,
+    principal: Annotated[Principal, Depends(require_role_csrf("admin"))],
+    uow: SqlUnitOfWork = Depends(uow_dep),
+) -> dict[str, object]:
+    """The quota new accounts are created with. Existing accounts are untouched."""
+    await set_tenant_context(uow.session, principal.user_id)
+    await write_setting(
+        uow, principal.user_id, DEFAULT_QUOTA_KEY, {"monthly_tokens": body.monthly_tokens}
+    )
+    uow.session.add(
+        _audit(
+            principal,
+            request,
+            "platform.default_quota_changed",
+            DEFAULT_QUOTA_KEY,
+            {"monthly_tokens": body.monthly_tokens, "reason": body.reason},
+            target_type="platform",
+        )
+    )
+    await uow.commit()
+    return {"monthly_tokens": body.monthly_tokens}
+
+
+@router.put("/settings/announcement")
+async def set_announcement(
+    body: AnnouncementWrite,
+    request: Request,
+    principal: Annotated[Principal, Depends(require_role_csrf("admin"))],
+    uow: SqlUnitOfWork = Depends(uow_dep),
+) -> dict[str, object]:
+    """A banner every signed-in player sees, for maintenance and incidents."""
+    await set_tenant_context(uow.session, principal.user_id)
+    payload: dict[str, Any] = {
+        "message": body.message.strip(),
+        "level": body.level,
+        "active": bool(body.active and body.message.strip()),
+    }
+    await write_setting(uow, principal.user_id, ANNOUNCEMENT_KEY, payload)
+    uow.session.add(
+        _audit(
+            principal,
+            request,
+            "platform.announcement_changed",
+            ANNOUNCEMENT_KEY,
+            {**payload, "reason": body.reason},
+            target_type="platform",
+        )
+    )
+    await uow.commit()
+    return payload
+
+
+# ---------------------------------------------------------------------------
+# Individual account controls
+# ---------------------------------------------------------------------------
+@router.post("/users/{user_id}/suspend")
+async def suspend_user(
+    user_id: str,
+    body: SuspendWrite,
+    request: Request,
+    principal: Annotated[Principal, Depends(require_role_csrf("admin"))],
+    uow: SqlUnitOfWork = Depends(uow_dep),
+) -> dict[str, object]:
+    """Block or restore sign-in. Suspending also ends every live session."""
+    await set_tenant_context(uow.session, principal.user_id)
+    if user_id == principal.user_id:
+        raise HTTPException(status_code=409, detail="administrator cannot suspend themselves")
+    user = await _target_user(uow, user_id)
+    if user.status == "system":
+        raise HTTPException(status_code=409, detail="the system account cannot be suspended")
+    before = user.status
+    user.status = "suspended" if body.suspended else "active"
+    if body.suspended:
+        await _revoke_sessions(uow, user_id)
+    uow.session.add(
+        _audit(
+            principal,
+            request,
+            "user.suspended" if body.suspended else "user.reinstated",
+            user_id,
+            {"before": before, "after": user.status, "reason": body.reason},
+        )
+    )
+    await uow.commit()
+    return {"user_id": user_id, "status": user.status}
+
+
+@router.post("/users/{user_id}/revoke-sessions")
+async def revoke_user_sessions(
+    user_id: str,
+    body: AccountActionWrite,
+    request: Request,
+    principal: Annotated[Principal, Depends(require_role_csrf("admin"))],
+    uow: SqlUnitOfWork = Depends(uow_dep),
+) -> dict[str, object]:
+    """Sign an account out everywhere, without blocking a fresh sign-in."""
+    await set_tenant_context(uow.session, principal.user_id)
+    await _target_user(uow, user_id)
+    revoked = await _revoke_sessions(uow, user_id)
+    uow.session.add(
+        _audit(
+            principal,
+            request,
+            "user.sessions_revoked",
+            user_id,
+            {"revoked": revoked, "reason": body.reason},
+        )
+    )
+    await uow.commit()
+    return {"user_id": user_id, "revoked": revoked}
+
+
+@router.post("/users/{user_id}/verify-email")
+async def force_verify_email(
+    user_id: str,
+    body: AccountActionWrite,
+    request: Request,
+    principal: Annotated[Principal, Depends(require_role_csrf("admin"))],
+    uow: SqlUnitOfWork = Depends(uow_dep),
+) -> dict[str, object]:
+    """Mark an address verified when delivery is the thing that is broken."""
+    await set_tenant_context(uow.session, principal.user_id)
+    user = await _target_user(uow, user_id)
+    if user.email_verified_at is None:
+        user.email_verified_at = datetime.now(UTC)
+        uow.session.add(
+            _audit(
+                principal, request, "user.email_force_verified", user_id, {"reason": body.reason}
+            )
+        )
+        await uow.commit()
+    return {"user_id": user_id, "verified": True}
+
+
+@router.post("/users/{user_id}/usage/reset")
+async def reset_monthly_usage(
+    user_id: str,
+    body: AccountActionWrite,
+    request: Request,
+    principal: Annotated[Principal, Depends(require_role_csrf("admin"))],
+    uow: SqlUnitOfWork = Depends(uow_dep),
+) -> dict[str, object]:
+    """Forgive this month's platform spend without changing the quota.
+
+    The ledger is append-only accounting, so nothing is deleted: a negative
+    correction entry is written and the running total moves back to zero.
+    """
+    await set_tenant_context(uow.session, principal.user_id)
+    await _target_user(uow, user_id)
+    month_start = datetime.now(UTC).replace(day=1, hour=0, minute=0, second=0, microsecond=0)
+    spent = int(
+        await uow.session.scalar(
+            sa.select(
+                sa.func.coalesce(
+                    sa.func.sum(UsageLedgerORM.input_tokens + UsageLedgerORM.output_tokens), 0
+                )
+            ).where(
+                UsageLedgerORM.user_id == user_id,
+                UsageLedgerORM.created_at >= month_start,
+                UsageLedgerORM.provider != "byok",
+            )
+        )
+        or 0
+    )
+    if spent > 0:
+        uow.session.add(
+            UsageLedgerORM(
+                id=new_id(),
+                user_id=user_id,
+                provider="platform",
+                model="admin-correction",
+                input_tokens=-spent,
+                output_tokens=0,
+                success=True,
+            )
+        )
+        uow.session.add(
+            _audit(
+                principal,
+                request,
+                "user.usage_reset",
+                user_id,
+                {"forgiven_tokens": spent, "reason": body.reason},
+            )
+        )
+        await uow.commit()
+    return {"user_id": user_id, "forgiven_tokens": spent}
+
+
+@router.post("/users/{user_id}/delete")
+async def delete_user(
+    user_id: str,
+    body: DeleteUserWrite,
+    request: Request,
+    principal: Annotated[Principal, Depends(require_role_csrf("admin"))],
+    uow: SqlUnitOfWork = Depends(uow_dep),
+) -> dict[str, object]:
+    """Erase an account and everything cascading from it. Irreversible."""
+    await set_tenant_context(uow.session, principal.user_id)
+    if user_id == principal.user_id:
+        raise HTTPException(status_code=409, detail="administrator cannot delete themselves")
+    user = await _target_user(uow, user_id)
+    if user.status == "system":
+        raise HTTPException(status_code=409, detail="the system account cannot be deleted")
+    if body.confirm_email.strip().casefold() != user.email:
+        raise HTTPException(status_code=409, detail="confirmation address does not match")
+    # Written before the row disappears: the audit trail has to outlive it.
+    uow.session.add(
+        _audit(
+            principal, request, "user.deleted", user_id,
+            {"email": user.email, "reason": body.reason},
+        )
+    )
+    await uow.session.flush()
+    await uow.session.delete(user)
+    await uow.commit()
+    return {"user_id": user_id, "deleted": True}
+
+
+@router.post("/releases/{release_id}/takedown")
+async def force_takedown(
+    release_id: str,
+    body: TakedownWrite,
+    request: Request,
+    principal: Annotated[Principal, Depends(require_role_csrf("admin"))],
+    uow: SqlUnitOfWork = Depends(uow_dep),
+) -> dict[str, object]:
+    """Pull a published work off the platform immediately, or put it back."""
+    await set_tenant_context(uow.session, principal.user_id)
+    release = await uow.session.get(ContentReleaseORM, release_id)
+    if release is None:
+        raise HTTPException(status_code=404, detail="release not found")
+    before = release.moderation_status
+    release.moderation_status = "approved" if body.restore else "taken_down"
+    if not body.restore:
+        release.visibility = "private"
+    uow.session.add(
+        _audit(
+            principal,
+            request,
+            "release.restored" if body.restore else "release.taken_down",
+            release_id,
+            {"before": before, "after": release.moderation_status, "reason": body.reason},
+            target_type="release",
+        )
+    )
+    await uow.commit()
+    return {"release_id": release_id, "moderation_status": release.moderation_status}
+
+
+@router.post("/users/{user_id}/inspect")
+async def inspect_player(
+    user_id: str,
+    body: AccountActionWrite,
+    request: Request,
+    principal: Annotated[Principal, Depends(require_role_csrf("admin"))],
+    uow: SqlUnitOfWork = Depends(uow_dep),
+) -> dict[str, object]:
+    """Look at a player's game the way they see it - read-only, and on the record.
+
+    Support questions about a stuck or broken playthrough cannot be answered
+    from aggregate metrics; someone has to see the actual story. That is real
+    access to someone's private writing, so it is deliberately not a session
+    switch: there is nothing here that can act as the player, take a turn, or
+    change a single row.
+
+    Three things keep it honest. It is a POST with a required reason, so it
+    cannot be reached by wandering around the interface. Administrator MFA
+    step-up already gates every admin write. And every call writes an audit
+    entry the player can read on their own account page - being able to find
+    out that someone looked is the part that makes the power acceptable.
+    """
+    await set_tenant_context(uow.session, principal.user_id)
+    user = await _target_user(uow, user_id)
+    plays = (
+        (
+            await uow.session.execute(
+                sa.select(PlaythroughORM)
+                .where(PlaythroughORM.user_id == user_id)
+                .order_by(PlaythroughORM.updated_at.desc())
+                .limit(20)
+            )
+        )
+        .scalars()
+        .all()
+    )
+    uow.session.add(
+        _audit(
+            principal,
+            request,
+            "user.inspected",
+            user_id,
+            {"reason": body.reason, "playthroughs": len(plays)},
+        )
+    )
+    await uow.commit()
+    return {
+        "user": {
+            "id": user.id,
+            "email": user.email,
+            "display_name": user.display_name,
+            "status": user.status,
+            "verified": user.email_verified_at is not None,
+            "monthly_quota": user.platform_quota_monthly,
+        },
+        "playthroughs": [
+            {
+                "id": play.id,
+                "release_id": play.release_id,
+                "status": play.status,
+                "turn_number": play.turn_number,
+                "updated_at": play.updated_at,
+            }
+            for play in plays
+        ],
+        "read_only": True,
+    }
+
+
+@router.get("/users/{user_id}/inspect/{playthrough_id}")
+async def inspect_playthrough(
+    user_id: str,
+    playthrough_id: str,
+    principal: Annotated[Principal, Depends(require_roles("admin"))],
+    uow: SqlUnitOfWork = Depends(uow_dep),
+    limit: Annotated[int, Query(ge=1, le=40)] = 12,
+) -> dict[str, object]:
+    """The story text of one playthrough, for diagnosing what went wrong."""
+    await set_tenant_context(uow.session, principal.user_id)
+    play = await uow.session.get(PlaythroughORM, playthrough_id)
+    if play is None or play.user_id != user_id:
+        raise HTTPException(status_code=404, detail="playthrough not found")
+    segments = await uow.turns.list_narrative(play.game_session_id or "", limit=limit)
+    return {
+        "playthrough_id": play.id,
+        "status": play.status,
+        "turn_number": play.turn_number,
+        "chapters": [
+            {"kind": segment.kind, "text": segment.text, "world_minute": segment.world_minute}
+            for segment in segments
+            if segment.kind in {"chapter", "scene", "ending"}
+        ],
+        "read_only": True,
+    }
 
 
 @router.get("/system")

@@ -2372,3 +2372,86 @@ a {
   font: 600 10px/1.6 inherit;
   font-style: normal;
 }
+
+/* --- administrator account actions -------------------------------------- */
+.userActionsToggle {
+  justify-self: start;
+  font-size: 12px;
+}
+.userActions {
+  grid-column: 1 / -1;
+  display: grid;
+  gap: 10px;
+  padding: 12px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: rgba(0, 0, 0, 0.015);
+}
+.userActions .toolbar button {
+  padding: 7px 11px;
+  border: 1px solid var(--line);
+  border-radius: 9px;
+  background: var(--surface);
+  font-size: 12px;
+  cursor: pointer;
+  color: var(--ink);
+}
+.userActions .toolbar button:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+.userActions .toolbar button.destructive {
+  border-color: #d9a3ad;
+  color: #a53e52;
+}
+.inspection {
+  display: grid;
+  gap: 8px;
+}
+.inspectionRow {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 8px 11px;
+  border: 1px solid var(--line);
+  border-radius: 9px;
+  background: var(--surface);
+  cursor: pointer;
+  font-size: 12px;
+  color: var(--ink);
+}
+.inspectionChapter {
+  margin: 0;
+  padding: 10px 12px;
+  border-left: 3px solid var(--line);
+  background: var(--surface);
+  color: var(--ink-soft);
+  font-size: 12px;
+  line-height: 1.7;
+  white-space: pre-wrap;
+  max-height: 260px;
+  overflow-y: auto;
+}
+.checkRow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+}
+
+.siteNotice {
+  padding: 10px 18px;
+  text-align: center;
+  font-size: 13px;
+  border-bottom: 1px solid var(--line);
+  background: #eef2f7;
+  color: #33465e;
+}
+.siteNotice.warning {
+  background: #fdf3e3;
+  color: #8a5a2b;
+}
+.siteNotice.maintenance {
+  background: #fae8eb;
+  color: #a53e52;
+}

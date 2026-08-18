@@ -212,6 +212,20 @@ class LlmCredentialORM(TimestampMixin, Base):
     status: Mapped[str] = mapped_column(sa.String(24), default="active")
 
 
+class PlatformSettingORM(TimestampMixin, Base):
+    """Deployment-wide switches an administrator can change without a deploy.
+
+    One row per setting rather than one column per setting: the set of things
+    an operator needs to reach at runtime grows, and a schema migration is a
+    poor answer to "turn the site read-only for twenty minutes".
+    """
+
+    __tablename__ = "platform_settings"
+    key: Mapped[str] = mapped_column(sa.String(80), primary_key=True)
+    value: Mapped[dict[str, Any]] = mapped_column(JSONType, default=dict)
+    updated_by: Mapped[str] = mapped_column(sa.String(36), default="")
+
+
 class PlatformLlmConfigORM(TimestampMixin, Base):
     """Encrypted connection plus narrative/reasoning model profiles."""
 

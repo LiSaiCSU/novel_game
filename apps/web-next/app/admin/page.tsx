@@ -5,6 +5,8 @@ import Link from "next/link";
 import { api } from "@/lib/api";
 import { interfaceLabel, roleLabels } from "@/lib/display";
 import PlatformModelPanel from "@/components/admin/PlatformModelPanel";
+import PlatformOpsPanel from "@/components/admin/PlatformOpsPanel";
+import UserActions from "@/components/admin/UserActions";
 
 type Summary = {
   users: number;
@@ -193,6 +195,7 @@ export default function AdminCenter() {
               个最小化事件{funnel?.sample_truncated ? "（已达到聚合上限）" : ""}。
             </p>
           </section>
+          <PlatformOpsPanel onChanged={() => load(query).catch((x) => setError(x.message))} />
           <section className="panel">
             <div className="entityToolbar">
               <div>
@@ -258,6 +261,11 @@ export default function AdminCenter() {
                     </button>
                   </div>
                   <p className="roleLine">{roleLabels(user.roles)}</p>
+                  <UserActions
+                    user={user}
+                    onChanged={() => load(query).catch((x) => setError(x.message))}
+                    onError={setError}
+                  />
                 </article>
               ))}
             </div>
