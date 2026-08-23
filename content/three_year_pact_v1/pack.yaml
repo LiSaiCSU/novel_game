@@ -1,7 +1,7 @@
 key: three_year_pact_v1
 name: 三年之期已到
 genre: urban_revenge
-version: "1.0.0"
+version: "1.0.1"
 engine_min_version: "0.2.0"
 primary_progression_key: standing
 attribute_definitions:
@@ -42,6 +42,11 @@ player_fields:
       - {value: numb, label: 早就无所谓了}
   - {key: background, label: 入赘之前, type: text, required: false}
 language: zh-CN
+assets:
+  - key: three_year_pact_cover
+    kind: cover
+    path: official/three_year_pact_v1/three-year-pact-cover-v1.png
+    alt: 江城豪门家宴上，结束三年隐忍的成年男子把围裙放回主桌，银行人员携文件进门，桌上摆着契约与旧铜牌
 author_tests:
   - key: opening_state
     name: 开场处境与知识边界正确

@@ -36,6 +36,8 @@ CONTENT = Path(__file__).resolve().parents[2] / "content"
         "wedding_verdict_v1",
         "divorce_ledger_v1",
         "shelter_broadcast_v1",
+        "three_year_pact_v1",
+        "second_chance_v1",
     ),
 )
 def test_new_official_content_has_a_valid_landscape_cover(key: str) -> None:

@@ -1,7 +1,7 @@
 key: second_chance_v1
 name: 重生：这一次换我来
 genre: rebirth_revenge
-version: "1.0.0"
+version: "1.0.1"
 engine_min_version: "0.2.0"
 primary_progression_key: standing
 attribute_definitions:
@@ -43,6 +43,11 @@ player_fields:
       - {value: myself, label: 自己没出息}
   - {key: background, label: 上一世后来怎么样了, type: text, required: false}
 language: zh-CN
+assets:
+  - key: second_chance_cover
+    kind: cover
+    path: official/second_chance_v1/second-chance-cover-v1.png
+    alt: 二〇一三年的滨海五金厂里，带着十年记忆归来的成年主角用红笔圈出订单陷阱，家人仍在身后，厂外有人暗中监视
 author_tests:
   - key: opening_state
     name: 开场处境与先知边界正确
