@@ -1,0 +1,97 @@
+facts:
+  - key: fact_elimination_button_shares_safety_bus
+    statement: 节目淘汰按钮被违规接入避难城安全总线，按下会加剧已经过热的切换柜故障
+    truth_value: true
+    scope: WORLD
+    sensitivity: 0.18
+    related: [elimination_stage, original_wiring_map, safety_bus_fuse]
+    initial_knowledge:
+      player: {state: KNOWN, confidence: 0.95, source: WITNESSED}
+      qi_yue: {state: KNOWN, confidence: 1, source: DOCUMENT}
+      song_wei: {state: HEARD, confidence: 0.45, source: TOLD_BY}
+  - key: fact_warning_was_hidden_for_ratings
+    statement: 宋薇收到三次太阳风暴预警后仍把直播提前，并要求剪掉玩家指出线路风险的片段
+    truth_value: true
+    scope: PERSONAL
+    sensitivity: 1.0
+    subject: song_wei
+    related: [warning_mail_cache, studio_control, song_wei]
+    initial_knowledge:
+      song_wei: {state: KNOWN, confidence: 1, source: SEED}
+      peng_dali: {state: KNOWN, confidence: 0.8, source: WITNESSED}
+  - key: fact_eliminated_people_still_below
+    statement: 六名已淘汰选手没有离开穹顶，而是被安置在下层宿舍等待决赛返场
+    truth_value: true
+    scope: FACTION
+    sensitivity: 0.65
+    related: [lower_dorm, contestant_collective]
+    initial_knowledge:
+      lin_qing: {state: KNOWN, confidence: 1, source: WITNESSED}
+      mao_mao: {state: KNOWN, confidence: 1, source: WITNESSED}
+      song_wei: {state: KNOWN, confidence: 1, source: DOCUMENT}
+      luo_qi: {state: SUSPECTED, confidence: 0.55, source: INFERRED}
+  - key: fact_vote_was_story_algorithm
+    statement: 百分之九十七的淘汰票并非实时观众结果，而是节目算法按预设故事弧加权后的展示数
+    truth_value: true
+    scope: FACTION
+    sensitivity: 0.82
+    related: [studio_control, final_resident_show]
+    initial_knowledge:
+      song_wei: {state: KNOWN, confidence: 1, source: DOCUMENT}
+      peng_dali: {state: KNOWN, confidence: 0.75, source: TOLD_BY}
+  - key: fact_shelter_requires_multi_role_control
+    statement: 九号穹顶总控采用多岗位交叉验证，没有任何单人永久主人权限
+    truth_value: true
+    scope: WORLD
+    sensitivity: 0.1
+    related: [central_control, shelter_technicians]
+    initial_knowledge:
+      player: {state: KNOWN, confidence: 0.8, source: DOCUMENT}
+      qi_yue: {state: KNOWN, confidence: 1, source: DOCUMENT}
+      zhao_xin: {state: KNOWN, confidence: 1, source: DOCUMENT}
+  - key: fact_ad_batteries_should_power_clinic
+    statement: 两组原定给医疗冷柜的备用电池被彭大力签字转到赞助展廊
+    truth_value: true
+    scope: PERSONAL
+    sensitivity: 0.86
+    subject: peng_dali
+    related: [battery_allocation_sheet, sponsor_gallery, clinic]
+    initial_knowledge:
+      peng_dali: {state: KNOWN, confidence: 1, source: DOCUMENT}
+      song_wei: {state: KNOWN, confidence: 0.8, source: DOCUMENT}
+  - key: fact_tangtang_has_first_aid_training
+    statement: 江棠棠做过四年急救志愿者，节目仍把她剪成只会拍照的花瓶
+    truth_value: true
+    scope: PERSONAL
+    sensitivity: 0.5
+    subject: jiang_tangtang
+    related: [jiang_tangtang, emergency_med_kit]
+    initial_knowledge:
+      jiang_tangtang: {state: KNOWN, confidence: 1, source: SEED}
+      luo_qi: {state: HEARD, confidence: 0.6, source: TOLD_BY}
+  - key: fact_water_branch_already_isolated
+    statement: 林晴在被困前已关闭受烟雾机清洗液污染的生活水支路，当前主储水尚未污染
+    truth_value: true
+    scope: PERSONAL
+    sensitivity: 0.7
+    subject: lin_qing
+    related: [lin_qing, water_plant, water_test_strips]
+    initial_knowledge:
+      lin_qing: {state: KNOWN, confidence: 1, source: WITNESSED}
+  - key: fact_supplies_only_last_seven_days
+    statement: 广告宣称的百人一月物资，实际只够四十八名成年人维持七天
+    truth_value: true
+    scope: WORLD
+    sensitivity: 0.62
+    related: [supply_store, mao_mao]
+    initial_knowledge:
+      mao_mao: {state: KNOWN, confidence: 0.95, source: WITNESSED}
+      song_wei: {state: SUSPECTED, confidence: 0.5, source: INFERRED}
+  - key: fact_rescue_needs_twenty_four_hours
+    statement: 地面救援至少二十四小时后才能抵达，避难城必须自行维持最低运行
+    truth_value: true
+    scope: WORLD
+    sensitivity: 0.45
+    related: [zhao_xin, surface_station, storm_bulletin]
+    initial_knowledge:
+      zhao_xin: {state: KNOWN, confidence: 1, source: DOCUMENT}

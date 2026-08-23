@@ -1,0 +1,19 @@
+item_types: [{key: document, name: 文件}, {key: device, name: 设备}, {key: token, name: 权限}, {key: evidence, name: 证据}, {key: currency, name: 资金}]
+rarities: [{key: common, name: 普通, value_multiplier: 1}, {key: important, name: 重要, value_multiplier: 2}, {key: key_item, name: 关键, value_multiplier: 1}]
+items:
+  - {key: cash, name: 现金, type: currency, rarity: common, value: 1, stackable: true, description: 能付款，但买不到一条完整证据链。, effects: {}}
+  - {key: red_evidence_book, name: 红色证据册, type: evidence, rarity: key_item, value: 0, stackable: false, description: 四十八笔关联交易的索引，不是原件，单独公开只能引起怀疑。, effects: {quest_item: true}}
+  - {key: stream_admin_token, name: 直播主控令牌, type: token, rarity: key_item, value: 0, stackable: false, description: 可以选择现场主画面，但不能改写公证存证流。, effects: {quest_item: true}}
+  - {key: mother_share_copy, name: 母亲股份文件复印件, type: document, rarity: key_item, value: 0, stackable: false, description: 证明母亲曾持股百分之二十一，控制权如何处置不在这一页。, effects: {quest_item: true}}
+  - {key: debt_agreement, name: 债务转让确认书, type: document, rarity: key_item, value: 0, stackable: false, description: 第十页签名会同时确认第十一页附件，但现场版本故意抽走了第十页背面的骑缝章。, effects: {quest_item: true}}
+  - {key: group_access_card, name: 集团高层门卡, type: token, rarity: important, value: 0, stackable: false, description: 能进入二十八层与档案区，后台会记录每一次刷卡。, effects: {}}
+  - {key: chairman_seal, name: 董事长印鉴, type: token, rarity: key_item, value: 0, stackable: false, description: 真印鉴边缘有一处母亲当年留下的缺口。, effects: {quest_item: true}}
+  - {key: backup_wedding_dress, name: 备用婚纱, type: evidence, rarity: common, value: 8000, stackable: false, description: 不是爱情信物，是顾家提前准备替换新娘的物证，衣袋里还有流程单。, effects: {}}
+  - {key: trust_key, name: 信托保管箱钥匙, type: token, rarity: key_item, value: 0, stackable: false, description: 只是一把钥匙，还需要原始印鉴和第二见证人。, effects: {quest_item: true}}
+  - {key: backup_stream_drive, name: 备用推流硬盘, type: device, rarity: key_item, value: 0, stackable: false, description: 记录三路推流地址与后台操作日志，拔掉会触发自动上传。, effects: {quest_item: true}}
+  - {key: payroll_drive, name: 欠薪明细盘, type: evidence, rarity: key_item, value: 0, stackable: false, description: 六个月排班、打卡、应发与实发记录，姓名已做公开脱敏。, effects: {quest_item: true}}
+  - {key: loan_freeze_notice, name: 临时风控通知, type: document, rarity: key_item, value: 0, stackable: false, description: 银行要求十八点前说明债务主体，否则暂停全部新增授信。, effects: {quest_item: true}}
+  - {key: missing_recorder, name: 失踪录音笔, type: evidence, rarity: key_item, value: 0, stackable: false, description: 录下关联交易的指令，但必须核验声纹、时间和原始文件。, effects: {quest_item: true}}
+  - {key: shred_truck_key, name: 销毁车钥匙, type: token, rarity: important, value: 0, stackable: false, description: 对应卸货区那辆无标识车辆。, effects: {}}
+  - {key: stage_cue_log, name: 舞台提示日志, type: evidence, rarity: important, value: 0, stackable: false, description: 记录顾承泽要求签字后切流的时间和原始耳返音轨。, effects: {quest_item: true}}
+  - {key: trust_deed, name: 员工优先信托原件, type: document, rarity: key_item, value: 0, stackable: false, description: 母亲把表决权托管条件写得很清楚：发生恶意资产拆分时，控制权暂时转给员工与独立董事。, effects: {reveals_fact: fact_mother_trust_controls_company, quest_item: true}}

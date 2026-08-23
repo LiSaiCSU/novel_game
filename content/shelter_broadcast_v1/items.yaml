@@ -1,0 +1,19 @@
+item_types: [{key: tool, name: 工具}, {key: document, name: 记录}, {key: device, name: 设备}, {key: token, name: 权限}, {key: supply, name: 物资}]
+rarities: [{key: common, name: 常规, value_multiplier: 1}, {key: important, name: 重要, value_multiplier: 3}, {key: key_item, name: 关键, value_multiplier: 1}]
+items:
+  - {key: maintenance_multitool, name: 绝缘维修钳组, type: tool, rarity: key_item, value: 300, stackable: false, description: 带绝缘钳、测温贴和机械锁片，不能替代正确断电。, effects: {quest_item: true}}
+  - {key: analog_manual_pages, name: 纸质维护手册残页, type: document, rarity: key_item, value: 0, stackable: false, description: 只剩电力切换与通风旁路两章，水处理章节被节目装修队拿走垫桌脚。, effects: {quest_item: true}}
+  - {key: contestant_badge, name: 已淘汰参赛证, type: token, rarity: common, value: 0, stackable: false, description: 节目门禁显示淘汰，老系统仍识别实名与维修资质。, effects: {}}
+  - {key: host_earpiece, name: 主持人耳返, type: device, rarity: important, value: 2000, stackable: false, description: 本地频道仍能工作，缓存了断网前最后十分钟指令。, effects: {quest_item: true}}
+  - {key: producer_master_card, name: 制作人总卡, type: token, rarity: key_item, value: 0, stackable: false, description: 能开节目区，打不开民防核心区。, effects: {}}
+  - {key: warning_mail_cache, name: 风暴预警缓存, type: document, rarity: key_item, value: 0, stackable: false, description: 三封预警、三个时间戳和一次人工标记“延后处理”。, effects: {reveals_fact: fact_warning_was_hidden_for_ratings, quest_item: true}}
+  - {key: emergency_med_kit, name: 应急医疗包, type: supply, rarity: important, value: 800, stackable: false, description: 止血、固定和基础药品，不能替代医疗舱。, effects: {}}
+  - {key: climbing_line, name: 高空作业绳, type: tool, rarity: common, value: 500, stackable: false, description: 有磨损记录，使用前必须复检。, effects: {}}
+  - {key: original_wiring_map, name: 原始电气竣工图, type: document, rarity: key_item, value: 0, stackable: false, description: 明确显示淘汰舞台不应接入安全总线，后期改线没有报验。, effects: {quest_item: true}}
+  - {key: water_test_strips, name: 水质快检条, type: tool, rarity: important, value: 120, stackable: true, description: 能筛查余氯、酸碱度和几类常见污染，不能替代实验室全检。, effects: {}}
+  - {key: storm_bulletin, name: 地面风暴短报, type: document, rarity: key_item, value: 0, stackable: false, description: 每七分钟更新一次强度与短通信窗口。, effects: {quest_item: true}}
+  - {key: battery_allocation_sheet, name: 备用电池分配单, type: document, rarity: key_item, value: 0, stackable: false, description: 医疗冷柜的两组电池被划给赞助展廊，签字与设备号都在。, effects: {quest_item: true}}
+  - {key: hand_crank_radio, name: 手摇广播机, type: device, rarity: important, value: 300, stackable: false, description: 不依赖主电网，声音不好听但覆盖两层。, effects: {}}
+  - {key: safety_bus_fuse, name: 安全总线熔断器, type: tool, rarity: key_item, value: 60, stackable: true, description: 规格必须一致，节目道具组曾拿相似外观的普通保险替代。, effects: {quest_item: true}}
+  - {key: access_log_drive, name: 门禁日志盘, type: device, rarity: key_item, value: 0, stackable: false, description: 记录谁改过下层门策略与何时取消维修员权限。, effects: {quest_item: true}}
+  - {key: open_maintenance_manual, name: 完整公共维护手册, type: document, rarity: key_item, value: 0, stackable: false, description: 图纸、风险、轮值与旁路操作经多岗位复核后形成的公开版本。, effects: {quest_item: true}}

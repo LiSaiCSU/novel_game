@@ -1,0 +1,17 @@
+rules:
+  - key: accounting_builds_evidence
+    trigger: after_action
+    condition: {op: in, args: [{op: get, args: [action.action_type]}, [OBSERVE, SEARCH, USE_SKILL]]}
+    effects:
+      - {op: adjust_player_resource, field: ledger_clues, value: 4}
+      - {op: adjust_player_resource, field: court_attention, value: 2}
+  - key: household_orders_shift_control
+    trigger: after_action
+    condition: {op: in, args: [{op: get, args: [action.action_type]}, [TALK, ASK, CONVERSATION]]}
+    effects:
+      - {op: adjust_player_resource, field: household_control, value: 2}
+  - key: rest_preserves_strength
+    trigger: after_action
+    condition: {op: in, args: [{op: get, args: [action.action_type]}, [REST, WAIT]]}
+    effects:
+      - {op: adjust_player_resource, field: health, value: 8}

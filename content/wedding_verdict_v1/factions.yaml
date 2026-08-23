@@ -1,0 +1,33 @@
+factions:
+  - key: gu_group
+    name: 顾氏物流
+    type: corporation
+    description: 表面现金充足，实际通过关联交易把优质资产送进私人公司。
+    values: [控制权, 家族体面, 资本周转]
+    goals: [通过资产拆分, 把债务留给玩家]
+    resources: {money: 88, information: 72, influence: 80, people: 75}
+    relations: {warehouse_union: -45, river_bank_committee: 20, independent_investors: -10}
+  - key: warehouse_union
+    name: 仓网员工互助会
+    type: civic
+    description: 不是工会替代品，而是欠薪员工自发建立的证据与生活互助群。
+    values: [工资, 工作安全, 说到做到]
+    goals: [追回欠薪, 阻止空壳拆分]
+    resources: {money: 8, information: 58, influence: 35, people: 90}
+    relations: {gu_group: -45, independent_investors: 15}
+  - key: river_bank_committee
+    name: 江城银行授信委员会
+    type: institution
+    description: 只认能核验的资产、现金流和印章链。
+    values: [风险, 程序, 可追责]
+    goals: [控制坏账, 找到真实担保人]
+    resources: {money: 95, information: 65, influence: 75, people: 40}
+    relations: {gu_group: 20, independent_investors: 25}
+  - key: independent_investors
+    name: 独立投资人席
+    type: coalition
+    description: 九个互不信任的小股东，谁给出可执行的保全方案就投谁。
+    values: [回报, 合规, 不背锅]
+    goals: [保住仓网价值, 在股东会选边]
+    resources: {money: 60, information: 45, influence: 55, people: 25}
+    relations: {gu_group: -10, warehouse_union: 15, river_bank_committee: 25}

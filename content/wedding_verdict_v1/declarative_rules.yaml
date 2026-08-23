@@ -1,0 +1,18 @@
+rules:
+  - key: evidence_work_builds_chain
+    trigger: after_action
+    condition: {op: in, args: [{op: get, args: [action.action_type]}, [OBSERVE, SEARCH, USE_SKILL]]}
+    effects:
+      - {op: adjust_player_resource, field: evidence, value: 4}
+      - {op: adjust_player_resource, field: pressure, value: 2}
+  - key: public_confrontation_moves_opinion
+    trigger: after_action
+    condition: {op: in, args: [{op: get, args: [action.action_type]}, [TALK, ASK, CONVERSATION]]}
+    effects:
+      - {op: adjust_player_resource, field: public_support, value: 2}
+      - {op: adjust_player_resource, field: pressure, value: 3}
+  - key: pause_reduces_pressure
+    trigger: after_action
+    condition: {op: in, args: [{op: get, args: [action.action_type]}, [REST, WAIT]]}
+    effects:
+      - {op: adjust_player_resource, field: pressure, value: -8}

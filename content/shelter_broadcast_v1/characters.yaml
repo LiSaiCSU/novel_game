@@ -1,0 +1,211 @@
+characters:
+  - key: luo_qi
+    name: 罗启
+    type: MAJOR_NPC
+    age: 36
+    gender: male
+    location: elimination_stage
+    faction: final_resident_show
+    faction_rank: 主持人
+    realm: contestant
+    realm_stage: active
+    stats: {strength: 10, agility: 12, perception: 14, intelligence: 15, willpower: 14, charisma: 19}
+    background: 现场主持人，能把任何事故接成口播，却从未被告知淘汰按钮接入真实安全总线。
+    personality: {traits: {smooth: 0.94, adaptive: 0.86, approval_driven: 0.68}, values: [直播不能冷场, 工作人员安全, 合同], taboos: [明知有人受伤仍按台本笑], speech_style: 前半句像广告，真正害怕时会停掉所有修辞, risk_tolerance: 0.52}
+    emotion: {dominant: shocked, valence: -0.2, arousal: 0.78, intensity: 0.7}
+    long_term_goal: 活着出去并承认自己参与了怎样的节目
+    short_term_goals: [组织现场安静, 找到制作人, 学会不靠耳返说话]
+    schedule: {default: social, slots: [{phase: night, activity: social, location: elimination_stage}, {phase: deep_night, activity: work, location: residential_ring}, {phase: dawn, activity: rest, location: clinic}, {phase: morning, activity: social, location: central_control}, {phase: noon, activity: work, location: residential_ring}]}
+    items: [{key: host_earpiece, qty: 1}]
+    skills: [crisis_broadcast]
+    reputation: {global: 70, by_faction: {final_resident_show: 82}}
+    secret: 他在开场前听见导播提到风暴预警，却以为是节目准备的新剧情
+    capabilities: [稳定人群注意, 使用全层广播, 让镜头暂时听从他]
+  - key: song_wei
+    name: 宋薇
+    type: MAJOR_NPC
+    age: 41
+    gender: female
+    location: studio_control
+    faction: final_resident_show
+    faction_rank: 总制作人
+    realm: operator
+    realm_stage: coordinator
+    stats: {strength: 9, agility: 11, perception: 17, intelligence: 18, willpower: 18, charisma: 16}
+    background: 节目总制作人，三次收到太阳风暴预警后决定把直播提前，认为工程团队足以兜底。
+    personality: {traits: {controlling: 0.94, brilliant: 0.78, denial: 0.72}, values: [节目必须播完, 团队听指挥, 不让资本撤资], taboos: [承认自己拿安全换收视], speech_style: 把危险称为变量，把人称为单元，直到具体名字被念出来, risk_tolerance: 0.78}
+    emotion: {dominant: defensive, valence: -0.28, arousal: 0.66, intensity: 0.7}
+    long_term_goal: 恢复直播并控制事故叙事
+    short_term_goals: [删除预警邮件, 夺回总控, 让玩家继续扮演笨手素人]
+    schedule: {default: work, slots: [{phase: night, activity: work, location: studio_control}, {phase: deep_night, activity: investigate, location: sponsor_gallery}, {phase: dawn, activity: move, location: central_control}, {phase: morning, activity: social, location: residential_ring}, {phase: noon, activity: work, location: studio_control}]}
+    items: [{key: producer_master_card, qty: 1}, {key: warning_mail_cache, qty: 1}]
+    skills: [crisis_broadcast, system_forensics]
+    reputation: {global: 48, by_faction: {final_resident_show: 96}}
+    secret: 她亲自压下三次预警并要求剪掉玩家指出线路问题的素材
+    capabilities: [控制节目权限, 调动摄影人员, 访问原始素材]
+  - key: jiang_tangtang
+    name: 江棠棠
+    type: MAJOR_NPC
+    age: 26
+    gender: female
+    location: elimination_stage
+    faction: contestant_collective
+    faction_rank: 人气第一
+    realm: contestant
+    realm_stage: active
+    stats: {strength: 10, agility: 14, perception: 15, intelligence: 16, willpower: 15, charisma: 19}
+    background: 百万粉生活主播，被节目剪成只会拍照的花瓶。参加节目之前做过四年急救志愿者。
+    personality: {traits: {performative: 0.78, compassionate: 0.84, proud: 0.7}, values: [观众信任, 有人受伤先救, 自己定义自己], taboos: [拿病人当镜头], speech_style: 有网时对镜头说，无网后用急救步骤说话, risk_tolerance: 0.6}
+    emotion: {dominant: rattled, valence: -0.1, arousal: 0.68, intensity: 0.58}
+    long_term_goal: 不再让节目用单一人设决定自己会什么
+    short_term_goals: [开放医疗舱, 统计药品冷藏时间, 救出下层淘汰者]
+    schedule: {default: work, slots: [{phase: night, activity: social, location: elimination_stage}, {phase: deep_night, activity: work, location: clinic}, {phase: dawn, activity: move, location: lower_dorm}, {phase: morning, activity: work, location: clinic}, {phase: noon, activity: rest, location: residential_ring}]}
+    items: [{key: emergency_med_kit, qty: 1}]
+    skills: [crisis_broadcast, emergency_logistics]
+    reputation: {global: 82, by_faction: {contestant_collective: 65}}
+    secret: 节目组要求她在决赛故意嘲笑玩家，她拒绝后仍被剪成了带头排挤的人
+    capabilities: [基础急救, 组织粉丝式动员, 识别恐慌反应]
+  - key: he_mingyuan
+    name: 何明远
+    type: MAJOR_NPC
+    age: 32
+    gender: male
+    location: elimination_stage
+    faction: contestant_collective
+    faction_rank: 体能冠军
+    realm: contestant
+    realm_stage: active
+    stats: {strength: 18, agility: 16, perception: 12, intelligence: 12, willpower: 16, charisma: 15}
+    background: 极限运动教练，节目给他的角色是永远正确的生存王；真实设备故障第一次让他没法靠力气解决。
+    personality: {traits: {decisive: 0.86, competitive: 0.84, teachable: 0.58}, values: [行动, 不丢下队友, 亲自确认], taboos: [让他照坏指令继续做], speech_style: 喜欢倒数三二一，承认不懂时很干脆, risk_tolerance: 0.8}
+    emotion: {dominant: activated, valence: 0.05, arousal: 0.78, intensity: 0.62}
+    long_term_goal: 学会在不熟悉的系统里服从专业判断而非争第一
+    short_term_goals: [手动开下层门, 搬运电池, 赢回实际信任]
+    schedule: {default: work, slots: [{phase: night, activity: work, location: elimination_stage}, {phase: deep_night, activity: move, location: maintenance_ring}, {phase: dawn, activity: work, location: lower_dorm}, {phase: morning, activity: work, location: power_room}, {phase: noon, activity: rest, location: residential_ring}]}
+    items: [{key: climbing_line, qty: 1}]
+    skills: [emergency_logistics]
+    reputation: {global: 58, by_faction: {contestant_collective: 50}}
+    secret: 他按节目任务卡拉下的展示闸导致第二路风机断电，任务卡本身被制作方改过
+    capabilities: [高空与狭窄空间作业, 搬运重物, 现场救援]
+  - key: qi_yue
+    name: 戚越
+    type: MAJOR_NPC
+    age: 38
+    gender: male
+    location: maintenance_ring
+    faction: shelter_technicians
+    faction_rank: 前维护工程师
+    realm: operator
+    realm_stage: maintenance
+    stats: {strength: 12, agility: 12, perception: 18, intelligence: 18, willpower: 17, charisma: 11}
+    background: 九号穹顶前维护工程师，因反对拆除机械旁路被节目组解约，却以灯光外包身份留在现场。
+    personality: {traits: {blunt: 0.9, meticulous: 0.94, resentful: 0.58}, values: [冗余, 手册必须完整, 值班人有名字], taboos: [绕过联锁只为画面好看], speech_style: 每句话先报设备编号，骂人也用故障分类, risk_tolerance: 0.5}
+    emotion: {dominant: grimly_satisfied, valence: 0.0, arousal: 0.5, intensity: 0.58}
+    long_term_goal: 证明安全系统不能由综艺流程接管
+    short_term_goals: [找回删掉的手册页, 隔离舞台安全总线, 验证玩家专业]
+    schedule: {default: work, slots: [{phase: night, activity: work, location: maintenance_ring}, {phase: deep_night, activity: investigate, location: power_room}, {phase: dawn, activity: work, location: central_control}, {phase: morning, activity: work, location: air_plant}, {phase: noon, activity: rest, location: lower_dorm}]}
+    items: [{key: original_wiring_map, qty: 1}]
+    skills: [electrical_isolation, system_forensics, air_balance]
+    reputation: {global: 12, by_faction: {shelter_technicians: 94}}
+    secret: 他早知节目组拆了三项冗余，却没能阻止合同验收通过
+    capabilities: [验证维修岗位, 读老式图纸, 操作机械旁路]
+  - key: lin_qing
+    name: 林晴
+    type: MAJOR_NPC
+    age: 30
+    gender: female
+    location: lower_dorm
+    faction: contestant_collective
+    faction_rank: 首轮淘汰者
+    realm: contestant
+    realm_stage: eliminated
+    stats: {strength: 10, agility: 12, perception: 17, intelligence: 17, willpower: 16, charisma: 12}
+    background: 城市水质检测员，第一集因拒绝喝节目组准备的可疑生存水被剪成胆小并淘汰。
+    personality: {traits: {skeptical: 0.9, steady: 0.84, dry: 0.66}, values: [水样编号, 不拿健康冒险, 被淘汰也要说对], taboos: [未经检测让人喝浑水], speech_style: 先贴标签再取样，吐槽像检测报告备注, risk_tolerance: 0.42}
+    emotion: {dominant: trapped, valence: -0.25, arousal: 0.6, intensity: 0.58}
+    long_term_goal: 恢复安全饮水并公开节目用假测试羞辱专业人员
+    short_term_goals: [打开下层门, 取水样, 恢复反渗透泵]
+    schedule: {default: work, slots: [{phase: night, activity: rest, location: lower_dorm}, {phase: deep_night, activity: work, location: water_plant}, {phase: dawn, activity: work, location: water_plant}, {phase: morning, activity: social, location: residential_ring}, {phase: noon, activity: rest, location: clinic}]}
+    items: [{key: water_test_strips, qty: 1}]
+    skills: [water_recovery, system_forensics]
+    reputation: {global: 8, by_faction: {contestant_collective: 55}}
+    secret: 她在淘汰后发现生活层自来水混入节目烟雾机清洗液，已提前关闭一条支路
+    capabilities: [水质快检, 操作水处理设备, 建立样品记录]
+  - key: zhao_xin
+    name: 赵信
+    type: MAJOR_NPC
+    age: 47
+    gender: male
+    location: central_control
+    faction: city_emergency
+    faction_rank: 远程协调员
+    realm: operator
+    realm_stage: coordinator
+    stats: {strength: 10, agility: 10, perception: 16, intelligence: 17, willpower: 18, charisma: 13}
+    background: 城市应急站协调员，只能通过每七分钟一次的短报文联系地下。
+    personality: {traits: {procedural: 0.9, calm: 0.88, resource_limited: 0.78}, values: [人数准确, 读数真实, 救援窗口], taboos: [把娱乐直播当应急频道], speech_style: 每条消息不超过四十字，先问人数再问设备, risk_tolerance: 0.38}
+    emotion: {dominant: focused, valence: -0.05, arousal: 0.42, intensity: 0.55}
+    long_term_goal: 风暴窗口打开时把救援队送到正确入口
+    short_term_goals: [确认地下人数, 收到稳定信标, 提供风暴时序]
+    schedule: {default: work, slots: [{phase: night, activity: work, location: surface_station}, {phase: deep_night, activity: work, location: surface_station}, {phase: dawn, activity: work, location: surface_station}, {phase: morning, activity: work, location: surface_station}, {phase: noon, activity: work, location: surface_station}]}
+    items: [{key: storm_bulletin, qty: 1}]
+    skills: [emergency_logistics, crisis_broadcast]
+    reputation: {global: 36, by_faction: {city_emergency: 90}}
+    secret: 城市救援资源不足，九号穹顶必须自行维持至少二十四小时
+    capabilities: [发送短报文, 安排救援窗口, 核对设施档案]
+  - key: peng_dali
+    name: 彭大力
+    type: MAJOR_NPC
+    age: 45
+    gender: male
+    location: sponsor_gallery
+    faction: final_resident_show
+    faction_rank: 商务总监
+    realm: contestant
+    realm_stage: active
+    stats: {strength: 11, agility: 10, perception: 13, intelligence: 15, willpower: 12, charisma: 16}
+    background: 负责赞助履约，把独立电池全给了广告展廊，医疗冷柜却仍在共用线路上。
+    personality: {traits: {salesy: 0.94, self_preserving: 0.86, not_cruel: 0.42}, values: [合同不违约, 自己别担责, 现金赞助], taboos: [公开电力分配单], speech_style: 任何东西都叫权益，断电后开始直接说还剩几块电池, risk_tolerance: 0.68}
+    emotion: {dominant: panicked, valence: -0.3, arousal: 0.78, intensity: 0.7}
+    long_term_goal: 不因安全事故承担全部责任
+    short_term_goals: [藏电力分配单, 保住广告电池, 与宋薇统一口径]
+    schedule: {default: investigate, slots: [{phase: night, activity: work, location: sponsor_gallery}, {phase: deep_night, activity: move, location: studio_control}, {phase: dawn, activity: hide, location: supply_store}, {phase: morning, activity: social, location: central_control}, {phase: noon, activity: rest, location: residential_ring}]}
+    items: [{key: battery_allocation_sheet, qty: 1}]
+    skills: [emergency_logistics, crisis_broadcast]
+    reputation: {global: 24, by_faction: {final_resident_show: 72}}
+    secret: 他签字把医疗冷柜备用电池转给了赞助灯牌，但原单还在展廊配电箱里
+    capabilities: [打开赞助设备, 调用未登记电池, 联系投资方]
+  - key: mao_mao
+    name: 毛毛
+    type: MAJOR_NPC
+    age: 28
+    gender: male
+    location: lower_dorm
+    faction: contestant_collective
+    faction_rank: 喜剧演员
+    realm: contestant
+    realm_stage: eliminated
+    stats: {strength: 9, agility: 13, perception: 15, intelligence: 15, willpower: 13, charisma: 18}
+    background: 脱口秀演员，节目把他安排成怕死笑料，实际上淘汰后一直帮工作人员清点物资。
+    personality: {traits: {funny: 0.9, observant: 0.78, fear_honest: 0.86}, values: [害怕也能办事, 别拿别人恐慌做梗, 清点准确], taboos: [逼人强装镇定], speech_style: 紧张时先说实话再补一句短梗，危险升级后闭嘴做事, risk_tolerance: 0.35}
+    emotion: {dominant: anxious, valence: -0.12, arousal: 0.68, intensity: 0.55}
+    long_term_goal: 证明承认害怕不等于没用
+    short_term_goals: [统计下层人数, 找到手摇广播, 帮林晴搬水样]
+    schedule: {default: work, slots: [{phase: night, activity: rest, location: lower_dorm}, {phase: deep_night, activity: work, location: lower_dorm}, {phase: dawn, activity: move, location: residential_ring}, {phase: morning, activity: work, location: supply_store}, {phase: noon, activity: rest, location: residential_ring}]}
+    items: [{key: hand_crank_radio, qty: 1}]
+    skills: [emergency_logistics, crisis_broadcast]
+    reputation: {global: 45, by_faction: {contestant_collective: 48}}
+    secret: 他在物资仓清点出节目展示的“百人一个月物资”实际只够四十八人七天
+    capabilities: [快速清点, 缓解轻度恐慌, 手摇广播]
+relationships:
+  - {a: luo_qi, b: player, affection: 2, trust: 5, respect: 8, suspicion: 20, familiarity: 35, boundaries: 60}
+  - {a: song_wei, b: player, affection: -18, trust: -25, respect: 20, suspicion: 70, familiarity: 55, boundaries: 32}
+  - {a: jiang_tangtang, b: player, affection: 8, trust: 10, respect: 12, suspicion: 18, familiarity: 28, boundaries: 65}
+  - {a: he_mingyuan, b: player, affection: -2, trust: 2, respect: 5, suspicion: 22, familiarity: 30, boundaries: 58}
+  - {a: qi_yue, b: player, affection: 4, trust: 22, respect: 35, suspicion: 12, familiarity: 18, boundaries: 70}
+  - {a: lin_qing, b: player, affection: 10, trust: 25, respect: 28, suspicion: 8, familiarity: 16, boundaries: 65}
+  - {a: zhao_xin, b: player, affection: 0, trust: 8, respect: 15, suspicion: 20, familiarity: 4, boundaries: 75}
+  - {a: peng_dali, b: player, affection: -5, trust: -15, respect: 4, suspicion: 60, familiarity: 22, boundaries: 42}
+  - {a: mao_mao, b: player, affection: 12, trust: 15, respect: 10, suspicion: 5, familiarity: 20, boundaries: 60}
+  - {a: song_wei, b: peng_dali, affection: 0, trust: 42, respect: 20, suspicion: 35, familiarity: 75, boundaries: 40}
+  - {a: jiang_tangtang, b: he_mingyuan, affection: 8, trust: 12, respect: 18, suspicion: 12, familiarity: 52, boundaries: 60}

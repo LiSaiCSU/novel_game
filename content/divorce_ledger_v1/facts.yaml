@@ -1,0 +1,91 @@
+facts:
+  - key: fact_manor_runs_on_dowry_credit
+    statement: 宁王府近一年日常开支与三笔旧债都靠玩家嫁妆商号担保周转
+    truth_value: true
+    scope: PERSONAL
+    sensitivity: 0.25
+    subject: player
+    related: [dowry_inventory, ning_house, yunjin_merchants]
+    initial_knowledge:
+      player: {state: KNOWN, confidence: 1, source: DOCUMENT}
+      xiao_chengjing: {state: KNOWN, confidence: 0.9, source: DOCUMENT}
+      old_princess_du: {state: KNOWN, confidence: 1, source: DOCUMENT}
+      a_qiao: {state: KNOWN, confidence: 1, source: DOCUMENT}
+  - key: fact_su_lian_is_censor_clerk
+    statement: 苏莲是巡盐御史的秘密书吏，接中馈钥匙为编号封存而非准备嫁入王府
+    truth_value: true
+    scope: PERSONAL
+    sensitivity: 0.82
+    subject: su_lian
+    related: [su_lian, censor_seal_strip, salt_censorate]
+    initial_knowledge:
+      su_lian: {state: KNOWN, confidence: 1, source: SEED}
+      pei_zhaoyi: {state: KNOWN, confidence: 1, source: SEED}
+      xiao_chengjing: {state: KNOWN, confidence: 0.9, source: TOLD_BY}
+  - key: fact_third_ledger_tracks_relief_grain
+    statement: 王府第三本账记录赈粮调拨暗号、暗道出仓次数与私卖分成
+    truth_value: true
+    scope: FACTION
+    sensitivity: 0.95
+    related: [third_ledger, feng_quan, east_granary]
+    initial_knowledge:
+      feng_quan: {state: KNOWN, confidence: 1, source: SEED}
+      old_princess_du: {state: SUSPECTED, confidence: 0.7, source: INFERRED}
+  - key: fact_prince_planned_false_divorce
+    statement: 萧承璟知道八万两指控是假的，原计划用和离让玩家离府避查，却剥夺了玩家的知情与选择
+    truth_value: true
+    scope: PERSONAL
+    sensitivity: 0.88
+    subject: xiao_chengjing
+    related: [xiao_chengjing, signed_divorce_letter]
+    initial_knowledge:
+      xiao_chengjing: {state: KNOWN, confidence: 1, source: SEED}
+      su_lian: {state: SUSPECTED, confidence: 0.55, source: INFERRED}
+  - key: fact_steward_expanded_old_diversion
+    statement: 先王曾秘密挪粮补边军，冯全利用这条旧暗线继续盗卖并把两万石藏入染坊链路
+    truth_value: true
+    scope: PERSONAL
+    sensitivity: 1.0
+    subject: feng_quan
+    related: [feng_quan, dye_yard, grain_tunnel]
+    initial_knowledge:
+      feng_quan: {state: KNOWN, confidence: 1, source: SEED}
+      old_princess_du: {state: SUSPECTED, confidence: 0.6, source: INFERRED}
+  - key: fact_boat_twenty_seven_is_decoy
+    statement: 被指为运赃的二十七号船没有粮，只有用来嫁祸云锦号的空官袋
+    truth_value: true
+    scope: FACTION
+    sensitivity: 0.75
+    related: [boat_registry, fake_grain_bags, canal_wharf]
+    initial_knowledge:
+      qiao_yunsheng: {state: KNOWN, confidence: 1, source: WITNESSED}
+      tang_jiu: {state: SUSPECTED, confidence: 0.55, source: INFERRED}
+  - key: fact_east_granary_short_fourty_thousand
+    statement: 东仓地秤与仓墙证明实际入仓比官簿少四万石
+    truth_value: true
+    scope: WORLD
+    sensitivity: 0.55
+    related: [scale_record, east_granary, tang_jiu]
+    initial_knowledge:
+      tang_jiu: {state: KNOWN, confidence: 1, source: WITNESSED}
+      pei_zhaoyi: {state: SUSPECTED, confidence: 0.8, source: DOCUMENT}
+  - key: fact_mother_gave_shops_exit_rule
+    statement: 玩家母亲留下商号约定，玩家若主动离府，十二铺立即停止替王府担保并听从玩家处置
+    truth_value: true
+    scope: PERSONAL
+    sensitivity: 0.72
+    subject: player
+    related: [a_qiao, dowry_master_ledger, yunjin_shop]
+    initial_knowledge:
+      a_qiao: {state: KNOWN, confidence: 1, source: TOLD_BY}
+      qiao_yunsheng: {state: KNOWN, confidence: 0.85, source: TOLD_BY}
+  - key: fact_mynah_not_evidence
+    statement: 鹩哥乌金只能提供查证方向，无法理解话意或证明说话人，不能单独作为证据
+    truth_value: true
+    scope: WORLD
+    sensitivity: 0.05
+    related: [mynah, account_room]
+    initial_knowledge:
+      player: {state: KNOWN, confidence: 1, source: SEED}
+      su_lian: {state: KNOWN, confidence: 1, source: SEED}
+      pei_zhaoyi: {state: KNOWN, confidence: 1, source: SEED}

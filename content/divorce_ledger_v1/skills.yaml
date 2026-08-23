@@ -1,0 +1,7 @@
+skills:
+  - {key: ledger_reconcile, name: 合账, category: professional, description: 把府账、商号账、仓账与船账按时间和数量对齐。, max_level: 5}
+  - {key: seal_check, name: 验印, category: investigation, description: 分辨印泥、缺口、补盖与押缝先后。, max_level: 5}
+  - {key: convoy_dispatch, name: 调船, category: professional, description: 依据水位、吃水与路引安排船队。, max_level: 5}
+  - {key: household_management, name: 掌中馈, category: professional, description: 知道府中每把钥匙、每份月例和每个实际办事的人。, max_level: 5}
+  - {key: court_statement, name: 公堂陈述, category: social, description: 只说能被证据支持的事实，并当场拆开含混指控。, max_level: 5}
+  - {key: supply_appraisal, name: 辨货, category: professional, description: 从粮色、药材、布袋和封签辨认调包。, max_level: 5}

@@ -119,6 +119,24 @@ async def ensure_official_releases(
                 session, settings, asset_store, "second_chance_v1",
                 "second-chance", ["重生", "年代", "复仇", "短剧"],
             )
+        wedding_verdict_dir = settings.content_path / "wedding_verdict_v1"
+        if wedding_verdict_dir.is_dir():
+            await _ensure_pack(
+                session, settings, asset_store, "wedding_verdict_v1",
+                "wedding-verdict", ["都市", "复仇", "商战", "短剧"],
+            )
+        divorce_ledger_dir = settings.content_path / "divorce_ledger_v1"
+        if divorce_ledger_dir.is_dir():
+            await _ensure_pack(
+                session, settings, asset_store, "divorce_ledger_v1",
+                "divorce-ledger", ["古装", "和离", "查案", "短剧"],
+            )
+        shelter_broadcast_dir = settings.content_path / "shelter_broadcast_v1"
+        if shelter_broadcast_dir.is_dir():
+            await _ensure_pack(
+                session, settings, asset_store, "shelter_broadcast_v1",
+                "shelter-broadcast", ["末日", "科幻", "生存", "短剧"],
+            )
         await session.commit()
 
 

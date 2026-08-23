@@ -1,0 +1,33 @@
+event_types:
+  - {key: MOVE, importance: 0.05, visibility: LOCAL}
+  - {key: CONVERSATION, importance: 0.12, visibility: LOCAL}
+  - {key: TRADE, importance: 0.10, visibility: LOCAL}
+  - {key: DEATH, importance: 1.00, visibility: PUBLIC}
+  - {key: RESCUE, importance: 0.90, visibility: LOCAL}
+  - {key: BETRAYAL, importance: 0.95, visibility: PRIVATE}
+  - {key: PROMISE, importance: 0.55, visibility: PRIVATE}
+  - {key: SECRET_DISCLOSURE, importance: 0.90, visibility: PRIVATE}
+  - {key: ITEM_ACQUIRED, importance: 0.25, visibility: PRIVATE}
+  - {key: QUEST_ACCEPTED, importance: 0.25, visibility: LOCAL}
+  - {key: QUEST_COMPLETED, importance: 0.60, visibility: LOCAL}
+  - {key: QUEST_FAILED, importance: 0.60, visibility: LOCAL}
+  - {key: RELATIONSHIP_SHIFT, importance: 0.22, visibility: PRIVATE}
+  - {key: REJECTED_ACTION, importance: 0.02, visibility: PRIVATE}
+  - {key: OBSERVATION, importance: 0.08, visibility: PRIVATE}
+  - {key: NPC_RETURN, importance: 0.45, visibility: LOCAL}
+  - {key: NPC_DEPARTURE, importance: 0.40, visibility: LOCAL}
+  - {key: NPC_APPROACH, importance: 0.45, visibility: LOCAL}
+  - {key: RUMOR_SPREAD, importance: 0.40, visibility: PUBLIC}
+  - {key: FACTION_MOVE, importance: 0.60, visibility: FACTION}
+  - {key: QUEST_OFFER, importance: 0.32, visibility: LOCAL}
+  - {key: DISCOVERY, importance: 0.65, visibility: PRIVATE}
+  - {key: ENVIRONMENT_SHIFT, importance: 0.45, visibility: PUBLIC}
+  - {key: CONFRONTATION, importance: 0.75, visibility: LOCAL}
+  - {key: RESOURCE_CHANGE, importance: 0.25, visibility: FACTION}
+  - {key: FORESHADOWING, importance: 0.25, visibility: LOCAL}
+  - {key: OFFLINE_WORLD_EVENT, importance: 0.30, visibility: PUBLIC}
+  - {key: SCHEDULE_MOVE, importance: 0.02, visibility: LOCAL}
+offline_templates:
+  - {key: readings_change, lod: [1, 2], weight: 24, scope: faction, requires: {faction_any: true}, effects: {faction_resources: {}}, narrative_hint: 机械表的读数又跨过一格，轮值必须调整}
+  - {key: crews_move, lod: [1, 2], weight: 22, scope: character, requires: {character_type: [MAJOR_NPC]}, effects: {move_along_schedule: true}, narrative_hint: 各组带着工具换到下一处故障点}
+  - {key: radio_update, lod: [1, 2], weight: 18, scope: information, requires: {has_public_facts: true}, effects: {spread_information: true}, narrative_hint: 手摇广播把新读数传到各层}

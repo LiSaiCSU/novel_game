@@ -1,0 +1,185 @@
+key: wedding_verdict_v1
+name: 婚礼直播：我让豪门当场破产
+genre: urban_revenge_microdrama
+version: "1.0.0"
+engine_min_version: "0.2.0"
+primary_progression_key: leverage
+attribute_definitions:
+  - {key: composure, label: 定力, type: number}
+  - {key: audit, label: 审账, type: number}
+  - {key: negotiation, label: 谈判, type: number}
+  - {key: media_sense, label: 镜头感, type: number}
+resource_definitions:
+  - {key: health, label: 状态, minimum: 0, maximum: 100, default: 100}
+  - {key: evidence, label: 证据链, minimum: 0, maximum: 100, default: 18}
+  - {key: public_support, label: 舆论支持, minimum: 0, maximum: 100, default: 12}
+  - {key: pressure, label: 现场压力, minimum: 0, maximum: 100, default: 35}
+progression_definitions:
+  - key: leverage
+    label: 翻盘筹码
+    tiers:
+      - {key: cornered, label: 被逼签字, order: 0}
+      - {key: witness, label: 证据在手, order: 1}
+      - {key: counterattack, label: 反客为主, order: 2}
+      - {key: verdict, label: 当场清算, order: 3}
+player_fields:
+  - {key: name, label: 姓名, type: text, required: true}
+  - {key: age, label: 年龄, type: integer, required: true, default: 28, minimum: 22, maximum: 45}
+  - key: profession
+    label: 你真正的本事
+    type: choice
+    required: true
+    default: forensic_accountant
+    choices:
+      - {value: forensic_accountant, label: 法证会计·从数字里找谎言}
+      - {value: crisis_pr, label: 危机公关·知道镜头该看哪里}
+      - {value: contract_lawyer, label: 商事律师·每个字都能反咬}
+      - {value: logistics_operator, label: 仓储运营·谁在干活一清二楚}
+  - key: public_mask
+    label: 过去三年你装成什么样
+    type: choice
+    required: true
+    default: obedient
+    choices:
+      - {value: obedient, label: 不争不抢的准儿媳}
+      - {value: ordinary, label: 没背景的普通职员}
+      - {value: lovestruck, label: 为爱冲昏头的恋爱脑}
+      - {value: broke, label: 急着攀高枝的穷亲戚}
+  - {key: personal_goal, label: 今天最想拿回什么, type: text, required: true, default: 母亲留下的股份和我自己的名字}
+language: zh-CN
+assets:
+  - key: wedding_verdict_cover
+    kind: cover
+    path: official/wedding_verdict_v1/wedding-verdict-cover-v1.png
+    alt: 豪华婚礼直播现场，身穿白色西装的成年女性手持红色证据册走向镜头，身后财务屏幕亮起红色警报
+author_tests:
+  - key: opening_knows_the_trap
+    name: 开场玩家知道债务协议是陷阱但不知道幕后主使
+    scenario: main_story
+    assertions:
+      - {path: player.location, op: eq, expected: wedding_stage}
+      - {path: knowledge.player.fact_debt_transfer_hidden_in_vows, op: eq, expected: KNOWN}
+      - {path: knowledge.player.fact_mother_trust_controls_company, op: eq, expected: UNKNOWN}
+  - key: endings_locked
+    name: 结局在开场均未解锁
+    scenario: main_story
+    assertions:
+      - {path: endings.ending_live_verdict.available, op: eq, expected: false}
+      - {path: endings.ending_take_the_company.available, op: eq, expected: false}
+world:
+  name: 江城·盛景婚礼直播夜
+  description: >
+    江城物流巨头顾氏正在直播一场全城瞩目的婚礼。表面上是顾家继承人顾承泽迎娶相恋三年的普通职员，
+    实际上婚礼流程里藏着一份四点八亿债务转让确认书。八小时后顾氏临时股东会将通过资产拆分，
+    三千名仓储员工的欠薪会被留在空壳公司里。玩家早已发现协议，却只掌握半条证据链；婚礼直播既是陷阱，也是唯一不会被悄悄关掉的证人。
+  start_location: wedding_stage
+  world_seed_default: wedding-verdict-2026
+story:
+  title: 婚礼直播：我让豪门当场破产
+  opening_location: wedding_stage
+  premise: >
+    司仪刚念到“无论贫穷还是负债”，顾承泽便把一份夹在誓词里的协议推到你面前，要求你在六百万观众面前签字。
+    顾母说这是顾家的规矩，继妹许明珠已经穿着备用婚纱站在侧门，银行催收电话同时打进直播导播台。
+    他们以为你忍了三年，是为了嫁进豪门；他们不知道红色证据册里装着四十八笔关联交易，也不知道今天的直播推流账号在你手里。
+  opening_blueprint:
+    player_context: 在婚礼逼签的即时冲突里交代玩家所选职业如何发现陷阱、三年伪装为何必要，以及母亲股份与欠薪员工为何让玩家没有直接离场。
+    acts:
+      - purpose: 十秒内把协议和羞辱推到镜头前
+        must_show: [顾承泽当众要求先签债务确认再交换戒指, 玩家用所选职业看出至少一个具体漏洞, 直播人数仍在暴涨]
+        comic_beat: 司仪按台本说完“掌声送给共同承担”，耳返里才听清承担的是四点八亿，只能把下一句改成“共同承担……今天的天气”
+      - purpose: 让玩家完成第一次小翻盘
+        must_show: [玩家不掀全部底牌而是要求把附件投屏, 附件页码从九直接跳到十一, 顾家第一次主动要求关直播但发现推流权不在他们手里]
+        comic_beat: 花童抱着戒指盒不肯走，认真宣布顾承泽拖欠她两百元出场红包，镜头正好把这句收进去
+      - purpose: 把个人婚变升级为公司生死局
+        must_show: [仓库代表的欠薪视频打进现场, 银行的人提前到场, 临时股东会倒计时八小时启动]
+        comic_beat: 笑点在危机升级前收住；不拿欠薪、亲情背叛或受害者开玩笑
+    humor_rule: 笑点来自豪门仪式被现实账单拆台、专业人士纠正荒唐话术和现场工作人员的求生反应；不羞辱普通员工，不把情感操控写成浪漫。
+    choice_gate: 玩家已经知道签与不签的法律后果、直播控制权和八小时期限；第一次选择是在签名旁加证据保全条款、要求投屏附件，或让仓库代表接入直播，而不是凭空决定相信谁。
+  starter_items:
+    - {key: red_evidence_book, quantity: 1}
+    - {key: stream_admin_token, quantity: 1}
+    - {key: mother_share_copy, quantity: 1}
+  player_template:
+    constraints: {minimum_age: 22, maximum_age: 45}
+    properties: {public_identity: bride, company_status: suspended_employee}
+  relationship_boundaries: 所有主要人物均为成年人；背叛、经济控制和情感操控会被明确视为伤害，不作为甜宠手段。玩家可拒绝任何复合或感情线，拒绝后不再强迫推进。
+  endings:
+    - key: ending_live_verdict
+      type: independent
+      title: 六百万人的证词
+      priority: 95
+      epilogue: 直播没有替任何人定罪，却让每一页原始凭证都有了无法撤回的时间戳。员工拿到欠薪，调查正式启动，你走出酒店时没有戴戒指，只拿着自己的名字。
+      condition: {op: eq, args: [{op: get, args: [quests.quest_secure_stream.status]}, completed]}
+    - key: ending_take_the_company
+      type: other
+      title: 今天换董事长
+      priority: 90
+      epilogue: 临时股东会最后一票落下，顾家还坐在主位，你却已经接过了公司公章。你保住仓网，也把所有关联交易交给独立调查。
+      condition: {op: and, args: [{op: eq, args: [{op: get, args: [quests.quest_find_trust_deed.status]}, completed]}, {op: eq, args: [{op: get, args: [quests.quest_employee_votes.status]}, completed]}]}
+    - key: ending_clean_exit
+      type: independent
+      title: 不嫁，也不要顾氏
+      priority: 70
+      epilogue: 你把证据交出去，把股份委托给员工基金，然后从婚礼侧门离开。第一次没有人替你安排下一步，你觉得这种空白很好。
+      condition: {op: eq, args: [{op: get, args: [quests.quest_choose_future.status]}, completed]}
+    - key: ending_scapegoat
+      type: other
+      title: 签字的人
+      priority: 20
+      epilogue: 直播被切断，协议上的签名却留了下来。顾氏倒下时所有镜头都对准你，他们早已替真正拿走钱的人准备好出口。
+      condition: {op: eq, args: [{op: get, args: [quests.quest_debt_agreement.status]}, failed]}
+narrative_style:
+  language: 中文
+  person: 第二人称
+  tense: 现在时
+  tone: 红果式高密度都市复仇爽剧；冲突直给、每回合至少一次局势变化、每两到三回合一次有证据支撑的身份或立场反转，台词短而狠，专业细节负责让夸张情节落地。
+  target_length: 1500
+  avoid_phrases: [嘴角勾起一抹弧度, 眼中闪过一丝异色, 空气仿佛凝固, 淡淡地说道, 目光扫过, 一切才刚刚开始, 你们会后悔的, 真相远比想象复杂]
+  phrase_repeat_window: 10
+  phrase_repeat_threshold: 2
+  pacing: explosive_microdrama
+  pacing_rules:
+    - 开场五十字内必须出现逼签、直播或婚礼替补中的至少两个冲突元素
+    - 每回合形成一次明确的攻防：对方出牌、玩家回应、局势改变；不以人物排队震惊代替剧情
+    - 反转必须由已经出现的文件、权限、时间线或人物行动回收，不允许凭空宣布主角还有一个更大的身份
+  guidance:
+    - 爽点写成具体后果：屏幕亮起、权限移交、账户冻结、证人改口、座位重新排列
+    - 反派有现实目标并会补救失误，不站着等主角念完长篇演讲
+    - 每段对话最多三轮就要有人行动，少写沉默、喝酒、眼神和围观者齐声惊呼
+    - 幽默只拆豪门排场和荒唐话术，不嘲笑员工、债务受害者或被背叛者
+theme: {accent: "#c21f3a", background: "#f6eee9", surface: "#fffaf6", text: "#251b1c"}
+vocabulary:
+  profile_labels: {health: 状态, power: 证据链, age_suffix: 岁, realm: 翻盘筹码, root: 专业, faction: 阵营, male: 男, female: 女, unspecified: 未指定, story_lead: 关键盟友, no_story_lead: 尚未结盟, absent: 当前不在场}
+  relationship_labels: {affection: 好感, trust: 信任, respect: 尊重, fear: 忌惮, hatred: 敌意, suspicion: 怀疑, dependency: 依赖, familiarity: 熟悉, boundaries: 界限}
+  action_aliases:
+    MOVE: [去, 前往, 进入, 回到]
+    TALK: [谈, 说, 对话, 交涉]
+    ASK: [问, 追问, 质询, 采访]
+    OBSERVE: [看, 检查, 核对, 观察]
+    SEARCH: [搜, 查账, 调记录, 找证据]
+    FOLLOW: [跟着, 盯住]
+    HIDE: [躲, 隐藏, 避开镜头]
+    USE_ITEM: [使用, 打开, 投屏, 出示]
+    GIVE_ITEM: [交给, 递交, 提交]
+    PICKUP: [拿起, 收好]
+    DROP: [放下, 丢掉]
+    STEAL: [偷取, 拿走]
+    ATTACK: [动手, 制止]
+    DEFEND: [防守, 挡住]
+    BUY: [购买]
+    SELL: [出售]
+    USE_SKILL: [审计, 谈判, 启动直播, 核验合同]
+    REST: [休息]
+    WAIT: [等待]
+    ACCEPT_QUEST: [接受, 答应]
+    REJECT_QUEST: [拒绝, 不答应]
+  method_aliases: {persuade: [说服], comfort: [安慰], promise: [承诺], threaten: [警告], bribe: [收买], negotiate: [谈判], indirect_questioning: [套话]}
+  query_aliases: {QUERY_STATUS: [我的状态, 证据链], QUERY_INVENTORY: [证据, 手上的东西], QUERY_RELATIONSHIPS: [人物关系, 谁站我这边], QUERY_QUESTS: [目标, 还要做什么]}
+  refusal_words: [不, 拒绝, 不签, 免谈]
+  plan_connectors: [然后, 接着, 随后, 再]
+  continue_words: [继续, 接着说, 让故事继续]
+  entity_aliases: {婚礼现场: wedding_stage, 导播间: control_room, 宴会厅: ballroom, 顾氏大厦: group_tower, 股东会: boardroom, 一号仓: warehouse_one, 银行: river_bank, 公证室: notary_room}
+  status_labels: {offered: 待处理, active: 进行中, completed: 已完成, failed: 已失败, expired: 已超时, taken_by_other: 他人处理, rejected: 已拒绝}
+  ambiguity_messages: {empty_input: 说清楚你准备做什么。, move_target_unknown: 说明你要去哪个已知地点。, conversation_target_unknown: 说明你要和谁谈。, item_unknown: 说明你准备使用哪份材料。}
+  time_units: {分钟: 1, 小时: 60, 天: 1440}
+  time_words: {一会儿: 10, 半小时: 30, 一小时: 60, 两小时: 120}

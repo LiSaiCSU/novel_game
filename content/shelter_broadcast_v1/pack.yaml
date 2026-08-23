@@ -1,0 +1,185 @@
+key: shelter_broadcast_v1
+name: 末日直播：全网淘汰我后，避难城只听我的
+genre: near_future_survival_microdrama
+version: "1.0.0"
+engine_min_version: "0.2.0"
+primary_progression_key: command_access
+attribute_definitions:
+  - {key: engineering, label: 工程判断, type: number}
+  - {key: endurance, label: 耐力, type: number}
+  - {key: leadership, label: 协调, type: number}
+  - {key: observation, label: 观察, type: number}
+resource_definitions:
+  - {key: health, label: 身体状态, minimum: 0, maximum: 100, default: 100}
+  - {key: power_reserve, label: 备用电力, minimum: 0, maximum: 100, default: 52}
+  - {key: oxygen_margin, label: 供氧余量, minimum: 0, maximum: 100, default: 68}
+  - {key: crew_trust, label: 团队信任, minimum: 0, maximum: 100, default: 15}
+progression_definitions:
+  - key: command_access
+    label: 避难城权限
+    tiers:
+      - {key: eliminated, label: 已被淘汰, order: 0}
+      - {key: maintenance, label: 维修环权限, order: 1}
+      - {key: operator, label: 系统操作员, order: 2}
+      - {key: coordinator, label: 全城协调席, order: 3}
+player_fields:
+  - {key: name, label: 姓名, type: text, required: true}
+  - {key: age, label: 年龄, type: integer, required: true, default: 29, minimum: 21, maximum: 48}
+  - key: trade
+    label: 你的维修专业
+    type: choice
+    required: true
+    default: electrical
+    choices:
+      - {value: electrical, label: 电力检修·听得出变压器哪里不对}
+      - {value: ventilation, label: 通风工程·知道风往哪里走}
+      - {value: water, label: 水处理·一滴浑水也有原因}
+      - {value: logistics, label: 应急物流·物资和人都能排顺}
+  - key: show_label
+    label: 节目组给你的人设
+    type: choice
+    required: true
+    default: clumsy_amateur
+    choices:
+      - {value: clumsy_amateur, label: 什么都弄坏的笨手素人}
+      - {value: background_worker, label: 没镜头的后勤大姐}
+      - {value: lucky_survivor, label: 只会撞运气的关系户}
+      - {value: silent_extra, label: 一句话都不会说的背景板}
+  - {key: personal_goal, label: 断网后的第一目标, type: text, required: true, default: 先让所有人能呼吸，再找谁隐瞒了预警}
+language: zh-CN
+assets:
+  - key: shelter_broadcast_cover
+    kind: cover
+    path: official/shelter_broadcast_v1/shelter-broadcast-cover-v1.png
+    alt: 近未来地下真人秀避难所内，穿橙色维修服的成年女性拉下机械总闸，身后主持人与参赛者震惊地望向关闭的防爆门
+author_tests:
+  - key: opening_understands_panel
+    name: 玩家开场知道淘汰台故障却不知道真实太阳风暴被隐瞒
+    scenario: main_story
+    assertions:
+      - {path: player.location, op: eq, expected: elimination_stage}
+      - {path: knowledge.player.fact_elimination_button_shares_safety_bus, op: eq, expected: KNOWN}
+      - {path: knowledge.player.fact_warning_was_hidden_for_ratings, op: eq, expected: UNKNOWN}
+  - key: endings_locked
+    name: 开场结局未解锁
+    scenario: main_story
+    assertions:
+      - {path: endings.ending_city_online.available, op: eq, expected: false}
+      - {path: endings.ending_open_source_manual.available, op: eq, expected: false}
+world:
+  name: 2043年·九号穹顶避难城
+  description: >
+    爆款生存真人秀《最后入住者》在废弃的九号民防枢纽直播决赛，十二名成年人争夺一套所谓终身避难舱。
+    节目组只翻新了上层摄影区，却没告诉观众地下七层仍连接城市应急电网。预测中的太阳超级风暴提前二十四小时抵达，
+    通信、门禁与电网先后失灵。节目投票把玩家淘汰的同一分钟，真正的防爆门开始闭合。
+  start_location: elimination_stage
+  world_seed_default: shelter-nine-2043
+story:
+  title: 末日直播：全网淘汰我后，避难城只听我的
+  opening_location: elimination_stage
+  premise: >
+    主持人宣布你以百分之九十七的票数淘汰，巨大红按钮落下，观众等着看“笨手素人”被弹射出局。
+    你却先拔掉舞台特效电缆，因为按钮后的安全总线温度已经高到烫手。下一秒，太阳风暴让全城断网，
+    淘汰舱没有开，身后的真实防爆门反而锁死。节目组让你别碰设备，避难城的老式语音却第一次开口：维修员验证通过。
+  opening_blueprint:
+    player_context: 在淘汰直播和总线过热中交代玩家所选维修专业、节目组如何剪辑出笨拙人设，以及玩家为何仍在比赛里坚持到决赛；能力通过一次准确处置表现，不靠秘密血统。
+    acts:
+      - purpose: 十秒内让综艺淘汰变成真实封城
+        must_show: [主持人按下淘汰按钮, 玩家发现安全总线与舞台特效错误共线, 全城断网且真实防爆门开始闭合]
+        comic_beat: 赞助播报在断电前最后坚持说完“本节目所有意外均为沉浸式体验”，紧接着自己的广告灯牌先掉进黑屏
+      - purpose: 第一次打脸来自专业而非万能权限
+        must_show: [玩家用所选专业救下一项关键系统, 明星选手照着节目任务卡操作反而触发第二故障, 老式系统只开放维修环而非全城最高权限]
+        comic_beat: 百万粉主播举着没信号的手机要求观众扣一，维修师傅提醒她现在唯一会扣一的是氧气读数
+      - purpose: 把摄影棚危机升级为二十四小时避难城接管
+        must_show: [地下层传来被淘汰选手的求救, 城市应急站发来残缺风暴预警, 电力与供氧必须二选一先救]
+        comic_beat: 真实伤亡风险出现后收住笑点；不拿窒息、恐慌、残障、救援对象或基层人员作笑料
+    humor_rule: 笑点来自综艺话术在真实工程面前失效、广告系统顽强抢戏和网红习惯撞上断网现实；危机后果必须认真处理。
+    choice_gate: 玩家知道各系统当前读数、维修环可达范围和第一批被困者位置；第一次选择是先稳电、稳风或打开下层通道，并明确各自代价。
+  starter_items:
+    - {key: maintenance_multitool, quantity: 1}
+    - {key: analog_manual_pages, quantity: 1}
+    - {key: contestant_badge, quantity: 1}
+  player_template:
+    constraints: {minimum_age: 21, maximum_age: 48}
+    properties: {show_status: eliminated, verified_role: maintenance}
+  relationship_boundaries: 所有主要角色均为成年人。危机中的依赖、救援或权限差不会自动转化为感情；拒绝、恐慌与身体界限必须得到尊重。
+  endings:
+    - key: ending_city_online
+      type: independent
+      title: 九号穹顶重新上线
+      priority: 95
+      epilogue: 二十四小时后，避难城恢复最低运行，地面救援信标逐个亮起。屏幕没有宣布冠军，值班表上写满每个真正让城市运转的人。
+      condition: {op: and, args: [{op: eq, args: [{op: get, args: [quests.quest_restore_grid.status]}, completed]}, {op: eq, args: [{op: get, args: [quests.quest_balance_air.status]}, completed]}]}
+    - key: ending_open_source_manual
+      type: independent
+      title: 所有人都能看懂的手册
+      priority: 82
+      epilogue: 你拒绝接过永久总控权限，把被节目组删减的维修手册、故障记录和轮值制度全部公开。避难城第一次不需要等一个天选之人醒来。
+      condition: {op: eq, args: [{op: get, args: [quests.quest_choose_governance.status]}, completed]}
+    - key: ending_true_ensemble
+      type: bond
+      title: 淘汰组接管全场
+      priority: 76
+      epilogue: 最终修复名单上，前六个名字全来自节目早早淘汰的后勤组。主持人问冠军是谁，大家指向还在漏水的三号阀——先修，修完再说。
+      condition: {op: eq, args: [{op: get, args: [quests.quest_rescue_eliminated.status]}, completed]}
+    - key: ending_rating_blackout
+      type: other
+      title: 最后一条热搜
+      priority: 20
+      epilogue: 制作方恢复了一路直播，却没有恢复供氧。最后的画面很有话题度，没有人能留下评论。
+      condition: {op: eq, args: [{op: get, args: [quests.quest_balance_air.status]}, failed]}
+narrative_style:
+  language: 中文
+  person: 第二人称
+  tense: 现在时
+  tone: 近未来末日真人秀爽剧，综艺淘汰、直播舆论与真实工程危机连续翻转；节奏极快、危机具体、打脸直接，但设备遵守电力、通风、水压、门禁和人力限制，主角靠专业与协作而非凭空成为系统主人。
+  target_length: 1500
+  avoid_phrases: [系统认主, 天选之人, 嘴角勾起, 众人倒吸冷气, 空气凝固, 末日降临, 机械女声冰冷响起, 一切尽在掌握, 真正的游戏才刚开始]
+  phrase_repeat_window: 10
+  phrase_repeat_threshold: 2
+  pacing: explosive_survival_show
+  pacing_rules:
+    - 开场五十字内必须出现淘汰按钮、过热总线或真实防爆门中的至少两个钩子
+    - 每回合至少改变一项读数、通路、权限、队伍站位或风暴时限
+    - 每次反转回收一个已展示信号：过热、延迟、错误剪辑、未完工装修、手册缺页或异常广告指令
+  guidance:
+    - 写清楚谁拉哪只闸、哪一路失电、风机为何停、氧气能撑多久；不靠屏幕突然给答案
+    - 直播时代笑点要短，真正危机出现后人物会停止营业式表演并承担选择
+    - 明星与网红不是天然坏人，维修员也不是永远正确；能力由现场行动验证
+    - 爽点用门重新打开、灯带逐段亮起、读数回稳和权限共享表现，少写全员跪服
+theme: {accent: "#f06d2f", background: "#101820", surface: "#18242d", text: "#f4f7f8"}
+vocabulary:
+  profile_labels: {health: 状态, power: 备用电力, age_suffix: 岁, realm: 避难城权限, root: 专业, faction: 队伍, male: 男, female: 女, unspecified: 未指定, story_lead: 搭档, no_story_lead: 尚未组队, absent: 当前不在场}
+  relationship_labels: {affection: 好感, trust: 信任, respect: 尊重, fear: 恐惧, hatred: 敌意, suspicion: 怀疑, dependency: 依赖, familiarity: 熟悉, boundaries: 界限}
+  action_aliases:
+    MOVE: [去, 前往, 进入, 下到, 回到]
+    TALK: [谈, 说, 协调, 广播]
+    ASK: [问, 追问, 呼叫, 询问]
+    OBSERVE: [看, 检查, 读表, 观察]
+    SEARCH: [搜, 排查, 找故障, 查日志]
+    FOLLOW: [跟, 追踪, 沿线检查]
+    HIDE: [躲, 避开, 断开定位]
+    USE_ITEM: [使用, 接上, 打开, 刷卡]
+    GIVE_ITEM: [交给, 递给, 分配]
+    PICKUP: [拿起, 收好]
+    DROP: [放下, 丢开]
+    STEAL: [偷, 夺取权限]
+    ATTACK: [动手, 制止]
+    DEFEND: [挡住, 保护]
+    BUY: [购买]
+    SELL: [交换]
+    USE_SKILL: [检修, 稳压, 调风, 排水, 调度]
+    REST: [休息]
+    WAIT: [等待]
+    ACCEPT_QUEST: [接受, 接下]
+    REJECT_QUEST: [拒绝, 不接]
+  method_aliases: {persuade: [说服], comfort: [安抚], promise: [承诺], threaten: [警告], bribe: [交换资源], negotiate: [协商], indirect_questioning: [试探]}
+  query_aliases: {QUERY_STATUS: [系统状态, 我的状态, 读数], QUERY_INVENTORY: [工具, 装备], QUERY_RELATIONSHIPS: [队伍关系, 谁可信], QUERY_QUESTS: [故障, 目标, 要修什么]}
+  refusal_words: [不, 拒绝, 不做, 停下]
+  plan_connectors: [然后, 接着, 随后, 再]
+  continue_words: [继续, 接着说, 让故事继续]
+  entity_aliases: {淘汰台: elimination_stage, 导播舱: studio_control, 维修环: maintenance_ring, 总控室: central_control, 通风层: air_plant, 水处理层: water_plant, 医疗舱: clinic, 下层宿舍: lower_dorm, 地面站: surface_station}
+  status_labels: {offered: 待处理, active: 处理中, completed: 已完成, failed: 已失败, expired: 已超时, taken_by_other: 他人接手, rejected: 已拒绝}
+  ambiguity_messages: {empty_input: 说明你准备做什么。, move_target_unknown: 说明你要去哪个已知区域。, conversation_target_unknown: 说明你要和谁联系。, item_unknown: 说明你要使用哪件工具。}
+  time_units: {分钟: 1, 小时: 60, 天: 1440}
+  time_words: {五分钟: 5, 一刻钟: 15, 半小时: 30, 一小时: 60, 两小时: 120}

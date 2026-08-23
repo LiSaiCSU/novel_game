@@ -1,0 +1,17 @@
+location_types: [{key: city, name: 城池}, {key: building, name: 建筑}, {key: room, name: 房间}, {key: outdoor, name: 户外}]
+locations:
+  - {key: capital, name: 上京, type: city, parent: null, danger: 0, spirit_density: 1, description: 北地水患的奏报与上京宴饮同时抵达。}
+  - {key: ning_manor, name: 宁王府, type: building, parent: capital, danger: 1, spirit_density: 1, description: 门前显贵，门后靠嫁妆商号赊账度日。, travel: {censor_office: 18, yunjin_shop: 12, canal_wharf: 25, prefecture_hall: 16}}
+  - {key: ancestral_hall, name: 王府祠堂, type: room, parent: ning_manor, danger: 1, spirit_density: 1, description: 和离书、族谱和八万两亏空账同摆一案。, travel: {account_room: 2, inner_courtyard: 2, manor_gate: 3}}
+  - {key: account_room, name: 王府账房, type: room, parent: ning_manor, danger: 2, spirit_density: 1, description: 两本账摆在明处，第三只书匣没有编号。, travel: {ancestral_hall: 2, east_granary: 8}}
+  - {key: inner_courtyard, name: 内院正房, type: room, parent: ning_manor, danger: 1, spirit_density: 1, description: 中馈钥匙与各房月例册都在此交接。, travel: {ancestral_hall: 2, old_princess_room: 2}}
+  - {key: old_princess_room, name: 老王妃上房, type: room, parent: ning_manor, danger: 1, spirit_density: 1, description: 佛龛后的墙比别处厚半尺。, travel: {inner_courtyard: 2}}
+  - {key: manor_gate, name: 王府侧门, type: outdoor, parent: ning_manor, danger: 1, spirit_density: 1, description: 御史封条已经贴下，所有箱笼只能进不能出。, travel: {ancestral_hall: 3, capital: 5}}
+  - {key: east_granary, name: 城东赈粮仓, type: building, parent: capital, danger: 2, spirit_density: 1, description: 官簿写着三十万石，地秤与仓墙只认实际重量。, travel: {ning_manor: 20, canal_wharf: 14, grain_tunnel: 3}}
+  - {key: grain_tunnel, name: 东仓暗道, type: room, parent: east_granary, danger: 3, spirit_density: 1, description: 废弃排水沟被拓宽，足够夜里运出粮袋。, travel: {east_granary: 3, dye_yard: 10}}
+  - {key: canal_wharf, name: 南漕码头, type: outdoor, parent: capital, danger: 2, spirit_density: 1, description: 二十七条挂云锦号旗的粮船等待新路引。, travel: {east_granary: 14, yunjin_shop: 15, boat_office: 2}}
+  - {key: boat_office, name: 船行签押房, type: room, parent: canal_wharf, danger: 1, spirit_density: 1, description: 每条船的出发、吃水和押运人都要留底。, travel: {canal_wharf: 2}}
+  - {key: yunjin_shop, name: 云锦总号, type: building, parent: capital, danger: 0, spirit_density: 1, description: 玩家母亲留下的十二铺总号，柜台下藏着双锁账册。, travel: {ning_manor: 12, canal_wharf: 15, dye_yard: 9}}
+  - {key: dye_yard, name: 西市染坊, type: building, parent: capital, danger: 2, spirit_density: 1, description: 赈粮袋上的官印被洗掉后混进染料货包。, travel: {yunjin_shop: 9, grain_tunnel: 10}}
+  - {key: censor_office, name: 巡盐御史行辕, type: building, parent: capital, danger: 0, spirit_density: 1, description: 所有口供分房记录，谁也不能替谁答。, travel: {ning_manor: 18, prefecture_hall: 8}}
+  - {key: prefecture_hall, name: 上京府公堂, type: building, parent: capital, danger: 0, spirit_density: 1, description: 三日后将在此开仓验账并审理赈粮亏空。, travel: {ning_manor: 16, censor_office: 8}}

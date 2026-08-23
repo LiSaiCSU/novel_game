@@ -1,0 +1,17 @@
+location_types: [{key: district, name: 城区}, {key: building, name: 建筑}, {key: room, name: 房间}, {key: outdoor, name: 户外}]
+locations:
+  - {key: jiangcheng, name: 江城, type: district, parent: null, danger: 0, spirit_density: 1, description: 一场婚礼和一场股东会正在争夺同一座城市的热搜。}
+  - {key: grand_hotel, name: 盛景酒店, type: building, parent: jiangcheng, danger: 0, spirit_density: 1, description: 顾家包下整栋酒店直播婚礼。, travel: {group_tower: 20, warehouse_one: 35, river_bank: 18, notary_room: 15}}
+  - {key: wedding_stage, name: 婚礼主舞台, type: room, parent: grand_hotel, danger: 1, spirit_density: 1, description: 六百万观众正看着誓词屏和签字台。, travel: {ballroom: 1, control_room: 3, bridal_room: 2, hotel_loading_dock: 5}}
+  - {key: ballroom, name: 宴会厅, type: room, parent: grand_hotel, danger: 0, spirit_density: 1, description: 四百位宾客按身价排座，员工代表被安排在最靠门的位置。, travel: {wedding_stage: 1, control_room: 3}}
+  - {key: control_room, name: 直播导播间, type: room, parent: grand_hotel, danger: 2, spirit_density: 1, description: 主推流、备用推流和现场大屏在这里交汇。, travel: {wedding_stage: 3, ballroom: 3}}
+  - {key: bridal_room, name: 新娘休息室, type: room, parent: grand_hotel, danger: 1, spirit_density: 1, description: 镜子后藏着一只被人更换过的文件袋。, travel: {wedding_stage: 2}}
+  - {key: hotel_loading_dock, name: 酒店卸货区, type: outdoor, parent: grand_hotel, danger: 1, spirit_density: 1, description: 花车、转播车和一辆没有标识的文件销毁车挤在一起。, travel: {wedding_stage: 5, group_tower: 18}}
+  - {key: group_tower, name: 顾氏大厦, type: building, parent: jiangcheng, danger: 1, spirit_density: 1, description: 临时股东会将在十八点开始。, travel: {grand_hotel: 20, boardroom: 2, archive_room: 4, finance_office: 3}}
+  - {key: boardroom, name: 二十八层股东会, type: room, parent: group_tower, danger: 2, spirit_density: 1, description: 主位背后已经摆好了新董事长的名牌，只是还盖着布。, travel: {group_tower: 2, archive_room: 3}}
+  - {key: archive_room, name: 合同档案室, type: room, parent: group_tower, danger: 2, spirit_density: 1, description: 纸质原件与电子哈希表分开存放。, travel: {group_tower: 4, boardroom: 3}}
+  - {key: finance_office, name: 财务共享中心, type: room, parent: group_tower, danger: 1, spirit_density: 1, description: 四十八笔关联交易都在这里留下过痕迹。, travel: {group_tower: 3}}
+  - {key: warehouse_one, name: 江北一号仓, type: building, parent: jiangcheng, danger: 1, spirit_density: 1, description: 三千名员工欠薪的源头，也是顾氏真正值钱的自动化仓网核心。, travel: {grand_hotel: 35, warehouse_roof: 2}}
+  - {key: warehouse_roof, name: 一号仓天台, type: outdoor, parent: warehouse_one, danger: 1, spirit_density: 1, description: 备用卫星推流器藏在旧冷却机组后。, travel: {warehouse_one: 2}}
+  - {key: river_bank, name: 江城商业银行, type: building, parent: jiangcheng, danger: 0, spirit_density: 1, description: 顾氏授信委员会正在决定是否提前抽贷。, travel: {grand_hotel: 18}}
+  - {key: notary_room, name: 联合公证室, type: building, parent: jiangcheng, danger: 0, spirit_density: 1, description: 母亲信托文件的启封需要两名见证人与原始印鉴。, travel: {grand_hotel: 15, group_tower: 12}}

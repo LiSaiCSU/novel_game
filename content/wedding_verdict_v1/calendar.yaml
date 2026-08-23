@@ -1,0 +1,27 @@
+epoch_label: 公历
+epoch_year: 2026
+minutes_per_hour: 60
+hours_per_day: 24
+days_per_month: 30
+months_per_year: 12
+shichen:
+  - {key: morning, name: 上午, start_hour: 6, end_hour: 12}
+  - {key: afternoon, name: 下午, start_hour: 12, end_hour: 18}
+  - {key: evening, name: 晚间, start_hour: 18, end_hour: 24}
+  - {key: midnight, name: 深夜, start_hour: 0, end_hour: 6}
+day_phases:
+  - {key: dawn, name: 清晨, start_hour: 5, end_hour: 8}
+  - {key: morning, name: 上午, start_hour: 8, end_hour: 12}
+  - {key: noon, name: 中午, start_hour: 12, end_hour: 14}
+  - {key: afternoon, name: 下午, start_hour: 14, end_hour: 18}
+  - {key: dusk, name: 傍晚, start_hour: 18, end_hour: 20}
+  - {key: night, name: 夜里, start_hour: 20, end_hour: 24}
+  - {key: deep_night, name: 凌晨, start_hour: 0, end_hour: 5}
+seasons: [{key: spring, name: 春, months: [3, 4, 5]}, {key: summer, name: 夏, months: [6, 7, 8]}, {key: autumn, name: 秋, months: [9, 10, 11]}, {key: winter, name: 冬, months: [12, 1, 2]}]
+month_names: [一月, 二月, 三月, 四月, 五月, 六月, 七月, 八月, 九月, 十月, 十一月, 十二月]
+start_year: 2026
+start_month: 9
+start_day: 20
+start_hour: 10
+start_minute: 0
+format: "{year}年{month_name}{day}日 {phase}"

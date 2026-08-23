@@ -1,0 +1,185 @@
+key: divorce_ledger_v1
+name: 和离书一签，王府开始抄家
+genre: costume_revenge_microdrama
+version: "1.0.0"
+engine_min_version: "0.2.0"
+primary_progression_key: case_power
+attribute_definitions:
+  - {key: calculation, label: 算账, type: number}
+  - {key: etiquette, label: 礼法, type: number}
+  - {key: courage, label: 胆识, type: number}
+  - {key: networks, label: 商路, type: number}
+resource_definitions:
+  - {key: health, label: 体力, minimum: 0, maximum: 100, default: 100}
+  - {key: ledger_clues, label: 账证, minimum: 0, maximum: 100, default: 15}
+  - {key: household_control, label: 府中掌控, minimum: 0, maximum: 100, default: 28}
+  - {key: court_attention, label: 官署关注, minimum: 0, maximum: 100, default: 20}
+progression_definitions:
+  - key: case_power
+    label: 翻案分量
+    tiers:
+      - {key: cast_out, label: 被休出门, order: 0}
+      - {key: books_open, label: 开箱对账, order: 1}
+      - {key: hall_hearing, label: 公堂翻案, order: 2}
+      - {key: seal_returned, label: 印信归主, order: 3}
+player_fields:
+  - {key: name, label: 姓名, type: text, required: true}
+  - {key: age, label: 年龄, type: integer, required: true, default: 24, minimum: 20, maximum: 42}
+  - key: house_skill
+    label: 出嫁前掌握的本事
+    type: choice
+    required: true
+    default: merchant_accounts
+    choices:
+      - {value: merchant_accounts, label: 商号总账·一粒米也有来处}
+      - {value: water_transport, label: 漕运调度·认船认仓认路引}
+      - {value: seal_script, label: 印信文书·看得出补盖与伪押}
+      - {value: medicine_supply, label: 药材采办·知道价格也识假货}
+  - key: marriage_reason
+    label: 一年前为何嫁入宁王府
+    type: choice
+    required: true
+    default: protect_shops
+    choices:
+      - {value: protect_shops, label: 保住母亲留下的十二间铺子}
+      - {value: repay_rescue, label: 还萧承璟一次救命之情}
+      - {value: investigate_brother, label: 查清兄长押粮失踪}
+      - {value: choose_him, label: 当年确实真心选过他}
+  - {key: personal_goal, label: 三日内最想保住什么, type: text, required: true, default: 让赈粮进仓，让我的名字出府}
+language: zh-CN
+assets:
+  - key: divorce_ledger_cover
+    kind: cover
+    path: official/divorce_ledger_v1/divorce-ledger-cover-v1.png
+    alt: 风雨中的古代王府祠堂，成年女性一手举和离文书，一手持算盘，官差正在开启满是账册的箱笼
+author_tests:
+  - key: opening_knows_dowry
+    name: 开场玩家知道王府靠自己的嫁妆周转但不知道第三本账
+    scenario: main_story
+    assertions:
+      - {path: player.location, op: eq, expected: ancestral_hall}
+      - {path: knowledge.player.fact_manor_runs_on_dowry_credit, op: eq, expected: KNOWN}
+      - {path: knowledge.player.fact_third_ledger_tracks_relief_grain, op: eq, expected: UNKNOWN}
+  - key: endings_locked
+    name: 开场结局未解锁
+    scenario: main_story
+    assertions:
+      - {path: endings.ending_three_ledgers_open.available, op: eq, expected: false}
+      - {path: endings.ending_twelve_shops.available, op: eq, expected: false}
+world:
+  name: 大晏·上京宁王府
+  description: >
+    架空王朝大晏景和十四年，北地水患，三十万石赈粮经过上京转运。宁王府外表显贵，实际靠王妃嫁妆商号周转一年。
+    三日后巡盐御史将入府查账；今天祠堂却先开了一场族审，指控玩家盗走八万两库银并逼她签和离书。
+    王府以为赶走一个商户女就能把亏空一并推出门，不知道嫁妆箱笼每一只都有双锁，也不知道祠堂里那只学舌鹩哥记住了账房暗号。
+  start_location: ancestral_hall
+  world_seed_default: divorce-ledger-jinghe14
+story:
+  title: 和离书一签，王府开始抄家
+  opening_location: ancestral_hall
+  premise: >
+    和离书摊到你面前时，萧承璟身后的苏莲已经拿着王府中馈钥匙。老王妃让你认下八万两亏空，族老等着看商户女哭求留下。
+    你提笔就签，却在名字后添了一行：嫁妆十二铺、四仓、二十七船即刻撤回担保。话音刚落，王府账房冲进祠堂，说三家钱庄同时停兑。
+    更糟的是，巡盐御史的封条已经贴上侧门——不是来接你出府，是来问三十万石赈粮为什么少了四万。
+  opening_blueprint:
+    player_context: 在祠堂逼签中交代玩家所选本事、嫁入王府原因和一年掌中馈的实际能力；主角签字是主动切断担保，不是突然觉醒的万能身份。
+    acts:
+      - purpose: 落笔即翻第一张桌
+        must_show: [八万两指控和和离书同时摆出, 玩家从印章或账目发现指控漏洞, 签字后依法撤回嫁妆担保]
+        comic_beat: 族老刚骂商户满身铜臭，钱庄停兑的小厮便进来问王府今天午膳的肉钱由谁结，族老把茶杯默默放回桌上
+      - purpose: 让假情敌和真账目同时反转
+        must_show: [苏莲并不急着嫁而是先封存钥匙, 王府三本账只摆出两本, 学舌鹩哥重复账房暗号但不直接充当万能证据]
+        comic_beat: 鹩哥只会把“东仓三更换签”说成“东窗三更换钱”，全府以为它又学坏话，只有玩家听出账房习惯
+      - purpose: 把宅斗抬成三日赈粮案
+        must_show: [御史封门, 赈粮缺口公开, 玩家可选择先保人证、封仓或取回嫁妆总钥]
+        comic_beat: 封门之后停止玩笑；不拿灾民、饥饿、仆役受罚或女性名誉作笑料
+    humor_rule: 笑点来自礼法排场撞上真实账单、官样话被具体数字拆穿，以及聪明人对荒唐规矩的干脆回应；不把羞辱女性、贫困或灾情写成笑话。
+    choice_gate: 玩家知道和离的财产后果、御史封门原因和自己能调用的商路；第一次选择决定先保住哪条证据链，不要求盲信前夫或所谓情敌。
+  starter_items:
+    - {key: signed_divorce_letter, quantity: 1}
+    - {key: dowry_inventory, quantity: 1}
+    - {key: half_tally, quantity: 1}
+  player_template:
+    constraints: {minimum_age: 20, maximum_age: 42}
+    properties: {household_role: departing_princess_consort, legal_status: adult}
+  relationship_boundaries: 所有可发展关系均为成年人。和离、拒绝与财产权选择会被尊重；前夫若想重新合作必须先承担公开责任，系统不把控制、羞辱或救命之恩包装成爱情债。
+  endings:
+    - key: ending_three_ledgers_open
+      type: independent
+      title: 三本账同上公堂
+      priority: 95
+      epilogue: 三本账在公堂逐页核验，赈粮追回，替罪的脚夫与女使被放回家。你没有靠一句圣旨翻案，靠的是每一笔都能找到仓、船、人和印。
+      condition: {op: eq, args: [{op: get, args: [quests.quest_open_three_ledgers.status]}, completed]}
+    - key: ending_twelve_shops
+      type: independent
+      title: 十二铺重新开门
+      priority: 82
+      epilogue: 王府门匾还在，你的商号先换了新匾。十二间铺子不再替任何婚姻担保，第一车补发赈粮从你自己的码头启程。
+      condition: {op: eq, args: [{op: get, args: [quests.quest_reclaim_dowry.status]}, completed]}
+    - key: ending_equal_alliance
+      type: bond
+      title: 不回王府，只同路
+      priority: 75
+      epilogue: 萧承璟在公堂认下自己的失察与签押，你接受合作，却没有收回和离书。你们从两扇不同的门离开，下一次见面只谈共同要办的事。
+      condition: {op: eq, args: [{op: get, args: [quests.quest_public_accountability.status]}, completed]}
+    - key: ending_empty_box
+      type: other
+      title: 箱笼全空
+      priority: 20
+      epilogue: 第三日开仓时，粮、账与人证都已不在。你拿回和离书，却背上八万两亏空；王府推出一个替罪人，真正的船趁夜过了关。
+      condition: {op: eq, args: [{op: get, args: [quests.quest_seal_east_granary.status]}, failed]}
+narrative_style:
+  language: 中文
+  person: 第二人称
+  tense: 现在时
+  tone: 架空古装宅斗、商战与赈粮悬案融合的高反转爽剧；礼法压人必须被契约、账目、行动和后果反击，人物说话有身份差异，反转快但每一层都能在前文找到印、钥、船期或账页伏笔。
+  target_length: 1600
+  avoid_phrases: [凤眸微眯, 红唇勾起, 众人倒吸一口凉气, 空气凝固, 淡淡开口, 本王命令你, 你可知罪, 区区商户女, 这才刚刚开始]
+  phrase_repeat_window: 10
+  phrase_repeat_threshold: 2
+  pacing: explosive_costume_drama
+  pacing_rules:
+    - 开场五十字内必须出现和离书、八万两或停兑中的至少两个钩子
+    - 每回合至少改变一项：谁掌钥匙、哪本账有效、哪座仓被封、哪条船能走或谁愿上堂作证
+    - 身份反转不得代替能力展示；玩家的分量来自经营记录、专业判断和盟友选择
+  guidance:
+    - 对账要落到日期、仓号、船号、双锁和印泥，不靠“账有问题”的空话
+    - 萧承璟不是默认真爱；他每次隐瞒都要付出关系与程序代价
+    - 苏莲有独立目标和办案能力，不写雌竞排队，不让女性争夺一个男人成为主线
+    - 爽点用座次、钥匙、封条、账箱和实际放粮表现，少写旁人齐声震惊
+theme: {accent: "#9e2635", background: "#efe4d5", surface: "#fff8ed", text: "#2a211b"}
+vocabulary:
+  profile_labels: {health: 体力, power: 账证, age_suffix: 岁, realm: 翻案分量, root: 本事, faction: 阵营, male: 男, female: 女, unspecified: 未指定, story_lead: 同盟, no_story_lead: 尚未结盟, absent: 当前不在场}
+  relationship_labels: {affection: 好感, trust: 信任, respect: 尊重, fear: 忌惮, hatred: 敌意, suspicion: 怀疑, dependency: 依赖, familiarity: 熟悉, boundaries: 分寸}
+  action_aliases:
+    MOVE: [去, 前往, 入府, 出门, 赶往]
+    TALK: [谈, 说, 对质, 商议]
+    ASK: [问, 追问, 盘问, 请教]
+    OBSERVE: [看, 验印, 核账, 察看]
+    SEARCH: [搜, 翻账, 查仓, 找账本]
+    FOLLOW: [跟, 尾随, 盯住]
+    HIDE: [躲, 藏, 避开]
+    USE_ITEM: [用, 出示, 盖印, 开箱]
+    GIVE_ITEM: [交给, 呈交, 递给]
+    PICKUP: [拿起, 收好]
+    DROP: [放下, 丢下]
+    STEAL: [偷, 取走]
+    ATTACK: [动手, 拦下]
+    DEFEND: [挡住, 护住]
+    BUY: [买, 采买]
+    SELL: [卖, 出货]
+    USE_SKILL: [算账, 验印, 调船, 辨药]
+    REST: [休息]
+    WAIT: [等待]
+    ACCEPT_QUEST: [接下, 答应]
+    REJECT_QUEST: [拒绝, 不接]
+  method_aliases: {persuade: [说服], comfort: [宽慰], promise: [承诺, 立字据], threaten: [警告], bribe: [塞银], negotiate: [议价, 商议], indirect_questioning: [试探, 套话]}
+  query_aliases: {QUERY_STATUS: [我的状态, 手上账证], QUERY_INVENTORY: [箱笼, 手里的东西], QUERY_RELATIONSHIPS: [人物关系, 谁可信], QUERY_QUESTS: [要办的事, 目标]}
+  refusal_words: [不, 不肯, 拒绝, 免谈]
+  plan_connectors: [然后, 接着, 随后, 再]
+  continue_words: [继续, 接着说, 让故事继续]
+  entity_aliases: {祠堂: ancestral_hall, 王府: ning_manor, 账房: account_room, 东仓: east_granary, 码头: canal_wharf, 御史行辕: censor_office, 云锦号: yunjin_shop, 公堂: prefecture_hall}
+  status_labels: {offered: 待办, active: 正在办, completed: 已办妥, failed: 已失败, expired: 已过期, taken_by_other: 他人接手, rejected: 已拒绝}
+  ambiguity_messages: {empty_input: 说清楚你要做什么。, move_target_unknown: 说明你要去哪个已知地点。, conversation_target_unknown: 说明你要同谁说话。, item_unknown: 说明你要用哪件东西。}
+  time_units: {刻: 15, 时辰: 120, 小时: 60, 天: 1440}
+  time_words: {一刻: 15, 半个时辰: 60, 一个时辰: 120, 半日: 360, 一天: 1440}

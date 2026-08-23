@@ -1,0 +1,58 @@
+action_plan: {max_total_minutes: 180}
+time_costs:
+  TALK: {min: 2, max: 20}
+  ASK: {min: 2, max: 20}
+  CONVERSATION: {min: 3, max: 30}
+  OBSERVE: {min: 1, max: 12}
+  SEARCH: {min: 5, max: 45}
+  FOLLOW: {min: 3, max: 25}
+  HIDE: {min: 2, max: 20}
+  MOVE_LOCAL: {min: 1, max: 10}
+  MOVE_REGIONAL: {min: 3, max: 18}
+  USE_ITEM: {min: 1, max: 20}
+  USE_SKILL: {min: 5, max: 45}
+  GIVE_ITEM: {min: 1, max: 6}
+  STEAL: {min: 4, max: 20}
+  ATTACK: {min: 1, max: 8}
+  DEFEND: {min: 1, max: 8}
+  BUY: {min: 3, max: 12}
+  SELL: {min: 3, max: 12}
+  PICKUP: {min: 1, max: 4}
+  DROP: {min: 1, max: 3}
+  REST: {min: 15, max: 120}
+  WAIT: {min: 3, max: 60}
+  ACCEPT_QUEST: {min: 1, max: 5}
+  REJECT_QUEST: {min: 1, max: 3}
+  CUSTOM: {min: 2, max: 45}
+  SECLUSION_MAX_MINUTES: 240
+relationship:
+  dimensions: [affection, trust, respect, fear, hatred, suspicion, dependency, familiarity, boundaries]
+  ranges: {affection: {min: -100, max: 100, default: 0}, trust: {min: -100, max: 100, default: 0}, respect: {min: -100, max: 100, default: 0}, fear: {min: 0, max: 100, default: 0}, hatred: {min: 0, max: 100, default: 0}, suspicion: {min: 0, max: 100, default: 18}, dependency: {min: 0, max: 100, default: 0}, familiarity: {min: 0, max: 100, default: 0}, boundaries: {min: 0, max: 100, default: 60}}
+  max_delta_per_event: {trivial: 2, minor: 6, major: 20, life_changing: 42}
+  familiarity_gain_per_interaction: 2
+  decay_per_month_without_contact: {familiarity: 1, affection: 1, suspicion: 1}
+social: {base_success: 0.28, weights: {trust: 0.006, affection: 0.001, respect: 0.004, familiarity: 0.002, hatred: -0.005, suspicion: -0.006, charisma: 0.008, reputation: 0.001}, request_size_penalty: {trivial: 0, small: 0.1, moderate: 0.3, large: 0.55, extreme: 0.9}, risk_penalty_weight: 0.65, value_conflict_penalty: 0.5, taboo_hard_refuse: true, first_meeting_penalty: 0.08, min: 0.01, max: 0.95}
+economy: {currency_key: supply_credit, currency_name: 物资额度, buy_markup: 1, sell_discount: 0.5, haggle_max_shift: 0.1, reputation_price_weight: 0.001}
+inventory: {max_slots: 24, max_weight: 0}
+information: {spread_chance_per_day: {PUBLIC: 0.95, LOCAL: 0.75, FACTION: 0.55, PRIVATE: 0, SECRET: 0}, confidence_decay_per_hop: 0.12}
+memory: {top_k: 14, min_importance: 0.08, conversation_importance: {base: 0.12, first_meeting: 0.3, major_npc: 0.35, request_size: {moderate: 0.3, large: 0.45, extreme: 0.6}}, recency_half_life_minutes: 360, decay_floor: 0.1, retrieval_weights: {similarity: 0.3, importance: 0.3, recency: 0.2, relationship: 0.1, context: 0.1}, always_remember_event_types: [PROMISE, SECRET_DISCLOSURE, BETRAYAL, RESCUE, DEATH, CONFRONTATION]}
+narrative:
+  tension_start: 78
+  tension_decay_per_day: 2
+  tension_gain_by_importance: 17
+  tension_gain_floor: 0.1
+  high_threshold: 84
+  max_consecutive_high_turns: 4
+  bands: [{key: show, name: 淘汰, min: 0, max: 30}, {key: outage, name: 断电, min: 30, max: 60}, {key: survival, name: 抢修, min: 60, max: 85}, {key: storm, name: 风暴峰值, min: 85, max: 101}]
+director:
+  min_interval_turns: 1
+  thread_patience_minutes: 90
+  pacing_rules: [每次介入必须改变读数、权限、通路、物资或人员安全, 玩家正在执行不可中断检修时返回NO_EVENT, 不用系统突然认主或全员崇拜代替工程结果]
+  high_importance_override: 0.85
+  max_events_per_day: 26
+  max_schedule_delay_minutes: 45
+  allowed_event_types: [NPC_RETURN, NPC_DEPARTURE, NPC_APPROACH, RUMOR_SPREAD, FACTION_MOVE, QUEST_OFFER, DISCOVERY, ENVIRONMENT_SHIFT, CONFRONTATION, FORESHADOWING, SECRET_DISCLOSURE, PROMISE, BETRAYAL, RESCUE, DEATH]
+simulation: {tick_minutes: {lod1: 15, lod2: 60, lod3: 180}, max_materialized_events_per_jump: 96, npc_goal_action_interval_minutes: 45, faction_drift_per_week: {resources: {min: 0, max: 0}, military_power: {min: 0, max: 0}, reputation: {min: -1, max: 1}}, offline_event_chance_per_week: {lod1: 0.6, lod2: 0.35, lod3: 0.15}}
+auto_advance: {max_steps: 4, max_minutes: 90, npc_llm_per_step: 0, interrupt_importance: 0.66, interrupt_health_loss: 0.15, engaging_actions: [TALK, ASK, SEARCH, OBSERVE], hostile_actions: [ATTACK, STEAL], offer_events: [QUEST_OFFER, CONFRONTATION, SECRET_DISCLOSURE, BETRAYAL, DEATH]}
+consistency: {strict: true, checks: [alive, location, inventory, knowledge, faction, time]}
+reputation: {ranges: {global: {min: -100, max: 100}, faction: {min: -100, max: 100}}}

@@ -1,0 +1,7 @@
+skills:
+  - {key: forensic_audit, name: 穿透审账, category: professional, description: 从关联方、时间戳和资金闭环中找到不能同时成立的两笔账。, max_level: 5}
+  - {key: contract_review, name: 合同拆弹, category: professional, description: 找到附件、定义和授权条款里的真正风险。, max_level: 5}
+  - {key: live_directing, name: 直播控场, category: media, description: 决定镜头看哪里、证据何时出现、如何保住备用推流。, max_level: 5}
+  - {key: negotiation, name: 限时谈判, category: social, description: 给对方一个必须在倒计时内回应的选项。, max_level: 5}
+  - {key: operations, name: 仓网调度, category: professional, description: 看懂仓储、车辆和订单数据背后的实际控制权。, max_level: 5}
+  - {key: evidence_chain, name: 证据保全, category: investigation, description: 记录来源、校验原件并避免材料变成孤证。, max_level: 5}

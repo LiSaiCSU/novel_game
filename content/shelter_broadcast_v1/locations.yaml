@@ -1,0 +1,19 @@
+location_types: [{key: complex, name: 设施}, {key: level, name: 层区}, {key: room, name: 舱室}, {key: outdoor, name: 地面}]
+locations:
+  - {key: dome_nine, name: 九号穹顶, type: complex, parent: null, danger: 2, spirit_density: 1, description: 七层地下民防枢纽，上两层被改成真人秀摄影棚。}
+  - {key: show_level, name: 节目摄影层, type: level, parent: dome_nine, danger: 1, spirit_density: 1, description: 灯光漂亮，真正应急线路却被布景挡住。, travel: {maintenance_ring: 4, residential_ring: 5, surface_station: 8}}
+  - {key: elimination_stage, name: 淘汰舞台, type: room, parent: show_level, danger: 2, spirit_density: 1, description: 红色淘汰按钮错误并入真实安全总线。, travel: {studio_control: 2, sponsor_gallery: 2, maintenance_ring: 4}}
+  - {key: studio_control, name: 节目导播舱, type: room, parent: show_level, danger: 1, spirit_density: 1, description: 剪辑脚本、投票算法和风暴预警都曾到过这里。, travel: {elimination_stage: 2, sponsor_gallery: 2}}
+  - {key: sponsor_gallery, name: 赞助展廊, type: room, parent: show_level, danger: 1, spirit_density: 1, description: 自动广告系统有独立电池，断网后仍按时播口号。, travel: {elimination_stage: 2, studio_control: 2}}
+  - {key: maintenance_ring, name: 地下维修环, type: level, parent: dome_nine, danger: 2, spirit_density: 1, description: 老式机械表和手动旁路比节目组的新屏幕可靠。, travel: {elimination_stage: 4, central_control: 3, air_plant: 4, power_room: 4, water_plant: 5, lower_dorm: 5}}
+  - {key: central_control, name: 避难城总控室, type: room, parent: maintenance_ring, danger: 2, spirit_density: 1, description: 总控要求多岗位共同验证，不承认单人永久主人。, travel: {maintenance_ring: 3, relay_tunnel: 3}}
+  - {key: power_room, name: 备用电力舱, type: room, parent: maintenance_ring, danger: 3, spirit_density: 1, description: 两组电池、一台柴油机和一只烧蚀的切换柜。, travel: {maintenance_ring: 4, battery_gallery: 2}}
+  - {key: battery_gallery, name: 电池廊, type: room, parent: power_room, danger: 3, spirit_density: 1, description: 温度持续上升，错误并联会让整排电池报废。, travel: {power_room: 2}}
+  - {key: air_plant, name: 通风净化层, type: room, parent: maintenance_ring, danger: 3, spirit_density: 1, description: 三台风机只剩两台可用，滤芯压差正在升高。, travel: {maintenance_ring: 4, residential_ring: 3}}
+  - {key: water_plant, name: 水处理层, type: room, parent: maintenance_ring, danger: 2, spirit_density: 1, description: 反渗透泵停机，储水还能支撑二十小时。, travel: {maintenance_ring: 5, clinic: 4}}
+  - {key: lower_dorm, name: 淘汰者下层宿舍, type: room, parent: maintenance_ring, danger: 2, spirit_density: 1, description: 六名被淘汰选手没有离开设施，节目组把他们安置在没有直播的下层。, travel: {maintenance_ring: 5, clinic: 3}}
+  - {key: residential_ring, name: 生活环, type: level, parent: dome_nine, danger: 1, spirit_density: 1, description: 四十八个床位、厨房和真实物资仓组成的小型生活区。, travel: {show_level: 5, air_plant: 3, clinic: 2, supply_store: 2}}
+  - {key: clinic, name: 医疗舱, type: room, parent: residential_ring, danger: 1, spirit_density: 1, description: 药品齐全但冷藏电源只剩六小时。, travel: {residential_ring: 2, lower_dorm: 3, water_plant: 4}}
+  - {key: supply_store, name: 应急物资仓, type: room, parent: residential_ring, danger: 1, spirit_density: 1, description: 物资标签被节目赞助贴纸覆盖，实际数量与镜头展示不同。, travel: {residential_ring: 2}}
+  - {key: relay_tunnel, name: 地面信号中继隧道, type: room, parent: dome_nine, danger: 3, spirit_density: 1, description: 连接地面天线，太阳风暴最强时无法久留。, travel: {central_control: 3, surface_station: 5}}
+  - {key: surface_station, name: 地面应急站, type: outdoor, parent: dome_nine, danger: 4, spirit_density: 1, description: 强辐射风暴与电磁干扰持续，只有短窗口能升起信标。, travel: {show_level: 8, relay_tunnel: 5}}

@@ -17,6 +17,7 @@ async def compile_official_content() -> None:
         "cultivation_v1", "campus_romance_v1", "tomb_lantern_v1",
         "fog_harbor_v1", "spirit_pact_v1",
         "three_year_pact_v1", "second_chance_v1",
+        "wedding_verdict_v1", "divorce_ledger_v1", "shelter_broadcast_v1",
     ):
         package = project_v1_as_v2(load_content_pack(settings.content_path, key))
         release = compile_package(package)

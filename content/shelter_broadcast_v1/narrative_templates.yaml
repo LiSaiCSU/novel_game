@@ -1,0 +1,10 @@
+npc_goal_action: "{name}没有等镜头指令，先去处理{goal}。"
+knowledge_hedges: {UNKNOWN: "{name}没有这项读数或信息。", HEARD: "{name}只从广播听到过，尚未复核。", SUSPECTED: "{name}判断可能如此，仍缺现场数据。", KNOWN: "{name}能说明读数、时间或记录来源。", BELIEVED: "{name}相信这一判断，仍可能受错误仪表影响。"}
+labels: {health: 状态, power: 电力, location: 区域, realm: 权限, faction: 队伍, inventory: 工具, skills: 专业, relationships: 关系, quests: 故障, threads: 危机线}
+rejection: {TABOO: "这违反对方的安全底线。", LOW_TRUST: "信任不足，对方不肯把命押在这条指令上。", HIGH_RISK: "风险与撤回方案不清，对方拒绝操作。", NO_CAPABILITY: "对方没有相应工具、岗位或能力。", DEFAULT: "当前条件下这条操作无法执行。"}
+action: {MOVE: "你赶到{location}，新读数已经等在那里。", TALK: "你向{target}下达或说明一条可复述的指令。", ASK: "你询问{target}，拿到一项可复核的信息。", OBSERVE: "你检查仪表与现场，确认了一个具体异常。", SEARCH: "你沿线路排查，把故障缩小到下一段。", USE_ITEM: "你正确接入工具，系统给出明确反馈。", USE_SKILL: "你用专业判断改变了一项读数或通路。", CUSTOM: "你的行动让危机产生了具体变化。", DEFAULT: "系统状态向前变化，并留下下一步。"}
+notes: {relationship: "{name}对你的{dimension}发生变化。", quest: "故障“{quest}”有了新进展。", memory: "相关人员记住这次操作。", trade: "工具或物资完成交接。"}
+npc: {success: "{name}完成了当前分工的一步。", failure: "{name}操作受阻，报告原因并寻找替代方案。", no_action: "{name}暂未冒险操作。"}
+world_event: {RUMOR_SPREAD: "广播里出现一个未经复核的说法。", FACTION_MOVE: "一组人员先调整了权限或资源。", DISCOVERY: "新日志或读数出现，仍需现场复核。", CONFRONTATION: "两套互斥方案被放到同一张系统图前。", DEFAULT: "风暴继续推进，设施状态发生变化。"}
+duration: {instant: 转眼, short: 几分钟后, medium: 一轮检修后, long: 一段轮值后}
+query: {status: "状态{health}，备用电力{power}，目前在{location}。", inventory_empty: "你手边没有可用工具。", inventory_header: "携带工具：", skills_empty: "尚无已登记专业。", skills_header: "可用专业：", relationships_empty: "尚未形成明确协作关系。", relationships_header: "当前协作关系：", quests_empty: "当前没有明确故障任务。", quests_header: "待处理故障：", threads_empty: "暂无追踪危机线。", threads_header: "正在推进的危机线："}

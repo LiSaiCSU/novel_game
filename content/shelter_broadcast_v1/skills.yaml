@@ -1,0 +1,7 @@
+skills:
+  - {key: electrical_isolation, name: 电力隔离, category: engineering, description: 判断故障区并用旁路保住关键负载。, max_level: 5}
+  - {key: air_balance, name: 风量平衡, category: engineering, description: 依据压差、人数与风道分配有限供氧。, max_level: 5}
+  - {key: water_recovery, name: 水系统恢复, category: engineering, description: 查找泵、膜组和管路问题并控制污染。, max_level: 5}
+  - {key: emergency_logistics, name: 应急调度, category: operations, description: 把人员、工具、时间窗与物资排成可执行轮值。, max_level: 5}
+  - {key: system_forensics, name: 系统取证, category: investigation, description: 对比安全日志、节目剪辑与预警时间戳。, max_level: 5}
+  - {key: crisis_broadcast, name: 危机广播, category: social, description: 用短而明确的指令降低恐慌并收集反馈。, max_level: 5}

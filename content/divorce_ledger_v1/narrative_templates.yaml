@@ -1,0 +1,10 @@
+npc_goal_action: "{name}没有站着等问，先去办{goal}。"
+knowledge_hedges: {UNKNOWN: "{name}并不知道这件事。", HEARD: "{name}只听过市井版本。", SUSPECTED: "{name}已有怀疑，却缺一份能上堂的凭据。", KNOWN: "{name}能说明何时何地得知。", BELIEVED: "{name}认定如此，仍可能受人误导。"}
+labels: {health: 体力, power: 账证, location: 地点, realm: 分量, faction: 阵营, inventory: 物件, skills: 本事, relationships: 关系, quests: 待办, threads: 案线}
+rejection: {TABOO: "这触到对方绝不肯退的底线。", LOW_TRUST: "交情不足，对方不肯把这份账交出来。", HIGH_RISK: "风险未被说清，对方拒绝照办。", NO_CAPABILITY: "对方手里没有办成此事的印信或本事。", DEFAULT: "此路暂时不通。"}
+action: {MOVE: "你赶到{location}，封条与倒计时都没有等你。", TALK: "你同{target}把条件说到明处。", ASK: "你追问{target}，得到一条可核验的说法。", OBSERVE: "你验过现场，找到一个能落到账上的细节。", SEARCH: "你翻查账物，接上了一段时间或数量。", USE_ITEM: "你出示手中物件，座次与口径随之改变。", USE_SKILL: "你凭手上本事拆穿一处含混。", CUSTOM: "你的行动让局面产生了具体后果。", DEFAULT: "事情继续向前，并留下可追查的结果。"}
+notes: {relationship: "{name}对你的{dimension}发生变化。", quest: "待办“{quest}”有了新进展。", memory: "相关人物记住了这件事。", trade: "银货或凭证完成交接。"}
+npc: {success: "{name}完成了当前打算的一步。", failure: "{name}受阻后换了一条路。", no_action: "{name}暂未贸然行动。"}
+world_event: {RUMOR_SPREAD: "市井传言换了一个版本。", FACTION_MOVE: "一方落下封条、路引或新条件。", DISCOVERY: "新账证出现，仍需互验。", CONFRONTATION: "两套不能同时成立的说法被摆上同一张案。", DEFAULT: "三日时限继续逼近。"}
+duration: {instant: 转眼, short: 片刻后, medium: 一番查验后, long: 一段时辰后}
+query: {status: "体力{health}，账证{power}，目前在{location}。", inventory_empty: "你手边没有可用物件。", inventory_header: "你带着：", skills_empty: "尚无已登记本事。", skills_header: "可用本事：", relationships_empty: "尚未形成明确关系。", relationships_header: "人物关系：", quests_empty: "当前无明确待办。", quests_header: "当前待办：", threads_empty: "暂无追踪案线。", threads_header: "正在推进的案线："}

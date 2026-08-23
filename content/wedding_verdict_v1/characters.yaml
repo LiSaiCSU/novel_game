@@ -1,0 +1,209 @@
+characters:
+  - key: gu_chengze
+    name: 顾承泽
+    type: MAJOR_NPC
+    age: 31
+    gender: male
+    location: wedding_stage
+    faction: gu_group
+    faction_rank: 执行副总裁
+    realm: insider
+    realm_stage: decision_maker
+    stats: {strength: 10, agility: 11, perception: 13, intelligence: 16, willpower: 14, charisma: 18}
+    background: 顾氏公开继承人，擅长把别人的劳动包装成自己的愿景。婚礼是他接手集团前最后一项风险隔离。
+    personality: {traits: {polished: 0.9, entitled: 0.88, adaptive: 0.72}, values: [控制权, 赢得漂亮, 母亲认可], taboos: [在镜头前失控], speech_style: 像发布会一样说情话，被追问数字时立刻谈感情, risk_tolerance: 0.65}
+    emotion: {dominant: confident, valence: 0.25, arousal: 0.45, intensity: 0.55}
+    long_term_goal: 接手干净的优质资产并让玩家承担旧债
+    short_term_goals: [拿到签名, 关闭备用推流, 赶去股东会]
+    schedule: {default: social, slots: [{phase: morning, activity: social, location: wedding_stage}, {phase: noon, activity: work, location: control_room}, {phase: afternoon, activity: work, location: boardroom}, {phase: dusk, activity: work, location: boardroom}, {phase: night, activity: rest, location: grand_hotel}]}
+    items: [{key: debt_agreement, qty: 1}, {key: group_access_card, qty: 1}]
+    skills: [negotiation, contract_review]
+    reputation: {global: 55, by_faction: {gu_group: 88}}
+    secret: 他只知道债务转移计划的前半段，顾母也准备在股东会后让他承担签字责任
+    capabilities: [调动集团保安, 召开临时会议, 在媒体前迅速改口]
+  - key: qin_huiru
+    name: 秦慧茹
+    type: MAJOR_NPC
+    age: 58
+    gender: female
+    location: ballroom
+    faction: gu_group
+    faction_rank: 董事长
+    realm: insider
+    realm_stage: chair
+    stats: {strength: 8, agility: 9, perception: 18, intelligence: 19, willpower: 19, charisma: 17}
+    background: 顾氏董事长，把集团和儿子都视为可以重组的资产。
+    personality: {traits: {controlled: 0.95, ruthless: 0.86, pragmatic: 0.9}, values: [顾家控制权, 现金流, 结果], taboos: [别人拿她的家规当笑话], speech_style: 从不提高音量，只把代价报得更具体, risk_tolerance: 0.72}
+    emotion: {dominant: watchful, valence: -0.05, arousal: 0.35, intensity: 0.6}
+    long_term_goal: 用婚礼和资产拆分一次解决债务、继承与信托问题
+    short_term_goals: [拿回红册, 控制银行代表, 找出谁泄露了股东会材料]
+    schedule: {default: work, slots: [{phase: morning, activity: social, location: ballroom}, {phase: noon, activity: work, location: bridal_room}, {phase: afternoon, activity: work, location: boardroom}, {phase: dusk, activity: work, location: boardroom}, {phase: night, activity: work, location: finance_office}]}
+    items: [{key: chairman_seal, qty: 1}]
+    skills: [negotiation, forensic_audit]
+    reputation: {global: 72, by_faction: {gu_group: 95}}
+    secret: 她曾协助玩家母亲设立员工优先的控制权信托，后来伪造补充协议想绕开它
+    capabilities: [冻结内部权限, 调动法务财务, 影响股东]
+  - key: xu_mingzhu
+    name: 许明珠
+    type: MAJOR_NPC
+    age: 27
+    gender: female
+    location: bridal_room
+    faction: gu_group
+    faction_rank: 品牌总监
+    realm: insider
+    realm_stage: decision_maker
+    stats: {strength: 9, agility: 13, perception: 15, intelligence: 14, willpower: 13, charisma: 18}
+    background: 玩家继妹，穿着备用婚纱来到现场，看似等着替补新娘，实际在追查父亲留下的一只录音笔。
+    personality: {traits: {dramatic: 0.85, competitive: 0.8, frightened: 0.62}, values: [不再被当替代品, 镜头, 自保], taboos: [别人替她决定婚姻], speech_style: 每句话都像热搜标题，真紧张时反而只说事实, risk_tolerance: 0.58}
+    emotion: {dominant: keyed_up, valence: 0.05, arousal: 0.72, intensity: 0.65}
+    long_term_goal: 拿回自己的身份与品牌团队，不嫁给任何人换资源
+    short_term_goals: [找到录音笔, 让所有人以为她真要抢婚, 判断玩家是否会保护证据]
+    schedule: {default: investigate, slots: [{phase: morning, activity: social, location: bridal_room}, {phase: noon, activity: investigate, location: hotel_loading_dock}, {phase: afternoon, activity: work, location: group_tower}, {phase: dusk, activity: social, location: boardroom}, {phase: night, activity: rest, location: grand_hotel}]}
+    items: [{key: backup_wedding_dress, qty: 1}]
+    skills: [live_directing, negotiation]
+    reputation: {global: 40, by_faction: {gu_group: 58}}
+    secret: 她是假意配合抢婚，目的是逼父亲的秘密代理人现身
+    capabilities: [制造热搜, 接近品牌与直播团队, 让人低估她]
+  - key: lu_yan
+    name: 陆砚
+    type: MAJOR_NPC
+    age: 34
+    gender: male
+    location: ballroom
+    faction: independent_investors
+    faction_rank: 独立董事
+    realm: insider
+    realm_stage: decision_maker
+    stats: {strength: 10, agility: 10, perception: 18, intelligence: 19, willpower: 17, charisma: 14}
+    background: 顾氏独立董事兼商事律师，三年前帮玩家母亲保管过一份没有启封的信托附件。
+    personality: {traits: {precise: 0.95, dry_humor: 0.6, cautious: 0.82}, values: [程序能落地, 证据链, 不替客户做决定], taboos: [伪造签名], speech_style: 先报条款再说人话，偶尔用一句冷笑话结束争执, risk_tolerance: 0.45}
+    emotion: {dominant: alert, valence: 0.0, arousal: 0.42, intensity: 0.5}
+    long_term_goal: 让真实控制权文件在有效程序中启封
+    short_term_goals: [保住原始印鉴, 找到第二见证人, 阻止现场冲突毁掉证据]
+    schedule: {default: work, slots: [{phase: morning, activity: observe, location: ballroom}, {phase: noon, activity: work, location: notary_room}, {phase: afternoon, activity: work, location: boardroom}, {phase: dusk, activity: work, location: boardroom}, {phase: night, activity: rest, location: group_tower}]}
+    items: [{key: trust_key, qty: 1}]
+    skills: [contract_review, evidence_chain]
+    reputation: {global: 38, by_faction: {independent_investors: 70}}
+    secret: 他不是顾家安排的前任白月光，而是信托文件指定的程序监督人
+    capabilities: [申请证据保全, 核验签章, 召集独立董事]
+  - key: han_xiaotang
+    name: 韩小棠
+    type: MAJOR_NPC
+    age: 29
+    gender: female
+    location: control_room
+    faction: warehouse_union
+    faction_rank: 前直播运营
+    realm: civilian
+    realm_stage: informed
+    stats: {strength: 9, agility: 15, perception: 17, intelligence: 16, willpower: 15, charisma: 14}
+    background: 玩家朋友，婚礼直播总导播。顾家以为她只会切镜头，不知道她把主推流拆成了三路。
+    personality: {traits: {fast: 0.9, loyal: 0.82, sarcastic: 0.76}, values: [别让镜头替坏人撒谎, 朋友, 工资要发], taboos: [拿直播事故威胁基层员工], speech_style: 指令短得像倒计时，吐槽只在手没停时出现, risk_tolerance: 0.68}
+    emotion: {dominant: focused, valence: 0.1, arousal: 0.75, intensity: 0.65}
+    long_term_goal: 建立不靠黑箱删改的直播取证系统
+    short_term_goals: [守住备用推流, 接入仓库代表, 找出内鬼账号]
+    schedule: {default: work, slots: [{phase: morning, activity: work, location: control_room}, {phase: noon, activity: work, location: control_room}, {phase: afternoon, activity: investigate, location: hotel_loading_dock}, {phase: dusk, activity: work, location: warehouse_roof}, {phase: night, activity: rest, location: warehouse_one}]}
+    items: [{key: backup_stream_drive, qty: 1}]
+    skills: [live_directing, evidence_chain]
+    reputation: {global: 12, by_faction: {warehouse_union: 65}}
+    secret: 三路推流里有一路发往公证存证服务器，顾家切不断但玩家也不能任意编辑
+    capabilities: [控制直播画面, 调阅后台日志, 启用备用链路]
+  - key: zhao_dacheng
+    name: 赵大成
+    type: MAJOR_NPC
+    age: 43
+    gender: male
+    location: warehouse_one
+    faction: warehouse_union
+    faction_rank: 员工代表
+    realm: civilian
+    realm_stage: informed
+    stats: {strength: 14, agility: 10, perception: 15, intelligence: 13, willpower: 18, charisma: 13}
+    background: 一号仓班组长，保存了半年排班和欠薪明细。他不想当英雄，只想让工友拿钱回家。
+    personality: {traits: {practical: 0.92, stubborn: 0.78, protective: 0.86}, values: [工资, 工友, 原始记录], taboos: [拿员工当舆论道具], speech_style: 只报姓名、班次和金额，不配合煽情, risk_tolerance: 0.55}
+    emotion: {dominant: angry, valence: -0.3, arousal: 0.55, intensity: 0.7}
+    long_term_goal: 追回所有欠薪并保住仓库运转
+    short_term_goals: [把排班账发进直播, 阻止销毁服务器, 拿到股东会授权]
+    schedule: {default: work, slots: [{phase: morning, activity: work, location: warehouse_one}, {phase: noon, activity: investigate, location: warehouse_one}, {phase: afternoon, activity: move, location: grand_hotel}, {phase: dusk, activity: social, location: boardroom}, {phase: night, activity: rest, location: warehouse_one}]}
+    items: [{key: payroll_drive, qty: 1}]
+    skills: [operations, evidence_chain]
+    reputation: {global: 16, by_faction: {warehouse_union: 92}}
+    secret: 员工持股平台拥有被顾家忽略的百分之三表决权，足以让关键议案改写
+    capabilities: [组织员工见证, 提供真实运营数据, 调动仓库班组]
+  - key: shen_man
+    name: 沈曼
+    type: MAJOR_NPC
+    age: 46
+    gender: female
+    location: river_bank
+    faction: river_bank_committee
+    faction_rank: 风险总监
+    realm: insider
+    realm_stage: decision_maker
+    stats: {strength: 9, agility: 10, perception: 19, intelligence: 18, willpower: 18, charisma: 13}
+    background: 顾氏授信风险总监。她不是来替玩家撑腰，只来确认谁能为四点八亿负责。
+    personality: {traits: {skeptical: 0.94, procedural: 0.9, fair: 0.62}, values: [可核验, 现金流, 不签人情字], taboos: [口头担保], speech_style: 一开口就是截止时间和材料清单, risk_tolerance: 0.3}
+    emotion: {dominant: skeptical, valence: -0.05, arousal: 0.35, intensity: 0.48}
+    long_term_goal: 把银行损失控制在可承受范围
+    short_term_goals: [核验债务主体, 暂停异常放款, 等待信托启封]
+    schedule: {default: work, slots: [{phase: morning, activity: work, location: river_bank}, {phase: noon, activity: social, location: grand_hotel}, {phase: afternoon, activity: work, location: group_tower}, {phase: dusk, activity: work, location: boardroom}, {phase: night, activity: rest, location: river_bank}]}
+    items: [{key: loan_freeze_notice, qty: 1}]
+    skills: [forensic_audit, contract_review]
+    reputation: {global: 45, by_faction: {river_bank_committee: 90}}
+    secret: 银行早已发现顾氏资金异常，婚礼逼签正是触发临时风控的最后一项证据
+    capabilities: [暂停放款, 核验担保, 要求董事说明]
+  - key: xu_guowei
+    name: 许国维
+    type: MAJOR_NPC
+    age: 54
+    gender: male
+    location: hotel_loading_dock
+    faction: gu_group
+    faction_rank: 供应商代表
+    realm: insider
+    realm_stage: decision_maker
+    stats: {strength: 11, agility: 10, perception: 14, intelligence: 16, willpower: 13, charisma: 16}
+    background: 玩家继父、许明珠的父亲，也是顾氏最大外包车队老板。人人都以为他只是来送女儿抢婚。
+    personality: {traits: {affable: 0.86, evasive: 0.9, survivalist: 0.88}, values: [自己先落地, 女儿别坐牢, 现金], taboos: [当众播放录音], speech_style: 先认错一半，再把另一半推给不在场的人, risk_tolerance: 0.7}
+    emotion: {dominant: cornered, valence: -0.28, arousal: 0.68, intensity: 0.7}
+    long_term_goal: 带着至少一笔安全资金退出顾氏
+    short_term_goals: [销毁录音, 换掉合同附件, 让许明珠先离场]
+    schedule: {default: investigate, slots: [{phase: morning, activity: investigate, location: hotel_loading_dock}, {phase: noon, activity: social, location: ballroom}, {phase: afternoon, activity: move, location: group_tower}, {phase: dusk, activity: work, location: finance_office}, {phase: night, activity: rest, location: grand_hotel}]}
+    items: [{key: missing_recorder, qty: 1}, {key: shred_truck_key, qty: 1}]
+    skills: [negotiation, operations]
+    reputation: {global: 34, by_faction: {gu_group: 52}}
+    secret: 他替秦慧茹经手关联交易，也保留了能反证自己不是主谋的全程录音
+    capabilities: [调动车队, 接近文件销毁链路, 提供交易中间账户]
+  - key: lin_tiantian
+    name: 林甜甜
+    type: MAJOR_NPC
+    age: 24
+    gender: female
+    location: wedding_stage
+    realm: civilian
+    realm_stage: informed
+    stats: {strength: 8, agility: 14, perception: 16, intelligence: 14, willpower: 13, charisma: 17}
+    background: 婚礼司仪助理兼临时热搜运营，拿一份工资干四个人的活，是现场最先看懂谁要失业的人。
+    personality: {traits: {funny: 0.86, observant: 0.82, practical: 0.9}, values: [尾款, 不背直播事故, 把台本留好], taboos: [让她删原始素材], speech_style: 对外喜气洋洋，对内精准播报谁还欠多少钱, risk_tolerance: 0.42}
+    emotion: {dominant: overstimulated, valence: 0.1, arousal: 0.75, intensity: 0.58}
+    long_term_goal: 拿齐尾款并带着一份能证明自己没乱切镜头的日志离开
+    short_term_goals: [保住台本, 催顾承泽结清花童红包, 决定把耳返录音交给谁]
+    schedule: {default: work, slots: [{phase: morning, activity: work, location: wedding_stage}, {phase: noon, activity: work, location: control_room}, {phase: afternoon, activity: investigate, location: ballroom}, {phase: dusk, activity: social, location: boardroom}, {phase: night, activity: rest, location: grand_hotel}]}
+    items: [{key: stage_cue_log, qty: 1}]
+    skills: [live_directing]
+    reputation: {global: 8, by_faction: {}}
+    secret: 她的耳返录下顾承泽要求导播在签字后立即切断主直播
+    capabilities: [访问舞台台本, 调整现场顺序, 提供耳返原始录音]
+relationships:
+  - {a: gu_chengze, b: player, affection: 12, trust: -25, respect: -10, suspicion: 45, familiarity: 75, boundaries: 25}
+  - {a: qin_huiru, b: player, affection: -8, trust: -15, respect: 28, suspicion: 65, familiarity: 55, boundaries: 50}
+  - {a: xu_mingzhu, b: player, affection: -5, trust: 5, respect: 8, suspicion: 38, familiarity: 68, boundaries: 55}
+  - {a: lu_yan, b: player, affection: 5, trust: 18, respect: 25, suspicion: 15, familiarity: 35, boundaries: 70}
+  - {a: han_xiaotang, b: player, affection: 45, trust: 65, respect: 35, suspicion: 0, familiarity: 80, boundaries: 65}
+  - {a: zhao_dacheng, b: player, affection: 10, trust: 28, respect: 22, suspicion: 15, familiarity: 30, boundaries: 60}
+  - {a: shen_man, b: player, affection: 0, trust: 5, respect: 12, suspicion: 35, familiarity: 8, boundaries: 70}
+  - {a: xu_guowei, b: player, affection: 5, trust: -20, respect: 5, suspicion: 60, familiarity: 70, boundaries: 35}
+  - {a: lin_tiantian, b: player, affection: 12, trust: 10, respect: 8, suspicion: 8, familiarity: 18, boundaries: 55}
+  - {a: gu_chengze, b: qin_huiru, affection: 20, trust: 35, respect: 55, suspicion: 30, familiarity: 90, boundaries: 25}
+  - {a: xu_mingzhu, b: xu_guowei, affection: 30, trust: -5, respect: -10, suspicion: 65, familiarity: 92, boundaries: 30}

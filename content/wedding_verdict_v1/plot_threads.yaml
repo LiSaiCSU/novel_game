@@ -1,0 +1,108 @@
+plot_threads:
+  - key: thread_wedding_trap
+    name: 誓词里的四点八亿
+    status: active
+    importance: 0.98
+    stage: 0
+    participants: [player, gu_chengze, qin_huiru, lin_tiantian, han_xiaotang]
+    unresolved_questions: [签字页缺失的附件去了哪里, 谁下令签字后切断直播, 玩家如何不签也保住现场]
+    foreshadowing: [页码从九跳到十一, 司仪耳返里多了一条临时指令, 顾承泽只催签名不肯让屏幕翻页]
+    related_facts: [fact_debt_transfer_hidden_in_vows, fact_stream_has_three_routes, fact_chengze_is_next_scapegoat]
+    next_beat_hint: 顾承泽会要求保安以婚礼隐私为由清场，林甜甜却把他的耳返指令接进了公放
+    escalation_pressure: 0.95
+    scheduled_beats:
+      - {at_minutes_from_start: 10, event_type: CONFRONTATION, beat: 顾承泽催签，缺失的附件页码被投上大屏}
+      - {at_minutes_from_start: 35, event_type: DISCOVERY, beat: 耳返日志证明有人要求签字后立即切流}
+      - {at_minutes_from_start: 80, event_type: BETRAYAL, beat: 顾承泽发现母亲也把他列进责任人名单}
+  - key: thread_three_streams
+    name: 切不断的第三路直播
+    status: active
+    importance: 0.9
+    stage: 0
+    participants: [player, han_xiaotang, lin_tiantian, xu_mingzhu, zhao_dacheng]
+    unresolved_questions: [谁有后台内鬼账号, 仓库备用流能撑多久, 哪些材料适合公开]
+    foreshadowing: [后台同时出现三个延迟数值, 卸货区停着销毁车, 有人用已离职账号登录]
+    related_facts: [fact_stream_has_three_routes, fact_recorder_needs_authentication]
+    next_beat_hint: 主流被切黑后，仓库屋顶那一路会自动顶上来
+    escalation_pressure: 0.82
+    scheduled_beats:
+      - {at_minutes_from_start: 45, event_type: ENVIRONMENT_SHIFT, beat: 主直播黑屏三秒，仓库备用流自动接管}
+      - {at_minutes_from_start: 150, event_type: DISCOVERY, beat: 内鬼账号的登录地点指向酒店卸货区}
+      - {at_minutes_from_start: 310, event_type: CONFRONTATION, beat: 备用设备只剩一块电池，必须选择播什么}
+  - key: thread_asset_strip
+    name: 被搬空的一号仓
+    status: active
+    importance: 0.92
+    stage: 0
+    participants: [player, qin_huiru, xu_guowei, zhao_dacheng, shen_man]
+    unresolved_questions: [四十八笔款项流向哪里, 谁签了真实运输合同, 银行会冻结谁]
+    foreshadowing: [仓库系统显示资产仍在但车辆夜间搬空, 新公司成立日期早于婚礼, 销毁车没有公司标识]
+    related_facts: [fact_assets_are_being_stripped, fact_bank_was_waiting_for_trigger, fact_recorder_needs_authentication]
+    next_beat_hint: 赵大成会把一辆本该在西区的货车定位发来，车正停在酒店后门
+    escalation_pressure: 0.88
+    scheduled_beats:
+      - {at_minutes_from_start: 90, event_type: DISCOVERY, beat: 失踪货车出现在酒店卸货区}
+      - {at_minutes_from_start: 220, event_type: FACTION_MOVE, beat: 银行暂停顾氏新增授信并要求说明}
+      - {at_minutes_from_start: 390, event_type: CONFRONTATION, beat: 秦慧茹提出用仓库恢复发薪换玩家撤回材料}
+  - key: thread_mother_trust
+    name: 母亲留下的第二份遗嘱
+    status: active
+    importance: 0.93
+    stage: 0
+    participants: [player, lu_yan, qin_huiru, zhao_dacheng, xu_mingzhu]
+    unresolved_questions: [信托原件在哪里, 第二见证人是谁, 母亲为何把员工写进控制权]
+    foreshadowing: [复印件缺少最后两页, 陆砚随身带一把不属于酒店的钥匙, 母亲旧印章边缘有缺口]
+    related_facts: [fact_mother_trust_controls_company, fact_employee_vote_is_decisive]
+    next_beat_hint: 陆砚会说明自己不是来参加婚礼，而是来等信托触发条件
+    escalation_pressure: 0.84
+    scheduled_beats:
+      - {at_minutes_from_start: 120, event_type: SECRET_DISCLOSURE, beat: 陆砚出示信托保管箱钥匙}
+      - {at_minutes_from_start: 280, event_type: DISCOVERY, beat: 第二见证人名字藏在员工持股平台旧章程里}
+      - {at_minutes_from_start: 430, event_type: CONFRONTATION, beat: 公证启封与股东会同时开始}
+  - key: thread_sisters
+    name: 备用新娘不想嫁
+    status: active
+    importance: 0.78
+    stage: 0
+    participants: [player, xu_mingzhu, xu_guowei, gu_chengze]
+    unresolved_questions: [许明珠到底站哪边, 录音笔在谁手里, 姐妹能否停止互当替身]
+    foreshadowing: [备用婚纱尺码根本不合身, 许明珠一直盯卸货区而不是新郎, 她在流程单背面写了车牌]
+    related_facts: [fact_mingzhu_fake_bridal_replacement, fact_recorder_needs_authentication]
+    next_beat_hint: 许明珠会在抢婚镜头前先问玩家愿不愿意配合她演完三十秒
+    escalation_pressure: 0.7
+    scheduled_beats:
+      - {at_minutes_from_start: 55, event_type: NPC_APPROACH, beat: 许明珠要求借三十秒抢婚镜头调走卸货区保安}
+      - {at_minutes_from_start: 180, event_type: DISCOVERY, beat: 备用婚纱流程单背面写着销毁车车牌}
+      - {at_minutes_from_start: 330, event_type: PROMISE, beat: 姐妹必须决定谁保管原始录音}
+  - key: thread_shareholder_clock
+    name: 八小时后的董事长
+    status: active
+    importance: 0.96
+    stage: 0
+    participants: [player, qin_huiru, gu_chengze, lu_yan, shen_man, zhao_dacheng]
+    unresolved_questions: [独立投资人投谁, 员工百分之三如何生效, 玩家要公司还是只要清算]
+    foreshadowing: [董事长名牌已提前盖好, 投票系统把员工席标成弃权, 银行只给到十八点]
+    related_facts: [fact_employee_vote_is_decisive, fact_mother_trust_controls_company, fact_bank_was_waiting_for_trigger]
+    next_beat_hint: 一名独立投资人会提出，只要有人能给出四十八小时发薪方案就改票
+    escalation_pressure: 0.94
+    scheduled_beats:
+      - {at_minutes_from_start: 240, event_type: QUEST_OFFER, beat: 独立投资人要求四十八小时发薪方案}
+      - {at_minutes_from_start: 420, event_type: FACTION_MOVE, beat: 股东会签到，员工席被系统自动标为弃权}
+      - {at_minutes_from_start: 480, event_type: CONFRONTATION, beat: 临时股东会开票，所有底牌必须落地}
+quests:
+  - {key: quest_debt_agreement, name: 拆掉誓词里的债务陷阱, giver: lu_yan, status: offered, goal: {type: investigate, item: debt_agreement}, constraints: {deadline_minutes: 45}, rewards: {resource: {evidence: 12}}, failure_conditions: [signed_without_reservation, deadline_passed], world_consequences: {on_success: {advance_thread: thread_wedding_trap}, on_failure: {tension: 18}}, plot_thread: thread_wedding_trap}
+  - {key: quest_project_attachment, name: 把缺失附件投上大屏, giver: han_xiaotang, status: offered, goal: {type: use, item: debt_agreement, location: wedding_stage}, constraints: {deadline_minutes: 60}, rewards: {resource: {public_support: 10}}, failure_conditions: [screen_cut, deadline_passed], world_consequences: {on_success: {advance_thread: thread_wedding_trap}}, plot_thread: thread_wedding_trap}
+  - {key: quest_secure_stream, name: 保住第三路存证直播, giver: han_xiaotang, status: offered, goal: {type: protect, location: control_room}, constraints: {deadline_minutes: 310}, rewards: {relationship: {han_xiaotang: {trust: 15}}, resource: {evidence: 18}}, failure_conditions: [all_streams_cut, tampered_evidence], world_consequences: {on_success: {advance_thread: thread_three_streams}, on_failure: {tension: 22}}, plot_thread: thread_three_streams}
+  - {key: quest_employee_broadcast, name: 让欠薪账自己说话, giver: zhao_dacheng, status: offered, goal: {type: use, item: payroll_drive}, constraints: {deadline_minutes: 180}, rewards: {resource: {public_support: 18}}, failure_conditions: [employees_exposed, deadline_passed], world_consequences: {on_success: {advance_thread: thread_three_streams}}, plot_thread: thread_three_streams}
+  - {key: quest_trace_forty_eight, name: 穿透四十八笔关联交易, giver: shen_man, status: offered, goal: {type: investigate, location: finance_office}, constraints: {deadline_minutes: 390}, rewards: {resource: {evidence: 22}}, failure_conditions: [originals_destroyed, deadline_passed], world_consequences: {on_success: {advance_thread: thread_asset_strip, reveal_fact_chance: {fact_assets_are_being_stripped: 1.0}}}, plot_thread: thread_asset_strip}
+  - {key: quest_stop_shred_truck, name: 拦住文件销毁车, giver: xu_mingzhu, status: offered, goal: {type: investigate, location: hotel_loading_dock}, constraints: {deadline_minutes: 150}, rewards: {item: {missing_recorder: 1}}, failure_conditions: [truck_departed, evidence_damaged], world_consequences: {on_success: {advance_thread: thread_asset_strip}}, plot_thread: thread_asset_strip}
+  - {key: quest_find_trust_deed, name: 启封母亲的信托原件, giver: lu_yan, status: offered, goal: {type: acquire, item: trust_deed, location: notary_room}, constraints: {deadline_minutes: 450}, rewards: {resource: {evidence: 25}}, failure_conditions: [missing_witness, false_seal, deadline_passed], world_consequences: {on_success: {advance_thread: thread_mother_trust, reveal_fact_chance: {fact_mother_trust_controls_company: 1.0}}}, plot_thread: thread_mother_trust}
+  - {key: quest_find_second_witness, name: 找到信托第二见证人, giver: lu_yan, status: offered, goal: {type: investigate, locations: [archive_room, warehouse_one]}, constraints: {deadline_minutes: 420}, rewards: {relationship: {zhao_dacheng: {trust: 12}}}, failure_conditions: [deadline_passed], world_consequences: {on_success: {advance_thread: thread_mother_trust}}, plot_thread: thread_mother_trust}
+  - {key: quest_mingzhu_alliance, name: 和备用新娘演完三十秒, giver: xu_mingzhu, status: offered, goal: {type: decide, options: [cooperate, expose_her, refuse]}, constraints: {deadline_minutes: 80}, rewards: {relationship: {xu_mingzhu: {trust: 15}}}, failure_conditions: [public_humiliation], world_consequences: {on_success: {advance_thread: thread_sisters}}, plot_thread: thread_sisters}
+  - {key: quest_authenticate_recorder, name: 给录音补齐时间戳和资金原件, giver: xu_mingzhu, status: offered, goal: {type: investigate, item: missing_recorder}, constraints: {deadline_minutes: 390}, rewards: {resource: {evidence: 18}}, failure_conditions: [recording_edited, deadline_passed], world_consequences: {on_success: {advance_thread: thread_sisters}}, plot_thread: thread_sisters}
+  - {key: quest_employee_votes, name: 让员工百分之三真正投票, giver: zhao_dacheng, status: offered, goal: {type: decide, location: boardroom}, constraints: {deadline_minutes: 480}, rewards: {faction_reputation: {warehouse_union: 30}}, failure_conditions: [marked_absent, deadline_passed], world_consequences: {on_success: {advance_thread: thread_shareholder_clock, reveal_fact_chance: {fact_employee_vote_is_decisive: 1.0}}}, plot_thread: thread_shareholder_clock}
+  - {key: quest_choose_future, name: 在董事席与自由之间作答, giver: lu_yan, status: offered, goal: {type: decide, options: [take_control, employee_trust, clean_exit]}, constraints: {deadline_minutes: 500}, rewards: {relationship: {lu_yan: {respect: 15}}}, failure_conditions: [decision_taken_by_other], world_consequences: {on_success: {advance_thread: thread_shareholder_clock}}, plot_thread: thread_shareholder_clock}
+clocks:
+  - {key: clock_shareholder_meeting, name: 临时股东会倒计时, kind: deadline, thread: thread_shareholder_clock, segments: 8, minutes_per_segment: 60, consequence: 股东会按现有材料开票，未提交的证据失去这一轮作用}
+  - {key: clock_stream_battery, name: 备用推流电量, kind: danger, thread: thread_three_streams, segments: 6, consequence: 仓库备用流断电，只剩不可编辑的存证流}
+  - {key: clock_evidence_chain, name: 完整证据链, kind: project, thread: thread_asset_strip, segments: 6, consequence: 交易指令、原始凭证与资金流完成互证}

@@ -1,0 +1,25 @@
+progression_name: 避难城权限
+realms:
+  - key: contestant
+    name: 节目身份
+    order: 0
+    stages: [{key: active, name: 在赛, order: 0}, {key: eliminated, name: 已淘汰, order: 1}]
+    power_coefficient: 1.0
+    max_health: 100
+    max_spiritual_power: 100
+    lifespan_years: 100
+    xp_to_next_stage: 100
+    breakthrough_base_chance: 1
+  - key: operator
+    name: 系统岗位
+    order: 1
+    stages: [{key: maintenance, name: 维修员, order: 0}, {key: coordinator, name: 协调员, order: 1}]
+    power_coefficient: 1.0
+    max_health: 100
+    max_spiritual_power: 100
+    lifespan_years: 100
+    xp_to_next_stage: 100
+    breakthrough_base_chance: 1
+spiritual_roots: [{key: trade, name: 工程专业, speed: 1.0, breakthrough_mod: 0, weight: 1}]
+mental_states: [{key: focused, name: 专注, min: 0, max: 1.01, breakthrough_mod: 0}]
+bottleneck: {gain_on_failure: 0, max: 0, penalty_per_point: 0, decay_per_month: 0}

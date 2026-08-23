@@ -1,0 +1,18 @@
+rules:
+  - key: engineering_uses_power
+    trigger: after_action
+    condition: {op: in, args: [{op: get, args: [action.action_type]}, [SEARCH, USE_SKILL, USE_ITEM]]}
+    effects:
+      - {op: adjust_player_resource, field: power_reserve, value: -2}
+      - {op: adjust_player_resource, field: crew_trust, value: 3}
+  - key: delays_cost_air
+    trigger: after_action
+    condition: {op: in, args: [{op: get, args: [action.action_type]}, [WAIT, REST]]}
+    effects:
+      - {op: adjust_player_resource, field: oxygen_margin, value: -3}
+      - {op: adjust_player_resource, field: health, value: 6}
+  - key: coordination_builds_trust
+    trigger: after_action
+    condition: {op: in, args: [{op: get, args: [action.action_type]}, [TALK, ASK, CONVERSATION]]}
+    effects:
+      - {op: adjust_player_resource, field: crew_trust, value: 2}

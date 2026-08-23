@@ -1,0 +1,5 @@
+factions:
+  - {key: ning_house, name: 宁王府, type: noble_house, description: 空有门第与封地收益，内账已经断裂。, values: [宗族体面, 爵位, 控制中馈], goals: [把亏空推给玩家, 保住赈粮案外的体面], resources: {money: 28, information: 70, influence: 78, people: 60}, relations: {yunjin_merchants: -35, salt_censorate: -25, canal_guild: 10}}
+  - {key: yunjin_merchants, name: 云锦十二铺, type: merchant_house, description: 十二铺、四仓与二十七条商船组成的商路网络。, values: [契约, 货真价实, 伙计有饭吃], goals: [撤回王府担保, 把赈粮送回正路], resources: {money: 72, information: 65, influence: 42, people: 75}, relations: {ning_house: -35, salt_censorate: 25, canal_guild: 55}}
+  - {key: salt_censorate, name: 巡盐御史署, type: institution, description: 奉命查四万石赈粮缺口，只认可互相印证的账、人、仓与船。, values: [证据, 赈粮, 程序], goals: [三日内开仓验账, 找到调包链条], resources: {money: 35, information: 80, influence: 88, people: 45}, relations: {ning_house: -25, yunjin_merchants: 25, canal_guild: 5}}
+  - {key: canal_guild, name: 南漕船帮, type: guild, description: 掌握船工、码头和实际水路，不愿替任何贵人沉船顶罪。, values: [船工性命, 路引, 现银], goals: [洗清调粮嫌疑, 保住漕运资格], resources: {money: 38, information: 78, influence: 48, people: 90}, relations: {ning_house: 10, yunjin_merchants: 55, salt_censorate: 5}}

@@ -1,0 +1,18 @@
+item_types: [{key: document, name: 文书}, {key: token, name: 印信}, {key: evidence, name: 账证}, {key: goods, name: 货物}, {key: currency, name: 银钱}]
+rarities: [{key: common, name: 寻常, value_multiplier: 1}, {key: important, name: 要紧, value_multiplier: 3}, {key: key_item, name: 关键, value_multiplier: 1}]
+items:
+  - {key: silver, name: 银两, type: currency, rarity: common, value: 1, stackable: true, description: 一两银子可以买粮，也能成为一笔必须解释的账。, effects: {}}
+  - {key: signed_divorce_letter, name: 已签和离书, type: document, rarity: key_item, value: 0, stackable: false, description: 玩家签字并注明嫁妆担保即刻撤回，不能被解释成认下王府亏空。, effects: {quest_item: true}}
+  - {key: dowry_inventory, name: 嫁妆总单, type: evidence, rarity: key_item, value: 0, stackable: false, description: 十二铺、四仓、二十七船及其原始契纸索引。, effects: {quest_item: true}}
+  - {key: half_tally, name: 半枚云纹船符, type: token, rarity: key_item, value: 0, stackable: false, description: 只能与船帮另一半合符调动云锦号船队。, effects: {quest_item: true}}
+  - {key: manor_command_token, name: 宁王府令牌, type: token, rarity: important, value: 0, stackable: false, description: 能调府卫，不能越过御史封条。, effects: {}}
+  - {key: old_prince_seal, name: 先王旧印, type: token, rarity: key_item, value: 0, stackable: false, description: 旧印角有磨损，近年假押却刻意仿得过于齐整。, effects: {quest_item: true}}
+  - {key: censor_seal_strip, name: 御史封条, type: token, rarity: key_item, value: 0, stackable: true, description: 每张编号入册，擅拆会留下明确责任。, effects: {}}
+  - {key: granary_seal_order, name: 东仓封存令, type: document, rarity: key_item, value: 0, stackable: false, description: 要求三日内地秤、仓簿、路引与实粮一并核验。, effects: {quest_item: true}}
+  - {key: third_ledger, name: 无号第三账, type: evidence, rarity: key_item, value: 0, stackable: false, description: 记赈粮调拨暗号与私卖分成，单看代号还不能指认所有人。, effects: {reveals_fact: fact_third_ledger_tracks_relief_grain, quest_item: true}}
+  - {key: tunnel_key, name: 东仓暗道钥匙, type: token, rarity: key_item, value: 0, stackable: false, description: 钥匙沾着染坊常用的靛蓝粉。, effects: {quest_item: true}}
+  - {key: boat_registry, name: 南漕船籍簿, type: evidence, rarity: key_item, value: 0, stackable: false, description: 船号、吃水、船工与每次出港路引均有记录。, effects: {quest_item: true}}
+  - {key: dowry_master_ledger, name: 云锦双锁总账, type: evidence, rarity: key_item, value: 0, stackable: false, description: 两名掌柜各持一钥，开箱后页角与总单能够互验。, effects: {quest_item: true}}
+  - {key: scale_record, name: 东仓地秤记录, type: evidence, rarity: key_item, value: 0, stackable: false, description: 实际入仓重量比官簿少四万石，记录有地秤压纹。, effects: {quest_item: true}}
+  - {key: fake_grain_bags, name: 洗印官粮袋, type: evidence, rarity: important, value: 0, stackable: true, description: 旧官印被染料洗淡，袋内未必装粮。, effects: {}}
+  - {key: relief_grain, name: 赈粮, type: goods, rarity: important, value: 1, stackable: true, description: 要送到灾民手里的粮，不是制造爽点的筹码。, effects: {}}

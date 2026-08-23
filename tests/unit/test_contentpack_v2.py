@@ -29,7 +29,14 @@ CONTENT = Path(__file__).resolve().parents[2] / "content"
 
 @pytest.mark.parametrize(
     "key",
-    ("tomb_lantern_v1", "fog_harbor_v1", "spirit_pact_v1"),
+    (
+        "tomb_lantern_v1",
+        "fog_harbor_v1",
+        "spirit_pact_v1",
+        "wedding_verdict_v1",
+        "divorce_ledger_v1",
+        "shelter_broadcast_v1",
+    ),
 )
 def test_new_official_content_has_a_valid_landscape_cover(key: str) -> None:
     pack = load_content_pack(CONTENT, key)
@@ -53,6 +60,9 @@ def test_new_official_content_has_a_valid_landscape_cover(key: str) -> None:
         "tomb_lantern_v1",
         "fog_harbor_v1",
         "spirit_pact_v1",
+        "wedding_verdict_v1",
+        "divorce_ledger_v1",
+        "shelter_broadcast_v1",
     ),
 )
 def test_official_content_has_a_three_act_player_first_opening(key: str) -> None:
@@ -75,6 +85,23 @@ def test_official_content_has_a_three_act_player_first_opening(key: str) -> None
     assert runtime.meta["player_fields"] == [
         field.model_dump(mode="json") for field in package.manifest.player_fields
     ]
+
+
+@pytest.mark.parametrize(
+    "key",
+    ("wedding_verdict_v1", "divorce_ledger_v1", "shelter_broadcast_v1"),
+)
+def test_microdrama_packs_have_full_interactive_structure(key: str) -> None:
+    pack = load_content_pack(CONTENT, key)
+
+    assert len(pack.locations) >= 15
+    assert len(pack.characters) >= 9
+    assert len(pack.plot_threads) == 6
+    assert len(pack.quests) == 12
+    assert len(pack.clocks) == 3
+    assert sum(len(row.get("scheduled_beats", [])) for row in pack.plot_threads) == 18
+    assert len(pack.story["endings"]) >= 4
+    assert pack.rule_plugin is None
 
 
 def test_campus_pack_is_full_v2_reference_work() -> None:
@@ -107,6 +134,7 @@ async def test_all_official_content_declares_and_passes_author_tests() -> None:
     for key in (
         "cultivation_v1", "campus_romance_v1", "tomb_lantern_v1",
         "fog_harbor_v1", "spirit_pact_v1",
+        "wedding_verdict_v1", "divorce_ledger_v1", "shelter_broadcast_v1",
     ):
         package = project_v1_as_v2(load_content_pack(CONTENT, key))
         suite = await run_author_tests(package, content_dir=str(CONTENT / key))

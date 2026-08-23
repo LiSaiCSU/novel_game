@@ -1,0 +1,25 @@
+progression_name: 翻盘筹码
+realms:
+  - key: civilian
+    name: 局外人
+    order: 0
+    stages: [{key: cornered, name: 被逼签字, order: 0}, {key: informed, name: 手握证据, order: 1}]
+    power_coefficient: 1.0
+    max_health: 100
+    max_spiritual_power: 100
+    lifespan_years: 100
+    xp_to_next_stage: 100
+    breakthrough_base_chance: 1
+  - key: insider
+    name: 局内人
+    order: 1
+    stages: [{key: decision_maker, name: 决策席, order: 0}, {key: chair, name: 董事席, order: 1}]
+    power_coefficient: 1.0
+    max_health: 100
+    max_spiritual_power: 100
+    lifespan_years: 100
+    xp_to_next_stage: 100
+    breakthrough_base_chance: 1
+spiritual_roots: [{key: professional, name: 专业能力, speed: 1.0, breakthrough_mod: 0, weight: 1}]
+mental_states: [{key: steady, name: 冷静, min: 0, max: 1.01, breakthrough_mod: 0}]
+bottleneck: {gain_on_failure: 0, max: 0, penalty_per_point: 0, decay_per_month: 0}

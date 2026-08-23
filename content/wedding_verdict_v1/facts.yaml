@@ -1,0 +1,91 @@
+facts:
+  - key: fact_debt_transfer_hidden_in_vows
+    statement: 婚礼誓词夹着的签字页会让玩家个人确认承接四点八亿争议债务
+    truth_value: true
+    scope: PERSONAL
+    sensitivity: 0.2
+    subject: player
+    related: [player, debt_agreement, wedding_stage]
+    initial_knowledge:
+      player: {state: KNOWN, confidence: 1, source: DOCUMENT}
+      gu_chengze: {state: KNOWN, confidence: 1, source: DOCUMENT}
+      qin_huiru: {state: KNOWN, confidence: 1, source: DOCUMENT}
+      lu_yan: {state: SUSPECTED, confidence: 0.7, source: INFERRED}
+  - key: fact_stream_has_three_routes
+    statement: 婚礼直播有主推流、仓库备用流和公证存证流三条链路，顾家只能关闭其中一条
+    truth_value: true
+    scope: PERSONAL
+    sensitivity: 0.72
+    subject: han_xiaotang
+    related: [control_room, backup_stream_drive]
+    initial_knowledge:
+      player: {state: KNOWN, confidence: 0.9, source: TOLD_BY}
+      han_xiaotang: {state: KNOWN, confidence: 1, source: SEED}
+  - key: fact_assets_are_being_stripped
+    statement: 顾氏把盈利仓网低价转给秦慧茹私人控制的新公司，把欠薪与债务留在旧主体
+    truth_value: true
+    scope: FACTION
+    sensitivity: 0.9
+    related: [gu_group, finance_office, warehouse_one]
+    initial_knowledge:
+      qin_huiru: {state: KNOWN, confidence: 1, source: SEED}
+      xu_guowei: {state: KNOWN, confidence: 1, source: WITNESSED}
+      player: {state: SUSPECTED, confidence: 0.65, source: DOCUMENT}
+      shen_man: {state: SUSPECTED, confidence: 0.6, source: INFERRED}
+  - key: fact_mother_trust_controls_company
+    statement: 玩家母亲留下的信托约定，恶意资产拆分发生时百分之二十一表决权转由员工代表与独立董事共同托管
+    truth_value: true
+    scope: PERSONAL
+    sensitivity: 1.0
+    subject: player
+    related: [trust_deed, notary_room, lu_yan]
+    initial_knowledge:
+      lu_yan: {state: KNOWN, confidence: 1, source: DOCUMENT}
+      qin_huiru: {state: KNOWN, confidence: 0.9, source: DOCUMENT}
+  - key: fact_mingzhu_fake_bridal_replacement
+    statement: 许明珠穿备用婚纱不是为了嫁给顾承泽，而是用抢婚假象掩护自己寻找父亲的录音笔
+    truth_value: true
+    scope: PERSONAL
+    sensitivity: 0.85
+    subject: xu_mingzhu
+    related: [xu_mingzhu, backup_wedding_dress, missing_recorder]
+    initial_knowledge:
+      xu_mingzhu: {state: KNOWN, confidence: 1, source: SEED}
+      xu_guowei: {state: SUSPECTED, confidence: 0.65, source: INFERRED}
+  - key: fact_chengze_is_next_scapegoat
+    statement: 秦慧茹计划在资产拆分后把违法签字责任推给顾承泽，儿子也只是下一层替罪人
+    truth_value: true
+    scope: PERSONAL
+    sensitivity: 0.95
+    subject: gu_chengze
+    related: [gu_chengze, qin_huiru, boardroom]
+    initial_knowledge:
+      qin_huiru: {state: KNOWN, confidence: 1, source: SEED}
+      xu_guowei: {state: SUSPECTED, confidence: 0.55, source: INFERRED}
+  - key: fact_employee_vote_is_decisive
+    statement: 员工持股平台被忽略的百分之三表决权能让临时股东会关键议案从五五开变成否决
+    truth_value: true
+    scope: FACTION
+    sensitivity: 0.8
+    related: [warehouse_union, zhao_dacheng, boardroom]
+    initial_knowledge:
+      zhao_dacheng: {state: KNOWN, confidence: 1, source: DOCUMENT}
+      lu_yan: {state: SUSPECTED, confidence: 0.6, source: INFERRED}
+  - key: fact_bank_was_waiting_for_trigger
+    statement: 银行已经监测顾氏异常三个月，婚礼逼签让风控条款正式触发
+    truth_value: true
+    scope: FACTION
+    sensitivity: 0.75
+    related: [river_bank_committee, shen_man, loan_freeze_notice]
+    initial_knowledge:
+      shen_man: {state: KNOWN, confidence: 1, source: DOCUMENT}
+  - key: fact_recorder_needs_authentication
+    statement: 录音笔只能指引调查，必须配合声纹、时间戳和转账原件才构成完整证据链
+    truth_value: true
+    scope: WORLD
+    sensitivity: 0.1
+    related: [missing_recorder, evidence_chain]
+    initial_knowledge:
+      player: {state: KNOWN, confidence: 1, source: SEED}
+      lu_yan: {state: KNOWN, confidence: 1, source: SEED}
+      han_xiaotang: {state: KNOWN, confidence: 0.9, source: TOLD_BY}

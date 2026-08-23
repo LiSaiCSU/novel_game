@@ -1,0 +1,108 @@
+plot_threads:
+  - key: thread_divorce
+    name: 一纸和离撤回四仓担保
+    status: active
+    importance: 0.96
+    stage: 0
+    participants: [player, xiao_chengjing, old_princess_du, a_qiao, su_lian]
+    unresolved_questions: [八万两假账谁做的, 和离是否能切清担保, 萧承璟为何配合族审]
+    foreshadowing: [指控账只有总数没有领银人, 和离书与认债书用了不同印泥, 阿巧早已等在钱庄]
+    related_facts: [fact_manor_runs_on_dowry_credit, fact_prince_planned_false_divorce, fact_mother_gave_shops_exit_rule]
+    next_beat_hint: 阿巧会送来三家钱庄同时停兑的回执
+    escalation_pressure: 0.9
+    scheduled_beats:
+      - {at_minutes_from_start: 20, event_type: FACTION_MOVE, beat: 云锦十二铺撤回担保，王府三家钱庄同时停兑}
+      - {at_minutes_from_start: 90, event_type: DISCOVERY, beat: 和离书与认债书上的印泥不是同一批}
+      - {at_minutes_from_start: 420, event_type: SECRET_DISCLOSURE, beat: 萧承璟承认自己参与假族审并说明理由}
+  - key: thread_three_ledgers
+    name: 明账、暗账与无号账
+    status: active
+    importance: 0.95
+    stage: 0
+    participants: [player, su_lian, feng_quan, old_princess_du, pei_zhaoyi]
+    unresolved_questions: [第三本账在哪, 暗号对应哪些仓船, 先王旧案与今日盗粮如何分开]
+    foreshadowing: [书匣编号少一只, 鹩哥反复学错同一句暗号, 冯全袖口有靛蓝粉]
+    related_facts: [fact_third_ledger_tracks_relief_grain, fact_steward_expanded_old_diversion, fact_mynah_not_evidence]
+    next_beat_hint: 乌金会再说一次东仓暗号，苏莲要求所有人先别猜凶手只查暗道
+    escalation_pressure: 0.92
+    scheduled_beats:
+      - {at_minutes_from_start: 75, event_type: FORESHADOWING, beat: 鹩哥重复被说错的东仓暗号}
+      - {at_minutes_from_start: 600, event_type: DISCOVERY, beat: 染坊暗柜里找到第三本账的包角纸}
+      - {at_minutes_from_start: 2400, event_type: CONFRONTATION, beat: 三本账在公堂同时翻开}
+  - key: thread_relief_grain
+    name: 少掉的四万石
+    status: active
+    importance: 0.99
+    stage: 0
+    participants: [player, pei_zhaoyi, tang_jiu, qiao_yunsheng, feng_quan]
+    unresolved_questions: [粮是否入过东仓, 暗道运走什么, 灾区还能等几日]
+    foreshadowing: [仓墙粮线比官簿低, 车辙只进不出, 暗道钥匙沾着染坊靛粉]
+    related_facts: [fact_east_granary_short_fourty_thousand, fact_steward_expanded_old_diversion, fact_boat_twenty_seven_is_decoy]
+    next_beat_hint: 唐九会把被撕半张的地秤记录藏进空粮袋送来
+    escalation_pressure: 0.98
+    scheduled_beats:
+      - {at_minutes_from_start: 180, event_type: DISCOVERY, beat: 地秤记录证明四万石从未完整入仓}
+      - {at_minutes_from_start: 900, event_type: ENVIRONMENT_SHIFT, beat: 北地再来急报，赈粮最多还能拖两日}
+      - {at_minutes_from_start: 2100, event_type: CONFRONTATION, beat: 暗道开始转运最后一批证物}
+  - key: thread_false_rival
+    name: 接钥匙的苏莲
+    status: active
+    importance: 0.76
+    stage: 0
+    participants: [player, su_lian, xiao_chengjing, old_princess_du]
+    unresolved_questions: [苏莲真实差事, 中馈钥匙为何编号, 谁放出新王妃传言]
+    foreshadowing: [苏莲先封钥匙而非挑首饰, 她带的是官署制式纸, 萧承璟与她从不单独谈情]
+    related_facts: [fact_su_lian_is_censor_clerk, fact_prince_planned_false_divorce]
+    next_beat_hint: 苏莲会当众纠正“未来王妃”称呼，报出自己的官署差遣
+    escalation_pressure: 0.62
+    scheduled_beats:
+      - {at_minutes_from_start: 45, event_type: SECRET_DISCLOSURE, beat: 苏莲公开书吏身份并封存中馈钥匙}
+      - {at_minutes_from_start: 360, event_type: PROMISE, beat: 玩家与苏莲约定各持一把双锁账钥}
+      - {at_minutes_from_start: 1500, event_type: BETRAYAL, beat: 王府有人伪造苏莲递出的封条}
+  - key: thread_boat_decoy
+    name: 空船上的官粮袋
+    status: active
+    importance: 0.84
+    stage: 0
+    participants: [player, qiao_yunsheng, tang_jiu, feng_quan, a_qiao]
+    unresolved_questions: [二十七号船为何空载, 官粮袋在哪里洗印, 真正粮船用谁的路引]
+    foreshadowing: [空船吃水却写满载, 官袋有靛蓝水痕, 路引押缝过分齐整]
+    related_facts: [fact_boat_twenty_seven_is_decoy, fact_steward_expanded_old_diversion]
+    next_beat_hint: 乔云生会把船停在公堂门外，邀请指控者亲自看吃水线
+    escalation_pressure: 0.77
+    scheduled_beats:
+      - {at_minutes_from_start: 300, event_type: DISCOVERY, beat: 二十七号船空载，舱里只有洗印官粮袋}
+      - {at_minutes_from_start: 1080, event_type: FACTION_MOVE, beat: 船帮扣住所有使用王府路引的夜船}
+      - {at_minutes_from_start: 1980, event_type: CONFRONTATION, beat: 真粮船试图借水涨强行出港}
+  - key: thread_public_hearing
+    name: 三日公堂
+    status: active
+    importance: 0.94
+    stage: 0
+    participants: [player, pei_zhaoyi, xiao_chengjing, old_princess_du, feng_quan, su_lian]
+    unresolved_questions: [谁承担旧案责任, 谁能证明今日盗粮链, 玩家是否保留王府任何关系]
+    foreshadowing: [御史坚持分房问讯, 老王妃只肯谈先王体面, 萧承璟准备了一份自己的认责书]
+    related_facts: [fact_prince_planned_false_divorce, fact_steward_expanded_old_diversion, fact_third_ledger_tracks_relief_grain]
+    next_beat_hint: 裴昭仪会要求玩家先选一件最能被外人核验的证据，而不是把所有猜测都端上来
+    escalation_pressure: 0.88
+    scheduled_beats:
+      - {at_minutes_from_start: 720, event_type: QUEST_OFFER, beat: 御史要求提交第一批可核验材料清单}
+      - {at_minutes_from_start: 1800, event_type: SECRET_DISCLOSURE, beat: 老王妃交代先王秘密挪粮的起点}
+      - {at_minutes_from_start: 2880, event_type: CONFRONTATION, beat: 三日公堂开审，旧案与新罪必须分开}
+quests:
+  - {key: quest_verify_divorce, name: 验明和离书与认债书不是同一印, giver: su_lian, status: offered, goal: {type: investigate, item: signed_divorce_letter}, constraints: {deadline_minutes: 180}, rewards: {resource: {ledger_clues: 10}}, failure_conditions: [documents_burned, deadline_passed], world_consequences: {on_success: {advance_thread: thread_divorce}}, plot_thread: thread_divorce}
+  - {key: quest_reclaim_dowry, name: 收回十二铺四仓二十七船, giver: a_qiao, status: offered, goal: {type: decide, item: dowry_inventory}, constraints: {deadline_minutes: 720}, rewards: {faction_reputation: {yunjin_merchants: 30}}, failure_conditions: [guarantee_renewed, deadline_passed], world_consequences: {on_success: {advance_thread: thread_divorce, reveal_fact_chance: {fact_mother_gave_shops_exit_rule: 1.0}}}, plot_thread: thread_divorce}
+  - {key: quest_find_third_ledger, name: 找到无号第三账, giver: su_lian, status: offered, goal: {type: acquire, item: third_ledger}, constraints: {deadline_minutes: 2100}, rewards: {resource: {ledger_clues: 25}}, failure_conditions: [ledger_burned, deadline_passed], world_consequences: {on_success: {advance_thread: thread_three_ledgers, reveal_fact_chance: {fact_third_ledger_tracks_relief_grain: 1.0}}}, plot_thread: thread_three_ledgers}
+  - {key: quest_decode_warehouse_sign, name: 核实鹩哥学来的东仓暗号, giver: su_lian, status: offered, goal: {type: investigate, locations: [account_room, east_granary]}, constraints: {deadline_minutes: 900}, rewards: {item: {tunnel_key: 1}}, failure_conditions: [treated_bird_as_proof, deadline_passed], world_consequences: {on_success: {advance_thread: thread_three_ledgers}}, plot_thread: thread_three_ledgers}
+  - {key: quest_seal_east_granary, name: 在粮转走前封住东仓, giver: pei_zhaoyi, status: offered, goal: {type: protect, location: east_granary}, constraints: {deadline_minutes: 600}, rewards: {resource: {court_attention: 15}}, failure_conditions: [grain_moved, seal_broken, deadline_passed], world_consequences: {on_success: {advance_thread: thread_relief_grain}, on_failure: {tension: 24}}, plot_thread: thread_relief_grain}
+  - {key: quest_weigh_missing_grain, name: 用地秤和仓墙算清缺口, giver: tang_jiu, status: offered, goal: {type: investigate, item: scale_record}, constraints: {deadline_minutes: 1080}, rewards: {resource: {ledger_clues: 16}}, failure_conditions: [scale_destroyed], world_consequences: {on_success: {advance_thread: thread_relief_grain, reveal_fact_chance: {fact_east_granary_short_fourty_thousand: 1.0}}}, plot_thread: thread_relief_grain}
+  - {key: quest_seal_keys_with_su, name: 与苏莲双锁封存中馈钥匙, giver: su_lian, status: offered, goal: {type: cooperate, target: su_lian}, constraints: {deadline_minutes: 360}, rewards: {relationship: {su_lian: {trust: 18, respect: 12}}}, failure_conditions: [keys_removed], world_consequences: {on_success: {advance_thread: thread_false_rival}}, plot_thread: thread_false_rival}
+  - {key: quest_expose_false_rumor, name: 查出谁放出新王妃传言, giver: su_lian, status: offered, goal: {type: investigate, location: inner_courtyard}, constraints: {deadline_minutes: 1200}, rewards: {resource: {household_control: 12}}, failure_conditions: [rumor_harms_witness], world_consequences: {on_success: {advance_thread: thread_false_rival}}, plot_thread: thread_false_rival}
+  - {key: quest_inspect_boat_twenty_seven, name: 验二十七号船的吃水线, giver: qiao_yunsheng, status: offered, goal: {type: investigate, location: canal_wharf}, constraints: {deadline_minutes: 900}, rewards: {item: {fake_grain_bags: 3}}, failure_conditions: [boat_departed], world_consequences: {on_success: {advance_thread: thread_boat_decoy, reveal_fact_chance: {fact_boat_twenty_seven_is_decoy: 1.0}}}, plot_thread: thread_boat_decoy}
+  - {key: quest_stop_night_boat, name: 截住真正的夜航粮船, giver: qiao_yunsheng, status: offered, goal: {type: protect, location: canal_wharf}, constraints: {deadline_minutes: 1980}, rewards: {faction_reputation: {canal_guild: 25}}, failure_conditions: [boat_departed, workers_harmed], world_consequences: {on_success: {advance_thread: thread_boat_decoy}}, plot_thread: thread_boat_decoy}
+  - {key: quest_open_three_ledgers, name: 让三本账在公堂互证, giver: pei_zhaoyi, status: offered, goal: {type: event, location: prefecture_hall}, constraints: {deadline_minutes: 2880, requires_item: third_ledger}, rewards: {resource: {court_attention: 30}}, failure_conditions: [evidence_chain_broken, deadline_passed], world_consequences: {on_success: {advance_thread: thread_public_hearing}}, plot_thread: thread_public_hearing}
+  - {key: quest_public_accountability, name: 要萧承璟公开承担假族审责任, giver: pei_zhaoyi, status: offered, goal: {type: decide, options: [testify, resign_title_duties, refuse_alliance]}, constraints: {deadline_minutes: 2880}, rewards: {relationship: {xiao_chengjing: {trust: 20, respect: 25}}}, failure_conditions: [private_apology_only], world_consequences: {on_success: {advance_thread: thread_public_hearing}}, plot_thread: thread_public_hearing}
+clocks:
+  - {key: clock_three_days, name: 三日开仓公审, kind: deadline, thread: thread_public_hearing, segments: 6, minutes_per_segment: 480, consequence: 公堂按现有材料开审，失去的粮与证据不再等人}
+  - {key: clock_grain_escape, name: 真粮船出港, kind: danger, thread: thread_boat_decoy, segments: 5, consequence: 真正载粮的夜船借涨水离开上京水域}
+  - {key: clock_three_books, name: 三账互证, kind: project, thread: thread_three_ledgers, segments: 6, consequence: 府账、仓账与私账完成日期、数量和印信对应}

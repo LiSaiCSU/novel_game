@@ -1,0 +1,108 @@
+plot_threads:
+  - key: thread_real_shutdown
+    name: 淘汰按钮后的真断电
+    status: active
+    importance: 0.99
+    stage: 0
+    participants: [player, luo_qi, song_wei, qi_yue, he_mingyuan]
+    unresolved_questions: [谁改接安全总线, 如何隔离舞台线路, 第二路风机为何同时断电]
+    foreshadowing: [按钮背板温度异常, 原始竣工图没有舞台支路, 任务卡要求拉一只不该碰的闸]
+    related_facts: [fact_elimination_button_shares_safety_bus, fact_warning_was_hidden_for_ratings]
+    next_beat_hint: 何明远照任务卡拉闸后，通风层第二台风机会断电
+    escalation_pressure: 0.98
+    scheduled_beats:
+      - {at_minutes_from_start: 5, event_type: ENVIRONMENT_SHIFT, beat: 全城断网，真实防爆门开始闭合}
+      - {at_minutes_from_start: 18, event_type: CONFRONTATION, beat: 何明远按节目任务卡拉错展示闸，第二路风机掉电}
+      - {at_minutes_from_start: 70, event_type: DISCOVERY, beat: 原始竣工图证明舞台改线从未报验}
+  - key: thread_people_below
+    name: 淘汰的人还在下面
+    status: active
+    importance: 0.94
+    stage: 0
+    participants: [player, lin_qing, mao_mao, jiang_tangtang, he_mingyuan]
+    unresolved_questions: [下层有几个人, 门禁为何拒绝淘汰证, 谁先断了生活水]
+    foreshadowing: [人员计数多出六个生命信号, 下层广播传来手摇噪音, 门禁日志写着返场待机]
+    related_facts: [fact_eliminated_people_still_below, fact_water_branch_already_isolated, fact_supplies_only_last_seven_days]
+    next_beat_hint: 手摇广播里会传来毛毛报出的六个人名与氧气读数
+    escalation_pressure: 0.9
+    scheduled_beats:
+      - {at_minutes_from_start: 35, event_type: SECRET_DISCLOSURE, beat: 下层广播报出六名淘汰者仍被困}
+      - {at_minutes_from_start: 120, event_type: RESCUE, beat: 手动下层门只能开启九十秒}
+      - {at_minutes_from_start: 300, event_type: DISCOVERY, beat: 林晴说明污染支路已被她提前隔离}
+  - key: thread_power_air
+    name: 电和空气不能都等
+    status: active
+    importance: 0.99
+    stage: 0
+    participants: [player, qi_yue, jiang_tangtang, he_mingyuan, peng_dali]
+    unresolved_questions: [电池先给风机还是医疗冷柜, 柴油机能否安全并网, 谁拿走两组备用电池]
+    foreshadowing: [赞助廊断网仍亮, 医疗冷柜报警, 电池廊温度分布不均]
+    related_facts: [fact_ad_batteries_should_power_clinic, fact_shelter_requires_multi_role_control]
+    next_beat_hint: 医疗冷柜剩余时间与风机停机风险会同时跳上机械表
+    escalation_pressure: 1.0
+    scheduled_beats:
+      - {at_minutes_from_start: 50, event_type: ENVIRONMENT_SHIFT, beat: 医疗冷柜只剩六小时，通风滤芯压差继续升高}
+      - {at_minutes_from_start: 240, event_type: DISCOVERY, beat: 赞助展廊配电箱里找到两组医疗备用电池}
+      - {at_minutes_from_start: 720, event_type: CONFRONTATION, beat: 柴油机并网前必须关闭一个非关键区域}
+  - key: thread_hidden_warning
+    name: 被剪掉的三次预警
+    status: active
+    importance: 0.92
+    stage: 0
+    participants: [player, song_wei, luo_qi, peng_dali, qi_yue]
+    unresolved_questions: [预警何时到达, 谁决定继续直播, 玩家的风险提醒为何被剪掉]
+    foreshadowing: [导播缓存有三个未读标记, 耳返最后十分钟提到新剧情, 玩家节目回放少了四十七秒]
+    related_facts: [fact_warning_was_hidden_for_ratings, fact_vote_was_story_algorithm, fact_elimination_button_shares_safety_bus]
+    next_beat_hint: 罗启耳返缓存会还原断网前那句“预警先别上屏”
+    escalation_pressure: 0.84
+    scheduled_beats:
+      - {at_minutes_from_start: 90, event_type: DISCOVERY, beat: 主持人耳返缓存出现“预警先别上屏”}
+      - {at_minutes_from_start: 360, event_type: SECRET_DISCLOSURE, beat: 三封风暴预警缓存恢复}
+      - {at_minutes_from_start: 960, event_type: CONFRONTATION, beat: 宋薇要求恢复直播换取制作方远程技术支持}
+  - key: thread_fake_vote
+    name: 百分之九十七是谁投的
+    status: active
+    importance: 0.75
+    stage: 0
+    participants: [player, song_wei, luo_qi, jiang_tangtang, mao_mao]
+    unresolved_questions: [淘汰票是否真实, 谁设定玩家笨手人设, 参赛者能否停止按剧本互害]
+    foreshadowing: [断网后投票数字仍上涨, 投票曲线恰好卡在广告节点, 原始素材里玩家修好了三次设备]
+    related_facts: [fact_vote_was_story_algorithm, fact_tangtang_has_first_aid_training]
+    next_beat_hint: 断网五分钟后淘汰票仍会精确增长到百分之九十八
+    escalation_pressure: 0.62
+    scheduled_beats:
+      - {at_minutes_from_start: 25, event_type: FORESHADOWING, beat: 断网后淘汰票仍继续上涨}
+      - {at_minutes_from_start: 210, event_type: DISCOVERY, beat: 算法文件标注玩家为决赛祭品角色}
+      - {at_minutes_from_start: 520, event_type: PROMISE, beat: 参赛者共同关掉节目人设胸牌}
+  - key: thread_governance
+    name: 谁来值下一班
+    status: active
+    importance: 0.91
+    stage: 0
+    participants: [player, qi_yue, zhao_xin, lin_qing, jiang_tangtang, luo_qi]
+    unresolved_questions: [总控为何拒绝单人最高权限, 如何建立轮值, 风暴后谁拥有维护数据]
+    foreshadowing: [总控台有四个岗位钥位, 纸质手册缺页, 应急站每次先问人数而不是负责人]
+    related_facts: [fact_shelter_requires_multi_role_control, fact_rescue_needs_twenty_four_hours, fact_supplies_only_last_seven_days]
+    next_beat_hint: 总控会要求电力、通风、医疗和人员四岗分别确认，任何人都不能独自接管
+    escalation_pressure: 0.82
+    scheduled_beats:
+      - {at_minutes_from_start: 180, event_type: QUEST_OFFER, beat: 地面要求建立四岗轮值并回报真实人数}
+      - {at_minutes_from_start: 840, event_type: PROMISE, beat: 第一轮六小时轮值交接}
+      - {at_minutes_from_start: 1320, event_type: CONFRONTATION, beat: 制作方主张避难城数据与权限属于节目资产}
+quests:
+  - {key: quest_isolate_stage, name: 隔离淘汰舞台安全总线, giver: qi_yue, status: offered, goal: {type: repair, location: elimination_stage}, constraints: {deadline_minutes: 70}, rewards: {resource: {power_reserve: 8}}, failure_conditions: [bus_fire, wrong_fuse, deadline_passed], world_consequences: {on_success: {advance_thread: thread_real_shutdown}}, plot_thread: thread_real_shutdown}
+  - {key: quest_restore_grid, name: 恢复避难城最低电网, giver: qi_yue, status: offered, goal: {type: repair, location: power_room}, constraints: {deadline_minutes: 720}, rewards: {resource: {power_reserve: 28}}, failure_conditions: [battery_runaway, generator_damage, deadline_passed], world_consequences: {on_success: {advance_thread: thread_power_air}, on_failure: {tension: 28}}, plot_thread: thread_power_air}
+  - {key: quest_rescue_eliminated, name: 在九十秒窗口救出下层六人, giver: mao_mao, status: offered, goal: {type: rescue, location: lower_dorm}, constraints: {deadline_minutes: 180}, rewards: {resource: {crew_trust: 22}}, failure_conditions: [door_relocks, oxygen_low, deadline_passed], world_consequences: {on_success: {advance_thread: thread_people_below}}, plot_thread: thread_people_below}
+  - {key: quest_verify_water, name: 核验生活水支路污染范围, giver: lin_qing, status: offered, goal: {type: investigate, location: water_plant}, constraints: {deadline_minutes: 420}, rewards: {relationship: {lin_qing: {trust: 18}}, resource: {oxygen_margin: 2}}, failure_conditions: [unsafe_water_distributed], world_consequences: {on_success: {advance_thread: thread_people_below, reveal_fact_chance: {fact_water_branch_already_isolated: 1.0}}}, plot_thread: thread_people_below}
+  - {key: quest_balance_air, name: 让两台风机撑过风暴峰值, giver: qi_yue, status: offered, goal: {type: repair, location: air_plant}, constraints: {deadline_minutes: 960}, rewards: {resource: {oxygen_margin: 30}}, failure_conditions: [filter_collapse, both_fans_offline, deadline_passed], world_consequences: {on_success: {advance_thread: thread_power_air}, on_failure: {tension: 35}}, plot_thread: thread_power_air}
+  - {key: quest_reclaim_med_batteries, name: 从赞助灯牌取回医疗电池, giver: jiang_tangtang, status: offered, goal: {type: acquire, item: battery_allocation_sheet, location: sponsor_gallery}, constraints: {deadline_minutes: 360}, rewards: {relationship: {jiang_tangtang: {trust: 15}}, resource: {power_reserve: 10}}, failure_conditions: [clinic_cold_chain_failed], world_consequences: {on_success: {advance_thread: thread_power_air, reveal_fact_chance: {fact_ad_batteries_should_power_clinic: 1.0}}}, plot_thread: thread_power_air}
+  - {key: quest_recover_warnings, name: 恢复被压下的三封风暴预警, giver: luo_qi, status: offered, goal: {type: investigate, item: warning_mail_cache}, constraints: {deadline_minutes: 600}, rewards: {resource: {crew_trust: 14}}, failure_conditions: [cache_wiped], world_consequences: {on_success: {advance_thread: thread_hidden_warning, reveal_fact_chance: {fact_warning_was_hidden_for_ratings: 1.0}}}, plot_thread: thread_hidden_warning}
+  - {key: quest_secure_raw_footage, name: 保全被剪掉的四十七秒素材, giver: luo_qi, status: offered, goal: {type: acquire, location: studio_control}, constraints: {deadline_minutes: 480}, rewards: {item: {access_log_drive: 1}}, failure_conditions: [footage_overwritten], world_consequences: {on_success: {advance_thread: thread_hidden_warning}}, plot_thread: thread_hidden_warning}
+  - {key: quest_audit_vote, name: 拆穿断网后还在增长的淘汰票, giver: mao_mao, status: offered, goal: {type: investigate, location: studio_control}, constraints: {deadline_minutes: 520}, rewards: {relationship: {mao_mao: {trust: 12}}, resource: {crew_trust: 10}}, failure_conditions: [algorithm_deleted], world_consequences: {on_success: {advance_thread: thread_fake_vote, reveal_fact_chance: {fact_vote_was_story_algorithm: 1.0}}}, plot_thread: thread_fake_vote}
+  - {key: quest_drop_show_roles, name: 让参赛者关掉人设胸牌, giver: jiang_tangtang, status: offered, goal: {type: decide, options: [share_real_skills, keep_roles, split_team]}, constraints: {deadline_minutes: 600}, rewards: {faction_reputation: {contestant_collective: 25}}, failure_conditions: [team_split], world_consequences: {on_success: {advance_thread: thread_fake_vote}}, plot_thread: thread_fake_vote}
+  - {key: quest_four_role_watch, name: 建立电力通风医疗人员四岗轮值, giver: zhao_xin, status: offered, goal: {type: recruit, count: 8}, constraints: {deadline_minutes: 840}, rewards: {resource: {crew_trust: 20}}, failure_conditions: [single_point_command, deadline_passed], world_consequences: {on_success: {advance_thread: thread_governance}}, plot_thread: thread_governance}
+  - {key: quest_choose_governance, name: 决定风暴后谁拥有避难城权限, giver: zhao_xin, status: offered, goal: {type: decide, options: [public_multi_role, city_takeover, production_license]}, constraints: {deadline_minutes: 1440}, rewards: {item: {open_maintenance_manual: 1}}, failure_conditions: [producer_exclusive_control], world_consequences: {on_success: {advance_thread: thread_governance}}, plot_thread: thread_governance}
+clocks:
+  - {key: clock_solar_peak, name: 二十四小时风暴峰值, kind: deadline, thread: thread_governance, segments: 8, minutes_per_segment: 180, consequence: 地面救援窗口打开，避难城必须仍有电、风和通信信标}
+  - {key: clock_oxygen, name: 供氧压差, kind: danger, thread: thread_power_air, segments: 6, consequence: 滤芯压差超过安全线，生活环必须缩区}
+  - {key: clock_shared_manual, name: 完整维护手册, kind: project, thread: thread_governance, segments: 6, consequence: 电、水、风、门禁与轮值记录完成多岗位复核}

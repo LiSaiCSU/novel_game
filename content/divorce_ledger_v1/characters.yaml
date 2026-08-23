@@ -1,0 +1,208 @@
+characters:
+  - key: xiao_chengjing
+    name: 萧承璟
+    type: MAJOR_NPC
+    age: 29
+    gender: male
+    location: ancestral_hall
+    faction: ning_house
+    faction_rank: 宁王
+    realm: household
+    realm_stage: master
+    stats: {strength: 14, agility: 12, perception: 15, intelligence: 16, willpower: 15, charisma: 16}
+    background: 宁王府现任家主，以为配合族审赶玩家出府能让她避开御史封门，却没有把选择权交给她。
+    personality: {traits: {reserved: 0.85, strategic: 0.76, arrogant: 0.68}, values: [王府不能倒, 边军赈粮, 自己承担结果], taboos: [让家仆替自己受刑], speech_style: 先下决定再解释，越心虚越像宣读军令, risk_tolerance: 0.66}
+    emotion: {dominant: strained, valence: -0.18, arousal: 0.58, intensity: 0.62}
+    long_term_goal: 查出赈粮去向并保住无辜府人
+    short_term_goals: [让玩家先出封锁圈, 找到父亲旧部, 阻止老王妃烧账]
+    schedule: {default: investigate, slots: [{phase: morning, activity: social, location: ancestral_hall}, {phase: noon, activity: investigate, location: account_room}, {phase: afternoon, activity: move, location: east_granary}, {phase: dusk, activity: social, location: censor_office}, {phase: night, activity: investigate, location: ning_manor}]}
+    items: [{key: manor_command_token, qty: 1}]
+    skills: [household_management, court_statement]
+    reputation: {global: 55, by_faction: {ning_house: 92}}
+    secret: 他知道族审指控是假的，却错误地认为不告诉玩家才是在保护她
+    capabilities: [调王府护卫, 开府库, 以家主身份上堂]
+  - key: old_princess_du
+    name: 杜太妃
+    type: MAJOR_NPC
+    age: 61
+    gender: female
+    location: old_princess_room
+    faction: ning_house
+    faction_rank: 老王妃
+    realm: household
+    realm_stage: master
+    stats: {strength: 7, agility: 8, perception: 17, intelligence: 18, willpower: 19, charisma: 16}
+    background: 宁王生母，掌府二十六年，王府每一桩体面背后都有她算过的代价。
+    personality: {traits: {unyielding: 0.94, class_bound: 0.9, protective: 0.58}, values: [爵位, 宗族, 不能让先王蒙罪], taboos: [公开先王账目], speech_style: 用祖训替代理由，真正着急时会直接报仓号, risk_tolerance: 0.72}
+    emotion: {dominant: defensive, valence: -0.25, arousal: 0.48, intensity: 0.68}
+    long_term_goal: 把先王挪用赈粮的旧案永远留在墙里
+    short_term_goals: [逼玩家认亏空, 取走第三本账, 控制冯管家]
+    schedule: {default: work, slots: [{phase: morning, activity: social, location: old_princess_room}, {phase: noon, activity: investigate, location: account_room}, {phase: afternoon, activity: rest, location: old_princess_room}, {phase: dusk, activity: social, location: ancestral_hall}, {phase: night, activity: investigate, location: old_princess_room}]}
+    items: [{key: old_prince_seal, qty: 1}]
+    skills: [household_management, ledger_reconcile]
+    reputation: {global: 48, by_faction: {ning_house: 96}}
+    secret: 她隐瞒的不是一笔私财，而是先王以赈粮补军粮、后来又被管家趁机扩大盗卖的起点
+    capabilities: [调动宗族, 控制内院, 认出先王旧印]
+  - key: su_lian
+    name: 苏莲
+    type: MAJOR_NPC
+    age: 27
+    gender: female
+    location: inner_courtyard
+    faction: salt_censorate
+    faction_rank: 秘密书吏
+    realm: official
+    realm_stage: clerk
+    stats: {strength: 9, agility: 13, perception: 18, intelligence: 18, willpower: 17, charisma: 14}
+    background: 以萧承璟旧识身份回府，接过中馈钥匙。实际受御史指派封存账册，绝不打算嫁入王府。
+    personality: {traits: {clinical: 0.9, patient: 0.82, independent: 0.9}, values: [原件, 女子不做替身, 公堂能核验], taboos: [被当作争宠工具], speech_style: 把每个暧昧称呼纠正为职务与日期, risk_tolerance: 0.62}
+    emotion: {dominant: focused, valence: 0.05, arousal: 0.45, intensity: 0.55}
+    long_term_goal: 把三本账完整带上公堂
+    short_term_goals: [封住账房, 判断玩家是否会毁掉对自己不利的账, 找第三只书匣]
+    schedule: {default: investigate, slots: [{phase: morning, activity: work, location: inner_courtyard}, {phase: noon, activity: investigate, location: account_room}, {phase: afternoon, activity: move, location: east_granary}, {phase: dusk, activity: work, location: censor_office}, {phase: night, activity: investigate, location: ning_manor}]}
+    items: [{key: censor_seal_strip, qty: 1}]
+    skills: [seal_check, court_statement, ledger_reconcile]
+    reputation: {global: 18, by_faction: {salt_censorate: 78}}
+    secret: 她接中馈钥匙是为给每把钥匙编号封存，所谓新王妃只是王府放出的说法
+    capabilities: [封存证物, 独立记录口供, 进入御史行辕]
+  - key: pei_zhaoyi
+    name: 裴昭仪
+    type: MAJOR_NPC
+    age: 38
+    gender: female
+    location: censor_office
+    faction: salt_censorate
+    faction_rank: 巡盐御史
+    realm: official
+    realm_stage: censor
+    stats: {strength: 10, agility: 11, perception: 19, intelligence: 19, willpower: 19, charisma: 15}
+    background: 奉命查赈粮，封门不看爵位。她允许任何人递材料，但不允许用直播式喊冤代替核验。
+    personality: {traits: {strict: 0.94, skeptical: 0.9, humane: 0.68}, values: [灾民先拿粮, 证人不替罪, 每份口供独立], taboos: [刑讯逼供], speech_style: 问句精确到时辰和数量，结论永远比旁人晚一步, risk_tolerance: 0.45}
+    emotion: {dominant: intent, valence: 0.0, arousal: 0.4, intensity: 0.55}
+    long_term_goal: 追回赈粮并把真正决策者送上公堂
+    short_term_goals: [守住东仓, 核对三路账, 保护脚夫证人]
+    schedule: {default: investigate, slots: [{phase: morning, activity: work, location: censor_office}, {phase: noon, activity: move, location: ning_manor}, {phase: afternoon, activity: investigate, location: east_granary}, {phase: dusk, activity: work, location: censor_office}, {phase: night, activity: work, location: prefecture_hall}]}
+    items: [{key: granary_seal_order, qty: 1}]
+    skills: [ledger_reconcile, court_statement, seal_check]
+    reputation: {global: 70, by_faction: {salt_censorate: 95}}
+    secret: 她已掌握两万石粮的去向，封王府是为逼剩下那条船链露头
+    capabilities: [封仓封府, 调阅官档, 保护证人]
+  - key: feng_quan
+    name: 冯全
+    type: MAJOR_NPC
+    age: 52
+    gender: male
+    location: account_room
+    faction: ning_house
+    faction_rank: 王府总管
+    realm: household
+    realm_stage: master
+    stats: {strength: 10, agility: 10, perception: 15, intelligence: 17, willpower: 13, charisma: 13}
+    background: 跟先王二十年，所有人都以为他只是奉老王妃的命做假账。
+    personality: {traits: {deferential: 0.88, greedy: 0.86, prepared: 0.9}, values: [银子出城, 家人先走, 不留原件], taboos: [搜他在染坊的暗柜], speech_style: 句句说按旧例，追问旧例出处便开始咳嗽, risk_tolerance: 0.76}
+    emotion: {dominant: cornered, valence: -0.35, arousal: 0.7, intensity: 0.72}
+    long_term_goal: 带着私吞所得从南漕离开
+    short_term_goals: [拿走第三本账, 启动暗道运粮, 把责任推给死去的先王]
+    schedule: {default: investigate, slots: [{phase: morning, activity: work, location: account_room}, {phase: noon, activity: move, location: east_granary}, {phase: afternoon, activity: investigate, location: dye_yard}, {phase: dusk, activity: move, location: canal_wharf}, {phase: night, activity: hide, location: grain_tunnel}]}
+    items: [{key: third_ledger, qty: 1}, {key: tunnel_key, qty: 1}]
+    skills: [ledger_reconcile, household_management]
+    reputation: {global: 22, by_faction: {ning_house: 82}}
+    secret: 他借先王秘密调粮之事建立私卖链，四万石缺口中有两万石进了自己的染坊暗仓
+    capabilities: [改府账, 调家丁, 启动暗道]
+  - key: qiao_yunsheng
+    name: 乔云生
+    type: MAJOR_NPC
+    age: 44
+    gender: male
+    location: canal_wharf
+    faction: canal_guild
+    faction_rank: 船帮掌事
+    realm: household
+    realm_stage: master
+    stats: {strength: 15, agility: 11, perception: 16, intelligence: 14, willpower: 17, charisma: 13}
+    background: 管南漕船工与路引，曾受玩家母亲照应，不肯让船工替王府的假路引顶罪。
+    personality: {traits: {blunt: 0.86, loyal: 0.76, cautious: 0.7}, values: [船工活着, 真路引, 欠债要还], taboos: [夜里超载出船], speech_style: 用吃水和水位说话，谁谈体面他就报沉过几条船, risk_tolerance: 0.58}
+    emotion: {dominant: angry, valence: -0.2, arousal: 0.52, intensity: 0.6}
+    long_term_goal: 保住船帮漕运资格并洗清调粮嫌疑
+    short_term_goals: [扣住二十七号船, 找到真路引, 让玩家认出母亲旧暗号]
+    schedule: {default: work, slots: [{phase: morning, activity: work, location: canal_wharf}, {phase: noon, activity: investigate, location: boat_office}, {phase: afternoon, activity: work, location: canal_wharf}, {phase: dusk, activity: move, location: east_granary}, {phase: night, activity: patrol, location: canal_wharf}]}
+    items: [{key: boat_registry, qty: 1}]
+    skills: [convoy_dispatch, supply_appraisal]
+    reputation: {global: 30, by_faction: {canal_guild: 92, yunjin_merchants: 55}}
+    secret: 他扣下的二十七号船里没有粮，只有用来嫁祸云锦号的空官袋
+    capabilities: [扣船, 核对吃水, 召集船工]
+  - key: a_qiao
+    name: 阿巧
+    type: MAJOR_NPC
+    age: 23
+    gender: female
+    location: yunjin_shop
+    faction: yunjin_merchants
+    faction_rank: 总号二掌柜
+    realm: household
+    realm_stage: master
+    stats: {strength: 9, agility: 15, perception: 17, intelligence: 16, willpower: 16, charisma: 13}
+    background: 跟玩家从商号进王府，负责十二铺每日飞钱与暗记，比任何族老都清楚王府欠了谁的钱。
+    personality: {traits: {quick: 0.92, funny: 0.72, loyal: 0.86}, values: [账日清, 姑娘有退路, 伙计不白干], taboos: [让她把假账抄成真账], speech_style: 说话像算盘珠，快而准，吐槽完会立刻补数字, risk_tolerance: 0.62}
+    emotion: {dominant: ready, valence: 0.12, arousal: 0.55, intensity: 0.58}
+    long_term_goal: 让云锦十二铺从王府担保中彻底独立
+    short_term_goals: [停掉赊账, 送来双锁总账, 保护商号伙计]
+    schedule: {default: work, slots: [{phase: morning, activity: work, location: yunjin_shop}, {phase: noon, activity: move, location: ning_manor}, {phase: afternoon, activity: investigate, location: dye_yard}, {phase: dusk, activity: work, location: canal_wharf}, {phase: night, activity: rest, location: yunjin_shop}]}
+    items: [{key: dowry_master_ledger, qty: 1}]
+    skills: [ledger_reconcile, household_management, seal_check]
+    reputation: {global: 18, by_faction: {yunjin_merchants: 88}}
+    secret: 玩家母亲临终前让她记住信托般的商号约定：姑娘若想走，十二铺先听姑娘，不听王府
+    capabilities: [停兑商号担保, 调铺中伙计, 验双锁账]
+  - key: tang_jiu
+    name: 唐九
+    type: MAJOR_NPC
+    age: 35
+    gender: male
+    location: east_granary
+    faction: canal_guild
+    faction_rank: 地秤师
+    realm: household
+    realm_stage: servant
+    stats: {strength: 13, agility: 11, perception: 18, intelligence: 12, willpower: 14, charisma: 10}
+    background: 负责东仓地秤，能从车辙和墙线判断粮进没进仓。
+    personality: {traits: {literal: 0.9, honest: 0.8, anxious: 0.66}, values: [秤砣, 老母, 不签空数], taboos: [把没见过的粮写进仓], speech_style: 问什么都先报重量，笑话听懂得比别人慢半拍, risk_tolerance: 0.4}
+    emotion: {dominant: nervous, valence: -0.15, arousal: 0.62, intensity: 0.52}
+    long_term_goal: 证明自己没有签收四万石不存在的粮
+    short_term_goals: [保住地秤记录, 找回被撕的半张仓单, 躲开冯全的人]
+    schedule: {default: work, slots: [{phase: morning, activity: work, location: east_granary}, {phase: noon, activity: investigate, location: grain_tunnel}, {phase: afternoon, activity: work, location: east_granary}, {phase: dusk, activity: social, location: censor_office}, {phase: night, activity: hide, location: boat_office}]}
+    items: [{key: scale_record, qty: 1}]
+    skills: [supply_appraisal]
+    reputation: {global: 8, by_faction: {canal_guild: 45}}
+    secret: 他亲眼看见冯全的人把官粮袋送进暗道，却没看见袋里装的是什么
+    capabilities: [验仓墙线, 核对车辙, 证明实际入仓数量]
+  - key: mynah
+    name: 乌金
+    type: MAJOR_NPC
+    age: 6
+    gender: unspecified
+    location: account_room
+    realm: household
+    realm_stage: servant
+    stats: {strength: 1, agility: 15, perception: 12, intelligence: 4, willpower: 10, charisma: 16}
+    background: 账房养的鹩哥，只会重复听过的声音，不理解内容，也绝不能单独作为证据。
+    personality: {traits: {mimic: 0.98, greedy_for_seeds: 0.9}, values: [瓜子, 高处, 重复响亮的话], taboos: [空食盆], speech_style: 把账房暗号说错一个字，越乱越爱学, risk_tolerance: 0.2}
+    emotion: {dominant: curious, valence: 0.3, arousal: 0.5, intensity: 0.4}
+    long_term_goal: 吃到瓜子
+    short_term_goals: [重复最近听见的暗号, 躲开伸手抓它的人]
+    schedule: {default: rest, slots: [{phase: morning, activity: social, location: account_room}, {phase: noon, activity: rest, location: account_room}, {phase: afternoon, activity: social, location: inner_courtyard}, {phase: dusk, activity: rest, location: account_room}, {phase: night, activity: rest, location: account_room}]}
+    items: []
+    skills: []
+    reputation: {global: 5, by_faction: {ning_house: 20}}
+    secret: 无；它只是重复“东仓三更换签”，不能回答是谁说的
+    capabilities: [模仿固定短句, 飞到高处]
+relationships:
+  - {a: xiao_chengjing, b: player, affection: 28, trust: -12, respect: 35, suspicion: 18, familiarity: 82, boundaries: 35}
+  - {a: old_princess_du, b: player, affection: -18, trust: -30, respect: 26, suspicion: 65, familiarity: 72, boundaries: 28}
+  - {a: su_lian, b: player, affection: 4, trust: 12, respect: 24, suspicion: 28, familiarity: 18, boundaries: 70}
+  - {a: pei_zhaoyi, b: player, affection: 0, trust: 4, respect: 16, suspicion: 38, familiarity: 5, boundaries: 75}
+  - {a: feng_quan, b: player, affection: -22, trust: -35, respect: 20, suspicion: 72, familiarity: 68, boundaries: 30}
+  - {a: qiao_yunsheng, b: player, affection: 18, trust: 40, respect: 35, suspicion: 8, familiarity: 52, boundaries: 60}
+  - {a: a_qiao, b: player, affection: 48, trust: 72, respect: 42, suspicion: 0, familiarity: 88, boundaries: 65}
+  - {a: tang_jiu, b: player, affection: 8, trust: 15, respect: 12, suspicion: 15, familiarity: 12, boundaries: 55}
+  - {a: su_lian, b: xiao_chengjing, affection: 0, trust: 22, respect: 28, suspicion: 20, familiarity: 45, boundaries: 75}
+  - {a: old_princess_du, b: feng_quan, affection: 5, trust: 35, respect: 18, suspicion: 30, familiarity: 90, boundaries: 25}
