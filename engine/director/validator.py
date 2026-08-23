@@ -95,15 +95,31 @@ class DirectorValidator:
 
         # -- causal basis must point at things that really happened ----------
         recent_ids = {e.id for e in await uow.events.list_recent(state.world.id, limit=60)}
+        open_threads = {
+            row.key: row
+            for row in await uow.plot_threads.list_for_world(state.world.id)
+            if row.status in (ThreadStatus.ACTIVE, ThreadStatus.DORMANT)
+        }
         for basis in decision.causal_basis:
             if basis in recent_ids:
                 continue
-            if thread is not None and (
-                basis in thread.foreshadowing
-                or basis in thread.unresolved_questions
-                or basis in thread.related_facts
-                or basis == thread.next_beat_hint
-            ):
+            # An unresolved storyline is a cause in its own right, and it is
+            # the only one available on turn one: a world that has not yet
+            # produced an important event cannot cite an important event, so
+            # the director's first proposal was rejected every single time.
+            cited = open_threads.get(basis)
+            if cited is not None:
+                continue
+            for candidate in (thread, *open_threads.values()):
+                if candidate is not None and (
+                    basis in candidate.foreshadowing
+                    or basis in candidate.unresolved_questions
+                    or basis in candidate.related_facts
+                    or basis == candidate.next_beat_hint
+                ):
+                    cited = candidate
+                    break
+            if cited is not None:
                 continue
             if await uow.knowledge.get_fact_by_key(state.world.id, basis) is not None:
                 continue

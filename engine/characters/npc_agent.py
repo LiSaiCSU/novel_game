@@ -282,7 +282,24 @@ class NPCAgent:
             )
 
         # --- not involved: keep living your own life -----------------------
+        # Still not furniture. A bystander who has met the player before, or
+        # who is somewhere dangerous, at least looks up - which gives the
+        # narrator a body in the room instead of an empty one. Everyone else
+        # genuinely is busy elsewhere.
         reasons.append("not_involved")
+        noticed = (relationship is not None and not relationship.is_stranger()) or (
+            ctx.state.location is not None and ctx.state.location.danger_level > 0
+        )
+        if noticed and ActionType.OBSERVE in _as_actions(available_actions):
+            reasons.append("bystander_notices")
+            return (
+                NPCDecision(
+                    reasoning_summary="This character notices, without getting involved.",
+                    decision=NPCDecisionBody(action_type=str(ActionType.OBSERVE)),
+                    speech_intent="",
+                ),
+                reasons,
+            )
         return (
             NPCDecision(
                 reasoning_summary="This character has business of their own.",
@@ -356,3 +373,14 @@ def _risk_for(size: RequestSize) -> float:
 
 def rejection_reason_code(decision: NPCDecision) -> ReasonCode:
     return ReasonCode.OK if not decision.refuses else ReasonCode.NOT_PHYSICALLY_POSSIBLE
+
+
+def _as_actions(available: list[str]) -> set[ActionType]:
+    """The rules' answer, as enum members it can be compared against."""
+    out: set[ActionType] = set()
+    for name in available:
+        try:
+            out.add(ActionType(str(name)))
+        except ValueError:
+            continue
+    return out

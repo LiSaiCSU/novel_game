@@ -1,7 +1,7 @@
 key: tomb_lantern_v1
 name: 寒鸦岭·九枝灯
 genre: tomb_raiding
-version: "1.4.0"
+version: "1.5.0"
 engine_min_version: "0.2.0"
 primary_progression_key: tomb_craft
 attribute_definitions:
@@ -258,6 +258,11 @@ narrative_style:
     - 阴风阵阵
   phrase_repeat_window: 12
   phrase_repeat_threshold: 2
+  pacing: literary
+  pacing_rules:
+    - 该快的快：赶路、等待、重复劳作，一两句带过；不在没有冲突的事情上耗字数
+    - 该慢的慢：讨价还价、对峙、有人说了要紧话、局势翻转，拆开写细
+    - 一次只写当前最紧迫的冲突；不要机械地连续反转，也不要为了热闹凭空安排袭击
   guidance:
     - 每一段至少推进以下之一——九日倒计时、灯序线索、父亲的下落、某个人的动机，或一个不可逆的后果
     - 地下的危险要讲物理——缺氧、塌方、水银蒸气、绳子长度、灯油还剩多少，而不是靠“不祥的预感”

@@ -113,7 +113,12 @@ class Settings(BaseSettings):
     # 0 delegates the maximum duration to the active content pack.  A positive
     # value is a deployment safety limit and is rejected, never silently clipped.
     sim_max_offline_minutes: int = 0
-    director_min_interval_turns: int = 3
+    # 0 delegates pacing to the active content pack, the same way
+    # SIM_MAX_OFFLINE_MINUTES does. A positive value is a deployment override.
+    # It used to default to 3 and was passed unconditionally, so a pack that
+    # asked for a director every turn - "宁可事多，不可平淡" - was quietly held
+    # to one consultation in four.
+    director_min_interval_turns: int = 0
 
     # --- Embeddings --------------------------------------------------------
     embedding_backend: str = "hash"

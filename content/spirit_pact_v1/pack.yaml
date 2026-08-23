@@ -1,7 +1,7 @@
 key: spirit_pact_v1
 name: 苍澜契约·九印抉择
 genre: eastern_fantasy_academy
-version: "1.4.0"
+version: "1.5.0"
 engine_min_version: "0.2.0"
 primary_progression_key: soul_rank
 language: zh-CN
@@ -317,6 +317,11 @@ narrative_style:
     - 从此走上人生巅峰
   phrase_repeat_window: 12
   phrase_repeat_threshold: 2
+  pacing: literary
+  pacing_rules:
+    - 该快的快：赶路、等待、重复劳作，一两句带过；不在没有冲突的事情上耗字数
+    - 该慢的慢：讨价还价、对峙、有人说了要紧话、局势翻转，拆开写细
+    - 一次只写当前最紧迫的冲突；不要机械地连续反转，也不要为了热闹凭空安排袭击
   guidance:
     - 每次涉及灵契的场面都必须同时写清三件事——这一契的契阶与颜色、它会占掉第几个契位、以及缔结它要付出的具体代价
     - 灵契一旦缔结就不可更换。任何角色都不能暗示玩家“以后还能换”，因为规则不允许

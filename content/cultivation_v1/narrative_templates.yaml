@@ -135,6 +135,9 @@ query:
   relationships_empty: "你还没有真正认识什么人。"
   quests_header: "【在身的差事】"
   quests_empty: "你眼下没有接下任何差事。"
+thread:
+  open: "未解决："
+  next: "下一步可以推进："
 clock:
   line: "- [{kind}] {name} {filled}/{segments}{remaining}{consequence}"
   remaining: "，还剩{duration}"

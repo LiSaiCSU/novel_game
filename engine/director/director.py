@@ -156,7 +156,14 @@ class Director:
 
     # ------------------------------------------------------------------
     def _overdue(self, threads: list[PlotThread], now_minute: int) -> list[PlotThread]:
-        """Threads the world has left hanging longer than their own pressure allows."""
+        """Threads the world has left hanging longer than their own pressure allows.
+
+        Patience has to be measured against the story's own clock. It was a
+        hardcoded week, so in a seven-day thriller nothing was ever overdue -
+        the one signal that forces the director to look was dead for exactly
+        the stories that need it most. The pack states its span instead.
+        """
+        span = max(1, int(self.pack.rule("director.thread_patience_minutes", 10_080)))
         out: list[PlotThread] = []
         for thread in threads:
             if thread.status is not ThreadStatus.ACTIVE:
@@ -164,7 +171,7 @@ class Director:
             if thread.escalation_pressure <= 0:
                 continue
             # higher pressure -> shorter patience
-            patience_minutes = int(10_080 / max(0.05, thread.escalation_pressure))
+            patience_minutes = int(span / max(0.05, thread.escalation_pressure))
             if now_minute - thread.last_advanced_minute >= patience_minutes:
                 out.append(thread)
         out.sort(key=lambda t: t.importance, reverse=True)

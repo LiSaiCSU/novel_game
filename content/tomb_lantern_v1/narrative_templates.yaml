@@ -53,6 +53,9 @@ query:
   relationships_empty: "你在岭上还没有能托底的人。"
   quests_header: "【手里的事】"
   quests_empty: "你眼下没有接别人的差事。"
+thread:
+  open: "还没弄明白："
+  next: "下一步可以推进："
 clock:
   line: "- [{kind}] {name} {filled}/{segments}{remaining}{consequence}"
   remaining: "，还剩{duration}"

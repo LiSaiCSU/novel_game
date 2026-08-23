@@ -10,7 +10,7 @@ stays genre-free.
 
 from __future__ import annotations
 
-from typing import Any
+from typing import Any, ClassVar
 
 from engine.actions.schema import ActionOutcome
 from engine.contentpack.pack import ContentPack
@@ -114,7 +114,24 @@ class TemplateNarrativeRenderer:
         return _safe_format(template, {"n": str(count)})
 
     # ------------------------------------------------------------------
-    def npc_line(self, npc: Character, speech_intent: str, spoken: str | None) -> str:
+    #: What a character did, when they did not say anything. Packs write these
+    #: lines and nothing rendered them: only speech intents were mapped, so a
+    #: character who walked out or squared up produced either silence or a
+    #: flat "said nothing much".
+    _ACTION_LINES: ClassVar[dict[str, str]] = {
+        "OBSERVE": "observes",
+        "MOVE": "leaves",
+        "FOLLOW": "approaches",
+        "ATTACK": "attacks",
+    }
+
+    def npc_line(
+        self,
+        npc: Character,
+        speech_intent: str,
+        spoken: str | None,
+        action_type: str = "",
+    ) -> str:
         table = self._get("npc", {}) or {}
         if spoken:
             return _safe_format(table.get("speaks", ""), {"name": npc.display_name, "line": spoken})
@@ -125,6 +142,12 @@ class TemplateNarrativeRenderer:
             "deflect": "silent",
             "neutral": "default",
         }
+        if not speech_intent:
+            physical = self._ACTION_LINES.get(action_type.upper(), "")
+            rendered = str(table.get(physical, "")) if physical else ""
+            if rendered:
+                return _safe_format(rendered, {"name": npc.display_name})
+            return ""
         key = mapping.get(speech_intent, "default")
         # Deliberately no `action_label`: an internal enum has no business in
         # the prose, and a missing placeholder is dropped silently.

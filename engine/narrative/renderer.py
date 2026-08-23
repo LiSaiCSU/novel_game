@@ -359,5 +359,11 @@ class NarrativeRenderer:
             names.add(str(faction.get("name", "")))
         return names
 
-    def npc_line(self, npc: Character, speech_intent: str, spoken: str | None) -> str:
-        return self.template.npc_line(npc, speech_intent, spoken)
+    def npc_line(
+        self,
+        npc: Character,
+        speech_intent: str,
+        spoken: str | None,
+        action_type: str = "",
+    ) -> str:
+        return self.template.npc_line(npc, speech_intent, spoken, action_type)

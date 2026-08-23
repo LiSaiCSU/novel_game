@@ -1,7 +1,7 @@
 key: fog_harbor_v1
 name: 雾锁白鹭号
 genre: murder_mystery
-version: "1.4.0"
+version: "1.5.0"
 engine_min_version: "0.2.0"
 primary_progression_key: investigation
 attribute_definitions:
@@ -280,6 +280,11 @@ narrative_style:
     - 脊背发凉
   phrase_repeat_window: 12
   phrase_repeat_threshold: 2
+  pacing: literary
+  pacing_rules:
+    - 该快的快：赶路、等待、重复劳作，一两句带过；不在没有冲突的事情上耗字数
+    - 该慢的慢：讨价还价、对峙、有人说了要紧话、局势翻转，拆开写细
+    - 一次只写当前最紧迫的冲突；不要机械地连续反转，也不要为了热闹凭空安排袭击
   guidance:
     - 每段至少推进以下之一——一条可验证的物证、一个人的时间线、一段十年前的旧事，或一次立场的转变
     - 时间要写死。谁在几点几分、在哪一层、和谁在一起，必须能被后面的场景检验

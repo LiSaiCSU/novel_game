@@ -74,6 +74,11 @@ narrative:
   bands: [{key: daily, name: 日常, min: 0, max: 25}, {key: progress, name: 推进, min: 25, max: 55}, {key: tense, name: 紧张, min: 55, max: 75}, {key: climax, name: 高潮, min: 75, max: 101}]
 director:
   min_interval_turns: 2
+  thread_patience_minutes: 15120    # 十二周故事：一条高压线索最多晾十天
+  pacing_rules:
+    - 允许平静回合：观察、整理、休息和关系留白是节奏的一部分
+    - 玩家正在执行明确行动、面对选择或消化结果时，返回 NO_EVENT
+    - 不要为了追求固定频率机械安排反转
   high_importance_override: 0.85
   max_events_per_day: 3
   max_schedule_delay_minutes: 2880

@@ -52,6 +52,9 @@ query:
   relationships_empty: "你还没有真正认识企划组成员。"
   quests_header: "【正在处理的事】"
   quests_empty: "你暂时没有接下新的事项。"
+thread:
+  open: "还没说清："
+  next: "下一步可以推进："
 clock:
   line: "- [{kind}] {name} {filled}/{segments}{remaining}{consequence}"
   remaining: "，还剩{duration}"

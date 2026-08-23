@@ -408,6 +408,12 @@ class NarrativeStyle:
         self.window = int(style.get("phrase_repeat_window", 12))
         self.threshold = int(style.get("phrase_repeat_threshold", 2))
         self.guidance: list[str] = list(style.get("guidance", []) or [])
+        # How fast this work is meant to move, in the pack's own words. The
+        # shared prompt used to hold one opinion about pacing and apply it to
+        # every work, which is why it opened by saying style comes only from
+        # the pack and then told every pack not to use consecutive reversals.
+        self.pacing: str = str(style.get("pacing", "")).strip()
+        self.pacing_rules: list[str] = list(style.get("pacing_rules", []) or [])
         self._recent: deque[str] = deque(maxlen=self.window)
 
     # ------------------------------------------------------------------
@@ -479,6 +485,11 @@ class NarrativeStyle:
             "avoid_phrases": self.avoid_list(),
             "style_guidance": (
                 "\n".join(f"- {item}" for item in self.guidance) if self.guidance else "-"
+            ),
+            "pacing_rules": (
+                "\n".join(f"- {item}" for item in self.pacing_rules)
+                if self.pacing_rules
+                else "-"
             ),
         }
 

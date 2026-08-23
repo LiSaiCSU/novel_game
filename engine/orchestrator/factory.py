@@ -150,7 +150,8 @@ def build_orchestrator(
             llm,
             registry,
             prompt_version=settings.prompt_version_director,
-            min_interval_turns=settings.director_min_interval_turns,
+            # None lets the pack decide; a positive setting overrides it.
+            min_interval_turns=settings.director_min_interval_turns or None,
         ),
         simulator=WorldSimulator(
             pack,

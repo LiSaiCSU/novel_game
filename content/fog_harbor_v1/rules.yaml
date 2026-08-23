@@ -84,6 +84,11 @@ narrative:
     - {key: climax, name: 指认, min: 78, max: 101}
 director:
   min_interval_turns: 2
+  thread_patience_minutes: 270    # 三十六小时故事：一条高压线索最多晾四个多小时
+  pacing_rules:
+    - 允许平静回合：观察、整理、休息和关系留白是节奏的一部分
+    - 玩家正在执行明确行动、面对选择或消化结果时，返回 NO_EVENT
+    - 不要为了追求固定频率机械安排反转
   high_importance_override: 0.85
   max_events_per_day: 12
   max_schedule_delay_minutes: 120

@@ -160,6 +160,11 @@ class ContextBuilder:
         # The viewpoint is the player: only what the player could know may appear.
         beliefs = await self.knowledge.beliefs_of(uow, state.player.id)
         hedges = self.knowledge.hedges()
+        open_quests = [
+            quest for quest in state.active_quests if str(quest.status) in ("offered", "active")
+        ]
+        contempt = self._who_underrates(state)
+        leverage = await self._leverage(uow, state, beliefs)
 
         sections = {
             "language": str(style.get("language", "")),
@@ -187,10 +192,31 @@ class ContextBuilder:
             "visible_facts": self._beliefs(beliefs, hedges),
             "inventory_facts": self._inventory_facts(state),
             "story_clocks": clocks_for_prompt(state),
+            # What this story is *about*. The opening chapter was given the
+            # premise and the open threads; every chapter after it was not, so
+            # from the second turn onward the narrator was improvising with no
+            # map - which is exactly how you get beautifully written scenes
+            # that never advance anything.
+            "story_premise": str(self.pack.story.get("premise", "")).strip() or "-",
+            "plot_threads": self._open_threads(state.plot_threads),
+            # The raw material of a reversal, as numbers the engine actually
+            # holds: who currently rates the player low, and what the player
+            # knows or carries that the people in the room do not.
+            "who_underrates_player": contempt,
+            "player_leverage": leverage,
+            "planted_foreshadowing": self._foreshadowing(state.plot_threads),
+            "open_quests": self._bullets(
+                [
+                    f"{quest.name}({self._quest_status_label(quest.status)})"
+                    for quest in open_quests[:5]
+                ]
+            ),
         }
         built = BuiltContext(sections=sections, included_fact_keys=[b.fact_key for b in beliefs])
         self._enforce_budget(
-            built, self.budget("narrative", 3500), ("recent_narrative", "visible_facts")
+            built,
+            self.budget("narrative", 3500),
+            ("recent_narrative", "visible_facts", "plot_threads"),
         )
         return built
 
@@ -227,7 +253,8 @@ class ContextBuilder:
             "tension_history": ", ".join(f"{t:.0f}" for t in world.tension_history[-8:]) or "-",
             "turns_since_last_event": str(turns_since_last_event),
             "player_progress": (
-                f"{state.player.name} / {ladder.display(state.player.realm, state.player.realm_stage)} "
+                f"[{state.player.key}] {state.player.name} / "
+                f"{ladder.display(state.player.realm, state.player.realm_stage)} "
                 f"/ {state.location.name if state.location else '-'}"
             ),
             "story_focus": self._story_focus(state),
@@ -245,6 +272,9 @@ class ContextBuilder:
             ),
             "event_types": ", ".join(
                 str(t) for t in (self.pack.rule("director.allowed_event_types", []) or [])
+            ),
+            "director_pacing": self._bullets(
+                [str(rule) for rule in (self.pack.rule("director.pacing_rules", []) or [])]
             ),
         }
         built = BuiltContext(sections=sections)
@@ -590,6 +620,107 @@ class ContextBuilder:
             detail = e.payload.get("summary") or e.payload.get("reason") or ""
             lines.append(f"- {prefix}{e.event_type} @{e.world_minute} {detail}".rstrip())
         return "\n".join(lines)
+
+    #: Below this, a character is not merely neutral about the player - they
+    #: have taken a view, and that view is low. It is the setup half of a
+    #: reversal: someone has to be wrong about you before being proved wrong.
+    _CONTEMPT_RESPECT = 0
+    _CONTEMPT_SUSPICION = 15
+
+    def _who_underrates_player(self, state: WorldStateView) -> list[Character]:
+        out = []
+        for character in state.present_characters:
+            if not character.alive:
+                continue
+            relationship = state.relationship_with(character.id)
+            if relationship is None:
+                continue
+            if (
+                relationship.respect < self._CONTEMPT_RESPECT
+                or relationship.suspicion >= self._CONTEMPT_SUSPICION
+                or relationship.hatred >= self._CONTEMPT_SUSPICION
+            ):
+                out.append(character)
+        return out
+
+    def _who_underrates(self, state: WorldStateView) -> str:
+        labels = self.pack.vocabulary.get("relationship_labels", {}) or {}
+        lines = []
+        for character in self._who_underrates_player(state)[:4]:
+            relationship = state.relationship_with(character.id)
+            if relationship is None:
+                continue
+            dims = ", ".join(
+                f"{labels.get(key, key)}={value}"
+                for key, value in relationship.as_dict().items()
+                if key in ("respect", "suspicion", "hatred", "trust") and value
+            )
+            lines.append(f"- {character.display_name}" + (f"（{dims}）" if dims else ""))
+        return "\n".join(lines) or "-"
+
+    async def _leverage(
+        self, uow: UnitOfWork, state: WorldStateView, beliefs: list
+    ) -> str:
+        """What the player holds that the room does not.
+
+        Only ever the player's own beliefs and their own inventory, so this
+        leaks nothing: it is a restatement of what they already know, marked
+        with who else happens to know it.
+        """
+        present_ids = {c.id for c in state.present_characters if c.alive}
+        lines: list[str] = []
+        for belief in beliefs[:6]:
+            fact = await uow.knowledge.get_fact_by_key(state.world.id, belief.fact_key)
+            if fact is None:
+                continue
+            knowers = {row.character_id for row in await uow.knowledge.list_knowers(fact.id)}
+            if present_ids & knowers:
+                continue
+            lines.append(f"- {belief.statement}")
+        for row in state.inventory[:6]:
+            raw = self.pack.item(row.item_key) or {}
+            constraints = (raw.get("metadata") or {}).get("narrative_constraints") or {}
+            if constraints:
+                lines.append(f"- {raw.get('name', row.item_key)}")
+        return "\n".join(lines[:6]) or "-"
+
+    def _foreshadowing(self, threads) -> str:
+        lines = []
+        for thread in threads:
+            if str(thread.status) != "active":
+                continue
+            for planted in thread.foreshadowing[:2]:
+                lines.append(f"- {planted}")
+        return "\n".join(lines[:5]) or "-"
+
+    def _quest_status_label(self, status) -> str:
+        """The pack's own word for a quest state; keys never leave the engine."""
+        labels = self.pack.vocabulary.get("status_labels", {}) or {}
+        return str(labels.get(str(status), status))
+
+    def _open_threads(self, threads) -> str:
+        """Unresolved storylines, as a narrator needs them.
+
+        Deliberately not the director's view: no importance scores or stage
+        numbers, because those are pacing machinery. What a narrator can use is
+        the question that is still open and the next concrete beat the author
+        wrote for it.
+        """
+        templates = self.pack.narrative_templates.get("thread", {}) or {}
+        open_label = str(templates.get("open", "open"))
+        next_label = str(templates.get("next", "next"))
+        lines = []
+        for thread in threads:
+            if str(thread.status) != "active":
+                continue
+            question = "; ".join(thread.unresolved_questions[:2])
+            row = f"- {thread.name}"
+            if question:
+                row += f" | {open_label}{question}"
+            if thread.next_beat_hint:
+                row += f" | {next_label}{thread.next_beat_hint}"
+            lines.append(row)
+        return "\n".join(lines[:4]) or "-"
 
     def _threads(self, threads) -> str:
         if not threads:

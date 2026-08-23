@@ -127,14 +127,17 @@ class NpcPhase:
             if disclosed:
                 trace.npc_decisions[-1]["disclosed_facts"] = disclosed
 
-            if result.decision.speech_intent or result.decision.spoken_line:
-                line = self.narrative.npc_line(
-                    npc,
-                    result.decision.speech_intent,
-                    result.decision.spoken_line,
-                )
-                if line:
-                    lines.append(line)
+            # A character who says nothing may still have done something, and
+            # the narrator can only write about what it is told. Two thirds of
+            # the people in a scene used to report nothing at all.
+            line = self.narrative.npc_line(
+                npc,
+                result.decision.speech_intent,
+                result.decision.spoken_line,
+                str(result.decision.decision.action_type or ""),
+            )
+            if line:
+                lines.append(line)
         return lines
 
     # ------------------------------------------------------------------
