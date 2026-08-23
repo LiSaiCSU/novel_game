@@ -1,0 +1,19 @@
+rules:
+  - key: focused_action_costs_energy
+    trigger: after_action
+    condition:
+      op: in
+      args:
+        - {op: get, args: [action.action_type]}
+        - [SEARCH, OBSERVE, ASK, TALK, CONVERSATION]
+    effects:
+      - {op: adjust_player_resource, field: energy, value: -4}
+  - key: rest_restores_energy
+    trigger: after_action
+    condition:
+      op: eq
+      args:
+        - {op: get, args: [action.action_type]}
+        - REST
+    effects:
+      - {op: adjust_player_resource, field: energy, value: 24}

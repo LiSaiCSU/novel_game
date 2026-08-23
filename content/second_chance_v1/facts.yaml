@@ -1,0 +1,98 @@
+facts:
+  - key: fact_order_is_a_trap
+    statement: 韩记那张高价订单的付款方式是货到六十天结，违约条款单独一页，签下去就等着被拖垮
+    truth_value: true
+    scope: WORLD
+    sensitivity: 0.7
+    related: [han_lei, su_jianguo, su_family, han_group]
+    initial_knowledge:
+      player: {state: KNOWN, confidence: 1, source: WITNESSED}
+      han_lei: {state: KNOWN, confidence: 1, source: WITNESSED}
+      chen_shufen: {state: SUSPECTED, confidence: 0.4, source: INFERRED}
+  - key: fact_han_ate_five_factories
+    statement: 韩记用同一套办法吃掉过河沿街五家小加工厂，苏记会是第六家
+    truth_value: true
+    scope: WORLD
+    sensitivity: 0.8
+    related: [han_lei, han_group, su_family]
+    initial_knowledge:
+      player: {state: KNOWN, confidence: 1, source: WITNESSED}
+      han_lei: {state: KNOWN, confidence: 1, source: WITNESSED}
+      aunt_tea: {state: SUSPECTED, confidence: 0.7, source: INFERRED}
+  - key: fact_alley_incident_in_nine_days
+    statement: 九天后的晚自习散场后，有人会在三中后门那条巷子里堵住苏晚晴
+    truth_value: true
+    scope: PERSONAL
+    sensitivity: 1.0
+    subject: su_wanqing
+    related: [su_wanqing, zhao_gang, back_alley, player]
+    initial_knowledge:
+      player: {state: KNOWN, confidence: 1, source: WITNESSED}
+  - key: fact_sister_already_followed
+    statement: 苏晚晴已经被人在后门堵过两次，她没有告诉家里
+    truth_value: true
+    scope: PERSONAL
+    sensitivity: 0.85
+    subject: su_wanqing
+    related: [su_wanqing, zhao_gang]
+    initial_knowledge:
+      su_wanqing: {state: KNOWN, confidence: 1, source: WITNESSED}
+      zhao_gang: {state: KNOWN, confidence: 1, source: WITNESSED}
+  - key: fact_scrap_shortfall
+    statement: 河沿市场的磅单和苏记入库单差了四百公斤废铁
+    truth_value: true
+    scope: FACTION
+    sensitivity: 0.75
+    related: [wang_kuaiji, lin_gong, zhao_gang, han_group]
+    initial_knowledge:
+      player: {state: SUSPECTED, confidence: 0.6, source: INFERRED}
+      wang_kuaiji: {state: KNOWN, confidence: 0.9, source: DOCUMENT}
+      lin_gong: {state: KNOWN, confidence: 0.8, source: WITNESSED}
+      zhao_gang: {state: KNOWN, confidence: 1, source: WITNESSED}
+  - key: fact_press_is_mortgaged
+    statement: 苏建国已经把厂里那台冲床抵押出去凑原料钱
+    truth_value: true
+    scope: FACTION
+    sensitivity: 0.8
+    related: [su_jianguo, su_family]
+    initial_knowledge:
+      player: {state: KNOWN, confidence: 1, source: WITNESSED}
+      su_jianguo: {state: KNOWN, confidence: 1, source: WITNESSED}
+  - key: fact_mother_hid_savings
+    statement: 陈淑芬偷偷留了三千块，家里没有第二个人知道
+    truth_value: true
+    scope: PERSONAL
+    sensitivity: 0.6
+    subject: chen_shufen
+    related: [chen_shufen]
+    initial_knowledge:
+      player: {state: KNOWN, confidence: 0.9, source: WITNESSED}
+      chen_shufen: {state: KNOWN, confidence: 1, source: WITNESSED}
+  - key: fact_zhao_sent_the_texts
+    statement: 苏晚晴手机里那三条陌生号码短信是赵刚发的，其中一条写了具体时间和地点
+    truth_value: true
+    scope: PERSONAL
+    sensitivity: 0.95
+    subject: su_wanqing
+    related: [zhao_gang, su_wanqing]
+    initial_knowledge:
+      zhao_gang: {state: KNOWN, confidence: 1, source: WITNESSED}
+      su_wanqing: {state: SUSPECTED, confidence: 0.5, source: INFERRED}
+  - key: fact_tea_stall_heard_it_all
+    statement: 前面五家厂子倒之前，都是先在茶摊上跟韩磊谈的
+    truth_value: true
+    scope: WORLD
+    sensitivity: 0.5
+    related: [aunt_tea, han_lei, tea_stall]
+    initial_knowledge:
+      player: {state: KNOWN, confidence: 0.8, source: WITNESSED}
+      aunt_tea: {state: KNOWN, confidence: 1, source: WITNESSED}
+  - key: fact_you_came_back
+    statement: 你带着十年后的记忆回到了二〇一三年七月三日这个早上
+    truth_value: true
+    scope: PERSONAL
+    sensitivity: 1.0
+    subject: player
+    related: [player]
+    initial_knowledge:
+      player: {state: KNOWN, confidence: 1, source: WITNESSED}

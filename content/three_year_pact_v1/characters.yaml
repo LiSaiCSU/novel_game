@@ -1,0 +1,186 @@
+characters:
+  - key: lin_wan
+    name: 林晚
+    type: MAJOR_NPC
+    age: 27
+    gender: female
+    location: lin_study
+    faction: lin_family
+    faction_rank: 林氏建材代理总经理
+    realm: nobody
+    realm_stage: noticed
+    stats: {strength: 9, agility: 11, perception: 16, intelligence: 17, willpower: 17, charisma: 14}
+    background: 三年前替父亲签下那张协议的人。她没有为难过你，也从来没有替你说过话——她认为那两件事都不该由她来做。
+    personality: {traits: {upright: 0.88, guarded: 0.8, tired: 0.7}, values: [说话算数, 不欠人情], taboos: [拿婚姻做交易], speech_style: 话少，句子短，从不提高声音, risk_tolerance: 0.4}
+    emotion: {dominant: composed, valence: -0.1, arousal: 0.4, intensity: 0.45}
+    long_term_goal: 在不出卖任何人的前提下让林氏活下去
+    short_term_goals: [凑出这一期还款, 让父亲别再去求赵家]
+    schedule: {default: work, slots: [{phase: morning, activity: work, location: lin_boardroom}, {phase: afternoon, activity: work, location: lin_group_tower}, {phase: dusk, activity: work, location: lin_study}, {phase: night, activity: rest, location: lin_mansion}]}
+    items: [{key: pact_paper, qty: 1}]
+    skills: []
+    reputation: {global: 30, by_faction: {lin_family: 60}}
+    secret: 三年前那张协议是她单方面加的条款，为的是让你随时可以走
+    capabilities: [看账, 谈判, 记人]
+  - key: lin_zhenhai
+    name: 林振海
+    type: MAJOR_NPC
+    age: 58
+    gender: male
+    location: lin_study
+    faction: lin_family
+    faction_rank: 林氏建材董事长
+    realm: nobody
+    realm_stage: noticed
+    stats: {strength: 8, agility: 8, perception: 12, intelligence: 13, willpower: 9, charisma: 12}
+    background: 靠一车水泥起家，也止步于此。他最怕的不是破产，是在商会主桌上被人挪到边桌。
+    personality: {traits: {face_saving: 0.92, anxious: 0.85, snobbish: 0.8}, values: [体面, 家业], taboos: [当众认输], speech_style: 对外客气，对内摔东西, risk_tolerance: 0.3}
+    emotion: {dominant: anxious, valence: -0.4, arousal: 0.6, intensity: 0.6}
+    long_term_goal: 让林家继续被人叫一声林董
+    short_term_goals: [借到八千六百万, 把女儿的婚事换成筹码]
+    schedule: {default: work, slots: [{phase: morning, activity: work, location: lin_study}, {phase: afternoon, activity: social, location: chamber_of_commerce}, {phase: night, activity: rest, location: lin_mansion}]}
+    items: [{key: repayment_notice, qty: 1}]
+    skills: []
+    reputation: {global: 18, by_faction: {lin_family: 55}}
+    secret: 他已经私下答应赵家，只要签字就把林晚的婚事一并谈
+    capabilities: [应酬, 拖延]
+  - key: lin_shiya
+    name: 林诗雅
+    type: MAJOR_NPC
+    age: 23
+    gender: female
+    location: lin_kitchen
+    faction: lin_family
+    faction_rank: 无
+    realm: nobody
+    realm_stage: door_mat
+    stats: {strength: 8, agility: 12, perception: 11, intelligence: 12, willpower: 10, charisma: 15}
+    background: 林家小女儿。三年来你听过的最难听的话有一半出自她口，她并不算坏，只是从没想过要正眼看你。
+    personality: {traits: {sharp_tongued: 0.9, impulsive: 0.82, loyal_to_family: 0.7}, values: [家里人, 面子], taboos: [被外人看低], speech_style: 快、冲、爱翻旧账, risk_tolerance: 0.6}
+    emotion: {dominant: contemptuous, valence: -0.3, arousal: 0.55, intensity: 0.5}
+    long_term_goal: 嫁进一个不用看别人脸色的家
+    short_term_goals: [让姐姐答应赵启明, 把你赶出林家]
+    schedule: {default: idle, slots: [{phase: morning, activity: idle, location: lin_mansion}, {phase: afternoon, activity: social, location: riverside_road}, {phase: night, activity: rest, location: lin_mansion}]}
+    items: []
+    skills: []
+    reputation: {global: 5, by_faction: {lin_family: 40}}
+    secret: 她替赵启明传过一次话，收了一只表
+    capabilities: [传话, 起哄]
+  - key: zhao_qiming
+    name: 赵启明
+    type: MAJOR_NPC
+    age: 31
+    gender: male
+    location: chamber_of_commerce
+    faction: zhao_family
+    faction_rank: 赵氏执行董事
+    realm: nobody
+    realm_stage: noticed
+    stats: {strength: 12, agility: 12, perception: 15, intelligence: 16, willpower: 14, charisma: 17}
+    background: 三年吃下江城四家同行，手法干净得让人挑不出错。他要的从来不是林家那间厂，是林晚点头那一下。
+    personality: {traits: {calculating: 0.9, vain: 0.7, courteous: 0.85}, values: [赢, 场面], taboos: [被人当众下面子], speech_style: 永远笑着，永远把刀递给别人拿, risk_tolerance: 0.55}
+    emotion: {dominant: confident, valence: 0.3, arousal: 0.4, intensity: 0.45}
+    long_term_goal: 让整个江城的建材生意姓赵
+    short_term_goals: [逼林家七日内签字, 在商会宴上把事定死]
+    schedule: {default: work, slots: [{phase: morning, activity: work, location: chamber_of_commerce}, {phase: afternoon, activity: social, location: banquet_hall}, {phase: night, activity: rest, location: chamber_of_commerce}]}
+    items: []
+    skills: []
+    reputation: {global: 66, by_faction: {zhao_family: 85, chamber: 70}}
+    secret: 那八千六百万的债权是他去年绕了三道手才收进来的
+    capabilities: [收购, 施压, 场面话]
+  - key: zhou_bo
+    name: 周叔
+    type: MAJOR_NPC
+    age: 63
+    gender: male
+    location: lin_kitchen
+    faction: lin_family
+    faction_rank: 老宅管家
+    realm: nobody
+    realm_stage: door_mat
+    stats: {strength: 10, agility: 9, perception: 17, intelligence: 13, willpower: 15, charisma: 10}
+    background: 在林家做了三十年。三年里唯一给你留过饭的人，也是唯一没打听过你来历的人。
+    personality: {traits: {steady: 0.9, discreet: 0.9, kind: 0.8}, values: [做事, 不多嘴], taboos: [背后议论主家], speech_style: 慢，一次只说一句要紧的, risk_tolerance: 0.35}
+    emotion: {dominant: calm, valence: 0.1, arousal: 0.25, intensity: 0.3}
+    long_term_goal: 看着这家人平安过去这一关
+    short_term_goals: [提醒林晚账上的窟窿, 把码头那把钥匙交出去]
+    schedule: {default: work, slots: [{phase: dawn, activity: work, location: lin_kitchen}, {phase: morning, activity: work, location: lin_mansion}, {phase: afternoon, activity: idle, location: old_teahouse}, {phase: night, activity: rest, location: lin_mansion}]}
+    items: [{key: dock_key, qty: 1}]
+    skills: []
+    reputation: {global: 12, by_faction: {lin_family: 70}}
+    secret: 他认得你铜牌上那个环，三十年前在码头见过一次
+    capabilities: [记事, 认人, 沉默]
+  - key: lu_zheng
+    name: 陆峥
+    type: MAJOR_NPC
+    age: 35
+    gender: male
+    location: north_liaison
+    faction: north_office
+    faction_rank: 联络人
+    realm: nobody
+    realm_stage: noticed
+    stats: {strength: 16, agility: 15, perception: 16, intelligence: 15, willpower: 18, charisma: 11}
+    background: 三年前把你送进林家的人，今天来接你回去。他不关心你在这里过得怎么样，只关心期限。
+    personality: {traits: {disciplined: 0.95, blunt: 0.85, impatient: 0.6}, values: [规矩, 期限], taboos: [替人做决定], speech_style: 短句，报时间，报条件, risk_tolerance: 0.5}
+    emotion: {dominant: flat, valence: 0, arousal: 0.35, intensity: 0.35}
+    long_term_goal: 把人按期带回城北
+    short_term_goals: [确认三年之期已满, 不让江城的事牵扯进来]
+    schedule: {default: work, slots: [{phase: morning, activity: work, location: north_liaison}, {phase: afternoon, activity: work, location: dock_yard}, {phase: night, activity: rest, location: north_liaison}]}
+    items: []
+    skills: []
+    reputation: {global: 0, by_faction: {north_office: 90}}
+    secret: 城北这三年一直在等你自己开口，从没打算强行带走
+    capabilities: [调度, 认令, 收尾]
+  - key: qian_kuai
+    name: 钱快
+    type: MINOR_NPC
+    age: 41
+    gender: male
+    location: lin_group_tower
+    faction: lin_family
+    faction_rank: 财务
+    realm: nobody
+    realm_stage: door_mat
+    stats: {strength: 8, agility: 9, perception: 13, intelligence: 14, willpower: 8, charisma: 10}
+    background: 林氏的账都从他手里过，风向一变他就开始收拾抽屉。
+    personality: {traits: {opportunist: 0.88, timid: 0.75}, values: [自保], taboos: [背锅], speech_style: 打太极，句尾总带个大概, risk_tolerance: 0.2}
+    emotion: {dominant: nervous, valence: -0.3, arousal: 0.5, intensity: 0.45}
+    long_term_goal: 在船沉之前换一条船
+    short_term_goals: [把两份对不上的账藏好]
+    schedule: {default: work, slots: [{phase: morning, activity: work, location: lin_group_tower}, {phase: night, activity: rest, location: riverside_road}]}
+    items: []
+    skills: []
+    reputation: {global: 3, by_faction: {lin_family: 30}}
+    secret: 他早就把林氏的现金流报给了赵家
+    capabilities: [做账]
+  - key: xiao_hui
+    name: 小惠
+    type: MINOR_NPC
+    age: 24
+    gender: female
+    location: lobby_desk
+    faction: lin_family
+    faction_rank: 前台
+    realm: nobody
+    realm_stage: door_mat
+    stats: {strength: 8, agility: 11, perception: 14, intelligence: 11, willpower: 10, charisma: 13}
+    background: 大厦前台，认得每一张脸，也记得每一张脸上一次是怎么被打发走的。
+    personality: {traits: {observant: 0.8, obedient: 0.85}, values: [不惹事], taboos: [越权放行], speech_style: 客气但不让步, risk_tolerance: 0.2}
+    emotion: {dominant: neutral, valence: 0, arousal: 0.3, intensity: 0.3}
+    long_term_goal: 平平安安做到转正
+    short_term_goals: [按名单放行]
+    schedule: {default: work, slots: [{phase: morning, activity: work, location: lobby_desk}, {phase: afternoon, activity: work, location: lobby_desk}, {phase: night, activity: rest, location: riverside_road}]}
+    items: []
+    skills: []
+    reputation: {global: 2, by_faction: {lin_family: 20}}
+    secret: 她手上有一份不予放行的名单，你排在第一个
+    capabilities: [登记, 放行]
+relationships:
+  - {a: lin_wan, b: player, affection: 2, trust: 6, respect: 4, familiarity: 30, boundaries: 60}
+  - {a: lin_zhenhai, b: player, affection: -20, trust: -10, respect: -30, suspicion: 25, familiarity: 30, boundaries: 50}
+  - {a: lin_shiya, b: player, affection: -30, trust: -15, respect: -45, suspicion: 30, hatred: 12, familiarity: 30, boundaries: 50}
+  - {a: zhao_qiming, b: player, affection: 0, trust: 0, respect: -35, suspicion: 5, familiarity: 4, boundaries: 50}
+  - {a: zhou_bo, b: player, affection: 18, trust: 22, respect: 15, familiarity: 35, boundaries: 50}
+  - {a: lu_zheng, b: player, affection: 0, trust: 30, respect: 40, familiarity: 20, boundaries: 50}
+  - {a: qian_kuai, b: player, affection: -5, trust: -5, respect: -25, suspicion: 20, familiarity: 15, boundaries: 50}
+  - {a: xiao_hui, b: player, affection: 0, trust: 0, respect: -20, suspicion: 10, familiarity: 10, boundaries: 50}

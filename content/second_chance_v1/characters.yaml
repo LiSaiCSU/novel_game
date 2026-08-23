@@ -1,0 +1,186 @@
+characters:
+  - key: su_wanqing
+    name: 苏晚晴
+    type: MAJOR_NPC
+    age: 17
+    gender: female
+    location: su_room
+    faction: su_family
+    faction_rank: 妹妹
+    realm: ordinary
+    realm_stage: nobody
+    stats: {strength: 8, agility: 12, perception: 14, intelligence: 16, willpower: 13, charisma: 13}
+    background: 高二，成绩全班前三，暑假天天去补课。前世的今天起第九天，她在三中后门那条巷子里出了事，从此没能再回学校。
+    personality: {traits: {bright: 0.85, stubborn: 0.7, considerate: 0.8}, values: [家里人, 念书], taboos: [让爸妈担心], speech_style: 语速快，爱顶嘴，但会把最要紧的事咽下去, risk_tolerance: 0.45}
+    emotion: {dominant: cheerful, valence: 0.4, arousal: 0.45, intensity: 0.4}
+    long_term_goal: 考出滨海
+    short_term_goals: [把这个暑假的补课坚持下来, 别让哥哥知道有人在校门口堵她]
+    schedule: {default: study, slots: [{phase: dawn, activity: rest, location: su_room}, {phase: morning, activity: study, location: binhai_no3_school}, {phase: afternoon, activity: study, location: binhai_no3_school}, {phase: dusk, activity: idle, location: school_gate}, {phase: night, activity: rest, location: su_room}]}
+    items: [{key: sister_phone, qty: 1}]
+    skills: []
+    reputation: {global: 6, by_faction: {su_family: 70, school: 40}}
+    secret: 已经有人在后门堵过她两次，她没敢跟家里说
+    capabilities: [念书, 记事, 嘴硬]
+  - key: su_jianguo
+    name: 苏建国
+    type: MAJOR_NPC
+    age: 47
+    gender: male
+    location: workshop_office
+    faction: su_family
+    faction_rank: 苏记老板
+    realm: ordinary
+    realm_stage: watched
+    stats: {strength: 13, agility: 10, perception: 11, intelligence: 12, willpower: 14, charisma: 10}
+    background: 开了十一年五金加工厂，最大的本事是手艺，最大的短处是看不懂合同。前世他在这个七月签了那张订单，半年后厂子没了。
+    personality: {traits: {honest: 0.9, proud: 0.8, trusting: 0.75}, values: [手艺, 说话算数], taboos: [欠工人工钱], speech_style: 话不多，说到厂里的事才来劲, risk_tolerance: 0.5}
+    emotion: {dominant: hopeful, valence: 0.3, arousal: 0.4, intensity: 0.4}
+    long_term_goal: 把厂子做到二十个人
+    short_term_goals: [接下韩记那张大单, 把冲床的钱还上]
+    schedule: {default: work, slots: [{phase: dawn, activity: work, location: su_workshop}, {phase: morning, activity: work, location: workshop_office}, {phase: afternoon, activity: work, location: su_workshop}, {phase: dusk, activity: social, location: tea_stall}, {phase: night, activity: rest, location: su_home}]}
+    items: [{key: order_contract, qty: 1}]
+    skills: []
+    reputation: {global: 14, by_faction: {su_family: 80}}
+    secret: 他已经把冲床抵押出去凑了原料钱
+    capabilities: [五金加工, 看料, 认人不认字]
+  - key: chen_shufen
+    name: 陈淑芬
+    type: MAJOR_NPC
+    age: 45
+    gender: female
+    location: su_kitchen
+    faction: su_family
+    faction_rank: 母亲
+    realm: ordinary
+    realm_stage: nobody
+    stats: {strength: 10, agility: 10, perception: 15, intelligence: 12, willpower: 16, charisma: 12}
+    background: 纺织厂三班倒，家里的账都在她心里。她比父亲更早觉得那张订单不对，但说不出哪里不对。
+    personality: {traits: {shrewd: 0.8, worrying: 0.85, tough: 0.8}, values: [过日子, 孩子], taboos: [借高利贷], speech_style: 唠叨里全是数字, risk_tolerance: 0.25}
+    emotion: {dominant: worried, valence: -0.1, arousal: 0.45, intensity: 0.45}
+    long_term_goal: 两个孩子都念完大学
+    short_term_goals: [劝丈夫别急着签那张单, 把这个月的水电费凑齐]
+    schedule: {default: work, slots: [{phase: dawn, activity: work, location: su_kitchen}, {phase: morning, activity: work, location: family_yard}, {phase: afternoon, activity: work, location: family_yard}, {phase: night, activity: rest, location: su_home}]}
+    items: []
+    skills: []
+    reputation: {global: 8, by_faction: {su_family: 75}}
+    secret: 她偷偷留了一笔三千块的钱，谁都没说
+    capabilities: [算账, 看人, 熬]
+  - key: han_lei
+    name: 韩磊
+    type: MAJOR_NPC
+    age: 38
+    gender: male
+    location: han_office
+    faction: han_group
+    faction_rank: 韩记老板
+    realm: ordinary
+    realm_stage: watched
+    stats: {strength: 13, agility: 12, perception: 16, intelligence: 16, willpower: 15, charisma: 15}
+    background: 三年吃下滨海五家小加工厂，手法一样：高价下单、拖账、逼违约、低价接手。前世苏家就是第六家。
+    personality: {traits: {patient: 0.85, ruthless: 0.88, affable: 0.8}, values: [赢, 便宜], taboos: [亏本], speech_style: 一口一个老哥，把最狠的条件说得像帮忙, risk_tolerance: 0.6}
+    emotion: {dominant: genial, valence: 0.2, arousal: 0.35, intensity: 0.4}
+    long_term_goal: 把河沿这条街的加工厂全收进来
+    short_term_goals: [让苏建国在七月签字, 压住磅单那件事]
+    schedule: {default: work, slots: [{phase: morning, activity: work, location: han_office}, {phase: afternoon, activity: social, location: riverside_market}, {phase: dusk, activity: social, location: tea_stall}, {phase: night, activity: rest, location: han_office}]}
+    items: []
+    skills: []
+    reputation: {global: 45, by_faction: {han_group: 88}}
+    secret: 磅单上少的四百公斤废铁是他手下换走的，收据还在
+    capabilities: [压价, 拖账, 场面话]
+  - key: zhao_gang
+    name: 赵刚
+    type: MAJOR_NPC
+    age: 24
+    gender: male
+    location: riverside_market
+    faction: han_group
+    faction_rank: 跑腿
+    realm: ordinary
+    realm_stage: nobody
+    stats: {strength: 15, agility: 14, perception: 11, intelligence: 9, willpower: 10, charisma: 8}
+    background: 韩磊手下管废铁进出的人。前世那条巷子里的事，他在场。
+    personality: {traits: {crude: 0.85, cowardly_inside: 0.7, greedy: 0.8}, values: [钱, 面子], taboos: [被人当众驳], speech_style: 嗓门大，一急就磕巴, risk_tolerance: 0.55}
+    emotion: {dominant: cocky, valence: 0.1, arousal: 0.5, intensity: 0.45}
+    long_term_goal: 在韩记混个管事
+    short_term_goals: [把那四百公斤的事压下去, 找苏晚晴要回那条短信]
+    schedule: {default: work, slots: [{phase: morning, activity: work, location: riverside_market}, {phase: afternoon, activity: work, location: han_office}, {phase: dusk, activity: idle, location: school_gate}, {phase: night, activity: rest, location: riverside_market}]}
+    items: []
+    skills: []
+    reputation: {global: 4, by_faction: {han_group: 40}}
+    secret: 他给苏晚晴发过三条短信，其中一条写了具体时间和地点
+    capabilities: [搬货, 堵人, 传话]
+  - key: aunt_tea
+    name: 茶摊老板娘
+    type: MAJOR_NPC
+    age: 52
+    gender: female
+    location: tea_stall
+    faction: null
+    faction_rank: 无
+    realm: ordinary
+    realm_stage: nobody
+    stats: {strength: 9, agility: 9, perception: 18, intelligence: 13, willpower: 14, charisma: 14}
+    background: 在市场口摆了十六年茶摊。这条街上每一笔生意是怎么谈成的，她都听过一半。
+    personality: {traits: {observant: 0.95, discreet: 0.7, warm: 0.75}, values: [不掺和, 老主顾], taboos: [白说别人的事], speech_style: 一边擦杯子一边说，话里留半句, risk_tolerance: 0.3}
+    emotion: {dominant: placid, valence: 0.15, arousal: 0.25, intensity: 0.3}
+    long_term_goal: 把茶摊摆到摆不动为止
+    short_term_goals: [看看这个夏天谁家要出事]
+    schedule: {default: work, slots: [{phase: dawn, activity: work, location: tea_stall}, {phase: morning, activity: work, location: tea_stall}, {phase: afternoon, activity: work, location: tea_stall}, {phase: dusk, activity: work, location: tea_stall}, {phase: night, activity: rest, location: riverside_market}]}
+    items: []
+    skills: []
+    reputation: {global: 16, by_faction: {}}
+    secret: 前面五家厂子倒之前，都是先在她摊上跟韩磊谈的
+    capabilities: [听事, 认人, 递话]
+  - key: lin_gong
+    name: 林工
+    type: MINOR_NPC
+    age: 51
+    gender: male
+    location: su_workshop
+    faction: su_family
+    faction_rank: 老师傅
+    realm: ordinary
+    realm_stage: nobody
+    stats: {strength: 14, agility: 10, perception: 14, intelligence: 11, willpower: 13, charisma: 9}
+    background: 跟着苏建国干了九年，全厂只有他会调那台冲床。
+    personality: {traits: {loyal: 0.85, blunt: 0.8}, values: [手艺, 工钱], taboos: [糊弄活], speech_style: 只说活儿, risk_tolerance: 0.3}
+    emotion: {dominant: steady, valence: 0.1, arousal: 0.3, intensity: 0.3}
+    long_term_goal: 干到退休
+    short_term_goals: [把这批活按时做完]
+    schedule: {default: work, slots: [{phase: morning, activity: work, location: su_workshop}, {phase: afternoon, activity: work, location: su_workshop}, {phase: night, activity: rest, location: family_yard}]}
+    items: []
+    skills: []
+    reputation: {global: 5, by_faction: {su_family: 60}}
+    secret: 他早就发现入库单的重量不对，跟老板提过一次，没人听
+    capabilities: [调机器, 看料]
+  - key: wang_kuaiji
+    name: 王会计
+    type: MINOR_NPC
+    age: 39
+    gender: female
+    location: workshop_office
+    faction: su_family
+    faction_rank: 会计
+    realm: ordinary
+    realm_stage: nobody
+    stats: {strength: 8, agility: 9, perception: 14, intelligence: 14, willpower: 10, charisma: 10}
+    background: 兼职给厂里做账，一周来两天。
+    personality: {traits: {careful: 0.8, self_protective: 0.75}, values: [账要平], taboos: [做假账], speech_style: 先报数字再说话, risk_tolerance: 0.2}
+    emotion: {dominant: neutral, valence: 0, arousal: 0.3, intensity: 0.3}
+    long_term_goal: 多接两家厂的账
+    short_term_goals: [把七月的账做平]
+    schedule: {default: work, slots: [{phase: morning, activity: work, location: workshop_office}, {phase: night, activity: rest, location: family_yard}]}
+    items: [{key: scrap_receipt, qty: 1}]
+    skills: []
+    reputation: {global: 4, by_faction: {su_family: 45}}
+    secret: 磅单和入库单差四百公斤，她压了半个月没敢说
+    capabilities: [做账, 对单]
+relationships:
+  - {a: su_wanqing, b: player, affection: 45, trust: 40, respect: 15, familiarity: 80, boundaries: 60}
+  - {a: su_jianguo, b: player, affection: 35, trust: 20, respect: -10, familiarity: 80, boundaries: 50}
+  - {a: chen_shufen, b: player, affection: 40, trust: 25, respect: -5, familiarity: 80, boundaries: 50}
+  - {a: han_lei, b: player, affection: 0, trust: 0, respect: -40, suspicion: 0, familiarity: 0, boundaries: 50}
+  - {a: zhao_gang, b: player, affection: 0, trust: 0, respect: -35, suspicion: 5, familiarity: 3, boundaries: 50}
+  - {a: aunt_tea, b: player, affection: 5, trust: 5, respect: 0, familiarity: 12, boundaries: 50}
+  - {a: lin_gong, b: player, affection: 10, trust: 10, respect: -5, familiarity: 40, boundaries: 50}
+  - {a: wang_kuaiji, b: player, affection: 2, trust: 2, respect: -15, familiarity: 20, boundaries: 50}

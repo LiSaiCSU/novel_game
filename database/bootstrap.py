@@ -107,6 +107,18 @@ async def ensure_official_releases(
                 session, settings, asset_store, "spirit_pact_v1",
                 "nine-sigil-choices", ["东方玄幻", "学院", "成长", "冒险"],
             )
+        three_year_dir = settings.content_path / "three_year_pact_v1"
+        if three_year_dir.is_dir():
+            await _ensure_pack(
+                session, settings, asset_store, "three_year_pact_v1",
+                "three-year-pact", ["都市", "逆袭", "打脸", "短剧"],
+            )
+        second_chance_dir = settings.content_path / "second_chance_v1"
+        if second_chance_dir.is_dir():
+            await _ensure_pack(
+                session, settings, asset_store, "second_chance_v1",
+                "second-chance", ["重生", "年代", "复仇", "短剧"],
+            )
         await session.commit()
 
 

@@ -1,0 +1,16 @@
+progression_name: 在江城的分量
+realms:
+  - key: nobody
+    name: 无名之辈
+    order: 0
+    stages: [{key: door_mat, name: 上门女婿, order: 0}, {key: noticed, name: 有人开始正眼看你, order: 1}]
+    power_coefficient: 1.0
+    max_health: 100
+    max_spiritual_power: 0
+    lifespan_years: 90
+    xp_to_next_stage: 0
+    breakthrough_base_chance: 0
+    description: 在江城，你目前什么都不是。
+spiritual_roots: [{key: unremarkable, name: 看不出来历, speed: 1.0, breakthrough_mod: 0, weight: 1}]
+mental_states: [{key: steady, name: 沉得住气, min: 0, max: 1.01, breakthrough_mod: 0}]
+bottleneck: {gain_on_failure: 0, max: 0, penalty_per_point: 0, decay_per_month: 0}

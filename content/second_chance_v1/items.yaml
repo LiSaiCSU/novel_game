@@ -1,0 +1,25 @@
+item_types: [{key: document, name: 单据}, {key: tool, name: 物件}, {key: token, name: 凭证}, {key: currency, name: 货币}]
+rarities: [{key: common, name: 普通, value_multiplier: 1}, {key: key_item, name: 关键, value_multiplier: 1}]
+items:
+  - {key: rmb, name: 现金, type: currency, rarity: common, value: 1, stackable: true, description: 你身上有八十六块，是这个暑假全部的零花钱。, effects: {}}
+  - key: order_contract
+    name: 那张没签的订单
+    type: document
+    rarity: key_item
+    value: 0
+    stackable: false
+    description: 韩记送来的代工合同，价钱比市面高两成，付款方式写的是货到六十天结。
+    effects: {reveals_fact: fact_order_is_a_trap, quest_item: true}
+    metadata:
+      narrative_facts:
+        - 合同的付款条款写的是货到六十天结，不是当场结。
+        - 违约条款单独占了一整页，字号比正文小一号。
+        - 甲方盖章处是韩记贸易，经办人一栏空着。
+      narrative_constraints:
+        aliases: [合同, 那张订单, 代工合同]
+        required_when_referenced: [六十天, 违约]
+        forbidden_when_referenced: [当场结清, 已经签了, 甲方是苏]
+  - {key: old_notebook, name: 一本旧笔记本, type: tool, rarity: key_item, value: 0, stackable: false, description: 你今天早上翻出来的空白本子。第一页你自己写了几行字，字迹还是十八岁的。, effects: {quest_item: true}}
+  - {key: sister_phone, name: 妹妹的旧手机, type: tool, rarity: common, value: 0, stackable: false, description: 一部按键机，短信收件箱里有三条没删的陌生号码。, effects: {}}
+  - {key: scrap_receipt, name: 废铁磅单, type: document, rarity: key_item, value: 0, stackable: false, description: 河沿市场开出的一张磅单，重量和厂里入库单对不上四百公斤。, effects: {reveals_fact: fact_scrap_shortfall}}
+  - {key: bus_card, name: 公交月票, type: token, rarity: common, value: 0, stackable: false, description: 七月的月票，还剩二十七天。, effects: {}}

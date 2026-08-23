@@ -1,0 +1,16 @@
+location_types: [{key: district, name: 城区}, {key: building, name: 楼宇}, {key: room, name: 房间}, {key: outdoor, name: 户外}]
+locations:
+  - {key: jiangcheng, name: 江城, type: district, parent: null, danger: 0, spirit_density: 1, description: 沿江的省会城市，老城区和新区之间隔着一条高架。}
+  - {key: lin_mansion, name: 林家老宅, type: building, parent: jiangcheng, danger: 0, spirit_density: 1, description: 三层小楼带院子，客厅正墙挂着林家与江城商会的合影，照片里没有你。, travel: {lin_kitchen: 1, lin_study: 2, riverside_road: 12}}
+  - {key: lin_kitchen, name: 老宅后厨, type: room, parent: lin_mansion, danger: 0, spirit_density: 1, description: 你三年来待得最久的地方，灶台边贴着一张排班表，每一格都写着你的名字。, travel: {lin_mansion: 1}}
+  - {key: lin_study, name: 林振海的书房, type: room, parent: lin_mansion, danger: 0, spirit_density: 1, description: 樟木书桌上摊着还款通知和一叠没签的协议，抽屉常年锁着。, travel: {lin_mansion: 2}}
+  - {key: riverside_road, name: 沿江路, type: outdoor, parent: jiangcheng, danger: 0, spirit_density: 1, description: 从老城通往新区的主干道，早高峰堵得死死的。, travel: {lin_mansion: 12, lin_group_tower: 15, old_teahouse: 8, city_hospital: 10}}
+  - {key: lin_group_tower, name: 林氏大厦, type: building, parent: jiangcheng, danger: 0, spirit_density: 1, description: 二十二层的老写字楼，林氏建材占了顶上三层，电梯里贴着停车费上调通知。, travel: {riverside_road: 15, lin_boardroom: 2, lobby_desk: 1}}
+  - {key: lobby_desk, name: 大厦前台, type: room, parent: lin_group_tower, danger: 0, spirit_density: 1, description: 前台姑娘认识每一张脸，也认识哪张脸不该放行。, travel: {lin_group_tower: 1}}
+  - {key: lin_boardroom, name: 林氏会议室, type: room, parent: lin_group_tower, danger: 1, spirit_density: 1, description: 长桌能坐十六个人，投影幕布上停着一张没有翻页的资产负债表。, travel: {lin_group_tower: 2}}
+  - {key: chamber_of_commerce, name: 江城商会, type: building, parent: jiangcheng, danger: 1, spirit_density: 1, description: 会长办公室在四楼，走廊两侧挂着历届理事的照片，最新一张是赵家的。, travel: {riverside_road: 14, banquet_hall: 1}}
+  - {key: banquet_hall, name: 商会宴会厅, type: room, parent: chamber_of_commerce, danger: 1, spirit_density: 1, description: 圆桌按位次排开，谁坐哪一桌在请柬印出来那天就定了。, travel: {chamber_of_commerce: 1}}
+  - {key: old_teahouse, name: 老码头茶馆, type: building, parent: jiangcheng, danger: 0, spirit_density: 1, description: 拆迁通知贴了两年也没拆，老周在这儿有个固定的位子。, travel: {riverside_road: 8, dock_yard: 6}}
+  - {key: dock_yard, name: 旧货运码头, type: outdoor, parent: jiangcheng, danger: 2, spirit_density: 1, description: 早就停用的三号泊位，夜里只有一盏灯，集装箱堆得比楼高。, travel: {old_teahouse: 6, riverside_road: 18}}
+  - {key: city_hospital, name: 江城中心医院, type: building, parent: jiangcheng, danger: 0, spirit_density: 1, description: 住院部十二楼是特护病房，走廊尽头那间常年拉着帘子。, travel: {riverside_road: 10}}
+  - {key: north_liaison, name: 城北联络处, type: building, parent: jiangcheng, danger: 1, spirit_density: 1, description: 挂着货运代理招牌的两层小楼，门口没有停车位，也从来没人停车。, travel: {riverside_road: 20, dock_yard: 12}}

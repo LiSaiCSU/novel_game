@@ -1,0 +1,25 @@
+item_types: [{key: token, name: 信物}, {key: document, name: 文件}, {key: tool, name: 物件}, {key: currency, name: 货币}]
+rarities: [{key: common, name: 普通, value_multiplier: 1}, {key: key_item, name: 关键, value_multiplier: 1}]
+items:
+  - {key: rmb, name: 现金, type: currency, rarity: common, value: 1, stackable: true, description: 你身上只有四百多块。, effects: {}}
+  - key: bronze_token
+    name: 一枚旧铜牌
+    type: token
+    rarity: key_item
+    value: 0
+    stackable: false
+    description: 巴掌大，边缘磨得发亮，正面刻着一个看不出是字还是纹的东西，背面空白。你戴了三年，没人问过。
+    effects: {quest_item: true}
+    metadata:
+      narrative_facts:
+        - 铜牌正面的刻痕是一个环，环里有三道横。
+        - 铜牌背面是空的，没有编号，也没有名字。
+        - 你从不摘下来，三年里没有任何人问过它的来历。
+      narrative_constraints:
+        aliases: [铜牌, 那枚牌子]
+        required_when_referenced: [环, 三道横]
+        forbidden_when_referenced: [刻着名字, 编号是, 上面写着龙]
+  - {key: pact_paper, name: 三年协议, type: document, rarity: key_item, value: 0, stackable: false, description: 三年前签的一张纸，写明期满之日双方两清。落款处只有你和林晚的名字。, effects: {quest_item: true}}
+  - {key: repayment_notice, name: 还款通知, type: document, rarity: key_item, value: 0, stackable: false, description: 八千六百万，七日内到账，抬头是林氏建材。, effects: {reveals_fact: fact_debt_due}}
+  - {key: old_phone, name: 一部旧手机, type: tool, rarity: common, value: 0, stackable: false, description: 三年没换过，通讯录里只存了一个没有备注的号码。, effects: {}}
+  - {key: dock_key, name: 三号泊位的钥匙, type: token, rarity: key_item, value: 0, stackable: false, description: 旧货运码头三号泊位仓库的钥匙，齿口磨平了一半。, effects: {}}

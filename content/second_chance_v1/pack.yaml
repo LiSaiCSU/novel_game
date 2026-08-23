@@ -1,0 +1,287 @@
+key: second_chance_v1
+name: 重生：这一次换我来
+genre: rebirth_revenge
+version: "1.0.0"
+engine_min_version: "0.2.0"
+primary_progression_key: standing
+attribute_definitions:
+  - {key: foresight, label: 先知, type: number}
+  - {key: nerve, label: 定力, type: number}
+  - {key: credit, label: 信用, type: number}
+resource_definitions:
+  - {key: health, label: 体力, minimum: 0, maximum: 100, default: 100}
+  - {key: energy, label: 精神, minimum: 0, maximum: 100, default: 90}
+progression_definitions:
+  - key: standing
+    label: 这一世的手牌
+    tiers:
+      - {key: nobody, label: 没人当回事, order: 0}
+      - {key: watched, label: 开始被人盯上, order: 1}
+      - {key: reckoned, label: 说话有人听, order: 2}
+player_fields:
+  - {key: name, label: 姓名, type: text, required: true}
+  - {key: age, label: 年龄, type: integer, required: true, default: 18, minimum: 18, maximum: 22}
+  - key: former_life
+    label: 上一世你最后是做什么的
+    type: choice
+    required: true
+    default: factory_manager
+    choices:
+      - {value: factory_manager, label: 给人打工管厂子}
+      - {value: accountant, label: 做了十年账}
+      - {value: sales, label: 跑业务的}
+      - {value: nothing, label: 什么都没做成}
+  - key: regret
+    label: 上一世你最过不去的一件事
+    type: choice
+    required: true
+    default: sister
+    choices:
+      - {value: sister, label: 妹妹那天晚上}
+      - {value: factory, label: 父亲的厂子}
+      - {value: mother, label: 母亲后来病了}
+      - {value: myself, label: 自己没出息}
+  - {key: background, label: 上一世后来怎么样了, type: text, required: false}
+language: zh-CN
+author_tests:
+  - key: opening_state
+    name: 开场处境与先知边界正确
+    scenario: main_story
+    assertions:
+      - {path: player.location, op: eq, expected: su_room}
+      - {path: knowledge.player.fact_alley_incident_in_nine_days, op: eq, expected: KNOWN}
+      - {path: knowledge.su_wanqing.fact_alley_incident_in_nine_days, op: eq, expected: UNKNOWN}
+      - {path: knowledge.player.fact_order_is_a_trap, op: eq, expected: KNOWN}
+      - {path: knowledge.su_jianguo.fact_order_is_a_trap, op: eq, expected: UNKNOWN}
+  - key: sister_hides_it
+    name: 妹妹自己知道被人堵过但没告诉家里
+    scenario: main_story
+    assertions:
+      - {path: knowledge.su_wanqing.fact_sister_already_followed, op: eq, expected: KNOWN}
+      - {path: knowledge.chen_shufen.fact_sister_already_followed, op: eq, expected: UNKNOWN}
+      - {path: knowledge.su_jianguo.fact_sister_already_followed, op: eq, expected: UNKNOWN}
+  - key: best_ending_needs_both
+    name: 最好的结局需要同时保住妹妹和厂子
+    scenario: main_story
+    fixtures:
+      quests: {quest_protect_sister: completed, quest_stop_the_signing: completed}
+    assertions:
+      - {path: endings.ending_both_saved.available, op: eq, expected: true}
+world:
+  name: 滨海·二〇一三年七月
+  description: 二〇一三年七月的滨海。父亲的五金加工厂还开着，妹妹还在念高二，韩记的那张订单刚送到厂里。十年后这些都没了，而你带着那十年的记忆回到了这个早上。
+  start_location: su_room
+  world_seed_default: binhai-july-third
+story:
+  title: 重生：这一次换我来
+  opening_location: su_room
+  premise: |
+    你死过一次。或者说，你活到了三十岁，然后在一个再普通不过的早上，睁眼看见了十八岁的天花板。
+    墙上的日历写着二〇一三年七月三日。下铺的妹妹还在睡，她今年高二，还能走路，还能笑。
+    厨房里母亲在熬绿豆汤。父亲已经去了厂里——韩记那张订单昨天送到，他今天就要签。
+    你记得那张单子怎么把厂子拖垮，记得九天后妹妹在三中后门那条巷子里出的事，
+    记得后来十年家里是怎么一点一点散掉的。
+    你什么都记得，但没有一个人会信你。你只有九天。
+  opening_blueprint:
+    player_context: 开场第一句就是重生本身带来的冲击，不做铺垫。玩家上一世做什么、最过不去哪件事，决定他睁眼之后第一个动作是扑向谁。
+    acts:
+      - purpose: 第一段就回来
+        must_show: [第一句之内主角意识到自己回到了十年前的这个早上, 用一个具体的东西确认年份——日历、旧手机、还没坏的冰箱, 妹妹活着且完好地出现在同一个房间里]
+        comic_beat: 最激动的时刻他先被十八岁的身体绊了一跤，或者被一句极其日常的催促打断
+      - purpose: 看清他有多没有本钱，也看清他知道什么
+        must_show: [点明九天后妹妹会出事和父亲今天要签那张单, 让家里至少一个人当面把他当小孩打发, 让读者明白他手上唯一多出来的东西只是记忆]
+        comic_beat: 他想开口警告，先被母亲用一句多喝汤堵回去
+      - purpose: 他抢回半步，代价立刻上门
+        must_show: [主角用一件只有他知道的事扳回半寸——说准一个数字、拦下一个动作、点破一份单据, 这半寸立刻让人开始怀疑他为什么会知道, 停在一个当场就要回答的问题上]
+        comic_beat: 他刚说准一件事，家里人第一反应不是信他，是问他是不是发烧了
+    humor_rule: 笑点来自重生者和十八岁身份之间的落差、家里人的日常唠叨和年代细节；不拿妹妹遇到的事、伤病或家庭困境开玩笑。
+    choice_gate: 主角回到了哪一天、九天后会发生什么、父亲今天要签什么、他手上唯一的东西是记忆，以及第一个选择会先救哪一头。
+  starter_items: [{key: old_notebook, quantity: 1}, {key: bus_card, quantity: 1}, {key: rmb, quantity: 86}]
+  player_template:
+    constraints: {minimum_age: 18, maximum_age: 22}
+    properties: {life_status: came_back}
+  relationship_boundaries: |
+    本作品的核心关系是家人与同伴，不以恋爱为主线。
+    任何可发展的关系都只发生在成年人之间，必须建立在共同经历与明确表达之上，玩家可以随时拒绝并保持拒绝。
+    不写露骨性描写，不把胁迫、控制或恩情美化成感情；未成年角色不涉及任何恋爱或性相关内容。
+  endings:
+    - key: ending_both_saved
+      type: other
+      title: 这一次都在
+      priority: 95
+      epilogue: >
+        第九天晚上九点半，晚自习散场。你站在三中后门的路灯下，妹妹背着书包出来，
+        看见你愣了一下，说了句"你怎么来了"，然后自己走过来挽住你的胳膊。
+        巷子口没有人。厂里那张订单最后没签，冲床赎回来了，父亲那天在茶摊坐到很晚，
+        跟人说他儿子今年像是突然长大了。
+        十年后你还记得这个夏天，但那已经是另一个十年。
+      condition:
+        op: and
+        args:
+          - {op: eq, args: [{op: get, args: [quests.quest_protect_sister.status]}, completed]}
+          - {op: eq, args: [{op: get, args: [quests.quest_stop_the_signing.status]}, completed]}
+    - key: ending_sister_only
+      type: bond
+      lead: su_wanqing
+      title: 厂子没了，人还在
+      priority: 80
+      epilogue: >
+        订单还是签了，厂子撑到年底就撑不住了。工人一个个走，最后一台机器被拉走那天下着雨。
+        但妹妹好好的。她照常上学，照常考试，第二年考出了滨海。
+        走的那天她在车站问你："哥，你那个夏天到底是怎么了？"
+        你说没什么。她看了你很久，说："反正你那次是对的。"
+      condition:
+        op: and
+        args:
+          - {op: eq, args: [{op: get, args: [quests.quest_protect_sister.status]}, completed]}
+          - {op: ne, args: [{op: get, args: [quests.quest_stop_the_signing.status]}, completed]}
+    - key: ending_factory_only
+      type: other
+      title: 厂子保住了
+      priority: 70
+      epilogue: >
+        那张单子没签。韩记的四百公斤废铁被翻了出来，河沿这条街半年没人再提吃厂子的事。
+        父亲的厂做到了二十个人，他很高兴，逢人就说。
+        只有你知道第九天那个晚上，你在另一个地方。
+        妹妹后来没能回学校。你把这件事记了一辈子，第二辈子。
+      condition:
+        op: and
+        args:
+          - {op: eq, args: [{op: get, args: [quests.quest_stop_the_signing.status]}, completed]}
+          - {op: ne, args: [{op: get, args: [quests.quest_protect_sister.status]}, completed]}
+    - key: ending_exposed
+      type: independent
+      title: 你到底是谁
+      priority: 45
+      epilogue: >
+        你说准的事太多了。母亲在厨房里问你的时候手一直在抖，
+        妹妹站在门口没有进来，父亲把烟按灭在鞋底上，一句话没说。
+        那天之后家里人还是待你很好，好得像在待一个客人。
+        你救下了该救的，也把自己从这个家里挪了出去——这是这一次的代价。
+      condition:
+        op: and
+        args:
+          - {op: eq, args: [{op: get, args: [quests.quest_keep_your_secret.status]}, failed]}
+          - {op: gte, args: [{op: get, args: [world.minute]}, 12960]}
+    - key: ending_same_again
+      type: other
+      title: 又是这样
+      priority: 20
+      hidden_until_available: true
+      epilogue: >
+        第九天晚上九点半，晚自习照常散场。
+        你在市场那头，正跟人争一张单子的价钱，争得很凶，几乎就要赢了。
+        手机响的时候你没接，因为那是个陌生号码。
+        你什么都记得，也什么都没改。
+      condition:
+        op: and
+        args:
+          - {op: ne, args: [{op: get, args: [quests.quest_protect_sister.status]}, completed]}
+          - {op: ne, args: [{op: get, args: [quests.quest_stop_the_signing.status]}, completed]}
+          - {op: gte, args: [{op: get, args: [world.minute]}, 12960]}
+narrative_style:
+  language: 中文
+  person: 第二人称
+  tense: 现在时
+  tone: 快节奏年代重生爽剧；先知带来的优势和说不出口的代价并行。白话、利落、生活细节扎实，情绪先行但因果不断
+  target_length: 1500
+  avoid_phrases:
+    - 嘴角勾起一抹弧度
+    - 眼中闪过一丝异色
+    - 空气仿佛凝固
+    - 心中暗道
+    - 淡淡地说道
+    - 你不知道的是
+    - 全场哗然
+    - 前世的记忆涌上心头
+    - 上一世的画面在眼前闪过
+    - 蝴蝶效应
+  phrase_repeat_window: 12
+  phrase_repeat_threshold: 2
+  pacing: short_drama
+  pacing_rules:
+    - 每一章必须有一个爆点：说准一件事、拦下一个动作、被人当面质问、代价当场落地、
+      或某个前世的节点提前到来。指不出爆点是哪一句就重写
+    - 爽点来自强弱转换：先让人把主角当小孩打发，再让他用只有他知道的事把局面扳回来。
+      落差越大越爽；被压的那一段不能超过三分之一篇幅，翻盘必须在本章之内发生
+    - 每用一次先知，怀疑就涨一格。爽感和代价必须同时出现，不能只爽不付账
+    - 反转每三到五章翻一次，翻的是人的立场或事情的真相，不是主角的能力。
+      反转必须能在已埋的线索、已知事实或人物动机里找到根据
+    - 结尾必须卡在钩子上：话被打断、门被推开、电话响了、日子又少一天。不要用情绪或景物收尾
+    - 台词是子弹不是棉花：一句话同时干两件事，推进局势并暴露立场或关系
+    - 赶路、等待、日常一句带过；对峙、追问、摊牌拆开写细
+    - 年代细节要具体到能摸到：价钱、车次、机器型号、电视里在放什么。但一段最多一处
+  guidance:
+    - 主角不能直接说自己重生了，也不能把未来当证据摆出来；他只能用"我猜""我看见过""上次有人这么干过"
+    - 家里人第一反应永远是不信。信任要一件一件挣，不是说准一次就够
+    - 韩磊每一步都合乎生意逻辑，被翻盘是因为他算漏了一个十八岁的孩子会看合同
+    - 妹妹是活人不是任务目标：她有自己的判断、自尊和不肯说的事
+    - 每两三个高压场面之间放一次短促的年代生活味，用来加速而不是松劲
+    - 不要写全知式的旁白提醒读者"这就是转折点"
+theme: {accent: "#2f5d7c", background: "#f3f1ec", surface: "#ffffff", text: "#1f2429"}
+vocabulary:
+  profile_labels: {health: 体力, power: 精神, age_suffix: 岁, realm: 手牌, root: 上一世, faction: 立场, male: 男, female: 女, unspecified: 未指定, story_lead: 最要紧的人, no_story_lead: 本局没有指定对象, absent: 当前不在场}
+  relationship_labels: {affection: 亲近, trust: 信任, respect: 看重, fear: 忌惮, hatred: 记恨, suspicion: 怀疑, dependency: 依赖, familiarity: 熟悉, boundaries: 界限感}
+  action_aliases:
+    MOVE: [去, 前往, 走向, 回, 进, 出门, 赶去, 上楼, 下楼]
+    TALK: [聊, 交谈, 说话, 打招呼, 找]
+    ASK: [问, 询问, 打听, 追问]
+    OBSERVE: [看, 观察, 打量, 环顾, 查看, 留意]
+    SEARCH: [搜, 翻, 翻找, 寻找, 查, 调查]
+    FOLLOW: [跟, 跟着, 尾随, 跟上]
+    HIDE: [躲, 藏, 避开]
+    ATTACK: [打, 动手, 出手]
+    DEFEND: [挡, 拦, 护住]
+    USE_ITEM: [用, 使用, 拿出, 打开, 翻开]
+    GIVE_ITEM: [给, 交给, 递给, 送]
+    PICKUP: [捡, 拿起, 收起]
+    DROP: [丢, 扔, 放下]
+    REST: [休息, 睡, 歇]
+    WAIT: [等, 等待, 守着]
+    ACCEPT_QUEST: [接, 接下, 答应]
+    REJECT_QUEST: [拒绝, 不接, 回绝]
+  method_aliases:
+    persuade: [劝, 说服, 劝说]
+    intimidate: [吓, 威胁]
+    promise: [承诺, 保证, 答应]
+    negotiate: [谈, 商量, 讲价]
+    indirect_questioning: [套话, 试探, 旁敲侧击]
+    deceive: [骗, 瞒, 装]
+    comfort: [安慰, 哄]
+  query_aliases:
+    QUERY_STATUS: [我的状态, 状态, 我现在什么处境]
+    QUERY_INVENTORY: [背包, 身上有什么, 我的东西]
+    QUERY_RELATIONSHIPS: [人物关系, 谁怎么看我, 关系]
+    QUERY_QUESTS: [任务, 手上的事, 还有什么没办]
+  request_size_hints:
+    extreme: [把厂子给我, 全部积蓄, 一辈子]
+    large: [借我三万, 别去上学了, 把单子撕了, 报警]
+    moderate: [帮我, 陪我走一趟, 告诉我, 带我去]
+    small: [问一句, 看一眼, 打听一下]
+  refusal_words: [不, 不要, 拒绝, 不接, 算了]
+  plan_connectors: [然后, 接着, 随后, 再]
+  continue_words: [继续, 继续。, 接着说, 往下走, 让故事继续, "..."]
+  entity_aliases:
+    家: su_home
+    厨房: su_kitchen
+    房间: su_room
+    院子: family_yard
+    厂里: su_workshop
+    厂子: su_workshop
+    办公室: workshop_office
+    市场: riverside_market
+    茶摊: tea_stall
+    韩记: han_office
+    学校: binhai_no3_school
+    三中: binhai_no3_school
+    后门: school_gate
+    巷子: back_alley
+    医院: city_hospital_2013
+  status_labels: {offered: 还没做, active: 正在做, completed: 做成了, failed: 砸了, expired: 来不及了, taken_by_other: 别人先做了, rejected: 你推掉了}
+  ambiguity_messages:
+    empty_input: 说清楚你要做什么。
+    move_target_unknown: 说明白你要去滨海哪一处。
+    conversation_target_unknown: 说清楚你要跟在场的谁说话。
+    item_unknown: 说清楚你要用身上哪一件东西。
+  time_units: {分钟: 1, 小时: 60, 天: 1440, 周: 10080}
+  time_words: {半小时: 30, 一小时: 60, 半天: 360, 一天: 1440, 一周: 10080}

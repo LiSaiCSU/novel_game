@@ -1,0 +1,94 @@
+facts:
+  - key: fact_pact_expires_today
+    statement: 三年前签下的那张协议在今天期满
+    truth_value: true
+    scope: PERSONAL
+    sensitivity: 0.4
+    subject: player
+    related: [player, lin_wan, lin_zhenhai]
+    initial_knowledge:
+      player: {state: KNOWN, confidence: 1, source: DOCUMENT}
+      lin_wan: {state: KNOWN, confidence: 1, source: DOCUMENT}
+      lin_zhenhai: {state: KNOWN, confidence: 0.8, source: DOCUMENT}
+  - key: fact_debt_due
+    statement: 林氏建材有八千六百万在七日内到期，逾期即进入强制处置
+    truth_value: true
+    scope: WORLD
+    sensitivity: 0.3
+    related: [lin_family, zhao_qiming, lin_wan]
+    initial_knowledge:
+      player: {state: KNOWN, confidence: 1, source: DOCUMENT}
+      lin_wan: {state: KNOWN, confidence: 1, source: DOCUMENT}
+      lin_zhenhai: {state: KNOWN, confidence: 1, source: DOCUMENT}
+      zhao_qiming: {state: KNOWN, confidence: 1, source: DOCUMENT}
+      qian_kuai: {state: KNOWN, confidence: 0.9, source: DOCUMENT}
+  - key: fact_token_is_north_seal
+    statement: 你脖子上那枚铜牌是城北的执令信物，见牌如见人
+    truth_value: true
+    scope: PERSONAL
+    sensitivity: 1.0
+    subject: player
+    related: [player, lu_zheng, north_office, zhou_bo]
+    initial_knowledge:
+      player: {state: KNOWN, confidence: 1, source: WITNESSED}
+      lu_zheng: {state: KNOWN, confidence: 1, source: WITNESSED}
+      zhou_bo: {state: SUSPECTED, confidence: 0.45, source: INFERRED}
+  - key: fact_zhao_holds_the_debt
+    statement: 那八千六百万的债权去年被赵启明绕过三家公司收在了自己手里
+    truth_value: true
+    scope: FACTION
+    sensitivity: 0.95
+    related: [zhao_qiming, lin_family, qian_kuai]
+    initial_knowledge:
+      player: {state: KNOWN, confidence: 0.9, source: INFERRED}
+      zhao_qiming: {state: KNOWN, confidence: 1, source: WITNESSED}
+      qian_kuai: {state: SUSPECTED, confidence: 0.5, source: INFERRED}
+  - key: fact_qian_leaks_to_zhao
+    statement: 林氏的现金流报表每周被钱快抄送给赵家
+    truth_value: true
+    scope: FACTION
+    sensitivity: 0.9
+    related: [qian_kuai, zhao_qiming, lin_wan]
+    initial_knowledge:
+      player: {state: SUSPECTED, confidence: 0.55, source: INFERRED}
+      qian_kuai: {state: KNOWN, confidence: 1, source: WITNESSED}
+      zhao_qiming: {state: KNOWN, confidence: 1, source: WITNESSED}
+  - key: fact_pact_clause_lets_you_leave
+    statement: 三年协议里那条随时可解除的条款，是林晚自己加进去的
+    truth_value: true
+    scope: PERSONAL
+    sensitivity: 0.85
+    related: [lin_wan, player]
+    initial_knowledge:
+      lin_wan: {state: KNOWN, confidence: 1, source: WITNESSED}
+  - key: fact_zhenhai_promised_marriage
+    statement: 林振海已私下答应赵家，只要债务谈成就把林晚的婚事一并谈
+    truth_value: true
+    scope: PERSONAL
+    sensitivity: 0.95
+    related: [lin_zhenhai, zhao_qiming, lin_wan]
+    initial_knowledge:
+      lin_zhenhai: {state: KNOWN, confidence: 1, source: WITNESSED}
+      zhao_qiming: {state: KNOWN, confidence: 1, source: WITNESSED}
+      lin_shiya: {state: HEARD, confidence: 0.4, source: TOLD_BY}
+  - key: fact_dock_warehouse_holds_goods
+    statement: 旧货运码头三号泊位的仓库里压着一批没人敢动的货
+    truth_value: true
+    scope: WORLD
+    sensitivity: 0.8
+    related: [zhou_bo, north_office, dock_yard]
+    initial_knowledge:
+      player: {state: HEARD, confidence: 0.35, source: TOLD_BY}
+      zhou_bo: {state: KNOWN, confidence: 0.9, source: WITNESSED}
+      lu_zheng: {state: KNOWN, confidence: 1, source: WITNESSED}
+  - key: fact_chamber_seat_decided_at_banquet
+    statement: 商会理事席位在七日后的宴会上重排，谁坐主桌当场就定
+    truth_value: true
+    scope: WORLD
+    sensitivity: 0.1
+    related: [chamber, zhao_qiming, lin_zhenhai]
+    initial_knowledge:
+      player: {state: KNOWN, confidence: 1, source: TOLD_BY}
+      lin_zhenhai: {state: KNOWN, confidence: 1, source: DOCUMENT}
+      zhao_qiming: {state: KNOWN, confidence: 1, source: DOCUMENT}
+      lin_shiya: {state: KNOWN, confidence: 1, source: TOLD_BY}

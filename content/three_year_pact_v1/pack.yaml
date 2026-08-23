@@ -1,0 +1,309 @@
+key: three_year_pact_v1
+name: 三年之期已到
+genre: urban_revenge
+version: "1.0.0"
+engine_min_version: "0.2.0"
+primary_progression_key: standing
+attribute_definitions:
+  - {key: nerve, label: 定力, type: number}
+  - {key: read_people, label: 识人, type: number}
+  - {key: leverage, label: 筹码, type: number}
+resource_definitions:
+  - {key: health, label: 体力, minimum: 0, maximum: 100, default: 100}
+  - {key: energy, label: 精神, minimum: 0, maximum: 100, default: 85}
+progression_definitions:
+  - key: standing
+    label: 在江城的分量
+    tiers:
+      - {key: door_mat, label: 上门女婿, order: 0}
+      - {key: noticed, label: 有人正眼看你, order: 1}
+      - {key: reckoned, label: 没人敢先开口, order: 2}
+player_fields:
+  - {key: name, label: 姓名, type: text, required: true}
+  - {key: age, label: 年龄, type: integer, required: true, default: 29, minimum: 18, maximum: 45}
+  - key: origin
+    label: 三年前你是从哪儿来的
+    type: choice
+    required: true
+    default: north_command
+    choices:
+      - {value: north_command, label: 城北执令}
+      - {value: field_medic, label: 战地医生}
+      - {value: money_hand, label: 替人管钱的}
+      - {value: nobody_knows, label: 没人说得清}
+  - key: three_year_style
+    label: 这三年你是怎么熬的
+    type: choice
+    required: true
+    default: swallow
+    choices:
+      - {value: swallow, label: 全咽下去}
+      - {value: ledger, label: 一笔一笔记着}
+      - {value: numb, label: 早就无所谓了}
+  - {key: background, label: 入赘之前, type: text, required: false}
+language: zh-CN
+author_tests:
+  - key: opening_state
+    name: 开场处境与知识边界正确
+    scenario: main_story
+    assertions:
+      - {path: player.location, op: eq, expected: lin_kitchen}
+      - {path: knowledge.player.fact_token_is_north_seal, op: eq, expected: KNOWN}
+      - {path: knowledge.lin_wan.fact_token_is_north_seal, op: eq, expected: UNKNOWN}
+      - {path: knowledge.player.fact_pact_clause_lets_you_leave, op: eq, expected: UNKNOWN}
+      - {path: knowledge.lin_wan.fact_pact_clause_lets_you_leave, op: eq, expected: KNOWN}
+  - key: contempt_is_seeded
+    name: 开局就有人看轻你
+    scenario: main_story
+    assertions:
+      - {path: relationships.lin_shiya.respect, op: lt, expected: 0}
+      - {path: relationships.lin_zhenhai.respect, op: lt, expected: 0}
+      - {path: relationships.zhou_bo.respect, op: gt, expected: 0}
+  - key: standing_ending_needs_the_debt_settled
+    name: 压住全场的结局需要债务先了结
+    scenario: main_story
+    fixtures:
+      quests: {quest_find_creditor: completed, quest_banquet_seat: completed}
+    assertions:
+      - {path: endings.ending_table_turned.available, op: eq, expected: true}
+world:
+  name: 江城·林家
+  description: 一座沿江省会城市。做建材的林家账面还撑着，现金已经见底；赵家吃下了同行四家，只剩林家没签字。三年前有个男人被送进林家当上门女婿，今天是协议期满的日子。
+  start_location: lin_kitchen
+  world_seed_default: jiangcheng-day-one
+story:
+  title: 三年之期已到
+  opening_location: lin_kitchen
+  premise: |
+    三年前你签了一张纸，进了林家的门。三年里你洗过这家所有人的碗，听过这家所有人的话，
+    没有一句是好听的。今天是那张纸期满的日子。
+    同一个早上，林家收到八千六百万的还款通知，只剩七天；赵启明的车停到了院门口；
+    城北来的人在联络处等你一句准话。
+    你脖子上那枚铜牌戴了三年，没有一个人问过它是什么。今天开始，会有人问。
+  opening_blueprint:
+    player_context: 开场第一句就是羞辱或逼迫，不做铺垫。玩家的定力、识人和这三年怎么熬过来的，全部通过他当场怎么接这一下显示出来。
+    acts:
+      - purpose: 第一段就被压住
+        must_show: [第一句之内主角正在被当众数落或使唤, 让读者立刻看清他在这个家里排在最末, 同一段里点明今天是三年之期的最后一天]
+        comic_beat: 最难堪的时刻偏偏冒出一句荒唐的家规——比如碗要按人头排队洗，女婿排最后一个
+      - purpose: 看清他有多没有本钱，也看清他手上有什么
+        must_show: [八千六百万和七日期限被摆到台面上, 至少一个人当面把他当空气或当废物, 那枚铜牌被镜头带过一次但没人当回事]
+        comic_beat: 有人一边数落他一边不忘让他去把车挪了
+      - purpose: 他扳回半寸，麻烦立刻变大
+        must_show: [主角用真本事扳回半寸——看出账目不对或一句话点破对方的算盘, 这半寸立刻招来更硬的对手或更近的期限, 停在一个当场就要回答的问题上]
+        comic_beat: 他刚把话说圆，对方立刻搬出更荒唐的规矩把口子堵上
+    humor_rule: 笑点来自家规荒唐、势利眼互相拆台和场面话翻车，而且只能夹在紧张里加速节奏；不拿伤病、羞辱本身或婚姻胁迫当笑话。
+    choice_gate: 主角在这个家里是什么处境、七日期限意味着什么、他手上唯一能用的东西是什么、谁已经在看轻他，以及第一个选择会保住或赌掉什么。
+  starter_items: [{key: bronze_token, quantity: 1}, {key: old_phone, quantity: 1}, {key: rmb, quantity: 437}]
+  player_template:
+    constraints: {minimum_age: 18, maximum_age: 45}
+    properties: {household_status: live_in_son_in_law}
+  relationship_boundaries: |
+    可发展的关系只存在于成年人之间，且必须建立在共同经历与明确表达之上。
+    婚姻不是筹码：任何一方都不得被家族、债务或人情逼着接受关系，玩家可以随时拒绝并保持拒绝。
+    不写露骨性描写，不把胁迫、控制、羞辱或救命之恩美化成感情。
+  endings:
+    - key: ending_table_turned
+      type: other
+      title: 主桌上那把椅子
+      priority: 95
+      epilogue: >
+        商会宴那天，林家的位次牌还摆在第七桌。你没有换牌，只是把一份文件放在了主桌上。
+        赵启明看完第一页就没有再翻第二页，他站起来，把自己那把椅子往边上挪了半尺。
+        没有人鼓掌，也没有人说话，所有人只是把目光从他身上挪到了你身上。
+        林振海那天晚上第一次叫了你的名字，叫得很轻，像是怕叫错。
+      condition:
+        op: and
+        args:
+          - {op: eq, args: [{op: get, args: [quests.quest_find_creditor.status]}, completed]}
+          - {op: eq, args: [{op: get, args: [quests.quest_banquet_seat.status]}, completed]}
+    - key: ending_quiet_exit
+      type: independent
+      title: 那张纸我带走了
+      priority: 82
+      epilogue: >
+        债清了，人没留。你把那张三年协议从林晚手里拿回来，折好，放进外套内袋。
+        院门口的车等了很久，陆峥没有催。你走出巷子的时候没有回头——
+        身后有人喊了一声，声音很急，但那一声隔着两道墙，你可以当作没听见。
+        江城的雨在你上车之后才下起来。
+      condition:
+        op: and
+        args:
+          - {op: eq, args: [{op: get, args: [quests.quest_find_creditor.status]}, completed]}
+          - {op: eq, args: [{op: get, args: [quests.quest_answer_north.status]}, completed]}
+          - {op: ne, args: [{op: get, args: [quests.quest_banquet_seat.status]}, completed]}
+    - key: ending_stay_as_equal
+      type: romance
+      lead: lin_wan
+      requires_consent: true
+      title: 第二张纸
+      priority: 90
+      epilogue: >
+        第一张纸期满那天，你们签了第二张。这一次没有条款，没有期限，也没有谁替谁做主。
+        林晚把笔递过来的时候说了一句话："这回是我求你。"你把笔接过去，写完自己的名字，
+        又在下面加了一行小字——她看完笑了，那是你三年里第一次看见她笑。
+        林氏建材第二年才缓过来，但那天晚上老宅的灯亮到很晚。
+      condition:
+        op: and
+        args:
+          - {op: eq, args: [{op: get, args: [quests.quest_find_creditor.status]}, completed]}
+          - {op: eq, args: [{op: get, args: [consent.lin_wan]}, accepted]}
+          - {op: gte, args: [{op: get, args: [relationships.lin_wan.affection]}, 35]}
+          - {op: gte, args: [{op: get, args: [relationships.lin_wan.trust]}, 45]}
+          - {op: gte, args: [{op: get, args: [relationships.lin_wan.respect]}, 40]}
+    - key: ending_partners_not_lovers
+      type: bond
+      lead: lin_wan
+      title: 各签各的字
+      priority: 70
+      epilogue: >
+        你们把厂子保住了，也把话说清楚了：合作到此为止，感情不必勉强。
+        林晚在董事会上第一次用"我们"这个词，说完自己愣了一下，改口成"公司"。
+        你没有纠正她。往后每一期账目你都看，每一次签字你都在场，
+        只是再没有人提过三年前那张纸。
+      condition:
+        op: and
+        args:
+          - {op: eq, args: [{op: get, args: [quests.quest_find_creditor.status]}, completed]}
+          - {op: ne, args: [{op: get, args: [consent.lin_wan]}, accepted]}
+          - {op: gte, args: [{op: get, args: [relationships.lin_wan.trust]}, 35]}
+          - {op: gte, args: [{op: get, args: [relationships.lin_wan.respect]}, 30]}
+    - key: ending_seal_burned
+      type: other
+      title: 牌子交回去了
+      priority: 55
+      epilogue: >
+        你把铜牌摘下来，放在联络处那张桌子上，推了过去。陆峥看了很久，没有伸手。
+        "交回去就不能再要了。"他说。你点头。
+        林家的事最后是林晚自己扛下来的，扛得很难看，但扛住了。
+        你留在了江城，做一个真正意义上什么都不是的人——这一次是你自己选的。
+      condition:
+        op: and
+        args:
+          - {op: eq, args: [{op: get, args: [quests.quest_answer_north.status]}, completed]}
+          - {op: ne, args: [{op: get, args: [quests.quest_find_creditor.status]}, completed]}
+          - {op: gte, args: [{op: get, args: [world.minute]}, 10080]}
+    - key: ending_swallowed
+      type: other
+      title: 第七天
+      priority: 20
+      hidden_until_available: true
+      epilogue: >
+        第七天上午九点，处置通知贴在了林氏大厦的玻璃门上。
+        林振海在门口站了很久，没有进去。林诗雅在电话里哭着骂人，骂的还是你。
+        赵启明的车从沿江路开过去，没有停。
+        你脖子上那枚铜牌还在，热的，贴着皮肉。你一次都没有把它拿出来。
+      condition:
+        op: and
+        args:
+          - {op: ne, args: [{op: get, args: [quests.quest_find_creditor.status]}, completed]}
+          - {op: ne, args: [{op: get, args: [quests.quest_answer_north.status]}, completed]}
+          - {op: gte, args: [{op: get, args: [world.minute]}, 10080]}
+narrative_style:
+  language: 中文
+  person: 第二人称
+  tense: 现在时
+  tone: 快节奏都市爽剧；被压、还手、翻盘，场面话底下全是刀。白话、利落、信息密度高，情绪先行但因果不断
+  target_length: 1500
+  avoid_phrases:
+    - 嘴角勾起一抹弧度
+    - 眼中闪过一丝异色
+    - 空气仿佛凝固
+    - 心中暗道
+    - 淡淡地说道
+    - 你不知道的是
+    - 全场哗然
+    - 所有人都惊呆了
+    - 深藏功与名
+    - 装逼
+  phrase_repeat_window: 12
+  phrase_repeat_threshold: 2
+  pacing: short_drama
+  pacing_rules:
+    - 每一章必须有一个爆点：打脸、亮底牌、被揭穿、被威胁、代价当场落地、或某人身份松动。
+      写完检查一遍，指不出这一章的爆点是哪一句，就重写
+    - 爽点来自强弱转换：先让人看轻、压住或误解主角，再让主角用手上真有的东西翻过来。
+      落差越大越爽；被压的那一段不能超过三分之一篇幅，翻盘必须在本章之内发生
+    - 反转每三到五章翻一次，翻身份、翻关系或翻态度。反转必须能在已埋的线索、
+      已知事实或人物动机里找到根据；不得临时新增人物、身份或危机来制造反转
+    - 反转写法：先让读者以为是甲，再揭示其实是乙，最后把乙推到更麻烦的丙
+    - 结尾必须卡在钩子上：话说到一半被打断、门被推开、名字被念出来、期限被提前。
+      不要用情绪或景物收尾
+    - 台词是子弹不是棉花：一句话同时干两件事，推进局势并暴露立场或关系。
+      删掉寒暄、客套和没有信息量的动作
+    - 赶路、等待、日常一句带过；冲突、对峙、要价、摊牌拆开写细
+    - 情绪优先于工整，但因果不能断：可以让局势急转，不能让读者发现前后矛盾
+  guidance:
+    - 打脸要具体：对方说过的原话、写下的字、许过的承诺，被同一场景里的证据顶回去
+    - 主角不解释自己的来历。别人替他猜，猜错了他也不纠正
+    - 反派要嚣张但不蠢：赵启明每一步都有道理，被翻盘是因为算漏了一件他不知道的事
+    - 铜牌、协议、报表这些东西只在真正起作用的那一刻才拿出来，不要反复提醒读者它很重要
+    - 每两三个高压场面之间放一次短促的人情味或荒唐规矩，用来加速而不是松劲
+    - 感情线必须服务主线，不写一见钟情，也不把婚姻胁迫写成浪漫
+theme: {accent: "#8a2f2f", background: "#f5f1ee", surface: "#ffffff", text: "#241f1f"}
+vocabulary:
+  profile_labels: {health: 体力, power: 精神, age_suffix: 岁, realm: 分量, root: 来历, faction: 立场, male: 男, female: 女, unspecified: 未指定, story_lead: 名义上的妻子, no_story_lead: 本局没有指定对象, absent: 当前不在场}
+  relationship_labels: {affection: 好感, trust: 信任, respect: 看重, fear: 忌惮, hatred: 记恨, suspicion: 怀疑, dependency: 依赖, familiarity: 熟悉, boundaries: 界限感}
+  action_aliases:
+    MOVE: [去, 前往, 走向, 回到, 进入, 出门, 赶去, 上楼, 下楼]
+    TALK: [聊, 交谈, 说话, 打招呼, 找]
+    ASK: [问, 询问, 打听, 请教, 追问]
+    OBSERVE: [看, 观察, 打量, 环顾, 查看, 留意]
+    SEARCH: [搜, 搜索, 翻找, 寻找, 查, 调查]
+    FOLLOW: [跟, 跟着, 尾随, 跟上]
+    HIDE: [躲, 藏, 避开]
+    ATTACK: [打, 动手, 出手, 揍]
+    DEFEND: [挡, 拦, 护住]
+    USE_ITEM: [用, 使用, 拿出, 亮出, 打开]
+    GIVE_ITEM: [给, 交给, 递给, 送]
+    STEAL: [偷, 拿走, 顺走]
+    BUY: [买, 购买, 收购]
+    SELL: [卖, 出售, 转手]
+    PICKUP: [捡, 拾, 拿起, 收起]
+    DROP: [丢, 扔, 放下]
+    REST: [休息, 睡, 歇]
+    WAIT: [等, 等待, 守着]
+    ACCEPT_QUEST: [接, 接下, 答应]
+    REJECT_QUEST: [拒绝, 不接, 回绝]
+  method_aliases:
+    persuade: [劝, 说服, 劝说]
+    intimidate: [吓, 威胁, 震住]
+    bribe: [收买, 打点, 塞钱]
+    promise: [承诺, 保证, 答应]
+    negotiate: [谈判, 商量, 讲条件]
+    indirect_questioning: [套话, 试探, 旁敲侧击]
+    deceive: [骗, 装, 诈]
+  query_aliases:
+    QUERY_STATUS: [我的状态, 状态, 我现在什么处境]
+    QUERY_INVENTORY: [背包, 身上有什么, 我的东西]
+    QUERY_RELATIONSHIPS: [人物关系, 谁怎么看我, 关系]
+    QUERY_QUESTS: [任务, 手上的事, 还有什么没办]
+  request_size_hints:
+    extreme: [全部身家, 把命, 整个公司, 所有股份]
+    large: [借我八千万, 替我出面, 把厂子给我, 嫁给我]
+    moderate: [帮我, 陪我走一趟, 告诉我, 带我去]
+    small: [问一句, 看一眼, 打听一下]
+  refusal_words: [不, 不要, 拒绝, 不接, 算了, 免谈]
+  plan_connectors: [然后, 接着, 随后, 再]
+  continue_words: [继续, 继续。, 接着说, 往下走, 让故事继续, "..."]
+  entity_aliases:
+    老宅: lin_mansion
+    书房: lin_study
+    厨房: lin_kitchen
+    公司: lin_group_tower
+    大厦: lin_group_tower
+    会议室: lin_boardroom
+    商会: chamber_of_commerce
+    宴会厅: banquet_hall
+    茶馆: old_teahouse
+    码头: dock_yard
+    医院: city_hospital
+    联络处: north_liaison
+  status_labels: {offered: 还没接, active: 正在办, completed: 办成了, failed: 砸了, expired: 来不及了, taken_by_other: 别人先办了, rejected: 你推掉了}
+  ambiguity_messages:
+    empty_input: 说清楚你要做什么。
+    move_target_unknown: 说明白你要去江城哪一处。
+    conversation_target_unknown: 说清楚你要跟在场的谁说话。
+    item_unknown: 说清楚你要用身上哪一件东西。
+  time_units: {分钟: 1, 小时: 60, 天: 1440, 周: 10080}
+  time_words: {半小时: 30, 一小时: 60, 半天: 360, 一天: 1440, 一周: 10080}

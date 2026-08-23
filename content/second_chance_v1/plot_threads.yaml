@@ -1,0 +1,92 @@
+plot_threads:
+  - key: thread_nine_days
+    name: 还有九天
+    status: active
+    importance: 0.99
+    stage: 0
+    participants: [player, su_wanqing, zhao_gang]
+    unresolved_questions: [怎么在不吓着妹妹的前提下拦下这件事, 谁在给她发短信, 拦下这一次会不会换个时间再来]
+    foreshadowing: [妹妹这几天总是等天黑透才回家, 她的手机收件箱有三条没删的陌生号码, 赵刚傍晚总在三中后门那条街上晃]
+    related_facts: [fact_alley_incident_in_nine_days, fact_sister_already_followed, fact_zhao_sent_the_texts]
+    next_beat_hint: 妹妹今天照常去补课，晚自习九点半散场
+    escalation_pressure: 0.97
+    scheduled_beats:
+      - {at_minutes_from_start: 900, event_type: FORESHADOWING, beat: 妹妹回家比平时晚了四十分钟}
+      - {at_minutes_from_start: 4320, event_type: DISCOVERY, beat: 那三条短信被翻出来}
+      - {at_minutes_from_start: 8640, event_type: CONFRONTATION, beat: 赵刚第一次当面拦人}
+      - {at_minutes_from_start: 12960, event_type: CONFRONTATION, beat: 第九天的晚自习}
+  - key: thread_the_order
+    name: 那张不能签的订单
+    status: active
+    importance: 0.95
+    stage: 0
+    participants: [player, su_jianguo, chen_shufen, han_lei]
+    unresolved_questions: [怎么让一个不看合同的人不签字, 不签这张单厂子的原料钱从哪来, 韩磊会不会换个人再来一次]
+    foreshadowing: [父亲已经把冲床抵押出去了, 违约条款单独占了一整页, 母亲说不出哪里不对但一直不肯松口]
+    related_facts: [fact_order_is_a_trap, fact_han_ate_five_factories, fact_press_is_mortgaged]
+    next_beat_hint: 韩记的人今天下午会到厂里来催签字
+    escalation_pressure: 0.92
+    scheduled_beats:
+      - {at_minutes_from_start: 480, event_type: NPC_APPROACH, beat: 韩记的人上门催签}
+      - {at_minutes_from_start: 2880, event_type: CONFRONTATION, beat: 父亲当着全家的面要签}
+      - {at_minutes_from_start: 7200, event_type: RESOURCE_CHANGE, beat: 原料款的窟窿摆到桌面上}
+      - {at_minutes_from_start: 11520, event_type: CONFRONTATION, beat: 韩磊亲自到厂里来}
+  - key: thread_four_hundred_kilos
+    name: 少掉的四百公斤
+    status: active
+    importance: 0.88
+    stage: 0
+    participants: [player, wang_kuaiji, lin_gong, zhao_gang, han_lei]
+    unresolved_questions: [那四百公斤去了哪里, 王会计压了多久, 这件事能不能反过来用]
+    foreshadowing: [林工提过一次入库单的重量不对没人听, 王会计每次说到磅单就换话题, 赵刚管着废铁进出]
+    related_facts: [fact_scrap_shortfall, fact_tea_stall_heard_it_all]
+    next_beat_hint: 磅单和入库单摆在一起就能看出问题，但没人愿意先开口
+    escalation_pressure: 0.7
+    scheduled_beats:
+      - {at_minutes_from_start: 2160, event_type: DISCOVERY, beat: 两张单子被摆到一起}
+      - {at_minutes_from_start: 6480, event_type: SECRET_DISCLOSURE, beat: 王会计说出压了半个月的事}
+      - {at_minutes_from_start: 10800, event_type: CONFRONTATION, beat: 赵刚被当面对上磅单}
+  - key: thread_who_is_this_kid
+    name: 这孩子怎么变了
+    status: active
+    importance: 0.8
+    stage: 0
+    participants: [player, chen_shufen, su_wanqing, su_jianguo, aunt_tea]
+    unresolved_questions: [家里人会不会发现你不对劲, 说得越准别人越信还是越怕, 有没有第二个人也知道后面会发生什么]
+    foreshadowing: [母亲问你为什么突然关心厂里的事, 妹妹说你今天说话像换了个人, 茶摊老板娘多看了你两眼]
+    related_facts: [fact_you_came_back, fact_mother_hid_savings]
+    next_beat_hint: 你每说准一件事，家里人看你的眼神就变一次
+    escalation_pressure: 0.6
+    scheduled_beats:
+      - {at_minutes_from_start: 1440, event_type: FORESHADOWING, beat: 母亲第一次追问你怎么知道}
+      - {at_minutes_from_start: 5760, event_type: RUMOR_SPREAD, beat: 市场上有人打听你这个小孩是谁}
+      - {at_minutes_from_start: 10080, event_type: CONFRONTATION, beat: 有人当面问你到底知道多少}
+
+quests:
+  - {key: quest_stop_the_signing, name: 别让父亲签那张单, giver: chen_shufen, status: offered, goal: {type: prevent, location: workshop_office}, constraints: {deadline_minutes: 11520}, rewards: {relationship: {su_jianguo: {respect: 12, trust: 8}}}, failure_conditions: [deadline_passed], world_consequences: {on_success: {advance_thread: thread_the_order}, on_failure: {tension: 25}}, plot_thread: thread_the_order}
+  - {key: quest_protect_sister, name: 拦下第九天那件事, giver: su_wanqing, status: offered, goal: {type: prevent, location: back_alley}, constraints: {deadline_minutes: 12960}, rewards: {relationship: {su_wanqing: {trust: 20, respect: 15}}}, failure_conditions: [deadline_passed], world_consequences: {on_success: {advance_thread: thread_nine_days}, on_failure: {tension: 40}}, plot_thread: thread_nine_days}
+  - {key: quest_find_the_texts, name: 弄清那三条短信是谁发的, giver: su_wanqing, status: offered, goal: {type: investigate, location: su_room}, constraints: {deadline_minutes: 8640}, rewards: {relationship: {su_wanqing: {trust: 10}}}, failure_conditions: [deadline_passed], world_consequences: {on_success: {advance_thread: thread_nine_days}}, plot_thread: thread_nine_days}
+  - {key: quest_scrap_evidence, name: 拿到那张磅单, giver: lin_gong, status: offered, goal: {type: investigate, location: workshop_office}, constraints: {deadline_minutes: 10800}, rewards: {relationship: {wang_kuaiji: {trust: 8}}}, failure_conditions: [deadline_passed], world_consequences: {on_success: {advance_thread: thread_four_hundred_kilos}}, plot_thread: thread_four_hundred_kilos}
+  - {key: quest_raise_material_money, name: 凑出原料钱, giver: su_jianguo, status: offered, goal: {type: gather, count: 30000}, constraints: {deadline_minutes: 11520}, rewards: {faction_reputation: {su_family: 15}}, failure_conditions: [deadline_passed], world_consequences: {on_success: {advance_thread: thread_the_order}}, plot_thread: thread_the_order}
+  - {key: quest_keep_your_secret, name: 别让人问出你知道多少, giver: chen_shufen, status: offered, goal: {type: endure, location: su_home}, constraints: {deadline_minutes: 12960}, rewards: {relationship: {chen_shufen: {trust: 10}}}, failure_conditions: [deadline_passed], world_consequences: {on_success: {advance_thread: thread_who_is_this_kid}}, plot_thread: thread_who_is_this_kid}
+
+clocks:
+  - key: clock_nine_days
+    name: 还有九天
+    kind: deadline
+    thread: thread_nine_days
+    segments: 9
+    minutes_per_segment: 1440
+    consequence: 晚自习散场，那条巷子里的事按前世原样发生
+  - key: clock_being_noticed
+    name: 有人在看你
+    kind: danger
+    thread: thread_who_is_this_kid
+    segments: 4
+    consequence: 你说得太准，家里人和外人都开始拿你当另一种东西看
+  - key: clock_your_hand
+    name: 你攒下的筹码
+    kind: project
+    thread: thread_four_hundred_kilos
+    segments: 5
+    consequence: 证据凑齐，你可以在任何一张桌子上把韩记的事挑明

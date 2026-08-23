@@ -1,0 +1,17 @@
+location_types: [{key: district, name: 城区}, {key: building, name: 楼房}, {key: room, name: 房间}, {key: outdoor, name: 户外}]
+locations:
+  - {key: binhai, name: 滨海市, type: district, parent: null, danger: 0, spirit_density: 1, description: 二〇一三年的滨海，海边的小城，夏天潮得能拧出水。}
+  - {key: su_home, name: 苏家老楼, type: building, parent: binhai, danger: 0, spirit_density: 1, description: 纺织厂家属院六号楼三层，进门就是那台修了三次的旧冰箱。, travel: {su_kitchen: 1, su_room: 1, family_yard: 2}}
+  - {key: su_kitchen, name: 家里的厨房, type: room, parent: su_home, danger: 0, spirit_density: 1, description: 灶台上有一锅刚熬好的绿豆汤，锅盖压着一张写着菜价的纸。, travel: {su_home: 1}}
+  - {key: su_room, name: 你和妹妹的房间, type: room, parent: su_home, danger: 0, spirit_density: 1, description: 上下铺，书桌上摊着妹妹的暑假作业和一本翻烂了的英语单词册。, travel: {su_home: 1}}
+  - {key: family_yard, name: 家属院院子, type: outdoor, parent: binhai, danger: 0, spirit_density: 1, description: 晾衣绳横穿整个院子，下面停着七八辆自行车，邻居的收音机常年开着。, travel: {su_home: 2, bus_stop: 5, su_workshop: 15}}
+  - {key: bus_stop, name: 家属院公交站, type: outdoor, parent: binhai, danger: 0, spirit_density: 1, description: 三路车终点站，早班车六点四十发第一趟。, travel: {family_yard: 5, binhai_no3_school: 20, riverside_market: 12}}
+  - {key: su_workshop, name: 苏记五金加工厂, type: building, parent: binhai, danger: 1, spirit_density: 1, description: 两间厂房加一个院子，八个工人，一台冲床是全厂最贵的东西。, travel: {family_yard: 15, riverside_market: 10, han_office: 18}}
+  - {key: workshop_office, name: 厂里的小办公室, type: room, parent: su_workshop, danger: 0, spirit_density: 1, description: 父亲在这儿抽烟、算账、签字。抽屉里压着一沓没签的合同。, travel: {su_workshop: 1}}
+  - {key: riverside_market, name: 河沿市场, type: outdoor, parent: binhai, danger: 1, spirit_density: 1, description: 滨海最杂的一条街，五金、废铁、二手机器和消息都在这儿流通。, travel: {bus_stop: 12, su_workshop: 10, han_office: 8, tea_stall: 2}}
+  - {key: tea_stall, name: 市场口的茶摊, type: outdoor, parent: binhai, danger: 0, spirit_density: 1, description: 两块钱一杯，老板娘知道这条街上每一笔生意是怎么谈的。, travel: {riverside_market: 2}}
+  - {key: han_office, name: 韩记贸易, type: building, parent: binhai, danger: 1, spirit_density: 1, description: 临街三层小楼，一层是门市，三层的窗帘白天也拉着。, travel: {riverside_market: 8, su_workshop: 18}}
+  - {key: binhai_no3_school, name: 滨海三中, type: building, parent: binhai, danger: 0, spirit_density: 1, description: 暑假补课期间只开东边一栋教学楼，操场围墙有个豁口。, travel: {bus_stop: 20, school_gate: 1}}
+  - {key: school_gate, name: 三中后门, type: outdoor, parent: binhai_no3_school, danger: 1, spirit_density: 1, description: 后门外是条没有路灯的小巷，晚自习散了以后没什么人走。, travel: {binhai_no3_school: 1, back_alley: 1}}
+  - {key: back_alley, name: 后门小巷, type: outdoor, parent: binhai, danger: 3, spirit_density: 1, description: 巷子尽头有一堆建筑垃圾，前世妹妹就是在这儿出的事。, travel: {school_gate: 1, riverside_market: 14}}
+  - {key: city_hospital_2013, name: 滨海市医院, type: building, parent: binhai, danger: 0, spirit_density: 1, description: 老住院楼，电梯坏了一半，走廊常年有人搭着折叠床。, travel: {riverside_market: 15, bus_stop: 18}}

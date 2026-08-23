@@ -1,0 +1,92 @@
+plot_threads:
+  - key: thread_three_year_pact
+    name: 三年之期
+    status: active
+    importance: 0.99
+    stage: 0
+    participants: [player, lin_wan, lu_zheng, lin_zhenhai]
+    unresolved_questions: [期满这天你走还是留, 林晚知不知道你能随时走, 城北为什么等了整整三年]
+    foreshadowing: [协议末页有一条被单独加粗的解除条款, 陆峥说的是接不是带, 林晚从没让你签过第二份东西]
+    related_facts: [fact_pact_expires_today, fact_pact_clause_lets_you_leave, fact_token_is_north_seal]
+    next_beat_hint: 陆峥在城北联络处等一句准话，而林家今天早上还在当你不存在
+    escalation_pressure: 0.95
+    scheduled_beats:
+      - {at_minutes_from_start: 480, event_type: NPC_APPROACH, beat: 陆峥第一次找上门}
+      - {at_minutes_from_start: 2880, event_type: CONFRONTATION, beat: 林振海当众要你把协议交出来}
+      - {at_minutes_from_start: 5760, event_type: SECRET_DISCLOSURE, beat: 解除条款是谁加的被摊开}
+      - {at_minutes_from_start: 8640, event_type: CONFRONTATION, beat: 期限最后一天，两边同时要一个答复}
+  - key: thread_debt_trap
+    name: 八千六百万
+    status: active
+    importance: 0.94
+    stage: 0
+    participants: [player, lin_wan, lin_zhenhai, zhao_qiming, qian_kuai]
+    unresolved_questions: [债权到底在谁手里, 钱快为什么急着收拾抽屉, 七日之后林氏还剩什么]
+    foreshadowing: [还款通知的抬头换过一次公司名, 钱快的两份报表页码对不上, 赵启明从不催得太紧]
+    related_facts: [fact_debt_due, fact_zhao_holds_the_debt, fact_qian_leaks_to_zhao]
+    next_beat_hint: 账上的窟窿摆在桌面，但没人说得清债主是谁
+    escalation_pressure: 0.88
+    scheduled_beats:
+      - {at_minutes_from_start: 1440, event_type: DISCOVERY, beat: 两份对不上的报表被翻出来}
+      - {at_minutes_from_start: 4320, event_type: SECRET_DISCLOSURE, beat: 债权的真正持有人浮出水面}
+      - {at_minutes_from_start: 7200, event_type: CONFRONTATION, beat: 赵家提前上门要处置资产}
+  - key: thread_hidden_identity
+    name: 那枚铜牌
+    status: active
+    importance: 0.9
+    stage: 0
+    participants: [player, zhou_bo, lu_zheng, zhao_qiming]
+    unresolved_questions: [谁会先认出这枚牌子, 认出来之后你还能不能留在这里, 亮出来要付什么代价]
+    foreshadowing: [周叔看见铜牌时手停了一下, 联络处门口从来没有车停, 陆峥进门先看你的领口]
+    related_facts: [fact_token_is_north_seal, fact_dock_warehouse_holds_goods]
+    next_beat_hint: 有人开始打听你三年前是从哪儿来的
+    escalation_pressure: 0.72
+    scheduled_beats:
+      - {at_minutes_from_start: 2160, event_type: FORESHADOWING, beat: 周叔提起三十年前码头上的事}
+      - {at_minutes_from_start: 5040, event_type: RUMOR_SPREAD, beat: 有人在商会打听你的来历}
+      - {at_minutes_from_start: 7920, event_type: SECRET_DISCLOSURE, beat: 铜牌在不该亮的场合被人看见}
+  - key: thread_zhao_courtship
+    name: 赵启明的那句话
+    status: active
+    importance: 0.86
+    stage: 0
+    participants: [player, zhao_qiming, lin_wan, lin_zhenhai, lin_shiya]
+    unresolved_questions: [林振海答应了什么, 林晚知不知情, 宴会那天要当众宣布什么]
+    foreshadowing: [林诗雅手腕上多了一只表, 请柜上林家的位次被挪到了边桌, 赵启明每次都先问林董再问林总]
+    related_facts: [fact_zhenhai_promised_marriage, fact_chamber_seat_decided_at_banquet]
+    next_beat_hint: 商会宴的请柬已经发了，林家被排在第七桌
+    escalation_pressure: 0.8
+    scheduled_beats:
+      - {at_minutes_from_start: 1080, event_type: NPC_APPROACH, beat: 赵启明第一次登门}
+      - {at_minutes_from_start: 3600, event_type: RUMOR_SPREAD, beat: 婚事的风声传到林晚耳朵里}
+      - {at_minutes_from_start: 6480, event_type: CONFRONTATION, beat: 林诗雅当众替赵家说话}
+      - {at_minutes_from_start: 8640, event_type: CONFRONTATION, beat: 商会宴上赵启明当场提亲}
+
+quests:
+  - {key: quest_survive_today, name: 撑过今天, giver: lin_wan, status: offered, goal: {type: endure, location: lin_mansion}, constraints: {deadline_minutes: 1440}, rewards: {relationship: {lin_wan: {respect: 4}}}, failure_conditions: [deadline_passed], world_consequences: {on_success: {advance_thread: thread_three_year_pact}}, plot_thread: thread_three_year_pact}
+  - {key: quest_find_creditor, name: 查清债主是谁, giver: lin_wan, status: offered, goal: {type: investigate, location: lin_group_tower}, constraints: {deadline_minutes: 5760}, rewards: {relationship: {lin_wan: {trust: 8, respect: 8}}}, failure_conditions: [deadline_passed], world_consequences: {on_success: {advance_thread: thread_debt_trap}}, plot_thread: thread_debt_trap}
+  - {key: quest_expose_leak, name: 揪出报表是谁抄送的, giver: zhou_bo, status: offered, goal: {type: investigate, location: lin_group_tower}, constraints: {deadline_minutes: 7200}, rewards: {relationship: {lin_wan: {trust: 6}}}, failure_conditions: [deadline_passed], world_consequences: {on_success: {advance_thread: thread_debt_trap}}, plot_thread: thread_debt_trap}
+  - {key: quest_dock_warehouse, name: 打开三号泊位的仓库, giver: zhou_bo, status: offered, goal: {type: investigate, location: dock_yard}, constraints: {deadline_minutes: 8640}, rewards: {relationship: {lu_zheng: {respect: 6}}}, failure_conditions: [deadline_passed], world_consequences: {on_success: {advance_thread: thread_hidden_identity}}, plot_thread: thread_hidden_identity}
+  - {key: quest_banquet_seat, name: 在商会宴上坐回主桌, giver: lin_zhenhai, status: offered, goal: {type: event, location: banquet_hall}, constraints: {deadline_minutes: 10080}, rewards: {faction_reputation: {lin_family: 20}}, failure_conditions: [deadline_passed], world_consequences: {on_success: {advance_thread: thread_zhao_courtship}, on_failure: {tension: 25}}, plot_thread: thread_zhao_courtship}
+  - {key: quest_answer_north, name: 给城北一个答复, giver: lu_zheng, status: offered, goal: {type: decide, options: [leave, stay, defer]}, constraints: {deadline_minutes: 10080}, rewards: {relationship: {lu_zheng: {respect: 10}}}, failure_conditions: [deadline_passed], world_consequences: {on_success: {advance_thread: thread_three_year_pact}}, plot_thread: thread_three_year_pact}
+
+clocks:
+  - key: clock_seven_days
+    name: 七日之期
+    kind: deadline
+    thread: thread_debt_trap
+    segments: 7
+    minutes_per_segment: 1440
+    consequence: 八千六百万逾期，林氏建材被强制处置，赵家当天进场
+  - key: clock_identity_exposure
+    name: 有人在查你
+    kind: danger
+    thread: thread_hidden_identity
+    segments: 4
+    consequence: 铜牌的来历被摊在台面上，你再也没有慢慢来的余地
+  - key: clock_leverage
+    name: 你手上的牌
+    kind: project
+    thread: thread_debt_trap
+    segments: 5
+    consequence: 筹码凑齐，你可以在任何一张桌子上把话说死
