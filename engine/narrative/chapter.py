@@ -130,6 +130,11 @@ class ChapterRenderer:
         fallback = self._fallback(state, steps)
         if not steps:
             return ChapterResult(text=fallback, degraded=True)
+        if all(step.outcome.summary_key.startswith("query_") for step in steps):
+            # A lookup is not a scene. Narrating one invented a whole stretch
+            # of story - people, movement, revelations - out of a player who
+            # only asked what was in their pack, and none of it was canonical.
+            return ChapterResult(text=fallback, degraded=False)
         if not (self.llm and self.registry and self.llm.usable_for(LLMRole.NARRATIVE)):
             return ChapterResult(text=fallback, degraded=True)
 
@@ -180,17 +185,25 @@ class ChapterRenderer:
         )
         if fact_violations:
             logger.warning(
-                "chapter violated declared facts, using templates: %s",
+                "chapter violated declared facts: %s",
                 [violation.as_dict() for violation in fact_violations],
             )
-            return ChapterResult(
-                text=fallback,
-                degraded=True,
-                debug={
-                    "steps": len(steps),
-                    "fact_violations": [violation.as_dict() for violation in fact_violations],
-                },
-            )
+            if on_chunk is None:
+                return ChapterResult(
+                    text=fallback,
+                    degraded=True,
+                    debug={
+                        "steps": len(steps),
+                        "fact_violations": [
+                            violation.as_dict() for violation in fact_violations
+                        ],
+                    },
+                )
+            # The reader already watched this chapter arrive. Swapping in a
+            # terse template now would leave the page they are looking at and
+            # the history they can reload permanently disagreeing, which is a
+            # worse failure than the violation itself. Keep the prose, flag it.
+            logger.warning("keeping a streamed chapter that violated declared facts")
 
         report = self.renderer.style.review(prose, self.renderer._known_entities(state))
         self.renderer.style.observe(prose)
@@ -199,6 +212,7 @@ class ChapterRenderer:
             beat=beat,
             debug={
                 "steps": len(steps),
+                "fact_violations": [violation.as_dict() for violation in fact_violations],
                 "overused": report.overused,
                 "unknown_entities": report.unknown_entities,
                 "length": report.length,
@@ -293,7 +307,12 @@ class ChapterRenderer:
     def _stop_reason(self, interrupt: Interrupt | None) -> str:
         if interrupt is None:
             return "-"
-        who = "、".join(interrupt.involves) if interrupt.involves else ""
+        # Neutral punctuation: the engine holds no world text, and this line
+        # is read by the narrator rather than shown to the player.
+        separator = str(
+            (self.pack.narrative_templates.get("labels", {}) or {}).get("list_separator", ", ")
+        )
+        who = separator.join(interrupt.involves) if interrupt.involves else ""
         return f"{interrupt.reason}{(' / ' + who) if who else ''} ({interrupt.detail})"
 
     def _fallback(self, state: WorldStateView, steps: list[ChapterStep]) -> str:

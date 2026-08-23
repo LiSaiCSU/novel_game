@@ -35,7 +35,7 @@ import re
 from dataclasses import dataclass, field
 from typing import Any
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict, Field, ValidationError
 
 from engine.contentpack.pack import ContentPack
 from engine.core import mutations as mut
@@ -169,11 +169,11 @@ class PlotSteward:
             )
             plan = await self.llm.generate_structured(
                 LLMRole.DIRECTOR,
-                prompt,
                 PlotPlan,
+                prompt,
                 prompt_version=self.prompt_version,
             )
-        except (LLMError, StructuredOutputError) as exc:
+        except (LLMError, StructuredOutputError, ValidationError) as exc:
             logger.warning("plot steward unavailable, story shape unchanged: %s", exc)
             return PlotResult(consulted=True, degraded=True)
 

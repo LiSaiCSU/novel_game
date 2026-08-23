@@ -49,7 +49,8 @@ export function usePlaythrough(id: string) {
       ]);
       setState(nextState);
       if (!preserveNarrative) setChapters(formatChapters(history));
-      if (!preserveRecommendations) setChoices(history.choices);
+      // An empty list is "nothing new to suggest", not "clear the suggestions".
+      if (!preserveRecommendations && history.choices.length) setChoices(history.choices);
       setSaves(saved);
       setDashboard(nextDashboard);
       setEndingStatus(endings);
@@ -69,7 +70,7 @@ export function usePlaythrough(id: string) {
       .then(([nextState, history, saved, nextDashboard, endings, returnRecap]) => {
         setState(nextState);
         setChapters(formatChapters(history));
-        setChoices(history.choices);
+        if (history.choices.length) setChoices(history.choices);
         setSaves(saved);
         setDashboard(nextDashboard);
         setEndingStatus(endings);
@@ -128,7 +129,7 @@ export function usePlaythrough(id: string) {
             const nextBeat = payload.beat as { question?: string; options?: Choice[] } | null;
             const nextChoices = (payload.choices as Choice[] | undefined) ?? [];
             const contextualChoices = nextBeat?.options?.length ? nextBeat.options : nextChoices;
-            setChoices(contextualChoices);
+            if (contextualChoices.length) setChoices(contextualChoices);
             setBeat(nextBeat?.question ?? "");
             if (payload.degraded) {
               setQualityWarning(

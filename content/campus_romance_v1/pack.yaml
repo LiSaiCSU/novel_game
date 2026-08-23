@@ -1,7 +1,7 @@
 key: campus_romance_v1
 name: 春日坂未完通信
 genre: campus_romance
-version: "1.8.0"
+version: "1.9.0"
 engine_min_version: "0.2.0"
 primary_progression_key: education
 attribute_definitions:
@@ -194,7 +194,7 @@ narrative_style:
     - 对话要有任务、立场或误解在变化，禁止只靠脸红、移开视线和欲言又止制造暧昧
 theme: {accent: "#8d5f73", background: "#f7f0eb", surface: "#fffaf6", text: "#30272d"}
 vocabulary:
-  profile_labels: {age_suffix: 岁, realm: 身份, root: 专业, faction: 组织, male: 男, female: 女, unspecified: 未指定, story_lead: 重要伙伴, no_story_lead: 尚未建立羁绊, absent: 当前不在场}
+  profile_labels: {health: 体力, power: 精力, age_suffix: 岁, realm: 身份, root: 专业, faction: 组织, male: 男, female: 女, unspecified: 未指定, story_lead: 重要伙伴, no_story_lead: 尚未建立羁绊, absent: 当前不在场}
   relationship_labels: {affection: 好感, trust: 信任, respect: 尊重, fear: 压力, hatred: 反感, suspicion: 疑虑, dependency: 依赖, familiarity: 熟悉, boundaries: 界限感}
   action_aliases:
     MOVE: [去, 前往, 走向, 回到, 进入, 出发, 赶往]

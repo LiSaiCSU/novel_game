@@ -260,6 +260,15 @@ class _RelationshipRepo:
     async def list_for_character(self, character_id: str) -> list[Relationship]:
         return [r for (a, _b), r in self.s.relationships.items() if a == character_id]
 
+    async def list_involving(self, world_id: str, character_id: str) -> list[Relationship]:
+        return [
+            relationship
+            for relationship in self.s.relationships.values()
+            if relationship.world_id == world_id
+            and character_id
+            in (relationship.character_a_id, relationship.character_b_id)
+        ]
+
     async def list_changes(self, character_id: str, limit: int = 50) -> list[RelationshipChange]:
         rows = [
             c
@@ -617,7 +626,8 @@ class _WorldStateRepo:
             relationships=_detach_all(
                 relationship
                 for relationship in self.s.relationships.values()
-                if relationship.world_id == world_id and relationship.character_a_id == player_id
+                if relationship.world_id == world_id
+                and player_id in (relationship.character_a_id, relationship.character_b_id)
             ),
             quests=_detach_all(
                 quest for quest in self.s.quests.values() if quest.world_id == world_id

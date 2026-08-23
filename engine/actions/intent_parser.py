@@ -64,6 +64,10 @@ class ParsedIntent:
     plan: ActionPlan
     degraded: bool
     resolution_notes: list[str] = field(default_factory=list)
+    #: What the player asked for that this turn could only start. Set when a
+    #: social or hostile move had to become travel first; the orchestrator
+    #: replays it as the next step of the same run.
+    deferred_intent: PlayerIntent | None = None
 
     @property
     def unresolved(self) -> list[str]:
@@ -95,6 +99,22 @@ class ParsedIntent:
             "move_target_unknown",
             "conversation_target_unknown",
         }
+
+
+#: Actions that are *about* a person and therefore survive the trip to reach
+#: them. A bare MOVE has nothing left over once the walk is done, so turning
+#: one into travel plus a replay would invent a second action nobody asked for.
+DEFERRABLE_ACTIONS: frozenset[ActionType] = frozenset(
+    {
+        ActionType.TALK,
+        ActionType.ASK,
+        ActionType.CONVERSATION,
+        ActionType.ATTACK,
+        ActionType.GIVE_ITEM,
+        ActionType.STEAL,
+        ActionType.FOLLOW,
+    }
+)
 
 
 class IntentParser:
@@ -187,7 +207,11 @@ class IntentParser:
         if steward.target_id:
             intent.target_id = steward.target_id
             intent.target_key = steward.target_key
-        if steward.location_key:
+        # A destination the player actually named, and that the world actually
+        # has, is not the steward's to overrule. Without this, "go to the
+        # training ground and talk to her" walked to wherever *she* was,
+        # because recognising the person also volunteered her location.
+        if steward.location_key and state.graph.by_key(intent.location_key or "") is None:
             intent.location_key = steward.location_key
         if steward.utterance and not intent.utterance:
             intent.utterance = steward.utterance
@@ -199,13 +223,25 @@ class IntentParser:
         # still waiting on the other side, and the trip is the honest cost of
         # it. This is decided here rather than trusted to the model, which
         # tends to answer "go and talk" with a single TALK.
+        #
+        # The walk is only half of what the player asked for, though. Dropping
+        # the rest is what made "go and talk to her" resolve as a bare MOVE:
+        # no conversation, no relationship change, nothing the world could
+        # remember - while the narrator, reading the same scene, wrote the
+        # conversation anyway. So the original move is kept as a *deferred*
+        # intent, and the caller plays it out as an ordinary second step once
+        # the character has actually arrived.
+        deferred: PlayerIntent | None = None
         destination = intent.location_key
         if (
             destination
             and destination != state.location_key()
             and intent.target_id
+            and intent.action_type in DEFERRABLE_ACTIONS
             and not state.is_present(intent.target_id)
         ):
+            deferred = intent.model_copy(deep=True)
+            deferred.plan = None
             intent.action_type = ActionType.MOVE
             intent.target_id = None
             intent.target_key = None
@@ -216,7 +252,10 @@ class IntentParser:
             action=action,
             plan=plan,
             degraded=parsed.degraded,
-            resolution_notes=[*parsed.resolution_notes, *notes],
+            resolution_notes=list(
+                dict.fromkeys([*parsed.resolution_notes, *notes])
+            ),
+            deferred_intent=deferred,
         )
 
     # ------------------------------------------------------------------

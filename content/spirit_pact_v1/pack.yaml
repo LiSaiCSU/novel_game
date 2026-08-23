@@ -1,7 +1,7 @@
 key: spirit_pact_v1
 name: 苍澜契约·九印抉择
 genre: eastern_fantasy_academy
-version: "1.3.0"
+version: "1.4.0"
 engine_min_version: "0.2.0"
 primary_progression_key: soul_rank
 language: zh-CN
@@ -330,7 +330,7 @@ narrative_style:
     - 对话必须改变资源、训练方案、情报或竞争关系，禁止用围观惊叹和空泛夸奖充当热血
 theme: {accent: "#3f7d5a", background: "#f2f4ef", surface: "#ffffff", text: "#20261f"}
 vocabulary:
-  profile_labels: {age_suffix: 岁, realm: 契师等级, root: 命印, faction: 门派, power: 灵息, male: 男, female: 女, unspecified: 未指定, story_lead: 同伴, no_story_lead: 你还没有可以托付后背的人, absent: 当前不在场}
+  profile_labels: {health: 气血, age_suffix: 岁, realm: 契师等级, root: 命印, faction: 门派, power: 灵息, male: 男, female: 女, unspecified: 未指定, story_lead: 同伴, no_story_lead: 你还没有可以托付后背的人, absent: 当前不在场}
   relationship_labels: {affection: 好感, trust: 信任, respect: 敬重, fear: 忌惮, hatred: 仇怨, suspicion: 提防, dependency: 倚重, familiarity: 熟识, boundaries: 分寸}
   action_aliases:
     MOVE: [去, 前往, 走向, 回到, 进入, 赶往, 出发, 潜入]

@@ -22,6 +22,18 @@ class BudgetedProvider:
     def available(self) -> bool:
         return self._provider.available
 
+    def begin_turn(self) -> None:
+        """Start a fresh turn's allowance.
+
+        ``_settle`` replaces each reservation with the call's real usage, which
+        means the counter only ever grows: without this reset it was a running
+        total of everything the process had spent, not a turn cap. Once that
+        total passed the limit every later call was refused - and because the
+        chapter is written last, the call the player actually reads is the one
+        that got refused, silently, for the rest of the session.
+        """
+        self._reserved = 0
+
     def _reserve(self, request: LLMRequest) -> int:
         prompt = (request.system or "") + "".join(message.content for message in request.messages)
         requested = estimate_tokens(prompt) + request.max_output_tokens

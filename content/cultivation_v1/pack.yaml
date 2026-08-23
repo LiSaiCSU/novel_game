@@ -1,7 +1,7 @@
 key: cultivation_v1
 name: 七日血契
 genre: cultivation
-version: "2.7.0"
+version: "2.8.0"
 engine_min_version: "0.2.0"
 primary_progression_key: cultivation
 language: zh-CN
@@ -66,6 +66,117 @@ story:
         - 在阵印被激活前找到解除办法
   starter_items:
     - {key: blood_roster_fragment, quantity: 1}
+  endings:
+    - key: ending_array_eye_broken
+      type: other
+      title: 阵眼碎在开门之前
+      priority: 95
+      epilogue: >
+        赤霞秘境按原本的日子开了，没有提前，也没有人在门口被点名。
+        阵眼碎的时候只响了一声，像谁在很远的地方把一只碗放回桌上。
+        执法堂后来把血名册的原本收了上去，抄了七个名字，第一个不是你的。
+        外门的物价花了半个月才落回去。你照旧挑水、算贡献点、在两张互相打架的告示里省下三个点，
+        只是从那以后，夜里有人敲门，你会先看一眼床底那块松动的青砖。
+      condition:
+        op: and
+        args:
+          - {op: eq, args: [{op: get, args: [quests.quest_break_array_eye.status]}, completed]}
+          - {op: eq, args: [{op: get, args: [quests.quest_clear_the_room.status]}, completed]}
+    - key: ending_name_taken_back
+      type: other
+      title: 把名字要回来
+      priority: 86
+      epilogue: >
+        血名册的原本终究是落到了你手里。你没有烧它——烧了，你的清白也一起没了。
+        你把它摊在执事堂的长桌上，让所有认得字的人看清第一行是谁添上去的。
+        阵眼没能毁掉，赤霞秘境还是提前开了门，但开门那天你站在山下的青云城里，
+        听着钟声响过七下，一直到第八下也没有响。你活过了那七天，代价是这座山从此不再是你的家。
+      condition:
+        op: and
+        args:
+          - {op: eq, args: [{op: get, args: [quests.quest_recover_roster.status]}, completed]}
+          - {op: eq, args: [{op: get, args: [quests.quest_clear_the_room.status]}, completed]}
+          - {op: ne, args: [{op: get, args: [quests.quest_break_array_eye.status]}, completed]}
+    - key: ending_two_names_one_road
+      type: romance
+      lead: lin_qingxue
+      requires_consent: true
+      title: 两个名字，一条路
+      priority: 84
+      epilogue: >
+        阵眼碎了以后，林清雪把那半张残页折好还给你，说这东西该由写错名字的人自己收着。
+        她没有回内门。真传弟子的白边道袍换成了灰的，站在演武场角上和你一起削那几块被剑气啃豁的青石。
+        她照旧话少，照旧叩剑鞘，只是叩的节奏你现在听得懂了——三下是"人在"，两下是"别过来"。
+        你们没有说过什么承诺的话。七天里说过的话已经够用一辈子记着了。
+      condition:
+        op: and
+        args:
+          - {op: eq, args: [{op: get, args: [quests.quest_break_array_eye.status]}, completed]}
+          - {op: eq, args: [{op: get, args: [consent.lin_qingxue]}, accepted]}
+          - {op: gte, args: [{op: get, args: [relationships.lin_qingxue.trust]}, 35]}
+          - {op: gte, args: [{op: get, args: [relationships.lin_qingxue.affection]}, 30]}
+    - key: ending_blade_between_us
+      type: romance
+      lead: zhao_wuji
+      requires_consent: true
+      title: 阵印落下的地方
+      priority: 84
+      epilogue: >
+        赵无极体内的阵印是在阵眼碎的同一刻散掉的。他疼得跪在地上，嘴上还没停：
+        "看见没有，这就是差距。"你没接话，把他半边身子扛起来往山下走。
+        后来他真的少说了很多废话，只是每回你要出远门，他都会先把那把没开刃的练习剑往你手里塞一次，
+        再嫌弃地拿回去。他说这叫习惯。你知道那不叫习惯。
+      condition:
+        op: and
+        args:
+          - {op: eq, args: [{op: get, args: [quests.quest_break_array_eye.status]}, completed]}
+          - {op: eq, args: [{op: get, args: [consent.zhao_wuji]}, accepted]}
+          - {op: gte, args: [{op: get, args: [relationships.zhao_wuji.trust]}, 35]}
+          - {op: gte, args: [{op: get, args: [relationships.zhao_wuji.affection]}, 30]}
+    - key: ending_two_who_walked_out
+      type: bond
+      title: 一起走出来的两个人
+      priority: 72
+      epilogue: >
+        血祭阵散了，你们谁也没提那七天里互相瞒过的事。有些账不清算，日子才过得下去。
+        搭档回了原本该去的地方，你留在外门，照旧挑水，照旧在告示上抠字眼。
+        每个月总有一封信从山那边过来，不写落款，只写一句"还活着"。你回的也是那三个字。
+        这不是圆满，但在七日血契之后，能有个人值得你花笔墨写三个字，已经很够。
+      condition:
+        op: and
+        args:
+          - {op: eq, args: [{op: get, args: [quests.quest_break_array_eye.status]}, completed]}
+          - {op: gte, args: [{op: get, args: [relationships.lin_qingxue.trust]}, 25]}
+    - key: ending_down_the_mountain
+      type: independent
+      title: 自己走下山
+      priority: 45
+      epilogue: >
+        你没有洗清嫌疑，也没能碰到阵眼。第七天的凌晨，你把青云宗的牙牌压在枕头底下，
+        从后山那条没人巡的小道下去了。石溪村的刘老栓看见你，没问，只把烟杆子往腰上一别，
+        指了指往北岔出去的那条路。你走的时候天还没亮，山门的钟在身后响了七下。
+        名字还在那张纸上，但人不在名单能找到的地方了。这也算一种活法。
+      condition:
+        op: and
+        args:
+          - {op: ne, args: [{op: get, args: [quests.quest_break_array_eye.status]}, completed]}
+          - {op: ne, args: [{op: get, args: [quests.quest_clear_the_room.status]}, completed]}
+          - {op: gte, args: [{op: get, args: [world.minute]}, 213167280]}
+    - key: ending_first_offering
+      type: other
+      title: 开门时的第一份祭品
+      priority: 20
+      hidden_until_available: true
+      epilogue: >
+        赤霞秘境提前开了七天。开门要人血引路，名册上的第一行写着谁，谁就先走这一步。
+        没有人来解释，也没有人来道歉——外门的规矩向来如此，出了事先找一个交代得过去的人。
+        你最后看见的是石阶上那两只木桶，一桶东泉，一桶西泉，兑好的水还没来得及浇下去。
+        月见草到底活没活，你不知道了。
+      condition:
+        op: and
+        args:
+          - {op: eq, args: [{op: get, args: [quests.quest_clear_the_room.status]}, failed]}
+          - {op: ne, args: [{op: get, args: [quests.quest_break_array_eye.status]}, completed]}
   relationship_boundaries: |
     感情线只发生在成年、具备自主意愿的玩家与成年搭档之间。允许危险后的靠近、试探、暧昧对话、
     克制的亲吻或淡出处理，但不得露骨描写性行为或身体部位，不得把胁迫、控制或权力压迫包装成浪漫。
@@ -120,6 +231,8 @@ model_preferences:
 
 vocabulary:
   profile_labels:
+    health: 气血
+    power: 灵力
     age_suffix: 岁
     realm: 境界
     root: 灵根

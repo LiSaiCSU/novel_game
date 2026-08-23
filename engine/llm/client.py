@@ -69,6 +69,13 @@ class LLMClient:
     def reset_records(self) -> None:
         self.records = []
 
+    def begin_turn(self) -> None:
+        """Reset per-turn accounting, including the provider's token budget."""
+        self.records = []
+        begin = getattr(self.provider, "begin_turn", None)
+        if callable(begin):
+            begin()
+
     def total_usage(self) -> LLMUsage:
         return LLMUsage(
             prompt_tokens=sum(r.prompt_tokens for r in self.records),

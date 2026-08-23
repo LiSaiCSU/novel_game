@@ -58,6 +58,14 @@ information:
 memory:
   top_k: 10
   min_importance: 0.12
+  conversation_importance:
+    base: 0.10
+    first_meeting: 0.35
+    major_npc: 0.35
+    request_size:
+      moderate: 0.30
+      large: 0.45
+      extreme: 0.60
   recency_half_life_minutes: 2880
   decay_floor: 0.1
   retrieval_weights: {similarity: 0.3, importance: 0.3, recency: 0.16, relationship: 0.12, context: 0.12}
@@ -66,6 +74,7 @@ narrative:
   tension_start: 45
   tension_decay_per_day: 3
   tension_gain_by_importance: 16
+  tension_gain_floor: 0.12                # 低于这个重要度的琐事不推高张力
   high_threshold: 75
   max_consecutive_high_turns: 3
   bands:

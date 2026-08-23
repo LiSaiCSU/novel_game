@@ -33,6 +33,7 @@ from engine.core.models import Event, NarrativeSegment
 from engine.core.mutations import ChangeSet, character_field
 from engine.core.types import Visibility
 from engine.endings import build_ending_context, evaluate_endings
+from engine.orchestrator.orchestrator import BEAT_SEGMENT
 from engine.orchestrator.turn import DEFAULT_NARRATIVE_CHARS
 from engine.world.clocks import clock_views
 from engine.world.seeder import PlayerSpec, build_world
@@ -352,6 +353,8 @@ async def create_playthrough(
         "release_id": release.id,
         "session_id": bundle.session.id,
         "opening": prologue.text,
+        "beat": prologue.beat.model_dump(mode="json") if prologue.beat else None,
+        "choices": await _opening_choices(uow, bundle.session.id),
         "state": state.scene_summary(),
     }
 
@@ -531,14 +534,24 @@ async def playthrough_dashboard(
     pack = release_content_cache.resolve(release, settings)
     state = await build_world_state(uow, pack, session.world_id, session.player_character_id)
     characters = await uow.characters.list_for_world(state.world.id)
+    # One query for the whole cast. How an NPC feels about the player is the
+    # authoritative direction; a creator-authored player -> NPC row remains a
+    # compatibility fallback.
+    rows = await uow.relationships.list_involving(state.world.id, state.player.id)
+    toward_player = {
+        row.character_a_id: row for row in rows if row.character_b_id == state.player.id
+    }
+    from_player = {
+        row.character_b_id: row for row in rows if row.character_a_id == state.player.id
+    }
     relationships: list[dict[str, Any]] = []
     for character in characters:
         if character.id == state.player.id:
             continue
-        relation = await uow.relationships.get(character.id, state.player.id)
+        relation = toward_player.get(character.id)
         direction = "toward_player"
         if relation is None:
-            relation = await uow.relationships.get(state.player.id, character.id)
+            relation = from_player.get(character.id)
             direction = "from_player"
         if relation is None or relation.is_stranger():
             continue
@@ -672,6 +685,8 @@ async def playthrough_recap(
         for item in last_result.get("choices", [])
         if isinstance(item, dict) and item.get("label")
     ][:4]
+    if not choices:
+        choices = (await _opening_choices(uow, session.id))[:4]
     return {
         "title": release.title,
         "turn_number": session.turn_number,
@@ -873,6 +888,37 @@ async def choose_playthrough_ending(
     }
 
 
+
+async def _opening_choices(uow: SqlUnitOfWork, session_id: str) -> list[dict[str, Any]]:
+    """The suggestions the opening chapter handed over.
+
+    Before a first turn exists there is no stored result to read choices from,
+    so a brand-new playthrough opened with no suggested actions at all - even
+    though the prologue had just written three, and they were sitting in the
+    narrative log the whole time.
+    """
+    for segment in reversed(await uow.turns.list_narrative(session_id, limit=6)):
+        if segment.kind != BEAT_SEGMENT:
+            continue
+        try:
+            payload = json.loads(segment.text)
+        except (json.JSONDecodeError, TypeError):
+            continue
+        options = payload.get("options") if isinstance(payload, dict) else None
+        if not isinstance(options, list):
+            continue
+        return [
+            {
+                "label": str(option.get("label", "")),
+                "hint": str(option.get("hint", "")),
+                "action_type": str(option.get("action_type", "")),
+                "source": str(option.get("source", "narrator")),
+            }
+            for option in options
+            if isinstance(option, dict) and str(option.get("label", "")).strip()
+        ]
+    return []
+
 @router.get("/playthroughs/{playthrough_id}/history")
 async def playthrough_history(
     playthrough_id: str,
@@ -901,7 +947,8 @@ async def playthrough_history(
             }
         )
     last_result = dict(turns[-1].get("result") or {}) if turns else {}
-    return {"chapters": chapters, "choices": last_result.get("choices", [])}
+    choices = list(last_result.get("choices") or []) or await _opening_choices(uow, session.id)
+    return {"chapters": chapters, "choices": choices}
 
 
 @router.post("/playthroughs/{playthrough_id}/saves", status_code=201)

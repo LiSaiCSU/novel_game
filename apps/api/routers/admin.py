@@ -30,6 +30,7 @@ from apps.api.rate_limit import rate_limiter
 from apps.api.security import Principal, SecretBox, require_role_csrf, require_roles
 from apps.api.tenancy import set_tenant_context
 from apps.worker.tasks import scrub_account
+from database.models.orm import GameSessionORM
 from database.models.platform import (
     AuditLogORM,
     AuthSessionORM,
@@ -547,8 +548,23 @@ async def _revoke_sessions(uow: SqlUnitOfWork, user_id: str) -> int:
         .where(AuthSessionORM.user_id == user_id, AuthSessionORM.revoked_at.is_(None))
         .values(revoked_at=datetime.now(UTC))
     )
-    return int(result.rowcount or 0)
+    return int(result.rowcount or 0)  # type: ignore[attr-defined]  # DML result
 
+
+
+async def _turn_numbers(uow: SqlUnitOfWork, session_ids: list[str | None]) -> dict[str, int]:
+    """How far each playthrough has actually got, read from its game session."""
+    wanted = [session_id for session_id in session_ids if session_id]
+    if not wanted:
+        return {}
+    rows = (
+        await uow.session.execute(
+            sa.select(GameSessionORM.id, GameSessionORM.turn_number).where(
+                GameSessionORM.id.in_(wanted)
+            )
+        )
+    ).all()
+    return {str(session_id): int(turn_number or 0) for session_id, turn_number in rows}
 
 @router.get("/users/quota/bulk/preview")
 async def preview_bulk_quota(
@@ -932,6 +948,7 @@ async def inspect_player(
         .scalars()
         .all()
     )
+    turn_numbers = await _turn_numbers(uow, [play.game_session_id for play in plays])
     uow.session.add(
         _audit(
             principal,
@@ -956,7 +973,7 @@ async def inspect_player(
                 "id": play.id,
                 "release_id": play.release_id,
                 "status": play.status,
-                "turn_number": play.turn_number,
+                "turn_number": turn_numbers.get(play.game_session_id or "", 0),
                 "updated_at": play.updated_at,
             }
             for play in plays
@@ -979,10 +996,11 @@ async def inspect_playthrough(
     if play is None or play.user_id != user_id:
         raise HTTPException(status_code=404, detail="playthrough not found")
     segments = await uow.turns.list_narrative(play.game_session_id or "", limit=limit)
+    turn_numbers = await _turn_numbers(uow, [play.game_session_id])
     return {
         "playthrough_id": play.id,
         "status": play.status,
-        "turn_number": play.turn_number,
+        "turn_number": turn_numbers.get(play.game_session_id or "", 0),
         "chapters": [
             {"kind": segment.kind, "text": segment.text, "world_minute": segment.world_minute}
             for segment in segments

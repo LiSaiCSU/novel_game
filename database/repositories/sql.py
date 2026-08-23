@@ -186,6 +186,24 @@ class SqlRelationshipRepo(_Repo):
         )
         return [m.relationship_to_domain(r) for r in rows]
 
+    async def list_involving(self, world_id: str, character_id: str) -> list[Relationship]:
+        """Every relationship this character is either side of, in one query.
+
+        Callers that need the whole cast - the dashboard, an ending readout -
+        were issuing up to two statements per character, which is a lot of
+        round trips for one page of a story.
+        """
+        rows = await self._scalars(
+            sa.select(RelationshipORM).where(
+                RelationshipORM.world_id == world_id,
+                sa.or_(
+                    RelationshipORM.character_a_id == character_id,
+                    RelationshipORM.character_b_id == character_id,
+                ),
+            )
+        )
+        return [m.relationship_to_domain(r) for r in rows]
+
     async def list_changes(self, character_id: str, limit: int = 50) -> list[RelationshipChange]:
         rows = await self._scalars(
             sa.select(RelationshipChangeORM)

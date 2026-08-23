@@ -14,7 +14,7 @@
 | `prompts/npc_decision_v1.md` | `npc_decision` | `NPCDecision` | 0.7 |
 | `prompts/director_v1.md` | `director` | `DirectorDecision` | 0.6 |
 | `prompts/narrative_v1.md` | `narrative` | free text | 0.85 |
-| `prompts/memory_v1.md` | `memory_extractor` | `MemoryExtraction` | 0.3 |
+| `prompts/memory_extractor_v1.md` | `memory_extractor` | `MemoryExtraction` | 0.3 |
 | `prompts/structured_repair_v1.md` | `structured_repair` | 目标 schema | 0.0 |
 
 ## Front-matter 规范

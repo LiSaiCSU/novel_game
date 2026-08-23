@@ -11,7 +11,7 @@ from dataclasses import dataclass
 from engine.characters.schemas import MemoryExtraction
 from engine.contentpack.pack import ContentPack
 from engine.context.builder import ContextBuilder
-from engine.core.errors import LLMError, StructuredOutputError
+from engine.core.errors import EngineError, LLMError, StructuredOutputError
 from engine.core.logging import get_logger
 from engine.core.models import Character, Event, Memory
 from engine.core.ports import UnitOfWork
@@ -148,7 +148,7 @@ class MemoryExtractor:
                     prompt_version=self.prompt_version,
                 )
                 degraded = False
-            except (LLMError, StructuredOutputError) as exc:
+            except (LLMError, StructuredOutputError, EngineError) as exc:
                 logger.warning("memory extraction fell back to heuristics: %s", exc)
                 self.llm.record_degraded(LLMRole.MEMORY, str(exc))
 

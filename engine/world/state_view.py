@@ -133,6 +133,24 @@ class WorldStateView:
         }
 
 
+def _relationships_by_other(
+    rows: list[Relationship], player_id: str
+) -> dict[str, Relationship]:
+    """Index the player's relationships by whoever the other party is.
+
+    Both directions are loaded. How an NPC feels about the player is what the
+    narrator, the rules and the interface all mean by "the relationship", so
+    the NPC -> player row wins when a pair happens to carry both.
+    """
+    by_other: dict[str, Relationship] = {}
+    for row in rows:
+        if row.character_a_id == player_id:
+            by_other.setdefault(row.character_b_id, row)
+        elif row.character_b_id == player_id:
+            by_other[row.character_a_id] = row
+    return by_other
+
+
 async def build_world_state(
     uow: UnitOfWork, pack: ContentPack, world_id: str, player_id: str
 ) -> WorldStateView:
@@ -149,7 +167,7 @@ async def build_world_state(
 
     location = graph.by_id(player.location_id)
     factions = {f.key: f for f in snapshot.factions}
-    relationships = {rel.character_b_id: rel for rel in snapshot.relationships}
+    relationships = _relationships_by_other(snapshot.relationships, player.id)
 
     return WorldStateView(
         world=world,

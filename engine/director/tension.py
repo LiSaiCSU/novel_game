@@ -25,6 +25,11 @@ class TensionModel:
         self.pack = pack
         self.decay_per_day = float(pack.rule("narrative.tension_decay_per_day", 2.0))
         self.gain_scale = float(pack.rule("narrative.tension_gain_by_importance", 30.0))
+        # Below this, an event is bookkeeping rather than drama. Without a
+        # floor every step - including walking from one room to the next -
+        # ratcheted tension upward, so a quiet fortnight of errands ended at
+        # the same pitch as a murder.
+        self.gain_floor = float(pack.rule("narrative.tension_gain_floor", 0.12))
         self.high_threshold = float(pack.rule("narrative.high_threshold", 75.0))
         self.max_consecutive_high = int(pack.rule("narrative.max_consecutive_high_turns", 3))
         self.bands = [
@@ -48,7 +53,8 @@ class TensionModel:
         return _clamp(current - self.decay_per_day * max(0.0, days_elapsed))
 
     def gain(self, current: float, importance: float) -> float:
-        return _clamp(current + max(0.0, importance) * self.gain_scale)
+        notable = max(0.0, importance - self.gain_floor)
+        return _clamp(current + notable * self.gain_scale)
 
     def apply(self, current: float, *, days_elapsed: float, importance: float) -> float:
         return self.gain(self.decay(current, days_elapsed), importance)

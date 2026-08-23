@@ -78,9 +78,15 @@ class Settings(BaseSettings):
     #: How many times a truncated (empty) response is retried with twice the
     #: budget before the caller is allowed to degrade.
     llm_truncation_retries: int = 2
-    llm_turn_token_limit: int = Field(default=20_000, ge=1)
-    llm_daily_token_limit: int = Field(default=80_000, ge=1)
-    llm_monthly_token_limit: int = Field(default=200_000, ge=1)
+    # One turn is not one model call: it is intent, world steward, two NPC
+    # agents, the director, memory, and a chapter of prose, each with a
+    # multi-thousand-token prompt. The old 20k default was smaller than a
+    # healthy turn, so any deployment that did not override it lost its
+    # chapter - the part the player reads - to the budget guard every turn.
+    # These match the documented values in .env.example.
+    llm_turn_token_limit: int = Field(default=120_000, ge=1)
+    llm_daily_token_limit: int = Field(default=2_000_000, ge=1)
+    llm_monthly_token_limit: int = Field(default=100_000_000, ge=1)
     llm_price_table: dict[str, dict[str, int]] = Field(default_factory=dict)
     llm_daily_cost_alert_microunits: int = Field(default=0, ge=0)
 

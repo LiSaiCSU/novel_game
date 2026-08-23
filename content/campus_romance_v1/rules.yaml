@@ -52,6 +52,14 @@ information:
 memory:
   top_k: 10
   min_importance: 0.12
+  conversation_importance:
+    base: 0.10
+    first_meeting: 0.35
+    major_npc: 0.35
+    request_size:
+      moderate: 0.30
+      large: 0.45
+      extreme: 0.60
   recency_half_life_minutes: 20160
   decay_floor: 0.1
   retrieval_weights: {similarity: 0.32, importance: 0.28, recency: 0.14, relationship: 0.14, context: 0.12}
@@ -60,6 +68,7 @@ narrative:
   tension_start: 20
   tension_decay_per_day: 2
   tension_gain_by_importance: 12
+  tension_gain_floor: 0.12                # 低于这个重要度的琐事不推高张力
   high_threshold: 75
   max_consecutive_high_turns: 3
   bands: [{key: daily, name: 日常, min: 0, max: 25}, {key: progress, name: 推进, min: 25, max: 55}, {key: tense, name: 紧张, min: 55, max: 75}, {key: climax, name: 高潮, min: 75, max: 101}]

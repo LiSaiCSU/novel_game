@@ -29,6 +29,7 @@ def recovery_capsule(
     debug_requested: bool,
     narrative_max_chars: int,
     memory_required: bool,
+    deferred_intent: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
     """Build all data needed to resume presentation after a durable commit."""
     return {
@@ -44,6 +45,8 @@ def recovery_capsule(
         "trace": trace.as_dict(),
         "debug_requested": debug_requested,
         "narrative_max_chars": narrative_max_chars,
+        # What this turn only started. The run replays it as its next step.
+        "deferred_intent": deferred_intent,
         "memory_projection": {
             "status": "PENDING" if memory_required else "NOT_REQUIRED",
             "attempts": 0,

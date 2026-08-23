@@ -200,15 +200,23 @@ class Prologue:
 
 
 def _goals(raw: str) -> list[str]:
-    """The beat block may also name what the character wants. Optional."""
+    """The beat block may also name what the character wants. Optional.
+
+    The marker is dropped often enough by long generations that looking only
+    behind it silently costs the character every opening goal - which the
+    autopilot and the director then have nothing to pull against.
+    """
     _, marker, tail = raw.partition(BEAT_MARKER)
-    if not marker:
-        return []
-    try:
-        payload = extract_json(tail)
-    except Exception:
-        return []
-    goals = payload.get("goals") if isinstance(payload, dict) else None
-    if not isinstance(goals, list):
-        return []
-    return [str(g).strip()[:80] for g in goals[:3] if str(g).strip()]
+    candidates = [tail] if marker else []
+    opener = raw.rfind("{")
+    if opener > 0:
+        candidates.append(raw[opener:])
+    for candidate in candidates:
+        try:
+            payload = extract_json(candidate)
+        except Exception:
+            continue
+        goals = payload.get("goals") if isinstance(payload, dict) else None
+        if isinstance(goals, list):
+            return [str(g).strip()[:80] for g in goals[:3] if str(g).strip()]
+    return []

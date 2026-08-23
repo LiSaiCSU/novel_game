@@ -18,6 +18,8 @@ from dataclasses import dataclass, replace
 from types import SimpleNamespace
 from typing import Any
 
+from pydantic import ValidationError
+
 from engine.actions.autopilot import Autopilot
 from engine.actions.intent_parser import IntentParser, ParsedIntent
 from engine.actions.planner import ActionPlanExecutor
@@ -115,6 +117,9 @@ class StepOutcome:
     step: ChapterStep | None = None
     interrupt: Interrupt | None = None
     degraded: bool = False
+    #: What the player asked for that this step could only begin - typically a
+    #: conversation that had to become a walk first.
+    deferred_intent: PlayerIntent | None = None
     #: Set only when nothing was committed because the input was unreadable.
     clarification: TurnResult | None = None
 
@@ -323,6 +328,37 @@ class GameOrchestrator:
             if d.llm is not None:
                 run_llm_records.extend(d.llm.records)
 
+            # "Go and talk to her" is one request, not two. The walk committed
+            # above is only its first half; play the rest out now that the
+            # character is standing in front of the person they went to see.
+            # Unless something happened on the way. Arriving into a drawn
+            # blade and then calmly starting the conversation you set out to
+            # have is not following through, it is ignoring the scene.
+            follow_up = (
+                None
+                if interrupt is not None and interrupt.dramatic
+                else await self._deferred_step(
+                    uow,
+                    request,
+                    session,
+                    request_id,
+                    timer,
+                    deferred=outcome.deferred_intent,
+                    budget=budget,
+                    minutes_spent=minutes_spent,
+                )
+            )
+            if follow_up is not None:
+                step = follow_up.committed_step()
+                steps.append(step)
+                turn_ids.append(follow_up.turn_id)
+                minutes_spent += step.minutes
+                interrupt = follow_up.interrupt or interrupt
+                degraded = degraded or follow_up.degraded
+                await self._notify(on_step, len(steps), step)
+                if d.llm is not None:
+                    run_llm_records.extend(d.llm.records)
+
         # -- then the character carries on by themselves ---------------------
         # Only with a model behind it. The deterministic fallback picks the
         # same safe action every time, so running it five times would just
@@ -388,6 +424,15 @@ class GameOrchestrator:
         # -- one chapter for the whole run -----------------------------------
         state = await build_world_state(uow, d.pack, session.world_id, session.player_character_id)
         before_chapter = len(d.llm.records) if d.llm is not None else 0
+        if d.llm is not None:
+            # The chapter is the one call the player actually reads. It runs
+            # after every step of the run has already spent from the same
+            # allowance, so without its own budget it is the first thing to be
+            # refused - and a refused chapter is a one-line template where a
+            # scene should be.
+            begin_budget = getattr(d.llm.provider, "begin_turn", None)
+            if callable(begin_budget):
+                begin_budget()
         with timer.measure("chapter"):
             chapter = await d.chapter.render(
                 uow,
@@ -480,7 +525,7 @@ class GameOrchestrator:
             world_id=session.world_id,
         )
         if d.llm is not None:
-            d.llm.reset_records()
+            d.llm.begin_turn()
 
         # -- S1 snapshot ----------------------------------------------------
         with timer.measure("snapshot"):
@@ -673,7 +718,7 @@ class GameOrchestrator:
 
         # -- S8b plot steward: did the player change what the story is about? --
         plot_result: PlotResult | None = None
-        if self._should_review_plot(parsed, outcome, turn_number):
+        if d.plot_steward is not None and self._should_review_plot(parsed, outcome, turn_number):
             with timer.measure("plot"):
                 plot_result = await d.plot_steward.review(
                     director_state,
@@ -762,6 +807,11 @@ class GameOrchestrator:
                 debug_requested=request.debug,
                 narrative_max_chars=request.narrative_max_chars,
                 memory_required=plan.needs_memory and bool(change_set.events),
+                deferred_intent=(
+                    parsed.deferred_intent.model_dump(mode="json")
+                    if rule_result.allowed and parsed.deferred_intent is not None
+                    else None
+                ),
             )
             try:
                 await commit_canonical_turn(
@@ -906,7 +956,10 @@ class GameOrchestrator:
             status=after_status,
             narrative=narrative.text,
             state_changes=self._state_change_summary(
-                dict(payload["before_facts"]), fresh_state, change_set
+                dict(payload["before_facts"]),
+                fresh_state,
+                change_set,
+                await self._world_names(uow, session),
             ),
             visible_updates=fresh_state.scene_summary(),
             choices=self._recommendations(
@@ -1164,16 +1217,24 @@ class GameOrchestrator:
         }
 
     def _state_change_summary(
-        self, before: dict[str, Any], after: WorldStateView, change_set: ChangeSet
+        self,
+        before: dict[str, Any],
+        after: WorldStateView,
+        change_set: ChangeSet,
+        names: dict[str, str] | None = None,
     ) -> dict[str, Any]:
         ladder = self.d.pack.realms
+        names = names or {}
         p1 = after.player
         character: dict[str, Any] = {}
         for field_name in self._TRACKED_FIELDS:
             a, b = before["player"][field_name], getattr(p1, field_name)
             if a != b:
                 character[field_name] = [a, b]
-        if before["realm_key"] != (p1.realm, p1.realm_stage):
+        # The capsule round-trips through JSON, which turns the captured tuple
+        # into a list. Comparing a list to a tuple is always unequal, so every
+        # single turn reported a realm change that had not happened.
+        if tuple(before["realm_key"]) != (p1.realm, p1.realm_stage):
             character["realm"] = [before["realm"], ladder.display(p1.realm, p1.realm_stage)]
         if before["location_id"] != p1.location_id:
             character["location"] = [
@@ -1196,19 +1257,22 @@ class GameOrchestrator:
             bucket = "added" if change.kind is mut.ChangeKind.INVENTORY_ADD else "removed"
             inventory[bucket].append(entry)
 
-        relationships = [
-            {
-                "with": change.payload.get("other_id"),
-                "with_name": (
-                    c.display_name
-                    if (c := after.character_by_id(change.payload.get("other_id")))
-                    else ""
-                ),
-                "deltas": change.payload.get("deltas"),
-                "reason": change.reason,
-            }
-            for change in change_set.by_kind(mut.ChangeKind.RELATIONSHIP_DELTA)
-        ]
+        # An interaction moves the *NPC's* feelings about the player, so the
+        # row is stored as NPC -> player: `target_id` is the NPC and
+        # `other_id` is the player. Reading `other_id` blindly labelled every
+        # change with the player's own name.
+        relationships = []
+        for change in change_set.by_kind(mut.ChangeKind.RELATIONSHIP_DELTA):
+            other_id = change.payload.get("other_id")
+            counterpart = change.target_id if other_id == p1.id else other_id
+            relationships.append(
+                {
+                    "with": counterpart,
+                    "with_name": names.get(str(counterpart), ""),
+                    "deltas": change.payload.get("deltas"),
+                    "reason": change.reason,
+                }
+            )
 
         return {
             "character": character,
@@ -1284,15 +1348,26 @@ class GameOrchestrator:
                         source="engine",
                     )
                 )
-        choices.append(
-            Choice(
-                label="",
-                hint=str(ActionType.CULTIVATE),
-                action_type=str(ActionType.CULTIVATE),
-                source="engine",
+        # The label has to come from the pack: the engine holds no world text,
+        # and an empty one crossed the API boundary as a suggestion with
+        # nothing written on it, which the recap then dropped outright.
+        rest = self._affordance_label(ActionType.CULTIVATE)
+        if rest:
+            choices.append(
+                Choice(
+                    label=rest,
+                    hint=str(ActionType.CULTIVATE),
+                    action_type=str(ActionType.CULTIVATE),
+                    source="engine",
+                )
             )
-        )
         return choices[:8]
+
+    def _affordance_label(self, action_type: ActionType) -> str:
+        """The pack's own word for an action, for a suggestion button."""
+        aliases = self.d.pack.vocabulary.get("action_aliases", {}) or {}
+        words = aliases.get(str(action_type)) or []
+        return str(words[0]) if words else ""
 
     # ==================================================================
     async def _notify(self, on_step: StepListener | None, index: int, step: ChapterStep) -> None:
@@ -1309,6 +1384,52 @@ class GameOrchestrator:
             max_steps=max(1, int(self.d.pack.rule("auto_advance.max_steps", 5))),
             max_minutes=max(1, int(self.d.pack.rule("auto_advance.max_minutes", 720))),
         )
+
+    async def _deferred_step(
+        self,
+        uow: UnitOfWork,
+        request: TurnRequest,
+        session: GameSession,
+        request_id: str,
+        timer: StageTimer,
+        *,
+        deferred: PlayerIntent | None,
+        budget: AdvanceBudget,
+        minutes_spent: int,
+    ) -> StepOutcome | None:
+        """Finish a request whose first step could only be the journey.
+
+        Nothing here is a second decision by the player: it is the move they
+        already typed, adjudicated by the ordinary rules against the scene they
+        have now walked into. It runs only when the person they went to see is
+        actually standing there - otherwise the walk really was the whole turn.
+        """
+        if deferred is None or budget.max_steps <= 1 or minutes_spent >= budget.max_minutes:
+            return None
+        state = await build_world_state(
+            uow, self.d.pack, session.world_id, session.player_character_id
+        )
+        target = None
+        if deferred.target_key:
+            target = state.character_by_key(deferred.target_key)
+        if target is None and deferred.target_id:
+            target = state.character_by_id(deferred.target_id)
+        if target is None or not target.alive or not state.is_present(target.id):
+            return None
+
+        intent = deferred.model_copy(deep=True)
+        intent.target_id = target.id
+        intent.target_key = target.key
+        # The destination has been reached; leaving it set would turn the
+        # follow-up into a second walk to where the character already stands.
+        intent.location_key = None
+        intent.plan = None
+        outcome = await self._advance_step(
+            uow, request, session, request_id, timer, forced_intent=intent
+        )
+        if outcome.clarification is not None or outcome.step is None:
+            return None
+        return outcome
 
     async def _advance_step(
         self,
@@ -1372,8 +1493,17 @@ class GameOrchestrator:
             health_before=health_before,
             director=trace.get("director"),
         )
+        deferred_raw = payload.get("deferred_intent")
+        deferred: PlayerIntent | None = None
+        if isinstance(deferred_raw, dict):
+            try:
+                deferred = PlayerIntent.model_validate(deferred_raw)
+            except ValidationError:
+                logger.warning("stored deferred intent is unreadable; dropping it")
+
         return StepOutcome(
             turn_id=turn_id,
+            deferred_intent=deferred,
             step=ChapterStep(
                 action=str(payload.get("player_action") or text or ""),
                 outcome=outcome,
@@ -1418,7 +1548,7 @@ class GameOrchestrator:
             turn_number=session.turn_number,
             status=TurnStatus.COMPLETED,
             narrative=chapter.text,
-            state_changes=await self._run_state_changes(uow, turn_ids, state),
+            state_changes=await self._run_state_changes(uow, turn_ids, state, session),
             visible_updates=state.scene_summary(),
             choices=self._recommendations(
                 state,
@@ -1482,7 +1612,11 @@ class GameOrchestrator:
         return result
 
     async def _run_state_changes(
-        self, uow: UnitOfWork, turn_ids: list[str], state: WorldStateView
+        self,
+        uow: UnitOfWork,
+        turn_ids: list[str],
+        state: WorldStateView,
+        session: GameSession,
     ) -> dict[str, Any]:
         """Player-visible deltas across the whole run, not just its last step.
 
@@ -1500,10 +1634,26 @@ class GameOrchestrator:
             stored = await uow.turns.get(turn_id)
             capsule = dict((stored or {}).get("canonical_payload") or {})
             if capsule.get("change_set"):
-                merged.changes.extend(ChangeSet.model_validate(capsule["change_set"]).changes)
-        summary = self._state_change_summary(dict(before), state, merged)
+                step_changes = ChangeSet.model_validate(capsule["change_set"])
+                merged.changes.extend(step_changes.changes)
+                merged.events.extend(step_changes.events)
+        summary = self._state_change_summary(
+            dict(before), state, merged, await self._world_names(uow, session)
+        )
         summary["steps"] = len(turn_ids)
         return summary
+
+    async def _world_names(self, uow: UnitOfWork, session: GameSession) -> dict[str, str]:
+        """Display names for everyone in this world.
+
+        A relationship can move for someone who has since walked out of the
+        scene, and looking them up in the present cast alone left the change
+        labelled with an empty name.
+        """
+        return {
+            character.id: character.display_name
+            for character in await uow.characters.list_for_world(session.world_id)
+        }
 
     def _is_continue(self, text: str) -> bool:
         """Did the player ask the story to carry on by itself?

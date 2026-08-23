@@ -1,7 +1,7 @@
 key: tomb_lantern_v1
 name: 寒鸦岭·九枝灯
 genre: tomb_raiding
-version: "1.3.0"
+version: "1.4.0"
 engine_min_version: "0.2.0"
 primary_progression_key: tomb_craft
 attribute_definitions:
@@ -269,7 +269,7 @@ narrative_style:
     - 少写烟头、眼神、停顿和“他没回答”；人物拒绝回答时必须改做一件能暴露立场的具体事情
 theme: {accent: "#8a5a2b", background: "#efe6d6", surface: "#fbf6ec", text: "#2b241c"}
 vocabulary:
-  profile_labels: {age_suffix: 岁, realm: 盗行阶, root: 门路, faction: 帮口, male: 男, female: 女, unspecified: 未指定, story_lead: 同路人, no_story_lead: 还没有人肯与你同路, absent: 当前不在场}
+  profile_labels: {health: 体力, power: 精神, age_suffix: 岁, realm: 盗行阶, root: 门路, faction: 帮口, male: 男, female: 女, unspecified: 未指定, story_lead: 同路人, no_story_lead: 还没有人肯与你同路, absent: 当前不在场}
   relationship_labels: {affection: 交情, trust: 信任, respect: 敬重, fear: 忌惮, hatred: 仇怨, suspicion: 疑心, dependency: 倚仗, familiarity: 熟识, boundaries: 分寸}
   action_aliases:
     MOVE: [去, 前往, 走向, 回到, 进入, 下, 摸进, 赶往, 出山]

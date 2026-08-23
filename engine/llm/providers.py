@@ -259,6 +259,19 @@ class OpenAIProvider(_HTTPProviderBase):
                 model=request.model,
             )
 
+        # A JSON answer cut off at the budget is not an answer at all: it can
+        # never parse, and the repair loop would spend two more calls
+        # rediscovering that. Growing the budget is the only thing that helps,
+        # so report it as the truncation it is. Prose is different - a scene
+        # that stopped early is still a scene, and the renderer trims it back
+        # to its last finished sentence.
+        if request.json_mode and finish_reason == "length":
+            raise LLMTruncated(
+                f"{self.name} truncated a structured response at the output budget",
+                budget=request.max_output_tokens,
+                model=request.model,
+            )
+
         return LLMResponse(
             text=text,
             model=data.get("model", request.model),

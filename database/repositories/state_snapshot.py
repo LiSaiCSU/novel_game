@@ -133,12 +133,19 @@ class SqlWorldStateRepository:
                 CharacterSkillORM.character_id == player_id,
                 valid_player,
             ),
+            # Both directions. Interactions write the NPC -> player row, so
+            # loading only player -> NPC left the narrator, the declarative
+            # rules and the relationship readout all seeing a world where the
+            # player had never met anybody.
             _branch(
                 "relationship",
                 RelationshipORM,
                 dialect_name,
                 RelationshipORM.world_id == world_id,
-                RelationshipORM.character_a_id == player_id,
+                sa.or_(
+                    RelationshipORM.character_a_id == player_id,
+                    RelationshipORM.character_b_id == player_id,
+                ),
             ),
             _branch("quest", QuestORM, dialect_name, QuestORM.world_id == world_id),
             _branch(

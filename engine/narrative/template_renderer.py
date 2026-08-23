@@ -141,11 +141,15 @@ class TemplateNarrativeRenderer:
         ladder = self.pack.realms
         if kind == "status":
             player = state.player
+            # The labels are the pack's words. Hardcoding "HP"/"MP" put two
+            # English abbreviations into an otherwise Chinese status readout,
+            # and would simply be wrong for any other genre.
+            labels = self.pack.vocabulary.get("profile_labels", {}) or {}
             lines = [
                 q.get("status_header", ""),
                 f"{player.name} / {ladder.display(player.realm, player.realm_stage)}",
-                f"HP {player.health}/{player.max_health}",
-                f"MP {player.spiritual_power}/{player.max_spiritual_power}",
+                f"{labels.get('health', 'health')} {player.health}/{player.max_health}",
+                f"{labels.get('power', 'power')} {player.spiritual_power}/{player.max_spiritual_power}",
                 f"{ladder.progression_name} {player.cultivation_progress * 100:.1f}%",
                 f"{state.time.label}",
                 f"{state.location.name if state.location else ''}",
@@ -163,10 +167,16 @@ class TemplateNarrativeRenderer:
             if not state.relationships:
                 return f"{q.get('relationships_header', '')}\n{q.get('relationships_empty', '')}"
             rows = []
+            dimension_labels = self.pack.vocabulary.get("relationship_labels", {}) or {}
             for other_id, rel in state.relationships.items():
                 other = state.character_by_id(other_id)
                 name = other.display_name if other else other_id
-                dims = ", ".join(f"{k}={v}" for k, v in rel.as_dict().items() if v)
+                # Raw dimension keys are engine plumbing; a player reads this.
+                dims = ", ".join(
+                    f"{dimension_labels.get(key, key)} {value}"
+                    for key, value in rel.as_dict().items()
+                    if value
+                )
                 rows.append(f"{name}: {dims or '-'}")
             return "\n".join([q.get("relationships_header", ""), *rows])
         if kind == "quests":

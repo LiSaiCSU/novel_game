@@ -22,7 +22,12 @@ from engine.core.ports import UnitOfWork
 from engine.core.types import LLMRole
 from engine.llm.structured import extract_json
 from engine.narrative.fact_guard import NarrativeFactGuard
-from engine.narrative.style import NarrativeStyle, StyleReport, strip_repeated_opening
+from engine.narrative.style import (
+    NarrativeStyle,
+    StyleReport,
+    quotations_balanced,
+    strip_repeated_opening,
+)
 from engine.narrative.template_renderer import TemplateNarrativeRenderer
 from engine.orchestrator.turn import DEFAULT_NARRATIVE_CHARS, StoryBeat
 from engine.world.state_view import WorldStateView
@@ -33,6 +38,10 @@ logger = get_logger("narrative")
 #: The narrator writes prose, then this marker, then a compact JSON beat. One
 #: call produces both, and the prose stays streamable up to the marker.
 BEAT_MARKER = "---BEAT---"
+
+#: The one field every beat block carries. Used to recognise a block that was
+#: emitted without its marker.
+BEAT_KEY = '"needs_player"'
 
 
 @dataclass(slots=True)
@@ -52,27 +61,32 @@ MAX_OPTION_CHARS = 60
 
 
 def _option_label(value: object) -> str:
-    """Trim an option to button length without cutting mid-sentence."""
+    """Trim an option to button length without cutting mid-sentence.
+
+    The prompt asks for options that quote what the player would say, so the
+    cut has to leave the quotation closed: trimming at the nearest comma
+    routinely produced a button whose speech opened and never ended.
+    """
     label = str(value).strip()
     if len(label) <= MAX_OPTION_CHARS:
         return label
     clipped = label[:MAX_OPTION_CHARS]
-    boundary = max(clipped.rfind(mark) for mark in ("。", "！", "？", "”", "，"))
-    return (clipped[: boundary + 1] if boundary >= MAX_OPTION_CHARS // 2 else clipped).strip()
+    floor = MAX_OPTION_CHARS // 2
+    for mark in ("。", "！", "？", "”", "，"):
+        boundary = clipped.rfind(mark)
+        while boundary >= floor:
+            candidate = clipped[: boundary + 1]
+            if quotations_balanced(candidate):
+                return candidate.strip()
+            boundary = clipped.rfind(mark, 0, boundary)
+    return clipped.strip()
 
 
-def split_beat(raw: str) -> tuple[str, StoryBeat | None]:
-    """Separate scene prose from the trailing beat block.
-
-    A missing or malformed block is not an error: the caller falls back to the
-    deterministic choices, and the player still gets their scene.
-    """
-    prose, marker, tail = raw.partition(BEAT_MARKER)
-    prose = prose.strip()
-    if not marker:
-        return prose, None
+def _beat_from_payload(payload: object) -> StoryBeat | None:
+    """Validate one decoded beat block, or give up quietly."""
+    if not isinstance(payload, dict):
+        return None
     try:
-        payload = extract_json(tail)
         beat = StoryBeat.model_validate(
             {
                 "needs_player": bool(payload.get("needs_player", True)),
@@ -89,11 +103,57 @@ def split_beat(raw: str) -> tuple[str, StoryBeat | None]:
                 ],
             }
         )
-    except (StructuredOutputError, ValidationError, AttributeError, TypeError) as exc:
+    except (ValidationError, AttributeError, TypeError) as exc:
+        logger.warning("narrative beat block unusable: %s", exc)
+        return None
+    beat.options = [o for o in beat.options if o.label]
+    return beat
+
+
+def _recover_trailing_beat(prose: str) -> tuple[str, StoryBeat | None]:
+    """Find a beat block the model emitted without the agreed marker.
+
+    Dropping the marker is the single most common way a long generation goes
+    wrong, and the cost is out of all proportion: the scene is fine, but the
+    player is handed no suggestions at all. The JSON is still sitting at the
+    end of the response, so look for it rather than throwing the hand-off away.
+    """
+    # Find the object that *contains* the key, not the last brace in the
+    # response: a real beat block nests one object per option, so searching
+    # backwards from the end lands inside the final option every time.
+    key_at = prose.rfind(BEAT_KEY)
+    if key_at <= 0:
+        return prose, None
+    opener = prose.rfind("{", 0, key_at)
+    if opener <= 0:
+        return prose, None
+    tail = prose[opener:]
+    try:
+        payload = extract_json(tail)
+    except StructuredOutputError:
+        return prose, None
+    beat = _beat_from_payload(payload)
+    if beat is None:
+        return prose, None
+    return prose[:opener].rstrip().rstrip("`").rstrip(), beat
+
+
+def split_beat(raw: str) -> tuple[str, StoryBeat | None]:
+    """Separate scene prose from the trailing beat block.
+
+    A missing or malformed block is not an error: the caller falls back to the
+    deterministic choices, and the player still gets their scene.
+    """
+    prose, marker, tail = raw.partition(BEAT_MARKER)
+    prose = prose.strip()
+    if not marker:
+        return _recover_trailing_beat(prose)
+    try:
+        payload = extract_json(tail)
+    except StructuredOutputError as exc:
         logger.warning("narrative beat block unusable: %s", exc)
         return prose, None
-    beat.options = [o for o in beat.options if o.label]
-    return prose, beat
+    return prose, _beat_from_payload(payload)
 
 
 class NarrativeRenderer:

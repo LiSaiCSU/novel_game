@@ -26,10 +26,26 @@ from apps.api.tenancy import set_tenant_context
 from database.models.platform import ContentReleaseORM
 from database.repositories.sql import SqlUnitOfWork
 from engine.core.config import Settings
+from engine.core.errors import EngineError
+from engine.core.logging import get_logger
 from engine.orchestrator.turn import TurnRequest
 
 router = APIRouter(tags=["v1-gameplay"])
+logger = get_logger("gameplay")
 HEARTBEAT_SECONDS = 12.0
+
+#: Anything the engine raises on purpose is safe to show; anything else is a
+#: bug, and its message may carry identifiers or provider detail the player
+#: has no business seeing.
+_GENERIC_ACTION_ERROR = "action failed"
+
+
+def _player_facing_error(value: Any) -> str:
+    if isinstance(value, HTTPException):
+        return str(value.detail)
+    if isinstance(value, EngineError):
+        return value.message
+    return _GENERIC_ACTION_ERROR
 
 
 def _sse(event: str, payload: dict[str, Any]) -> str:
@@ -185,7 +201,13 @@ async def stream_playthrough_action(
                     break
                 kind, value = item
                 if kind == "error":
-                    yield _sse("error", {"message": str(value)})
+                    # The player gets a sentence they can act on; the stack
+                    # trace and any internal identifiers stay in the log.
+                    logger.exception(
+                        "playthrough action failed", exc_info=value
+                        if isinstance(value, BaseException) else None
+                    )
+                    yield _sse("error", {"message": _player_facing_error(value)})
                     return
                 if kind == "narrative":
                     streamed = True

@@ -25,6 +25,12 @@ from engine.world.state_view import WorldStateView
 
 logger = get_logger("autopilot")
 
+#: The longest run this schema will accept. A content pack may budget fewer
+#: steps, never more: asking the model for a longer run than the schema allows
+#: guaranteed a rejected response and a repair round trip on every single
+#: delegated turn.
+MAX_RUN_STEPS = 6
+
 
 class AutopilotChoice(BaseModel):
     model_config = ConfigDict(extra="ignore")
@@ -51,7 +57,7 @@ class AutopilotRun(BaseModel):
     model_config = ConfigDict(extra="ignore")
 
     intent: str = ""
-    steps: list[AutopilotChoice] = Field(default_factory=list, max_length=6)
+    steps: list[AutopilotChoice] = Field(default_factory=list, max_length=MAX_RUN_STEPS)
 
 
 class Autopilot:
@@ -102,7 +108,7 @@ class Autopilot:
                 "autopilot_run",
                 self.prompt_version,
                 schema=self.llm.schema_hint(AutopilotRun),
-                max_steps=str(max(1, steps)),
+                max_steps=str(_run_length(steps)),
                 player_input=player_input or "-",
                 player_did=player_did or "-",
                 **self._scene(state, recent_narrative),
@@ -118,7 +124,7 @@ class Autopilot:
 
         intents = [
             self._to_intent(state, self._keep_it_possible(state, choice))
-            for choice in run.steps[: max(1, steps)]
+            for choice in run.steps[: _run_length(steps)]
         ]
         if not intents:
             intent, _ = await self.choose(state, recent_narrative=recent_narrative)
@@ -237,4 +243,21 @@ class Autopilot:
             return choice.model_copy(
                 update={"action_type": ActionType.OBSERVE, "item_key": None}
             )
+        if (
+            choice.action_type is ActionType.MOVE
+            and choice.location_key
+            and choice.location_key == state.location_key()
+        ):
+            # Travelling to where you already stand spends one of the few
+            # steps a delegated run gets, and world time with it, to arrive
+            # nowhere. Look around instead - that at least reports the scene.
+            logger.info("autopilot picked the current location; observing instead")
+            return choice.model_copy(
+                update={"action_type": ActionType.OBSERVE, "location_key": None}
+            )
         return choice
+
+
+def _run_length(requested: int) -> int:
+    """How many steps may actually be planned in one call."""
+    return max(1, min(MAX_RUN_STEPS, requested))

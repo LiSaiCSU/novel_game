@@ -27,6 +27,9 @@ from engine.orchestrator.turn import (
 # A run of 2-4 CJK characters: the shape a proper noun usually takes.
 # Built from code points so the engine source itself carries no world text.
 _NAME_CANDIDATE = re.compile(f"[{chr(0x4E00)}-{chr(0x9FFF)}]{{2,4}}")
+#: A maximal run of one script, delimited by anything else. Only a run
+#: short enough to be a name is treated as a name candidate.
+_CJK_RUN = re.compile(f"[{chr(0x4E00)}-{chr(0x9FFF)}]+")
 _PARAGRAPH_BREAK = re.compile(r"\n[ \t]*\n")
 _PROSE_SPACE = re.compile(r"\s+")
 
@@ -311,6 +314,79 @@ def strip_repeated_opening(text: str, recent_narrative: str) -> str:
     return filter_repeated_paragraphs(text, recent_narrative, final=True)
 
 
+#: Quotation marks that must be balanced for prose to read as finished. Only
+#: paired marks are listed: a straight quote is ambiguous and is left alone.
+_QUOTE_PAIRS: tuple[tuple[str, str], ...] = (
+    (chr(0x201C), chr(0x201D)),
+    (chr(0x2018), chr(0x2019)),
+    (chr(0x300C), chr(0x300D)),
+    (chr(0x300E), chr(0x300F)),
+)
+
+
+def quotations_balanced(text: str) -> bool:
+    """Whether every quotation opened in ``text`` was also closed."""
+    return all(text.count(opener) == text.count(closer) for opener, closer in _QUOTE_PAIRS)
+
+
+def _sentence_end_offsets(text: str) -> list[int]:
+    """Offsets just past every complete sentence in ``text``."""
+    offsets: list[int] = []
+    index = 0
+    while index < len(text):
+        if text[index] in _SENTENCE_END:
+            end = index + 1
+            while end < len(text) and text[end] in _SENTENCE_END + _SENTENCE_CLOSERS:
+                end += 1
+            offsets.append(end)
+            index = end
+        else:
+            index += 1
+    return offsets
+
+
+def drop_unfinished_tail(text: str) -> str:
+    """Remove a trailing half-written sentence left by a truncated response.
+
+    A model that runs out of output budget stops wherever it happens to be and
+    the reader is handed a scene that ends mid-word. The honest repair is to
+    end on the last sentence that actually finished - and, if that sentence
+    left a quotation hanging, on the last one that did not.
+    """
+    stripped = text.rstrip()
+    if not stripped:
+        return ""
+    offsets = _sentence_end_offsets(stripped)
+    if not offsets:
+        return stripped
+    if offsets[-1] == len(stripped) and quotations_balanced(stripped):
+        return stripped
+    for offset in reversed(offsets):
+        if quotations_balanced(stripped[:offset]):
+            return stripped[:offset].rstrip()
+    return stripped
+
+
+def _standalone_runs(text: str) -> set[str]:
+    """Name-length runs that appear delimited at least once in ``text``.
+
+    A run wedged between other characters of the same script is a slice of a
+    sentence, not a name. One that stands alone between punctuation marks is
+    at least plausibly one.
+    """
+    runs: set[str] = set()
+    for match in _CJK_RUN.finditer(text):
+        run = match.group(0)
+        if len(run) <= 4:
+            runs.add(run)
+            continue
+        # A name normally opens the clause it belongs to, so the delimited
+        # start of a run is a plausible name; the middle of one is prose.
+        for width in (2, 3, 4):
+            runs.add(run[:width])
+    return runs
+
+
 @dataclass(slots=True)
 class StyleReport:
     overused: list[str] = field(default_factory=list)
@@ -364,18 +440,24 @@ class NarrativeStyle:
             if phrase and phrase in text:
                 report.overused.append(phrase)
 
-        # Any 2-4 character run that looks like a proper noun but matches no
-        # known entity is a candidate hallucination worth surfacing in debug.
+        # A short run that looks like a proper noun but matches no known entity
+        # is a candidate hallucination worth surfacing in debug. Sliding a
+        # fixed-width window over continuous prose, however, mostly produces
+        # slices of ordinary sentences, which buried the real finds under
+        # dozens of fragments. A name has to stand as a whole token at least
+        # once - bounded by punctuation, a quotation mark, or a line break.
         vocabulary = {e for e in known_entities if e}
         suspects: set[str] = set()
-        for candidate in _NAME_CANDIDATE.findall(text):
+        for candidate in _standalone_runs(text):
+            if len(candidate) < 3:
+                continue
             if candidate in vocabulary:
                 continue
             if any(candidate in entity or entity in candidate for entity in vocabulary):
                 continue
             suspects.add(candidate)
         # Only flag names that recur - single occurrences are usually ordinary prose.
-        report.unknown_entities = sorted(s for s in suspects if text.count(s) >= 2 and len(s) >= 3)
+        report.unknown_entities = sorted(s for s in suspects if text.count(s) >= 2)
         report.needs_rewrite = len(report.overused) >= 2
         return report
 
@@ -409,18 +491,33 @@ class NarrativeStyle:
 
     @staticmethod
     def enforce_max_chars(text: str, max_chars: int) -> str:
-        """Keep generated prose under the user ceiling at a natural boundary."""
+        """Keep generated prose under the user ceiling at a natural boundary.
+
+        A ceiling that lands mid-scene is unavoidable, but *where* it lands is
+        not. Cutting at the nearest full stop routinely severed a line of
+        dialogue from its closing quotation mark, so the last thing the reader
+        saw was an unterminated speech. Preference order is therefore: a
+        paragraph break, then a sentence end that leaves every quotation
+        closed, then - only if neither exists in the window - the raw ceiling.
+        """
         ceiling = max(
             MIN_NARRATIVE_CHARS,
             min(MAX_NARRATIVE_CHARS, int(max_chars or DEFAULT_NARRATIVE_CHARS)),
         )
         if len(text) <= ceiling:
-            return text.strip()
+            return drop_unfinished_tail(text.strip())
         clipped = text[:ceiling]
         # Streaming callers retain this much tail, so choosing a boundary in
         # this window never requires retracting text already shown to a reader.
         floor = max(0, ceiling - 180)
-        boundary = max(clipped.rfind(mark) for mark in ("。", "！", "？", "\n"))
-        if boundary >= floor:
-            clipped = clipped[: boundary + 1]
+
+        paragraph = clipped.rfind(chr(10) + chr(10))
+        if paragraph >= floor and quotations_balanced(clipped[:paragraph]):
+            return clipped[:paragraph].rstrip()
+
+        for offset in reversed(_sentence_end_offsets(clipped)):
+            if offset < floor:
+                break
+            if quotations_balanced(clipped[:offset]):
+                return clipped[:offset].rstrip()
         return clipped.rstrip()

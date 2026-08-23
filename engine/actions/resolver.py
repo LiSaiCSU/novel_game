@@ -13,7 +13,7 @@ from engine.actions.schema import Action, ActionOutcome, RuleResult
 from engine.core import mutations as mut
 from engine.core.models import Character
 from engine.core.mutations import ChangeSet
-from engine.core.types import ActionType, ReasonCode, Visibility
+from engine.core.types import ActionType, CharacterType, ReasonCode, Visibility
 from engine.events.builder import EventBuilder, witnesses_for
 from engine.relationships.manager import RelationshipManager
 from engine.rules.base import RuleContext, clamp, time_cost
@@ -340,7 +340,10 @@ class ActionResolver:
             "request_size": str(action.request_size),
             "utterance": action.utterance,
         }
+        first_meeting = False
         if target is not None:
+            existing = ctx.state.relationship_with(target.id)
+            first_meeting = existing is None or existing.is_stranger()
             deltas = self.relationships.interaction_deltas()
             if deltas:
                 changes.add(
@@ -348,6 +351,7 @@ class ActionResolver:
                         target.id, ctx.state.player.id, deltas, reason="interaction"
                     )
                 )
+        facts["first_meeting"] = first_meeting
         return self._finish(
             ctx,
             action,
@@ -356,9 +360,37 @@ class ActionResolver:
             summary_key=summary_key,
             minutes=minutes,
             facts=facts,
-            importance=ctx.pack.event_importance("CONVERSATION"),
+            importance=self._conversation_importance(
+                ctx, action, target, first_meeting=first_meeting
+            ),
             event_type="CONVERSATION",
         )
+
+    @staticmethod
+    def _conversation_importance(
+        ctx: RuleContext, action: Action, target: Character | None, *, first_meeting: bool
+    ) -> float:
+        """How much of this conversation is worth remembering.
+
+        A flat importance for every exchange put ordinary dialogue below the
+        memory threshold, so nobody in the world ever remembered having talked
+        to the player - not the first meeting, not a major character, not an
+        enormous request. The weights are content, like every other number
+        here; the engine only knows which cases exist.
+        """
+        weights = ctx.pack.rule("memory.conversation_importance", {}) or {}
+        importance = float(weights.get("base", ctx.pack.event_importance("CONVERSATION")))
+        if target is None:
+            return importance
+        if first_meeting:
+            importance = max(importance, float(weights.get("first_meeting", 0.35)))
+        if target.character_type is CharacterType.MAJOR_NPC:
+            importance = max(importance, float(weights.get("major_npc", 0.35)))
+        by_size = weights.get("request_size", {}) or {}
+        sized = by_size.get(str(action.request_size))
+        if sized is not None:
+            importance = max(importance, float(sized))
+        return max(0.0, min(1.0, importance))
 
     # ------------------------------------------------------------------
     # Combat
