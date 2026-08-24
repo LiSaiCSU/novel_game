@@ -51,12 +51,43 @@ const apiMessages: Record<string, string> = {
   "assigned operator is not active": "所选处理人员当前不可用。",
   "assigned operator must be an administrator": "处理人员必须是管理员。",
   "notification not found": "没有找到这条通知，或当前账号无权查看。",
+  // Creator studio failures are addressed by code, because the server sends
+  // an English operator message that a writer should never have to read.
+  document_invalid: "草稿还有字段不符合要求，请按下方提示修改后会自动重新保存。",
+  document_slug_immutable: "作品的网址标识创建后不能修改。",
+  document_plugin_forbidden: "网页版作品不能安装 Python 规则插件。",
+  revision_conflict: "这份草稿在别处也被修改过，请选择保留哪一版。",
+  insufficient_credits: "叙点余额不足，请先充值或领取活动额度。",
+  creator_model_unavailable: "所选模型当前不可用，或平台 AI 额度已用完。可在设置里改用自带密钥。",
+  creator_draft_failed: "生成草稿失败，你的原文没有被保存，请重试。",
+  creator_import_key_reused: "这个重试标识对应的是另一份原文，请重新发起导入。",
+  creator_completion_failed: "AI 补全没有完成，草稿未被改动，请重试。",
+  creator_nothing_to_complete: "这份草稿的主要部分都已经齐全，没有需要补全的内容。",
 };
 
 function problemText(problem: ApiProblem): string {
   if (typeof problem.detail === "string") return problem.detail;
+  // A structured detail carries a stable code plus an English operator
+  // message. Prefer the code: it is what the translation table is keyed on,
+  // and falling through to the message produced one generic sentence for
+  // every distinct creator failure.
+  if (typeof problem.detail?.code === "string" && apiMessages[problem.detail.code])
+    return problem.detail.code;
   if (typeof problem.detail?.message === "string") return problem.detail.message;
   return problem.title ?? "请求没有完成";
+}
+
+export type DocumentProblem = { field: string; message: string };
+
+export function documentProblems(error: unknown): DocumentProblem[] {
+  if (!(error instanceof ApiError) || typeof error.problem.detail !== "object") return [];
+  const raw = error.problem.detail?.problems;
+  if (!Array.isArray(raw)) return [];
+  return raw.flatMap((item) =>
+    item && typeof item === "object" && typeof (item as DocumentProblem).field === "string"
+      ? [{ field: String((item as DocumentProblem).field), message: String((item as DocumentProblem).message ?? "") }]
+      : [],
+  );
 }
 
 export function localizeApiDetail(detail: string): string {

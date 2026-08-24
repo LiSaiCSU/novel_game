@@ -10,7 +10,7 @@ from typing import Annotated, Any, Literal
 import sqlalchemy as sa
 import yaml
 from fastapi import APIRouter, Depends, File, Form, HTTPException, Request, Response, UploadFile
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, ValidationError
 
 from apps.api.billing import (
     InsufficientWalletCredits,
@@ -22,9 +22,12 @@ from apps.api.content_import import IMPORT_MAX_BYTES, import_document
 from apps.api.creator_access import owned_project
 from apps.api.creator_ai import (
     TEXT_IMPORT_MAX_BYTES,
+    apply_completion,
     blueprint_document,
+    complete_story,
     creator_ai_runtime,
     decode_story_text,
+    document_gaps,
     generate_blueprint,
     record_creator_usage,
 )
@@ -62,6 +65,22 @@ from engine.core.ids import new_id
 router = APIRouter(prefix="/creator", tags=["v1-creator"])
 
 
+# The editor autosaves while a writer is still typing, so a half-finished
+# document is a routine state rather than an exceptional one. Naming the
+# offending field lets the browser say what to fix instead of "try again".
+def document_problem(exc: ValidationError) -> dict[str, Any]:
+    problems: list[dict[str, str]] = []
+    for error in exc.errors()[:20]:
+        location = ".".join(str(part) for part in error["loc"] if part != "document")
+        problems.append({"field": location or "document", "message": str(error["msg"])})
+    return {
+        "code": "document_invalid",
+        "message": "the draft does not satisfy the content schema",
+        "problems": problems,
+    }
+
+
+
 class ProjectCreate(BaseModel):
     slug: str | None = Field(
         default=None, pattern=r"^[a-z0-9]+(?:-[a-z0-9]+)*$", max_length=100
@@ -77,6 +96,12 @@ class ProjectCreate(BaseModel):
 class RevisionUpdate(BaseModel):
     expected_revision: int = Field(ge=0)
     document: dict[str, Any]
+
+
+class CompletionRequest(BaseModel):
+    idempotency_key: str = Field(min_length=8, max_length=110)
+    model_mode: Literal["platform", "byok"] = "platform"
+    provider: str = Field(default="", max_length=60)
 
 
 class PublishRequest(BaseModel):
@@ -623,13 +648,33 @@ async def update_document(
         diagnostics = [
             {"level": "error", "message": item} for item in validate_package_graph(package)
         ]
+    except ValidationError as exc:
+        # A writer clearing a field mid-edit is the common case here, so the
+        # response has to name the field. Returning str(exc) sent an English
+        # pydantic dump the browser could only render as a generic failure.
+        raise HTTPException(status_code=422, detail=document_problem(exc)) from exc
     except ValueError as exc:
-        raise HTTPException(status_code=422, detail=str(exc)) from exc
+        raise HTTPException(
+            status_code=422,
+            detail={"code": "document_invalid", "message": str(exc), "problems": []},
+        ) from exc
     if package.manifest.slug != project.slug:
-        raise HTTPException(status_code=422, detail="manifest slug is immutable for a project")
+        raise HTTPException(
+            status_code=422,
+            detail={
+                "code": "document_slug_immutable",
+                "message": "manifest slug is immutable for a project",
+                "problems": [],
+            },
+        )
     if package.manifest.trusted_rule_plugin:
         raise HTTPException(
-            status_code=422, detail="web projects cannot install Python rule plugins"
+            status_code=422,
+            detail={
+                "code": "document_plugin_forbidden",
+                "message": "web projects cannot install Python rule plugins",
+                "problems": [],
+            },
         )
     project.current_revision += 1
     project.title = package.manifest.title
@@ -647,6 +692,145 @@ async def update_document(
     uow.session.add(revision)
     await uow.commit()
     return {"revision": project.current_revision, "diagnostics": diagnostics}
+
+
+@router.post("/projects/{project_id}/ai-complete")
+async def ai_complete_project(
+    project_id: str,
+    body: CompletionRequest,
+    principal: Annotated[Principal, Depends(require_csrf)],
+    uow: SqlUnitOfWork = Depends(uow_dep),
+    settings: Settings = Depends(settings_dep),
+) -> dict[str, Any]:
+    """Fill in the parts of a draft the author has not written yet.
+
+    The model only supplies prose. Keys, ending conditions and knowledge wiring
+    are built here, and the merge never overwrites a field that already has
+    content, so running this cannot destroy the author's own work. The result
+    is returned for review rather than saved: the editor applies it through the
+    normal revision flow, which keeps undo and conflict handling intact.
+    """
+
+    await set_tenant_context(uow.session, principal.user_id)
+    project = await owned_project(uow, project_id, principal.user_id)
+    stored = await uow.session.scalar(
+        sa.select(ProjectRevisionORM.document).where(
+            ProjectRevisionORM.project_id == project.id,
+            ProjectRevisionORM.revision == project.current_revision,
+        )
+    )
+    try:
+        package = ContentPackageV2.model_validate(stored or {})
+    except ValidationError as exc:
+        raise HTTPException(status_code=422, detail=document_problem(exc)) from exc
+
+    gaps = document_gaps(package)
+    if not gaps:
+        raise HTTPException(
+            status_code=409,
+            detail={
+                "code": "creator_nothing_to_complete",
+                "message": "the draft already fills every section this can complete",
+            },
+        )
+
+    try:
+        runtime = await creator_ai_runtime(
+            uow=uow,
+            user_id=principal.user_id,
+            settings=settings,
+            mode=body.model_mode,
+            credential_provider=body.provider or None,
+        )
+    except ValueError as exc:
+        raise HTTPException(
+            status_code=409,
+            detail={
+                "code": "creator_model_unavailable",
+                "message": "The selected model is unavailable or your platform AI quota is exhausted.",
+            },
+        ) from exc
+
+    reservation: TurnReservation | None = None
+    if body.model_mode == "platform":
+        try:
+            reservation = await reserve_turn_credits(
+                uow,
+                user_id=principal.user_id,
+                playthrough_id=None,
+                idempotency_key=f"complete:{body.idempotency_key}",
+                reservation_kind="creator",
+            )
+        except InsufficientWalletCredits as exc:
+            raise HTTPException(
+                status_code=402,
+                detail={"code": "insufficient_credits", "message": str(exc)},
+            ) from exc
+
+    try:
+        completion = await complete_story(runtime, package=package, gaps=gaps)
+        merged, added = apply_completion(package, completion)
+        diagnostics = [
+            {"level": "error", "message": item} for item in validate_package_graph(merged)
+        ]
+        usage = await record_creator_usage(runtime, user_id=principal.user_id, uow=uow)
+        await record_product_event(
+            uow,
+            principal,
+            "creator_draft_completed",
+            project_id=project.id,
+            dedupe_key=f"creator-complete:{project.id}:{body.idempotency_key}",
+            properties={"added": added, "model_mode": body.model_mode},
+        )
+        if reservation is None:
+            await uow.commit()
+        else:
+            await settle_turn_credits(
+                uow,
+                reservation,
+                billable_cost_microunits=usage.billable_cost_microunits,
+                action_completed=True,
+            )
+        return {
+            "document": merged.model_dump(mode="json"),
+            "added": added,
+            "filled": sorted(gaps),
+            "diagnostics": diagnostics,
+        }
+    except HTTPException:
+        await uow.rollback()
+        usage = await record_creator_usage(runtime, user_id=principal.user_id, uow=uow)
+        if reservation is None:
+            await uow.commit()
+        else:
+            await settle_turn_credits(
+                uow,
+                reservation,
+                billable_cost_microunits=usage.billable_cost_microunits,
+                action_completed=False,
+            )
+        raise
+    except Exception as exc:
+        # Nothing was written to the project, so release the hold and let the
+        # author retry without losing the draft they already have.
+        await uow.rollback()
+        usage = await record_creator_usage(runtime, user_id=principal.user_id, uow=uow)
+        if reservation is None:
+            await uow.commit()
+        else:
+            await settle_turn_credits(
+                uow,
+                reservation,
+                billable_cost_microunits=usage.billable_cost_microunits,
+                action_completed=False,
+            )
+        raise HTTPException(
+            status_code=502,
+            detail={
+                "code": "creator_completion_failed",
+                "message": "We could not complete this draft. Nothing was changed; please try again.",
+            },
+        ) from exc
 
 
 @router.post("/projects/{project_id}/validate")

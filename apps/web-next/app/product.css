@@ -1311,6 +1311,95 @@ a {
   color: #a53e52;
 }
 
+.saveProblems {
+  margin: 6px 0 0;
+  padding: 8px 10px 8px 26px;
+  border-radius: 9px;
+  background: #fae8eb;
+  color: #92364a;
+  font-size: 12.5px;
+  line-height: 1.55;
+}
+
+.saveProblems li + li {
+  margin-top: 3px;
+}
+
+.aiCompletion {
+  grid-column: 1 / -1;
+  padding: 14px 16px;
+  border: 1px solid rgba(120, 140, 120, 0.28);
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.6);
+}
+
+.aiCompletion header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.aiCompletion strong {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 14px;
+}
+
+.aiCompletion header p {
+  margin: 4px 0 0;
+  max-width: 60ch;
+  font-size: 12.5px;
+  line-height: 1.6;
+  color: var(--muted, #5d6b5d);
+}
+
+.aiCompletion header button {
+  flex: 0 0 auto;
+}
+
+.aiCompletionError {
+  margin: 10px 0 0;
+  padding: 8px 10px;
+  border-radius: 9px;
+  background: #fae8eb;
+  color: #92364a;
+  font-size: 12.5px;
+}
+
+.aiCompletionResult {
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 1px solid rgba(120, 140, 120, 0.22);
+  font-size: 13px;
+}
+
+.aiCompletionResult ul {
+  margin: 8px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.aiCompletionResult li {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 6px 0;
+  border-bottom: 1px dashed rgba(120, 140, 120, 0.22);
+}
+
+.aiCompletionResult li span {
+  font-size: 12px;
+  color: var(--muted, #5d6b5d);
+}
+
+.aiCompletionActions {
+  display: flex;
+  gap: 8px;
+  margin-top: 12px;
+}
+
 .studioNav button {
   display: flex;
   align-items: center;

@@ -4,7 +4,8 @@ import { AlertTriangle, ArrowLeft, CheckCircle2, PanelRightOpen, X } from "lucid
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
-import { api, ApiError } from "@/lib/api";
+import { api, ApiError, documentProblems, type DocumentProblem } from "@/lib/api";
+import { AiCompletion } from "./ai-completion";
 import { AuthorTestStudio } from "./author-test-studio";
 import { EntityList, Field, JsonEditor } from "./editor-controls";
 import {
@@ -23,6 +24,25 @@ import { CoverManager } from "./cover-manager";
 import { ReleaseCenter, VersionDiff } from "./project-operations";
 import { EndingStudio, KnowledgeStudio, LocationWorkspace } from "./world-studios";
 
+// The schema speaks in dotted paths. A writer should read the name of the
+// box they were typing in, not "manifest.title".
+const fieldLabels: Record<string, string> = {
+  "manifest.title": "作品标题",
+  "manifest.summary": "一句话简介",
+  "manifest.slug": "网址标识",
+  "manifest.rating": "分级",
+  "manifest.locale": "语言",
+  "content.world.name": "世界名称",
+  "content.world.description": "世界描述",
+};
+
+function describeProblem(problem: DocumentProblem): string {
+  const label = fieldLabels[problem.field];
+  if (label) return `${label}：${problem.message}`;
+  const leaf = problem.field.split(".").pop() ?? problem.field;
+  return `${leaf}：${problem.message}`;
+}
+
 export default function Editor() {
   const { id } = useParams<{ id: string }>();
   const router = useRouter();
@@ -40,6 +60,7 @@ export default function Editor() {
   const [future, setFuture] = useState<Package[]>([]);
   const [conflict, setConflict] = useState<{ revision: number; server: Package; local: Package }>();
   const [revisionNumber, setRevisionNumber] = useState(0);
+  const [saveProblems, setSaveProblems] = useState<DocumentProblem[]>([]);
   const [inspectorOpen, setInspectorOpen] = useState(false);
   const revision = useRef(0);
   const editVersion = useRef(0);
@@ -97,6 +118,7 @@ export default function Editor() {
             ].slice(0, 50),
           );
           if (snapshotVersion === editVersion.current) dirty.current = false;
+          setSaveProblems([]);
           setStatus("所有更改已保存");
         } catch (error) {
           if (
@@ -112,6 +134,7 @@ export default function Editor() {
             });
             setStatus("检测到并发修改：服务器版本与本地草稿都已保留，请选择处理方式");
           } else {
+            setSaveProblems(documentProblems(error));
             setStatus(`未保存：${(error as Error).message}`);
           }
           throw error;
@@ -304,6 +327,13 @@ export default function Editor() {
           {statusTone === "failed" ? <AlertTriangle size={14} /> : <CheckCircle2 size={14} />}
           <span>{status}</span>
         </p>
+        {saveProblems.length > 0 && (
+          <ul className="saveProblems" aria-label="需要修改的字段">
+            {saveProblems.map((problem) => (
+              <li key={`${problem.field}:${problem.message}`}>{describeProblem(problem)}</li>
+            ))}
+          </ul>
+        )}
         <nav className="studioNav" aria-label="项目编辑栏目">
           {tabs.map((item) => (
             <button
@@ -377,6 +407,17 @@ export default function Editor() {
         )}
         {tab === "故事工作台" && (
           <div className="formGrid">
+            <AiCompletion
+              projectId={id}
+              onStatus={setStatus}
+              onApply={(completed) =>
+                change((next) => {
+                  next.manifest = completed.manifest;
+                  next.content = completed.content;
+                  next.author_tests = completed.author_tests;
+                })
+              }
+            />
             <Field
               label="作品标题"
               value={document.manifest.title}
