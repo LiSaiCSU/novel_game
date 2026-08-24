@@ -12,6 +12,12 @@ from fastapi import APIRouter, Depends, HTTPException
 from fastapi.responses import StreamingResponse
 from starlette.background import BackgroundTask
 
+from apps.api.billing import (
+    InsufficientWalletCredits,
+    TurnReservation,
+    reserve_turn_credits,
+    settle_turn_credits,
+)
 from apps.api.deps import settings_dep, uow_dep
 from apps.api.product_analytics import record_product_event
 from apps.api.routers.playthroughs import (
@@ -42,6 +48,8 @@ _GENERIC_ACTION_ERROR = "action failed"
 
 def _player_facing_error(value: Any) -> str:
     if isinstance(value, HTTPException):
+        if isinstance(value.detail, dict):
+            return str(value.detail.get("message") or value.detail.get("code") or _GENERIC_ACTION_ERROR)
         return str(value.detail)
     if isinstance(value, EngineError):
         return value.message
@@ -50,6 +58,30 @@ def _player_facing_error(value: Any) -> str:
 
 def _sse(event: str, payload: dict[str, Any]) -> str:
     return f"event: {event}\ndata: {json.dumps(payload, ensure_ascii=False)}\n\n"
+
+
+async def _reserve_billing(
+    runtime,
+    uow: SqlUnitOfWork,
+    *,
+    user_id: str,
+    playthrough_id: str,
+    idempotency_key: str | None,
+) -> TurnReservation | None:
+    if runtime.credential_mode == "byok":
+        return None
+    try:
+        return await reserve_turn_credits(
+            uow,
+            user_id=user_id,
+            playthrough_id=playthrough_id,
+            idempotency_key=idempotency_key,
+        )
+    except InsufficientWalletCredits as exc:
+        raise HTTPException(
+            status_code=402,
+            detail={"code": "insufficient_credits", "message": str(exc)},
+        ) from exc
 
 
 @router.post("/playthroughs/{playthrough_id}/actions")
@@ -71,6 +103,14 @@ async def playthrough_action(
         if release is None or session is None:
             raise HTTPException(status_code=409, detail="playthrough runtime is incomplete")
         runtime = await _runtime_for(release, play, principal, uow, settings)
+        reservation = await _reserve_billing(
+            runtime,
+            uow,
+            user_id=principal.user_id,
+            playthrough_id=play.id,
+            idempotency_key=body.idempotency_key,
+        )
+        action_completed = False
         try:
             result = await runtime.orchestrator.advance(
                 uow,
@@ -81,9 +121,32 @@ async def playthrough_action(
                     narrative_max_chars=narrative_max_chars(play, body.narrative_max_chars),
                 ),
             )
-        finally:
+            action_completed = not result.degraded
+        except Exception:
+            # The reservation was committed before inference.  The game turn
+            # was not: roll its transaction back before releasing that hold,
+            # otherwise a failed inference could accidentally persist partial
+            # world mutations when the accounting boundary commits.
+            await uow.rollback()
+            usage = await release_runtime_service.record_usage(
+                runtime, principal.user_id, playthrough_id, uow
+            )
+            await settle_turn_credits(
+                uow,
+                reservation,
+                billable_cost_microunits=usage.billable_cost_microunits,
+                action_completed=False,
+            )
+            raise
+        else:
             play.updated_at = datetime.now(UTC)
-            await release_runtime_service.record_usage(runtime, principal.user_id, play.id, uow)
+            usage = await release_runtime_service.record_usage(runtime, principal.user_id, play.id, uow)
+            await settle_turn_credits(
+                uow,
+                reservation,
+                billable_cost_microunits=usage.billable_cost_microunits,
+                action_completed=action_completed,
+            )
         await record_product_event(
             uow,
             principal,
@@ -123,6 +186,13 @@ async def stream_playthrough_action(
         if release is None or session is None:
             raise HTTPException(status_code=409, detail="playthrough runtime is incomplete")
         runtime = await _runtime_for(release, play, principal, uow, settings)
+        reservation = await _reserve_billing(
+            runtime,
+            uow,
+            user_id=principal.user_id,
+            playthrough_id=play.id,
+            idempotency_key=body.idempotency_key,
+        )
     except BaseException:
         await lock_context.__aexit__(None, None, None)
         raise
@@ -147,6 +217,8 @@ async def stream_playthrough_action(
             await queue.put(("narrative", {"delta": text}))
 
         async def run() -> None:
+            action_completed = False
+            action_failed = False
             try:
                 result = await runtime.orchestrator.advance(
                     uow,
@@ -159,6 +231,7 @@ async def stream_playthrough_action(
                     on_step,
                     on_chunk,
                 )
+                action_completed = not result.degraded
                 await record_product_event(
                     uow,
                     principal,
@@ -175,12 +248,23 @@ async def stream_playthrough_action(
                 )
                 await queue.put(("result", result))
             except Exception as exc:
+                # Keep the committed preauthorization but discard every
+                # mutation made by the incomplete turn before releasing it.
+                action_failed = True
+                await uow.rollback()
                 await queue.put(("error", exc))
             finally:
                 try:
-                    play.updated_at = datetime.now(UTC)
-                    await release_runtime_service.record_usage(
+                    if not action_failed:
+                        play.updated_at = datetime.now(UTC)
+                    usage = await release_runtime_service.record_usage(
                         runtime, principal.user_id, play.id, uow
+                    )
+                    await settle_turn_credits(
+                        uow,
+                        reservation,
+                        billable_cost_microunits=usage.billable_cost_microunits,
+                        action_completed=action_completed,
                     )
                     await uow.commit()
                 finally:

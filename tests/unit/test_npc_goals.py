@@ -11,6 +11,16 @@ from engine.relationships.manager import RelationshipManager
 from engine.rng.game_rng import GameRNG
 
 
+class _AlwaysFailGoalRng(GameRNG):
+    """A deterministic boundary double: a 1% roll can still succeed."""
+
+    def derive(self, key: str) -> _AlwaysFailGoalRng:
+        return self
+
+    def geometric(self, probability: float, max_trials: int) -> int | None:
+        return None
+
+
 def _major(store):
     return next(
         character
@@ -115,7 +125,7 @@ def test_failed_attempt_stays_on_same_plan_step(pack, store, state) -> None:
         npc,
         state.world.current_minute,
         lifecycle.next_action_minute,
-        rng=GameRNG("forced-failure"),
+        rng=_AlwaysFailGoalRng("forced-failure"),
         event_builder=EventBuilder(pack, state.world.id, "goal-turn"),
         graph=state.graph,
     )

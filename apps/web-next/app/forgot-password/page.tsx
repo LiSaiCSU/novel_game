@@ -58,7 +58,7 @@ export default function Forgot() {
           {busy ? "正在发送…" : "发送重置邮件"}
         </button>
         <p className="authFootnote">
-          <Link className="textLink" href="/">
+          <Link className="textLink" href="/login">
             返回登录
           </Link>
         </p>

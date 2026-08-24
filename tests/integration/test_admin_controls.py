@@ -292,6 +292,21 @@ async def test_an_empty_announcement_can_never_be_active(client) -> None:
 
 async def test_inspecting_a_player_is_read_only_and_visible_to_that_player(client) -> None:
     player_id = await register(client, "inspect-me@example.com", "被查看的玩家")
+    player_csrf = client.cookies.get("ng_csrf")
+    releases = (await client.get("/api/v1/catalog/releases")).json()["items"]
+    release = next(item for item in releases if "春日坂" in item["title"])
+    started = await client.post(
+        "/api/v1/playthroughs",
+        headers={"X-CSRF-Token": player_csrf},
+        json={
+            "release_id": release["id"],
+            "name": "仅供支持排障的存档",
+            "age": 20,
+            "gender": "female",
+        },
+    )
+    assert started.status_code == 201, started.text
+    playthrough_id = started.json()["id"]
     csrf = await admin_session(client, "inspect-admin@example.com", "correct-horse-admin")
 
     looked = await client.post(
@@ -302,6 +317,14 @@ async def test_inspecting_a_player_is_read_only_and_visible_to_that_player(clien
     assert looked.status_code == 200, looked.text
     assert looked.json()["read_only"] is True
     assert looked.json()["user"]["id"] == player_id
+    detailed = await client.post(
+        f"/api/v1/admin/users/{player_id}/inspect/{playthrough_id}",
+        headers={"X-CSRF-Token": csrf},
+        json={"reason": "定位玩家报告的具体叙事渲染问题"},
+    )
+    assert detailed.status_code == 200, detailed.text
+    assert detailed.json()["playthrough_id"] == playthrough_id
+    assert detailed.json()["read_only"] is True
 
     # Being able to find out is the part that makes the power acceptable.
     signed_in = await client.post(
@@ -311,7 +334,16 @@ async def test_inspecting_a_player_is_read_only_and_visible_to_that_player(clien
     assert signed_in.status_code == 200
     log = await client.get("/api/v1/settings/privacy/access-log")
     assert log.status_code == 200, log.text
-    assert [entry["reason"] for entry in log.json()["entries"]] == ["玩家报告存档打不开"]
+    assert {entry["reason"] for entry in log.json()["entries"]} == {
+        "玩家报告存档打不开",
+        "定位玩家报告的具体叙事渲染问题",
+    }
+    denied_detail = await client.post(
+        f"/api/v1/admin/users/{player_id}/inspect/{playthrough_id}",
+        headers={"X-CSRF-Token": client.cookies.get("ng_csrf")},
+        json={"reason": "玩家不能读取管理员诊断接口"},
+    )
+    assert denied_detail.status_code == 403
 
 
 async def test_strong_actions_are_refused_without_the_admin_role(client) -> None:
@@ -322,6 +354,7 @@ async def test_strong_actions_are_refused_without_the_admin_role(client) -> None
     attempts = [
         (f"/api/v1/admin/users/{victim_id}/suspend", {"suspended": True, "reason": "越权尝试"}),
         (f"/api/v1/admin/users/{victim_id}/inspect", {"reason": "越权尝试"}),
+        (f"/api/v1/admin/users/{victim_id}/inspect/not-a-playthrough", {"reason": "越权尝试"}),
         (f"/api/v1/admin/users/{victim_id}/revoke-sessions", {"reason": "越权尝试"}),
         (
             "/api/v1/admin/users/quota/bulk",

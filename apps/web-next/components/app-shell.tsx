@@ -2,9 +2,12 @@
 
 import {
   BookOpenText,
+  Bell,
   ChevronUp,
   Compass,
+  CircleDollarSign,
   Gauge,
+  LifeBuoy,
   LogIn,
   LogOut,
   PenTool,
@@ -25,10 +28,12 @@ type CurrentUser = {
   roles: string[];
   verified: boolean;
 };
+type NotificationInbox = { unread_total: number };
 
 const primaryNavigation = [
   { href: "/library", label: "作品库", icon: Compass },
   { href: "/play", label: "我的故事", icon: BookOpenText },
+  { href: "/pricing", label: "价格与权益", icon: CircleDollarSign },
   { href: "/creator", label: "创作台", icon: PenTool },
 ] as const;
 
@@ -47,6 +52,7 @@ export function AppShell({ children }: { children: ReactNode }) {
   const [authReady, setAuthReady] = useState(false);
   const [accountOpen, setAccountOpen] = useState(false);
   const [announcement, setAnnouncement] = useState<Announcement>();
+  const [unreadNotifications, setUnreadNotifications] = useState(0);
   const accountArea = useRef<HTMLDivElement>(null);
   const immersive = /^(?:\/play\/[^/]+|\/creator\/[^/]+)$/.test(pathname);
 
@@ -64,6 +70,19 @@ export function AppShell({ children }: { children: ReactNode }) {
       active = false;
     };
   }, []);
+
+  useEffect(() => {
+    if (!user || !user.verified) return;
+    let active = true;
+    api<NotificationInbox>("/notifications?limit=1")
+      .then((inbox) => {
+        if (active) setUnreadNotifications(inbox.unread_total);
+      })
+      .catch(() => undefined);
+    return () => {
+      active = false;
+    };
+  }, [user]);
 
   useEffect(() => {
     let active = true;
@@ -96,6 +115,7 @@ export function AppShell({ children }: { children: ReactNode }) {
   async function logout() {
     await api("/auth/logout", { method: "POST" });
     setUser(undefined);
+    setUnreadNotifications(0);
     setAccountOpen(false);
     router.replace("/");
     router.refresh();
@@ -108,7 +128,12 @@ export function AppShell({ children }: { children: ReactNode }) {
     user?.roles.includes("admin") ? { href: "/admin", label: "管理", icon: Gauge } : undefined,
   ].filter(Boolean) as Array<{ href: string; label: string; icon: typeof Gauge }>;
   const navigation = user
-    ? [...primaryNavigation, { href: "/settings", label: "账户设置", icon: Settings }]
+    ? [
+        ...primaryNavigation,
+        { href: "/wallet", label: "余额与套餐", icon: CircleDollarSign },
+        { href: "/support", label: "帮助与支持", icon: LifeBuoy },
+        { href: "/settings", label: "账户设置", icon: Settings },
+      ]
     : primaryNavigation;
   // Without this an unverified account only ever sees "email verification
   // required" errors from whichever page it happens to open, with no route
@@ -157,50 +182,74 @@ export function AppShell({ children }: { children: ReactNode }) {
           ))}
         </nav>
         {user ? (
-          <div className="accountArea" ref={accountArea}>
-            <button
-              type="button"
-              className={`account ${accountOpen || isCurrent(pathname, "/settings") ? "active" : ""}`}
-              title={`${user.email} · 账户菜单`}
-              aria-label={`打开账户菜单：${displayName(user)}`}
-              aria-expanded={accountOpen}
-              aria-controls="account-menu"
-              onClick={() => setAccountOpen((open) => !open)}
+          <>
+            <Link
+              className="notificationBell"
+              href="/notifications"
+              aria-label={
+                unreadNotifications ? `通知中心：${unreadNotifications} 条未读` : "通知中心"
+              }
             >
-              <span className="accountAvatar" aria-hidden="true">
-                {displayName(user).slice(0, 1).toUpperCase()}
-              </span>
-              <span className="accountCopy">
-                <b>{displayName(user)}</b>
-                <small>账户与偏好</small>
-              </span>
-              <ChevronUp className="accountSettings" size={16} aria-hidden="true" />
-            </button>
-            {accountOpen && (
-              <div className="accountMenu" id="account-menu" role="menu">
-                <header>
+              <Bell size={19} />
+              {unreadNotifications > 0 && (
+                <b>{unreadNotifications > 99 ? "99+" : unreadNotifications}</b>
+              )}
+            </Link>
+            <div className="accountArea" ref={accountArea}>
+              <button
+                type="button"
+                className={`account ${accountOpen || isCurrent(pathname, "/settings") ? "active" : ""}`}
+                title={`${user.email} · 账户菜单`}
+                aria-label={`打开账户菜单：${displayName(user)}`}
+                aria-expanded={accountOpen}
+                aria-controls="account-menu"
+                onClick={() => setAccountOpen((open) => !open)}
+              >
+                <span className="accountAvatar" aria-hidden="true">
+                  {displayName(user).slice(0, 1).toUpperCase()}
+                </span>
+                <span className="accountCopy">
                   <b>{displayName(user)}</b>
-                  <small>{user.email}</small>
-                </header>
-                <Link href="/play" role="menuitem" onClick={() => setAccountOpen(false)}>
-                  <BookOpenText size={16} /> 我的故事
-                </Link>
-                <Link href="/settings" role="menuitem" onClick={() => setAccountOpen(false)}>
-                  <Settings size={16} /> 账户设置
-                </Link>
-                {user.roles.includes("admin") && (
-                  <Link href="/admin" role="menuitem" onClick={() => setAccountOpen(false)}>
-                    <Gauge size={16} /> 平台管理
+                  <small>账户与偏好</small>
+                </span>
+                <ChevronUp className="accountSettings" size={16} aria-hidden="true" />
+              </button>
+              {accountOpen && (
+                <div className="accountMenu" id="account-menu" role="menu">
+                  <header>
+                    <b>{displayName(user)}</b>
+                    <small>{user.email}</small>
+                  </header>
+                  <Link href="/play" role="menuitem" onClick={() => setAccountOpen(false)}>
+                    <BookOpenText size={16} /> 我的故事
                   </Link>
-                )}
-                <button type="button" role="menuitem" onClick={() => void logout()}>
-                  <LogOut size={16} /> 退出登录
-                </button>
-              </div>
-            )}
-          </div>
+                  <Link href="/settings" role="menuitem" onClick={() => setAccountOpen(false)}>
+                    <Settings size={16} /> 账户设置
+                  </Link>
+                  <Link href="/wallet" role="menuitem" onClick={() => setAccountOpen(false)}>
+                    <CircleDollarSign size={16} /> 余额与套餐
+                  </Link>
+                  <Link href="/support" role="menuitem" onClick={() => setAccountOpen(false)}>
+                    <LifeBuoy size={16} /> 帮助与支持
+                  </Link>
+                  <Link href="/notifications" role="menuitem" onClick={() => setAccountOpen(false)}>
+                    <Bell size={16} /> 通知中心
+                    {unreadNotifications ? `（${unreadNotifications}）` : ""}
+                  </Link>
+                  {user.roles.includes("admin") && (
+                    <Link href="/admin" role="menuitem" onClick={() => setAccountOpen(false)}>
+                      <Gauge size={16} /> 平台管理
+                    </Link>
+                  )}
+                  <button type="button" role="menuitem" onClick={() => void logout()}>
+                    <LogOut size={16} /> 退出登录
+                  </button>
+                </div>
+              )}
+            </div>
+          </>
         ) : (
-          <Link className="account accountGuest" href="/" aria-label="登录叙界">
+          <Link className="account accountGuest" href="/login" aria-label="登录叙界">
             {authReady ? <LogIn size={18} /> : <UserRound className="authPulse" size={18} />}
             <span>{authReady ? "登录" : "账户"}</span>
           </Link>

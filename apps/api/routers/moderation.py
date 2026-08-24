@@ -172,11 +172,23 @@ async def audit_logs(
     uow: SqlUnitOfWork = Depends(uow_dep),
     limit: int = 100,
 ) -> list[dict[str, Any]]:
-    del principal
+    await set_tenant_context(uow.session, principal.user_id)
+    filters: list[Any] = []
+    if not principal.has_role("admin"):
+        # Reviewers need a moderation decision trail, not account, billing,
+        # authentication or support activity from the whole platform.
+        filters.append(
+            sa.or_(
+                AuditLogORM.action.startswith("moderation.", autoescape=True),
+                AuditLogORM.action.startswith("report.", autoescape=True),
+                AuditLogORM.action.startswith("release.", autoescape=True),
+            )
+        )
     rows = (
         (
             await uow.session.execute(
                 sa.select(AuditLogORM)
+                .where(*filters)
                 .order_by(AuditLogORM.created_at.desc())
                 .limit(max(1, min(limit, 500)))
             )

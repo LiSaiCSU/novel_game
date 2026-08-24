@@ -10,7 +10,7 @@ import {
   Users,
 } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { type CSSProperties, type FormEvent, useEffect, useState } from "react";
+import { type CSSProperties, type FormEvent, useEffect, useRef, useState } from "react";
 import { ErrorState, LoadingState, RetryButton } from "@/components/ui/async-state";
 import { api, ApiError } from "@/lib/api";
 
@@ -74,6 +74,7 @@ export function ReleaseDetail({ endpoint, shareToken }: { endpoint: string; shar
   const [credentials, setCredentials] = useState<Credential[]>([]);
   const [authenticated, setAuthenticated] = useState<boolean>();
   const [reloadKey, setReloadKey] = useState(0);
+  const startIdempotencyKey = useRef("");
 
   useEffect(() => {
     api<Release>(endpoint)
@@ -99,6 +100,8 @@ export function ReleaseDetail({ endpoint, shareToken }: { endpoint: string; shar
     }
     setBusy(true);
     setError("");
+    const idempotencyKey = startIdempotencyKey.current || crypto.randomUUID();
+    startIdempotencyKey.current = idempotencyKey;
     const data = new FormData(event.currentTarget);
     const playerConfig: Record<string, unknown> = {};
     const modelMode = String(data.get("model_mode") ?? "platform");
@@ -129,8 +132,13 @@ export function ReleaseDetail({ endpoint, shareToken }: { endpoint: string; shar
           gender: work.player_constraints.gender ?? "unspecified",
           background: String(data.get("background") ?? ""),
           player_config: playerConfig,
+          // A paid platform opening is an LLM request just like a later turn.
+          // Retrying this form after a lost response reuses the same durable
+          // operation instead of creating and charging for a second world.
+          idempotency_key: idempotencyKey,
         }),
       });
+      startIdempotencyKey.current = "";
       router.push(`/play/${play.id}`);
     } catch (exception) {
       if (exception instanceof ApiError && exception.status === 401) {

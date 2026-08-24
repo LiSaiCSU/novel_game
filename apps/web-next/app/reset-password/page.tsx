@@ -68,7 +68,7 @@ function ResetForm() {
           </p>
         )}
         {done ? (
-          <Link className="button primary" href="/">
+          <Link className="button primary" href="/login">
             返回登录
           </Link>
         ) : (

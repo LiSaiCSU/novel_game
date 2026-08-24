@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+import re
 from datetime import UTC, datetime, timedelta
 from typing import Annotated, Any, Literal
 
@@ -39,9 +40,12 @@ from database.models.platform import (
     PlatformLlmConfigORM,
     PlaythroughORM,
     ProductEventORM,
+    SuperAdminApprovalORM,
+    SupportCaseORM,
     UsageLedgerORM,
     UserORM,
     UserRoleORM,
+    WalletHoldORM,
 )
 from database.repositories.sql import SqlUnitOfWork
 from engine.core.config import Settings
@@ -53,8 +57,14 @@ from engine.llm.providers import build_provider
 from engine.llm.router import ModelRouter
 
 router = APIRouter(prefix="/admin", tags=["v1-admin"])
-_ALLOWED_ROLES = frozenset({"player", "creator", "reviewer", "admin"})
+_ALLOWED_ROLES = frozenset({"player", "creator", "reviewer", "admin", "super_admin"})
 logger = get_logger("admin")
+
+
+def _as_utc(value: datetime) -> datetime:
+    """Normalize SQLite development timestamps before a policy comparison."""
+
+    return value.replace(tzinfo=UTC) if value.tzinfo is None else value.astimezone(UTC)
 
 
 def _funnel_stage(key: str, label: str, users: set[str], events: int) -> dict[str, object]:
@@ -68,6 +78,15 @@ class QuotaWrite(BaseModel):
 
 class RolesWrite(BaseModel):
     roles: set[Literal["player", "creator", "reviewer", "admin"]]
+    reason: str = Field(min_length=3, max_length=500)
+
+
+class SuperAdminWrite(BaseModel):
+    enabled: bool
+    reason: str = Field(min_length=3, max_length=500)
+
+
+class SuperAdminApprovalDecisionWrite(BaseModel):
     reason: str = Field(min_length=3, max_length=500)
 
 
@@ -468,8 +487,12 @@ async def set_user_roles(
     uow: SqlUnitOfWork = Depends(uow_dep),
 ) -> dict[str, object]:
     await set_tenant_context(uow.session, principal.user_id)
-    await _target_user(uow, user_id)
-    requested = set(body.roles)
+    target = await uow.session.scalar(
+        sa.select(UserORM).where(UserORM.id == user_id).with_for_update()
+    )
+    if target is None:
+        raise HTTPException(status_code=404, detail="user not found")
+    requested: set[str] = set(body.roles)
     requested.add("player")
     if not requested.issubset(_ALLOWED_ROLES):
         raise HTTPException(status_code=422, detail="unknown role")
@@ -478,10 +501,17 @@ async def set_user_roles(
             await uow.session.execute(
                 sa.select(UserRoleORM.role).where(UserRoleORM.user_id == user_id)
             )
-        )
+    )
         .scalars()
         .all()
     )
+    if "super_admin" in current:
+        if not principal.has_role("super_admin"):
+            raise HTTPException(status_code=403, detail="super administrator role is protected")
+        # Generic role editing cannot silently demote a break-glass account.
+        # The dedicated endpoint below has a last-super-admin guard.
+        requested.add("super_admin")
+        requested.add("admin")
     if user_id == principal.user_id and "admin" not in requested:
         raise HTTPException(
             status_code=409, detail="administrator cannot remove their own admin role"
@@ -503,6 +533,415 @@ async def set_user_roles(
     )
     await uow.commit()
     return {"user_id": user_id, "roles": sorted(requested)}
+
+
+@router.get("/governance/super-admins")
+async def list_super_admins(
+    principal: Annotated[Principal, Depends(require_roles("super_admin"))],
+    uow: SqlUnitOfWork = Depends(uow_dep),
+) -> dict[str, object]:
+    """List the deliberately small break-glass administrator set."""
+
+    await set_tenant_context(uow.session, principal.user_id)
+    rows = (
+        await uow.session.execute(
+            sa.select(UserORM, UserRoleORM.created_at)
+            .join(UserRoleORM, UserRoleORM.user_id == UserORM.id)
+            .where(UserRoleORM.role == "super_admin")
+            .order_by(UserRoleORM.created_at.asc(), UserORM.email.asc())
+        )
+    ).all()
+    requester = sa.orm.aliased(UserORM)
+    target = sa.orm.aliased(UserORM)
+    approvals = (
+        await uow.session.execute(
+            sa.select(SuperAdminApprovalORM, requester.email, target.email)
+            .join(requester, requester.id == SuperAdminApprovalORM.requester_id)
+            .join(target, target.id == SuperAdminApprovalORM.target_user_id)
+            .where(
+                SuperAdminApprovalORM.status == "pending",
+                SuperAdminApprovalORM.expires_at > datetime.now(UTC),
+            )
+            .order_by(SuperAdminApprovalORM.created_at.asc())
+        )
+    ).all()
+    return {
+        "items": [
+            {
+                "id": user.id,
+                "email": user.email,
+                "display_name": user.display_name,
+                "status": user.status,
+                "granted_at": granted_at,
+            }
+            for user, granted_at in rows
+        ],
+        "pending_approvals": [
+            {
+                "id": approval.id,
+                "requester_id": approval.requester_id,
+                "requester_email": requester_email,
+                "target_user_id": approval.target_user_id,
+                "target_email": target_email,
+                "requested_enabled": approval.requested_enabled,
+                "reason": approval.request_reason,
+                "expires_at": approval.expires_at,
+                "created_at": approval.created_at,
+            }
+            for approval, requester_email, target_email in approvals
+        ],
+        "current_user_id": principal.user_id,
+        "mfa_required": True,
+    }
+
+
+@router.put("/users/{user_id}/super-admin")
+async def set_super_admin(
+    user_id: str,
+    body: SuperAdminWrite,
+    request: Request,
+    principal: Annotated[Principal, Depends(require_role_csrf("super_admin"))],
+    uow: SqlUnitOfWork = Depends(uow_dep),
+) -> dict[str, object]:
+    """Open a dual-control request; it never changes a role by itself."""
+
+    await set_tenant_context(uow.session, principal.user_id)
+    user = await uow.session.scalar(
+        sa.select(UserORM).where(UserORM.id == user_id).with_for_update()
+    )
+    if user is None:
+        raise HTTPException(status_code=404, detail="user not found")
+    if user_id == principal.user_id:
+        raise HTTPException(status_code=409, detail="super administrator cannot request a change to own role")
+    if user.status != "active":
+        raise HTTPException(status_code=409, detail="only an active account can be a super administrator")
+    pending = await uow.session.scalar(
+        sa.select(SuperAdminApprovalORM)
+        .where(
+            SuperAdminApprovalORM.target_user_id == user_id,
+            SuperAdminApprovalORM.status == "pending",
+        )
+        .with_for_update()
+    )
+    now = datetime.now(UTC)
+    if pending is not None and _as_utc(pending.expires_at) <= now:
+        pending.status = "expired"
+        pending.decision_reason = "请求未在时限内获得复核"
+        await uow.session.flush()
+        pending = None
+    if pending is not None:
+        if pending.requested_enabled == body.enabled:
+            return {
+                "id": pending.id,
+                "status": pending.status,
+                "expires_at": pending.expires_at,
+                "requested_enabled": pending.requested_enabled,
+                "idempotent_replay": True,
+            }
+        raise HTTPException(status_code=409, detail="a different super administrator request is pending")
+    approval = SuperAdminApprovalORM(
+        id=new_id(),
+        requester_id=principal.user_id,
+        target_user_id=user_id,
+        requested_enabled=body.enabled,
+        request_reason=body.reason,
+        status="pending",
+        expires_at=now + timedelta(hours=24),
+    )
+    uow.session.add(approval)
+    uow.session.add(
+        _audit(
+            principal,
+            request,
+            "super_admin.approval_requested",
+            approval.id,
+            {
+                "target_user_id": user_id,
+                "requested_enabled": body.enabled,
+                "reason": body.reason,
+                "expires_at": approval.expires_at.isoformat(),
+            },
+            target_type="super_admin_approval",
+        )
+    )
+    await uow.commit()
+    return {
+        "id": approval.id,
+        "status": approval.status,
+        "expires_at": approval.expires_at,
+        "requested_enabled": approval.requested_enabled,
+        "idempotent_replay": False,
+    }
+
+
+async def _pending_super_admin_approval(
+    uow: SqlUnitOfWork, approval_id: str, principal: Principal
+) -> SuperAdminApprovalORM:
+    approval = await uow.session.scalar(
+        sa.select(SuperAdminApprovalORM)
+        .where(SuperAdminApprovalORM.id == approval_id)
+        .with_for_update()
+    )
+    if approval is None:
+        raise HTTPException(status_code=404, detail="super administrator approval not found")
+    if approval.requester_id == principal.user_id:
+        raise HTTPException(status_code=409, detail="requester cannot review own super administrator request")
+    if approval.status != "pending":
+        raise HTTPException(status_code=409, detail="super administrator approval is not pending")
+    if _as_utc(approval.expires_at) <= datetime.now(UTC):
+        approval.status = "expired"
+        approval.decision_reason = "请求未在时限内获得复核"
+        await uow.commit()
+        raise HTTPException(status_code=409, detail="super administrator approval has expired")
+    return approval
+
+
+@router.post("/governance/super-admin-approvals/{approval_id}/approve")
+async def approve_super_admin_change(
+    approval_id: str,
+    body: SuperAdminApprovalDecisionWrite,
+    request: Request,
+    principal: Annotated[Principal, Depends(require_role_csrf("super_admin"))],
+    uow: SqlUnitOfWork = Depends(uow_dep),
+) -> dict[str, object]:
+    """A second super administrator approves and executes an elevation change."""
+
+    await set_tenant_context(uow.session, principal.user_id)
+    approval = await _pending_super_admin_approval(uow, approval_id, principal)
+    target = await uow.session.scalar(
+        sa.select(UserORM).where(UserORM.id == approval.target_user_id).with_for_update()
+    )
+    if target is None or target.status != "active":
+        raise HTTPException(status_code=409, detail="approval target is not an active account")
+    super_roles = (
+        await uow.session.scalars(
+            sa.select(UserRoleORM).where(UserRoleORM.role == "super_admin").with_for_update()
+        )
+    ).all()
+    current_super_ids = {role.user_id for role in super_roles}
+    idempotent_replay = False
+    if approval.requested_enabled:
+        roles = set(
+            (
+                await uow.session.scalars(
+                    sa.select(UserRoleORM.role).where(UserRoleORM.user_id == target.id)
+                )
+            ).all()
+        )
+        added = {"admin", "super_admin"} - roles
+        uow.session.add_all(
+            UserRoleORM(id=new_id(), user_id=target.id, role=role) for role in added
+        )
+        role_action = "user.super_admin_granted"
+        idempotent_replay = not added
+    else:
+        if target.id not in current_super_ids:
+            role_action = "user.super_admin_revoke_idempotent"
+            idempotent_replay = True
+        else:
+            if len(current_super_ids) <= 1:
+                raise HTTPException(status_code=409, detail="at least one super administrator is required")
+            await uow.session.execute(
+                sa.delete(UserRoleORM).where(
+                    UserRoleORM.user_id == target.id, UserRoleORM.role == "super_admin"
+                )
+            )
+            role_action = "user.super_admin_revoked"
+    approval.status = "approved"
+    approval.approver_id = principal.user_id
+    approval.decision_reason = body.reason
+    approval.executed_at = datetime.now(UTC)
+    uow.session.add(
+        _audit(
+            principal,
+            request,
+            "super_admin.approval_approved",
+            approval.id,
+            {
+                "target_user_id": target.id,
+                "requested_enabled": approval.requested_enabled,
+                "requester_id": approval.requester_id,
+                "reason": body.reason,
+            },
+            target_type="super_admin_approval",
+        )
+    )
+    uow.session.add(
+        _audit(
+            principal,
+            request,
+            role_action,
+            target.id,
+            {
+                "approval_id": approval.id,
+                "requester_id": approval.requester_id,
+                "approval_reason": body.reason,
+                "request_reason": approval.request_reason,
+            },
+        )
+    )
+    await uow.commit()
+    return {
+        "id": approval.id,
+        "status": approval.status,
+        "user_id": target.id,
+        "super_admin": approval.requested_enabled,
+        "idempotent_replay": idempotent_replay,
+    }
+
+
+@router.post("/governance/super-admin-approvals/{approval_id}/reject")
+async def reject_super_admin_change(
+    approval_id: str,
+    body: SuperAdminApprovalDecisionWrite,
+    request: Request,
+    principal: Annotated[Principal, Depends(require_role_csrf("super_admin"))],
+    uow: SqlUnitOfWork = Depends(uow_dep),
+) -> dict[str, object]:
+    """A second super administrator rejects an unexecuted role-change request."""
+
+    await set_tenant_context(uow.session, principal.user_id)
+    approval = await _pending_super_admin_approval(uow, approval_id, principal)
+    approval.status = "rejected"
+    approval.approver_id = principal.user_id
+    approval.decision_reason = body.reason
+    uow.session.add(
+        _audit(
+            principal,
+            request,
+            "super_admin.approval_rejected",
+            approval.id,
+            {
+                "target_user_id": approval.target_user_id,
+                "requested_enabled": approval.requested_enabled,
+                "requester_id": approval.requester_id,
+                "reason": body.reason,
+            },
+            target_type="super_admin_approval",
+        )
+    )
+    await uow.commit()
+    return {"id": approval.id, "status": approval.status}
+
+
+@router.post("/governance/super-admin-approvals/{approval_id}/cancel")
+async def cancel_super_admin_change(
+    approval_id: str,
+    body: SuperAdminApprovalDecisionWrite,
+    request: Request,
+    principal: Annotated[Principal, Depends(require_role_csrf("super_admin"))],
+    uow: SqlUnitOfWork = Depends(uow_dep),
+) -> dict[str, object]:
+    """The requester can cancel, but never approve, their own request."""
+
+    await set_tenant_context(uow.session, principal.user_id)
+    approval = await uow.session.scalar(
+        sa.select(SuperAdminApprovalORM)
+        .where(SuperAdminApprovalORM.id == approval_id)
+        .with_for_update()
+    )
+    if approval is None:
+        raise HTTPException(status_code=404, detail="super administrator approval not found")
+    if approval.requester_id != principal.user_id:
+        raise HTTPException(status_code=403, detail="only requester can cancel super administrator approval")
+    if approval.status != "pending":
+        raise HTTPException(status_code=409, detail="super administrator approval is not pending")
+    approval.status = "cancelled"
+    approval.decision_reason = body.reason
+    uow.session.add(
+        _audit(
+            principal,
+            request,
+            "super_admin.approval_cancelled",
+            approval.id,
+            {"target_user_id": approval.target_user_id, "reason": body.reason},
+            target_type="super_admin_approval",
+        )
+    )
+    await uow.commit()
+    return {"id": approval.id, "status": approval.status}
+
+
+def _audit_log_view(row: AuditLogORM, actor_email: str | None) -> dict[str, object]:
+    return {
+        "id": row.id,
+        "actor_id": row.actor_id,
+        "actor_email": actor_email,
+        "action": row.action,
+        "target_type": row.target_type,
+        "target_id": row.target_id,
+        "request_id": row.request_id,
+        "details": row.details,
+        "created_at": row.created_at,
+    }
+
+
+@router.get("/audit-logs")
+async def admin_audit_logs(
+    principal: Annotated[Principal, Depends(require_roles("admin"))],
+    uow: SqlUnitOfWork = Depends(uow_dep),
+    action_prefix: Annotated[str, Query(max_length=80)] = "",
+    actor_id: Annotated[str, Query(max_length=36)] = "",
+    target_id: Annotated[str, Query(max_length=120)] = "",
+    before: datetime | None = None,
+    limit: Annotated[int, Query(ge=1, le=100)] = 30,
+) -> dict[str, object]:
+    """Search high-assurance operator actions without exposing player prose."""
+
+    await set_tenant_context(uow.session, principal.user_id)
+    prefix = action_prefix.strip()
+    if prefix and not re.fullmatch(r"[a-z0-9_.-]+", prefix):
+        raise HTTPException(status_code=422, detail="action_prefix has invalid characters")
+    filters: list[Any] = []
+    if prefix:
+        filters.append(AuditLogORM.action.startswith(prefix, autoescape=True))
+    if actor_id.strip():
+        filters.append(AuditLogORM.actor_id == actor_id.strip())
+    if target_id.strip():
+        filters.append(AuditLogORM.target_id == target_id.strip())
+    if before is not None:
+        filters.append(AuditLogORM.created_at < before)
+    rows = (
+        await uow.session.execute(
+            sa.select(AuditLogORM, UserORM.email)
+            .outerjoin(UserORM, UserORM.id == AuditLogORM.actor_id)
+            .where(*filters)
+            .order_by(AuditLogORM.created_at.desc(), AuditLogORM.id.desc())
+            .limit(limit + 1)
+        )
+    ).all()
+    page = rows[:limit]
+    next_before = page[-1][0].created_at if len(rows) > limit and page else None
+    return {
+        "items": [_audit_log_view(row, email) for row, email in page],
+        "next_before": next_before,
+        "limit": limit,
+    }
+
+
+@router.get("/audit-summary")
+async def admin_audit_summary(
+    principal: Annotated[Principal, Depends(require_roles("admin"))],
+    uow: SqlUnitOfWork = Depends(uow_dep),
+    hours: Annotated[int, Query(ge=1, le=168)] = 24,
+) -> dict[str, object]:
+    """Recent change pressure for the operations dashboard, with no PII."""
+
+    await set_tenant_context(uow.session, principal.user_id)
+    since = datetime.now(UTC) - timedelta(hours=hours)
+    rows = (
+        await uow.session.execute(
+            sa.select(AuditLogORM.action, sa.func.count())
+            .where(AuditLogORM.created_at >= since)
+            .group_by(AuditLogORM.action)
+            .order_by(sa.func.count().desc(), AuditLogORM.action.asc())
+            .limit(20)
+        )
+    ).all()
+    return {
+        "hours": hours,
+        "actions": [{"action": str(action), "count": int(count)} for action, count in rows],
+    }
 
 
 # ---------------------------------------------------------------------------
@@ -982,21 +1421,38 @@ async def inspect_player(
     }
 
 
-@router.get("/users/{user_id}/inspect/{playthrough_id}")
+@router.post("/users/{user_id}/inspect/{playthrough_id}")
 async def inspect_playthrough(
     user_id: str,
     playthrough_id: str,
-    principal: Annotated[Principal, Depends(require_roles("admin"))],
+    body: AccountActionWrite,
+    request: Request,
+    principal: Annotated[Principal, Depends(require_role_csrf("admin"))],
     uow: SqlUnitOfWork = Depends(uow_dep),
     limit: Annotated[int, Query(ge=1, le=40)] = 12,
 ) -> dict[str, object]:
-    """The story text of one playthrough, for diagnosing what went wrong."""
+    """Read a story excerpt only with MFA, an explicit reason and an audit row."""
     await set_tenant_context(uow.session, principal.user_id)
     play = await uow.session.get(PlaythroughORM, playthrough_id)
     if play is None or play.user_id != user_id:
         raise HTTPException(status_code=404, detail="playthrough not found")
     segments = await uow.turns.list_narrative(play.game_session_id or "", limit=limit)
     turn_numbers = await _turn_numbers(uow, [play.game_session_id])
+    uow.session.add(
+        _audit(
+            principal,
+            request,
+            "user.playthrough_inspected",
+            user_id,
+            {
+                "reason": body.reason,
+                "playthrough_id": play.id,
+                "segment_count": len(segments),
+                "limit": limit,
+            },
+        )
+    )
+    await uow.commit()
     return {
         "playthrough_id": play.id,
         "status": play.status,
@@ -1016,6 +1472,8 @@ async def system_summary(
     uow: SqlUnitOfWork = Depends(uow_dep),
 ) -> dict[str, object]:
     await set_tenant_context(uow.session, principal.user_id)
+    now = datetime.now(UTC)
+    since = now - timedelta(hours=24)
     token_sum = sa.func.coalesce(
         sa.func.sum(UsageLedgerORM.input_tokens + UsageLedgerORM.output_tokens), 0
     )
@@ -1040,12 +1498,270 @@ async def system_summary(
         )
         or 0
     )
+    recent_usage = (
+        await uow.session.execute(
+            sa.select(
+                sa.func.count(),
+                sa.func.coalesce(sa.func.sum(UsageLedgerORM.input_tokens + UsageLedgerORM.output_tokens), 0),
+                sa.func.coalesce(sa.func.sum(UsageLedgerORM.cost_microunits), 0),
+                sa.func.coalesce(
+                    sa.func.sum(sa.case((UsageLedgerORM.success.is_(False), 1), else_=0)), 0
+                ),
+            ).where(UsageLedgerORM.created_at >= since)
+        )
+    ).one()
+    recent_calls = int(recent_usage[0] or 0)
+    recent_failures = int(recent_usage[3] or 0)
+    active_sessions = int(
+        await uow.session.scalar(
+            sa.select(sa.func.count())
+            .select_from(AuthSessionORM)
+            .where(AuthSessionORM.revoked_at.is_(None), AuthSessionORM.expires_at > now)
+        )
+        or 0
+    )
+    security_events = int(
+        await uow.session.scalar(
+            sa.select(sa.func.count())
+            .select_from(AuditLogORM)
+            .where(
+                AuditLogORM.created_at >= since,
+                AuditLogORM.action.in_(
+                    (
+                        "auth.login_failed",
+                        "auth.login_anomaly",
+                        "auth.password_reset_requested",
+                        "auth.password_reset_completed",
+                        "auth.password_changed",
+                        "auth.mfa_disabled",
+                    )
+                ),
+            )
+        )
+        or 0
+    )
+    support_open_cases = int(
+        await uow.session.scalar(
+            sa.select(sa.func.count())
+            .select_from(SupportCaseORM)
+            .where(SupportCaseORM.status.in_(("open", "in_progress", "waiting_user")))
+        )
+        or 0
+    )
+    support_unassigned_cases = int(
+        await uow.session.scalar(
+            sa.select(sa.func.count())
+            .select_from(SupportCaseORM)
+            .where(
+                SupportCaseORM.status.in_(("open", "in_progress", "waiting_user")),
+                SupportCaseORM.assigned_to.is_(None),
+            )
+        )
+        or 0
+    )
+    provider_rows = (
+        await uow.session.execute(
+            sa.select(
+                UsageLedgerORM.provider,
+                sa.func.count(),
+                sa.func.coalesce(sa.func.sum(UsageLedgerORM.input_tokens + UsageLedgerORM.output_tokens), 0),
+                sa.func.coalesce(sa.func.sum(UsageLedgerORM.cost_microunits), 0),
+                sa.func.coalesce(
+                    sa.func.sum(sa.case((UsageLedgerORM.success.is_(False), 1), else_=0)), 0
+                ),
+            )
+            .where(UsageLedgerORM.created_at >= since)
+            .group_by(UsageLedgerORM.provider)
+            .order_by(sa.func.sum(UsageLedgerORM.cost_microunits).desc(), UsageLedgerORM.provider.asc())
+            .limit(12)
+        )
+    ).all()
     return {
         "users": users,
         "releases": releases,
         "pending_moderation": pending,
         "llm_tokens": tokens,
         "llm_failures": failures,
+        "operations_window_hours": 24,
+        "llm_calls_24h": recent_calls,
+        "llm_failures_24h": recent_failures,
+        "llm_failure_rate_24h": round(recent_failures / recent_calls, 4) if recent_calls else 0.0,
+        "llm_tokens_24h": int(recent_usage[1] or 0),
+        "llm_cost_microunits_24h": int(recent_usage[2] or 0),
+        "active_sessions": active_sessions,
+        "security_events_24h": security_events,
+        "support_open_cases": support_open_cases,
+        "support_unassigned_cases": support_unassigned_cases,
+        "model_usage_24h": [
+            {
+                "provider": str(provider or "unknown"),
+                "calls": int(calls or 0),
+                "tokens": int(row_tokens or 0),
+                "cost_microunits": int(cost or 0),
+                "failures": int(row_failures or 0),
+            }
+            for provider, calls, row_tokens, cost, row_failures in provider_rows
+        ],
+    }
+
+
+@router.get("/operations-alerts")
+async def operations_alerts(
+    principal: Annotated[Principal, Depends(require_roles("admin"))],
+    uow: SqlUnitOfWork = Depends(uow_dep),
+) -> dict[str, object]:
+    """Compute actionable, privacy-safe operational signals from durable state.
+
+    The dashboard deliberately does not persist or acknowledge these alerts.
+    They are a current view of database facts, so an operator cannot hide an
+    unresolved financial, security or player-support risk by clicking away a
+    notification.  Pager delivery remains the responsibility of Prometheus/
+    Sentry deployment integrations; this endpoint is the audited human
+    operations counterpart.
+    """
+
+    await set_tenant_context(uow.session, principal.user_id)
+    now = datetime.now(UTC)
+    since = now - timedelta(hours=24)
+    alerts: list[dict[str, object]] = []
+
+    usage = (
+        await uow.session.execute(
+            sa.select(
+                sa.func.count(),
+                sa.func.coalesce(
+                    sa.func.sum(sa.case((UsageLedgerORM.success.is_(False), 1), else_=0)), 0
+                ),
+            ).where(UsageLedgerORM.created_at >= since)
+        )
+    ).one()
+    calls, failures = int(usage[0] or 0), int(usage[1] or 0)
+    failure_rate = failures / calls if calls else 0.0
+    if calls >= 5 and failure_rate >= 0.2:
+        alerts.append(
+            {
+                "code": "llm_failure_rate_critical",
+                "severity": "critical",
+                "title": "模型调用失败率过高",
+                "description": f"过去 24 小时 {failures}/{calls} 次模型调用失败（{failure_rate:.1%}）。",
+                "value": failures,
+                "href": "#operations-health",
+            }
+        )
+    elif calls >= 5 and failure_rate >= 0.03:
+        alerts.append(
+            {
+                "code": "llm_failure_rate_warning",
+                "severity": "warning",
+                "title": "模型调用失败率需要关注",
+                "description": f"过去 24 小时 {failures}/{calls} 次模型调用失败（{failure_rate:.1%}）。",
+                "value": failures,
+                "href": "#operations-health",
+            }
+        )
+
+    expired_holds = int(
+        await uow.session.scalar(
+            sa.select(sa.func.count())
+            .select_from(WalletHoldORM)
+            .where(WalletHoldORM.status == "held", WalletHoldORM.expires_at < now)
+        )
+        or 0
+    )
+    if expired_holds:
+        alerts.append(
+            {
+                "code": "expired_wallet_holds",
+                "severity": "warning",
+                "title": "发现过期的回合预授权",
+                "description": f"有 {expired_holds} 笔预授权仍为 held 状态，应检查结算恢复与 worker 清理。",
+                "value": expired_holds,
+                "href": "#commerce-operations",
+            }
+        )
+
+    open_case_statuses = ("open", "in_progress", "waiting_user")
+    urgent_unassigned = int(
+        await uow.session.scalar(
+            sa.select(sa.func.count())
+            .select_from(SupportCaseORM)
+            .where(
+                SupportCaseORM.status.in_(open_case_statuses),
+                SupportCaseORM.priority == "urgent",
+                SupportCaseORM.assigned_to.is_(None),
+            )
+        )
+        or 0
+    )
+    if urgent_unassigned:
+        alerts.append(
+            {
+                "code": "urgent_support_unassigned",
+                "severity": "critical",
+                "title": "存在未分派的紧急支持请求",
+                "description": f"有 {urgent_unassigned} 项紧急请求尚未明确负责人。",
+                "value": urgent_unassigned,
+                "href": "#support-operations",
+            }
+        )
+
+    stale_support = int(
+        await uow.session.scalar(
+            sa.select(sa.func.count())
+            .select_from(SupportCaseORM)
+            .where(
+                SupportCaseORM.status.in_(open_case_statuses),
+                SupportCaseORM.created_at < now - timedelta(hours=24),
+            )
+        )
+        or 0
+    )
+    if stale_support:
+        alerts.append(
+            {
+                "code": "support_response_sla_risk",
+                "severity": "warning",
+                "title": "支持请求可能超过首响目标",
+                "description": f"有 {stale_support} 项未结束请求已创建超过 24 小时。",
+                "value": stale_support,
+                "href": "#support-operations",
+            }
+        )
+
+    login_anomalies = int(
+        await uow.session.scalar(
+            sa.select(sa.func.count())
+            .select_from(AuditLogORM)
+            .where(
+                AuditLogORM.created_at >= since,
+                AuditLogORM.action == "auth.login_anomaly",
+            )
+        )
+        or 0
+    )
+    if login_anomalies >= 3:
+        alerts.append(
+            {
+                "code": "login_anomaly_cluster",
+                "severity": "warning",
+                "title": "异常登录信号集中出现",
+                "description": f"过去 24 小时记录了 {login_anomalies} 次异常登录信号，请核查安全事件与会话。",
+                "value": login_anomalies,
+                "href": "#audit-operations",
+            }
+        )
+
+    severity_rank = {"critical": 0, "warning": 1, "info": 2}
+    alerts.sort(key=lambda row: (severity_rank[str(row["severity"])], str(row["code"])))
+    return {
+        "generated_at": now.isoformat(),
+        "window_hours": 24,
+        "healthy": not alerts,
+        "counts": {
+            "critical": sum(1 for row in alerts if row["severity"] == "critical"),
+            "warning": sum(1 for row in alerts if row["severity"] == "warning"),
+        },
+        "alerts": alerts,
     }
 
 

@@ -24,6 +24,7 @@ const labels: Record<string, string> = {
   creator: "创作者",
   reviewer: "审核员",
   admin: "管理员",
+  super_admin: "超级管理员",
   warning: "提醒",
   error: "错误",
   info: "信息",

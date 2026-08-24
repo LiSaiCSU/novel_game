@@ -26,6 +26,7 @@ from database.models.platform import (
     PlaythroughORM,
     ProductEventORM,
     ProjectORM,
+    SupportCaseORM,
     UsageLedgerORM,
     UserORM,
 )
@@ -108,21 +109,33 @@ async def administrator_access_log(
     principal: Annotated[Principal, Depends(verified_principal)],
     uow: SqlUnitOfWork = Depends(uow_dep),
 ) -> dict[str, object]:
-    """Every time an administrator opened this account's saved stories.
+    """Every time an administrator opened this account's private content.
 
     Support sometimes has to read a player's writing to answer a question
     about it. Whether that is acceptable rests on the player being able to
     find out it happened, so the record is theirs to read, not only ours.
     """
     await set_tenant_context(uow.session, principal.user_id)
+    own_support_case_ids = sa.select(SupportCaseORM.id).where(
+        SupportCaseORM.user_id == principal.user_id
+    )
     rows = (
         (
             await uow.session.execute(
                 sa.select(AuditLogORM)
                 .where(
-                    AuditLogORM.target_type == "user",
-                    AuditLogORM.target_id == principal.user_id,
-                    AuditLogORM.action == "user.inspected",
+                    sa.or_(
+                        sa.and_(
+                            AuditLogORM.target_type == "user",
+                            AuditLogORM.target_id == principal.user_id,
+                            AuditLogORM.action.in_(("user.inspected", "user.playthrough_inspected")),
+                        ),
+                        sa.and_(
+                            AuditLogORM.target_type == "support_case",
+                            AuditLogORM.target_id.in_(own_support_case_ids),
+                            AuditLogORM.action == "support.case_inspected",
+                        ),
+                    )
                 )
                 .order_by(AuditLogORM.created_at.desc())
                 .limit(50)

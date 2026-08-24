@@ -40,6 +40,17 @@ const apiMessages: Record<string, string> = {
   "credential test failed": "模型连接测试失败，请检查地址、密钥和模型名称。",
   "data export not found": "没有找到这份数据导出任务。",
   "data export is unavailable": "个人数据文件暂时不可下载。",
+  "campaign unavailable": "这个活动当前不可领取。",
+  "campaign is not currently claimable": "这个活动当前不在可领取时间内。",
+  "campaign redemption limit reached": "这项活动已经领完了。",
+  "campaign code already exists": "活动代码已存在，请换一个内部代码。",
+  "an expired campaign cannot be reactivated": "活动已过期，不能重新启用。",
+  "an ended campaign cannot be reactivated": "活动已经结束，不能重新启用。",
+  "support case not found": "没有找到这项支持请求，或当前账号无权查看。",
+  "support case is not accepting replies": "这项请求已经结束，不能继续回复。",
+  "assigned operator is not active": "所选处理人员当前不可用。",
+  "assigned operator must be an administrator": "处理人员必须是管理员。",
+  "notification not found": "没有找到这条通知，或当前账号无权查看。",
 };
 
 function problemText(problem: ApiProblem): string {

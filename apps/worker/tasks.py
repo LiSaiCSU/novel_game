@@ -35,7 +35,10 @@ from database.models.platform import (
     ProjectORM,
     ProjectRevisionORM,
     ReportORM,
+    SupportCaseMessageORM,
+    SupportCaseORM,
     UsageLedgerORM,
+    UserNotificationORM,
     UserORM,
     UserRoleORM,
 )
@@ -150,6 +153,11 @@ async def scrub_account(session: Any, user: UserORM, *, reason: str = "") -> Non
     await session.execute(sa.delete(AuthSessionORM).where(AuthSessionORM.user_id == user.id))
     await session.execute(sa.delete(EmailTokenORM).where(EmailTokenORM.user_id == user.id))
     await session.execute(sa.delete(LlmCredentialORM).where(LlmCredentialORM.user_id == user.id))
+    await session.execute(sa.delete(UserNotificationORM).where(UserNotificationORM.user_id == user.id))
+    # Support conversations are personal correspondence, not a financial
+    # ledger. Delete the case and its append-only replies with the account;
+    # the generic audit action remains as non-content integrity evidence.
+    await session.execute(sa.delete(SupportCaseORM).where(SupportCaseORM.user_id == user.id))
     await session.execute(sa.delete(UsageLedgerORM).where(UsageLedgerORM.user_id == user.id))
     await session.execute(
         sa.update(PlaythroughORM)
@@ -346,10 +354,46 @@ async def build_data_export(settings: Settings, export_id: str, user_id: str) ->
                 .scalars()
                 .all()
             )
+            support_cases = list(
+                (
+                    await session.execute(
+                        sa.select(SupportCaseORM).where(SupportCaseORM.user_id == user_id)
+                    )
+                )
+                .scalars()
+                .all()
+            )
+            support_case_ids = [case.id for case in support_cases]
+            support_messages = (
+                list(
+                    (
+                        await session.execute(
+                            sa.select(SupportCaseMessageORM).where(
+                                SupportCaseMessageORM.case_id.in_(support_case_ids)
+                            )
+                        )
+                    )
+                    .scalars()
+                    .all()
+                )
+                if support_case_ids
+                else []
+            )
             product_events = list(
                 (
                     await session.execute(
                         sa.select(ProductEventORM).where(ProductEventORM.user_id == user_id)
+                    )
+                )
+                .scalars()
+                .all()
+            )
+            notifications = list(
+                (
+                    await session.execute(
+                        sa.select(UserNotificationORM).where(
+                            UserNotificationORM.user_id == user_id
+                        )
                     )
                 )
                 .scalars()
@@ -482,6 +526,29 @@ async def build_data_export(settings: Settings, export_id: str, user_id: str) ->
                     }
                     for row in reports
                 ],
+                "support_cases": [
+                    {
+                        "id": row.id,
+                        "playthrough_id": row.playthrough_id,
+                        "category": row.category,
+                        "status": row.status,
+                        "priority": row.priority,
+                        "subject": row.subject,
+                        "created_at": row.created_at,
+                        "updated_at": row.updated_at,
+                    }
+                    for row in support_cases
+                ],
+                "support_messages": [
+                    {
+                        "id": row.id,
+                        "case_id": row.case_id,
+                        "author_role": row.author_role,
+                        "body": row.body,
+                        "created_at": row.created_at,
+                    }
+                    for row in support_messages
+                ],
                 "product_events": [
                     {
                         "event_name": row.event_name,
@@ -493,6 +560,18 @@ async def build_data_export(settings: Settings, export_id: str, user_id: str) ->
                         "occurred_at": row.occurred_at,
                     }
                     for row in product_events
+                ],
+                "notifications": [
+                    {
+                        "id": row.id,
+                        "kind": row.kind,
+                        "title": row.title,
+                        "body": row.body,
+                        "href": row.href,
+                        "read_at": row.read_at,
+                        "created_at": row.created_at,
+                    }
+                    for row in notifications
                 ],
             }
             encoded = json.dumps(

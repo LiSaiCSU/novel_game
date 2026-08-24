@@ -75,7 +75,7 @@ export default function Register() {
         </button>
         <p className="authFootnote">
           已有账号？{" "}
-          <Link className="textLink" href="/">
+          <Link className="textLink" href="/login">
             直接登录
           </Link>
         </p>

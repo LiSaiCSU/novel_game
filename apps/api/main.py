@@ -23,6 +23,7 @@ from apps.api.routers import (
     admin,
     auth,
     catalog,
+    commerce,
     creator,
     creator_assets,
     debug,
@@ -30,11 +31,13 @@ from apps.api.routers import (
     gameplay,
     media,
     moderation,
+    notifications,
     playthroughs,
+    support,
     worlds,
 )
 from apps.api.routers import settings as user_settings
-from database.bootstrap import ensure_official_releases
+from database.bootstrap import ensure_configured_super_admins, ensure_official_releases
 from database.session import create_all, dispose, get_sessionmaker
 from engine.core.config import get_settings
 from engine.core.errors import EngineError
@@ -51,6 +54,9 @@ async def lifespan(app: FastAPI):
     if settings.database_url.startswith("sqlite"):
         await create_all()
     await ensure_official_releases(settings, object_store(settings))
+    promoted = await ensure_configured_super_admins(settings)
+    if promoted:
+        logger.warning("bootstrapped %s configured super administrator account(s)", promoted)
     logger.info(
         "world engine ready (pack=%s provider=%s)", settings.content_pack, settings.llm_provider
     )
@@ -216,6 +222,11 @@ def create_app() -> FastAPI:
     app.include_router(creator_assets.router, prefix="/api/v1")
     app.include_router(moderation.router, prefix="/api/v1")
     app.include_router(catalog.router, prefix="/api/v1")
+    app.include_router(commerce.router, prefix="/api/v1")
+    app.include_router(commerce.admin_router, prefix="/api/v1")
+    app.include_router(notifications.router, prefix="/api/v1")
+    app.include_router(support.router, prefix="/api/v1")
+    app.include_router(support.admin_router, prefix="/api/v1")
     app.include_router(playthroughs.router, prefix="/api/v1")
     app.include_router(gameplay.router, prefix="/api/v1")
     app.include_router(user_settings.router, prefix="/api/v1")

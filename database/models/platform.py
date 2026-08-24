@@ -264,6 +264,289 @@ class UsageLedgerORM(Base):
     )
 
 
+class WalletLedgerORM(Base):
+    """Append-only player credit ledger.
+
+    ``credit_delta`` is deliberately not cached on ``users``.  A balance is a
+    derived value, which means an operator can never silently overwrite a
+    player's financial history.  Reversals are represented by a new entry,
+    never a mutation or deletion of the original entry.
+    """
+
+    __tablename__ = "wallet_ledger"
+    __table_args__ = (
+        sa.UniqueConstraint("user_id", "idempotency_key", name="uq_wallet_ledger_idempotency"),
+        sa.CheckConstraint("credit_delta <> 0", name="ck_wallet_ledger_nonzero_delta"),
+    )
+
+    id: Mapped[str] = mapped_column(sa.String(36), primary_key=True)
+    user_id: Mapped[str] = mapped_column(
+        sa.String(36), sa.ForeignKey("users.id", ondelete="RESTRICT"), index=True
+    )
+    #: Positive values grant narrative credits; negative values settle usage,
+    #: refunds, chargebacks or a documented administrative correction.
+    credit_delta: Mapped[int] = mapped_column(sa.BigInteger)
+    entry_type: Mapped[str] = mapped_column(sa.String(32), index=True)
+    source_type: Mapped[str] = mapped_column(sa.String(40), default="")
+    source_id: Mapped[str | None] = mapped_column(sa.String(120), nullable=True, index=True)
+    idempotency_key: Mapped[str] = mapped_column(sa.String(120))
+    actor_id: Mapped[str | None] = mapped_column(
+        sa.String(36), sa.ForeignKey("users.id", ondelete="SET NULL"), nullable=True, index=True
+    )
+    reason: Mapped[str] = mapped_column(sa.Text, default="")
+    entry_metadata: Mapped[dict[str, Any]] = mapped_column(JSONType, default=dict)
+    expires_at: Mapped[datetime | None] = mapped_column(sa.DateTime(timezone=True), nullable=True)
+    created_at: Mapped[datetime] = mapped_column(
+        sa.DateTime(timezone=True), default=utcnow, index=True
+    )
+
+
+class WalletHoldORM(TimestampMixin, Base):
+    """A short-lived preauthorization for one platform-model turn.
+
+    A hold never changes a wallet balance by itself.  It merely prevents two
+    concurrent turns from spending the same credit.  Settlement writes an
+    immutable ``WalletLedgerORM`` entry, then marks this record settled or
+    released.  Storing the rate snapshot protects players from an operator
+    changing the price while a long streamed turn is still in progress.
+    """
+
+    __tablename__ = "wallet_holds"
+    __table_args__ = (
+        sa.UniqueConstraint("user_id", "idempotency_key", name="uq_wallet_hold_idempotency"),
+        sa.CheckConstraint("reserved_credits > 0", name="ck_wallet_hold_positive_reserve"),
+        sa.CheckConstraint(
+            "cost_microunits_per_credit > 0", name="ck_wallet_hold_positive_rate"
+        ),
+        sa.CheckConstraint("settled_credits >= 0", name="ck_wallet_hold_nonnegative_settlement"),
+        sa.CheckConstraint(
+            "settled_credits <= reserved_credits", name="ck_wallet_hold_settlement_within_reserve"
+        ),
+        sa.CheckConstraint(
+            "status IN ('held', 'settled', 'released', 'capped')", name="ck_wallet_hold_valid_status"
+        ),
+    )
+
+    id: Mapped[str] = mapped_column(sa.String(36), primary_key=True)
+    user_id: Mapped[str] = mapped_column(
+        sa.String(36), sa.ForeignKey("users.id", ondelete="RESTRICT"), index=True
+    )
+    playthrough_id: Mapped[str | None] = mapped_column(
+        sa.String(36), sa.ForeignKey("playthroughs.id", ondelete="SET NULL"), nullable=True, index=True
+    )
+    idempotency_key: Mapped[str] = mapped_column(sa.String(120))
+    status: Mapped[str] = mapped_column(sa.String(24), default="held", index=True)
+    reserved_credits: Mapped[int] = mapped_column(sa.BigInteger)
+    settled_credits: Mapped[int] = mapped_column(sa.BigInteger, default=0)
+    cost_microunits_per_credit: Mapped[int] = mapped_column(sa.BigInteger)
+    wallet_ledger_id: Mapped[str | None] = mapped_column(
+        sa.String(36), sa.ForeignKey("wallet_ledger.id", ondelete="SET NULL"), nullable=True, unique=True
+    )
+    expires_at: Mapped[datetime] = mapped_column(sa.DateTime(timezone=True), index=True)
+    hold_metadata: Mapped[dict[str, Any]] = mapped_column(JSONType, default=dict)
+
+
+class PaymentOrderORM(TimestampMixin, Base):
+    """A provider-neutral, immutable price snapshot for a checkout attempt.
+
+    Payment processor objects are external evidence, not the balance source of
+    truth.  A verified payment writes one corresponding ``WalletLedgerORM``
+    credit entry.  This table keeps the price, currency and channel that the
+    player actually saw so later catalog changes cannot rewrite history.
+    """
+
+    __tablename__ = "payment_orders"
+    __table_args__ = (
+        sa.UniqueConstraint("user_id", "idempotency_key", name="uq_payment_order_idempotency"),
+        sa.UniqueConstraint("provider", "provider_reference", name="uq_payment_order_provider_ref"),
+        sa.CheckConstraint("amount_minor >= 0", name="ck_payment_order_nonnegative_amount"),
+        sa.CheckConstraint("credit_amount > 0", name="ck_payment_order_positive_credits"),
+        sa.Index("ix_payment_orders_created_at", "created_at"),
+    )
+
+    id: Mapped[str] = mapped_column(sa.String(36), primary_key=True)
+    user_id: Mapped[str] = mapped_column(
+        sa.String(36), sa.ForeignKey("users.id", ondelete="RESTRICT"), index=True
+    )
+    plan_code: Mapped[str] = mapped_column(sa.String(80), default="")
+    provider: Mapped[str] = mapped_column(sa.String(40), default="")
+    provider_reference: Mapped[str | None] = mapped_column(sa.String(160), nullable=True)
+    status: Mapped[str] = mapped_column(sa.String(32), default="created", index=True)
+    currency: Mapped[str] = mapped_column(sa.String(8), default="CNY")
+    amount_minor: Mapped[int] = mapped_column(sa.BigInteger)
+    credit_amount: Mapped[int] = mapped_column(sa.BigInteger)
+    idempotency_key: Mapped[str] = mapped_column(sa.String(120))
+    checkout_url: Mapped[str | None] = mapped_column(sa.String(1_000), nullable=True)
+    expires_at: Mapped[datetime | None] = mapped_column(sa.DateTime(timezone=True), nullable=True)
+    settled_at: Mapped[datetime | None] = mapped_column(sa.DateTime(timezone=True), nullable=True)
+    order_metadata: Mapped[dict[str, Any]] = mapped_column(JSONType, default=dict)
+
+
+class CreditCampaignORM(TimestampMixin, Base):
+    """A bounded, non-cash promotional credit grant.
+
+    Campaigns do not represent a payment method or a transferable balance.
+    Each successful redemption still creates a normal immutable wallet ledger
+    entry, allowing operators to reverse a mistaken grant without editing
+    campaign history or a player's balance in place.
+    """
+
+    __tablename__ = "credit_campaigns"
+    __table_args__ = (
+        sa.CheckConstraint("credit_amount > 0", name="ck_credit_campaign_positive_credits"),
+        sa.CheckConstraint("redemption_count >= 0", name="ck_credit_campaign_nonnegative_redemptions"),
+        sa.CheckConstraint(
+            "max_redemptions IS NULL OR max_redemptions > 0",
+            name="ck_credit_campaign_positive_cap",
+        ),
+        sa.CheckConstraint("ends_at > starts_at", name="ck_credit_campaign_valid_window"),
+        sa.CheckConstraint(
+            "status IN ('draft', 'active', 'paused', 'ended')",
+            name="ck_credit_campaign_valid_status",
+        ),
+    )
+
+    id: Mapped[str] = mapped_column(sa.String(36), primary_key=True)
+    code: Mapped[str] = mapped_column(sa.String(48), unique=True, index=True)
+    name: Mapped[str] = mapped_column(sa.String(100))
+    description: Mapped[str] = mapped_column(sa.String(500), default="")
+    credit_amount: Mapped[int] = mapped_column(sa.BigInteger)
+    status: Mapped[str] = mapped_column(sa.String(16), default="draft", index=True)
+    starts_at: Mapped[datetime] = mapped_column(sa.DateTime(timezone=True), index=True)
+    ends_at: Mapped[datetime] = mapped_column(sa.DateTime(timezone=True), index=True)
+    max_redemptions: Mapped[int | None] = mapped_column(sa.BigInteger, nullable=True)
+    redemption_count: Mapped[int] = mapped_column(sa.BigInteger, default=0)
+    created_by: Mapped[str | None] = mapped_column(
+        sa.String(36), sa.ForeignKey("users.id", ondelete="SET NULL"), nullable=True
+    )
+    updated_by: Mapped[str | None] = mapped_column(
+        sa.String(36), sa.ForeignKey("users.id", ondelete="SET NULL"), nullable=True
+    )
+
+
+class SupportCaseORM(TimestampMixin, Base):
+    """A player-owned support case with an auditable operator lifecycle.
+
+    A case deliberately contains only the player-provided issue description and
+    an optional playthrough reference.  It never snapshots story prose, model
+    credentials, payment instruments, IP addresses or internal diagnostics.
+    """
+
+    __tablename__ = "support_cases"
+    __table_args__ = (
+        sa.CheckConstraint(
+            "category IN ('account', 'billing', 'playthrough', 'technical', 'content', 'other')",
+            name="ck_support_case_category",
+        ),
+        sa.CheckConstraint(
+            "status IN ('open', 'in_progress', 'waiting_user', 'resolved', 'closed')",
+            name="ck_support_case_status",
+        ),
+        sa.CheckConstraint(
+            "priority IN ('low', 'normal', 'high', 'urgent')",
+            name="ck_support_case_priority",
+        ),
+    )
+
+    id: Mapped[str] = mapped_column(sa.String(36), primary_key=True)
+    user_id: Mapped[str] = mapped_column(
+        sa.String(36), sa.ForeignKey("users.id", ondelete="CASCADE"), index=True
+    )
+    playthrough_id: Mapped[str | None] = mapped_column(
+        sa.String(36), sa.ForeignKey("playthroughs.id", ondelete="SET NULL"), nullable=True, index=True
+    )
+    category: Mapped[str] = mapped_column(sa.String(24), default="other", index=True)
+    status: Mapped[str] = mapped_column(sa.String(24), default="open", index=True)
+    priority: Mapped[str] = mapped_column(sa.String(16), default="normal", index=True)
+    subject: Mapped[str] = mapped_column(sa.String(140))
+    assigned_to: Mapped[str | None] = mapped_column(
+        sa.String(36), sa.ForeignKey("users.id", ondelete="SET NULL"), nullable=True, index=True
+    )
+
+
+class SupportCaseMessageORM(Base):
+    """Append-only player/operator conversation for a support case."""
+
+    __tablename__ = "support_case_messages"
+    __table_args__ = (
+        sa.CheckConstraint(
+            "author_role IN ('player', 'admin')", name="ck_support_case_message_author_role"
+        ),
+    )
+
+    id: Mapped[str] = mapped_column(sa.String(36), primary_key=True)
+    case_id: Mapped[str] = mapped_column(
+        sa.String(36), sa.ForeignKey("support_cases.id", ondelete="CASCADE"), index=True
+    )
+    author_id: Mapped[str | None] = mapped_column(
+        sa.String(36), sa.ForeignKey("users.id", ondelete="SET NULL"), nullable=True, index=True
+    )
+    author_role: Mapped[str] = mapped_column(sa.String(16))
+    body: Mapped[str] = mapped_column(sa.Text)
+    created_at: Mapped[datetime] = mapped_column(
+        sa.DateTime(timezone=True), default=utcnow, index=True
+    )
+
+
+class UserNotificationORM(Base):
+    """A small, player-owned in-product notification inbox entry."""
+
+    __tablename__ = "user_notifications"
+    __table_args__ = (
+        sa.CheckConstraint("length(title) > 0", name="ck_user_notification_title"),
+        sa.CheckConstraint("length(href) > 0", name="ck_user_notification_href"),
+    )
+
+    id: Mapped[str] = mapped_column(sa.String(36), primary_key=True)
+    user_id: Mapped[str] = mapped_column(
+        sa.String(36), sa.ForeignKey("users.id", ondelete="CASCADE"), index=True
+    )
+    kind: Mapped[str] = mapped_column(sa.String(64), index=True)
+    title: Mapped[str] = mapped_column(sa.String(160))
+    body: Mapped[str] = mapped_column(sa.String(500), default="")
+    href: Mapped[str] = mapped_column(sa.String(500))
+    read_at: Mapped[datetime | None] = mapped_column(sa.DateTime(timezone=True), nullable=True, index=True)
+    created_at: Mapped[datetime] = mapped_column(
+        sa.DateTime(timezone=True), default=utcnow, index=True
+    )
+
+
+class SuperAdminApprovalORM(TimestampMixin, Base):
+    """Dual-control record for the platform's break-glass administrator role.
+
+    A request is never a role change by itself.  A different super
+    administrator must approve it before the dedicated governance endpoint
+    changes ``user_roles``.  Retaining terminal requests makes elevation and
+    demotion reviewable even after an operator account is later scrubbed.
+    """
+
+    __tablename__ = "super_admin_approvals"
+    __table_args__ = (
+        sa.CheckConstraint(
+            "status IN ('pending', 'approved', 'rejected', 'cancelled', 'expired')",
+            name="ck_super_admin_approval_status",
+        ),
+        sa.CheckConstraint("length(request_reason) > 0", name="ck_super_admin_approval_reason"),
+    )
+
+    id: Mapped[str] = mapped_column(sa.String(36), primary_key=True)
+    requester_id: Mapped[str] = mapped_column(
+        sa.String(36), sa.ForeignKey("users.id", ondelete="RESTRICT"), index=True
+    )
+    target_user_id: Mapped[str] = mapped_column(
+        sa.String(36), sa.ForeignKey("users.id", ondelete="RESTRICT"), index=True
+    )
+    requested_enabled: Mapped[bool] = mapped_column(sa.Boolean)
+    request_reason: Mapped[str] = mapped_column(sa.String(500))
+    status: Mapped[str] = mapped_column(sa.String(16), default="pending", index=True)
+    approver_id: Mapped[str | None] = mapped_column(
+        sa.String(36), sa.ForeignKey("users.id", ondelete="SET NULL"), nullable=True, index=True
+    )
+    decision_reason: Mapped[str] = mapped_column(sa.String(500), default="")
+    expires_at: Mapped[datetime] = mapped_column(sa.DateTime(timezone=True), index=True)
+    executed_at: Mapped[datetime | None] = mapped_column(sa.DateTime(timezone=True), nullable=True)
+
+
 class DataExportORM(TimestampMixin, Base):
     __tablename__ = "data_exports"
     id: Mapped[str] = mapped_column(sa.String(36), primary_key=True)

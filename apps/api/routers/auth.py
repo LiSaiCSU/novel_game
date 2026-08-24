@@ -9,7 +9,7 @@ from typing import Annotated
 from urllib.parse import quote
 
 import sqlalchemy as sa
-from fastapi import APIRouter, Depends, HTTPException, Request, Response
+from fastapi import APIRouter, Depends, HTTPException, Query, Request, Response
 from pydantic import BaseModel, EmailStr, Field, field_validator
 
 from apps.api.deps import settings_dep, uow_dep
@@ -36,6 +36,7 @@ from apps.api.security import (
     verify_password,
     verify_totp,
 )
+from database.bootstrap import configured_super_admin_emails
 from database.models.platform import (
     AuditLogORM,
     AuthSessionORM,
@@ -101,6 +102,14 @@ class ResetPasswordRequest(TokenRequest):
     password: str = Field(min_length=12, max_length=256)
 
 
+class ChangePasswordRequest(BaseModel):
+    current_password: str = Field(min_length=1, max_length=256)
+    new_password: str = Field(min_length=12, max_length=256)
+    # An account with MFA must prove possession again before changing the
+    # primary credential. Recovery codes are accepted and consumed here too.
+    mfa_code: str = Field(default="", max_length=32)
+
+
 class MfaEnrollRequest(BaseModel):
     password: str = Field(min_length=1, max_length=256)
 
@@ -111,6 +120,10 @@ class MfaCodeRequest(BaseModel):
 
 class MfaDisableRequest(MfaCodeRequest):
     password: str = Field(min_length=1, max_length=256)
+
+
+class MfaRecoveryCodesRequest(MfaDisableRequest):
+    """Reissue recovery codes after password + possession verification."""
 
 
 class UserView(BaseModel):
@@ -314,6 +327,32 @@ def _consume_mfa_code(user: UserORM, code: str, settings: Settings) -> bool:
     return True
 
 
+def _security_audit(
+    *,
+    actor_id: str | None,
+    action: str,
+    request: Request,
+    details: dict[str, object] | None = None,
+) -> AuditLogORM:
+    """Create a small, user-visible security event without leaking credentials."""
+
+    return AuditLogORM(
+        id=new_id(),
+        actor_id=actor_id,
+        action=action,
+        target_type="user",
+        target_id=actor_id,
+        request_id=str(getattr(request.state, "request_id", "")),
+        details=details or {},
+    )
+
+
+def _affected_rows(result: object) -> int:
+    """SQLAlchemy's generic Result type does not expose rowcount statically."""
+
+    return int(getattr(result, "rowcount", 0) or 0)
+
+
 @router.post("/register", response_model=UserView, status_code=201)
 async def register(
     body: RegisterRequest,
@@ -407,6 +446,30 @@ async def verify_email(
         raise HTTPException(status_code=400, detail=INVALID_CODE_DETAIL)
     token.used_at = now
     user.email_verified_at = now
+    if user.email in configured_super_admin_emails(settings):
+        roles = set(
+            (
+                await uow.session.scalars(
+                    sa.select(UserRoleORM.role).where(UserRoleORM.user_id == user.id)
+                )
+            ).all()
+        )
+        added = {"admin", "super_admin"} - roles
+        if added:
+            uow.session.add_all(
+                UserRoleORM(id=new_id(), user_id=user.id, role=role) for role in added
+            )
+            uow.session.add(
+                AuditLogORM(
+                    id=new_id(),
+                    actor_id=None,
+                    action="system.super_admin_bootstrapped",
+                    target_type="user",
+                    target_id=user.id,
+                    request_id=str(getattr(request.state, "request_id", "")),
+                    details={"roles_added": sorted(added), "source": "SUPER_ADMIN_EMAILS"},
+                )
+            )
     await uow.commit()
     return await _user_view(uow, user)
 
@@ -545,6 +608,44 @@ async def me(
     return await _user_view(uow, user)
 
 
+@router.get("/security-events")
+async def security_events(
+    principal: Annotated[Principal, Depends(verified_principal)],
+    uow: SqlUnitOfWork = Depends(uow_dep),
+    limit: Annotated[int, Query(ge=1, le=50)] = 20,
+) -> dict[str, object]:
+    """A player-readable history of account security changes, not story data."""
+
+    rows = (
+        await uow.session.scalars(
+            sa.select(AuditLogORM)
+            .where(
+                AuditLogORM.target_type == "user",
+                AuditLogORM.target_id == principal.user_id,
+                AuditLogORM.action.like("auth.%"),
+            )
+            .order_by(AuditLogORM.created_at.desc())
+            .limit(limit)
+        )
+    ).all()
+    return {
+        "entries": [
+            {
+                "action": row.action,
+                "created_at": row.created_at,
+                # The server never returns tokens, recovery codes, raw IPs or
+                # user agents here. The small aggregate tells the account
+                # owner enough to understand a high-impact security action.
+                "sessions_revoked": int((row.details or {}).get("sessions_revoked", 0) or 0),
+                "recovery_codes_issued": int(
+                    (row.details or {}).get("recovery_codes_issued", 0) or 0
+                ),
+            }
+            for row in rows
+        ]
+    }
+
+
 @router.get("/mfa")
 async def mfa_status(
     principal: Annotated[Principal, Depends(verified_principal)],
@@ -626,6 +727,14 @@ async def confirm_mfa(
     user.mfa_enabled_at = datetime.now(UTC)
     user.mfa_last_counter = counter
     auth_session.mfa_verified_at = datetime.now(UTC)
+    uow.session.add(
+        _security_audit(
+            actor_id=user.id,
+            action="auth.mfa_enabled",
+            request=request,
+            details={"recovery_codes_issued": len(recovery_codes)},
+        )
+    )
     await uow.commit()
     return {"enabled": True, "recovery_codes": recovery_codes}
 
@@ -683,8 +792,54 @@ async def disable_mfa(
         .where(AuthSessionORM.user_id == user.id)
         .values(mfa_verified_at=None)
     )
+    uow.session.add(
+        _security_audit(
+            actor_id=user.id,
+            action="auth.mfa_disabled",
+            request=request,
+        )
+    )
     await uow.commit()
     return {"disabled": True}
+
+
+@router.post("/mfa/recovery-codes")
+async def rotate_mfa_recovery_codes(
+    body: MfaRecoveryCodesRequest,
+    request: Request,
+    principal: Annotated[Principal, Depends(require_csrf)],
+    uow: SqlUnitOfWork = Depends(uow_dep),
+    settings: Settings = Depends(settings_dep),
+) -> dict[str, object]:
+    """Replace every fallback code after proving password and MFA possession."""
+
+    await rate_limiter.check(
+        f"mfa-recovery-codes:{principal.user_id}:{_client_ip(request)}",
+        5,
+        3600,
+        redis_url=settings.redis_url,
+    )
+    user = await uow.session.scalar(
+        sa.select(UserORM).where(UserORM.id == principal.user_id).with_for_update()
+    )
+    auth_session = await uow.session.get(AuthSessionORM, principal.auth_session_id)
+    if user is None or auth_session is None or not verify_password(user.password_hash, body.password):
+        raise HTTPException(status_code=401, detail="password confirmation failed")
+    if user.mfa_enabled_at is None or not _consume_mfa_code(user, body.code, settings):
+        raise HTTPException(status_code=400, detail="MFA code or recovery code is invalid")
+    recovery_codes = [_recovery_code() for _ in range(10)]
+    user.mfa_recovery_hashes = [_recovery_digest(code, settings) for code in recovery_codes]
+    auth_session.mfa_verified_at = datetime.now(UTC)
+    uow.session.add(
+        _security_audit(
+            actor_id=user.id,
+            action="auth.mfa_recovery_codes_rotated",
+            request=request,
+            details={"recovery_codes_issued": len(recovery_codes)},
+        )
+    )
+    await uow.commit()
+    return {"recovery_codes": recovery_codes}
 
 
 @router.post("/forgot-password", status_code=202)
@@ -699,8 +854,38 @@ async def forgot_password(
     )
     email = normalize_email(str(body.email))
     user = await uow.session.scalar(sa.select(UserORM).where(UserORM.email == email))
-    if user is not None:
+    if user is not None and user.status == "active":
+        try:
+            await rate_limiter.check(
+                f"forgot-password-account:{token_hash(email, settings.auth_pepper)}",
+                3,
+                900,
+                redis_url=settings.redis_url,
+            )
+        except HTTPException:
+            # Do not turn a cooldown into an account-enumeration oracle. The
+            # caller always sees the same accepted response either way.
+            return {"status": "accepted"}
+        now = datetime.now(UTC)
+        # One recoverable password-reset link at a time is easier to reason
+        # about and removes stale inbox links after the user asks again.
+        await uow.session.execute(
+            sa.update(EmailTokenORM)
+            .where(
+                EmailTokenORM.user_id == user.id,
+                EmailTokenORM.purpose == "reset_password",
+                EmailTokenORM.used_at.is_(None),
+            )
+            .values(used_at=now)
+        )
         raw = await _issue_email_token(uow, settings, user.id, "reset_password")
+        uow.session.add(
+            _security_audit(
+                actor_id=user.id,
+                action="auth.password_reset_requested",
+                request=request,
+            )
+        )
         await uow.commit()
         url = f"{settings.public_app_url.rstrip('/')}/reset-password?token={raw}"
         await send_email(settings, email, "重置你的叙事世界密码", f"请在有效期内打开：{url}")
@@ -725,7 +910,7 @@ async def reset_password(
             EmailTokenORM.purpose == "reset_password",
             EmailTokenORM.used_at.is_(None),
             EmailTokenORM.expires_at > datetime.now(UTC),
-        )
+        ).with_for_update()
     )
     if token is None:
         raise HTTPException(status_code=400, detail="reset token is invalid or expired")
@@ -737,10 +922,94 @@ async def reset_password(
     except ValueError as exc:
         raise HTTPException(status_code=422, detail=str(exc)) from exc
     token.used_at = datetime.now(UTC)
-    await uow.session.execute(
+    revoked = await uow.session.execute(
         sa.update(AuthSessionORM)
         .where(AuthSessionORM.user_id == user.id, AuthSessionORM.revoked_at.is_(None))
         .values(revoked_at=datetime.now(UTC))
+    )
+    # A concurrent reset link (for example from a duplicate browser tab) must
+    # not stay live once the credential has changed.
+    await uow.session.execute(
+        sa.update(EmailTokenORM)
+        .where(
+            EmailTokenORM.user_id == user.id,
+            EmailTokenORM.purpose == "reset_password",
+            EmailTokenORM.used_at.is_(None),
+        )
+        .values(used_at=datetime.now(UTC))
+    )
+    uow.session.add(
+        _security_audit(
+            actor_id=user.id,
+            action="auth.password_reset_completed",
+            request=request,
+            details={"sessions_revoked": _affected_rows(revoked)},
+        )
+    )
+    await uow.commit()
+    _clear_auth_cookies(response, settings)
+    response.status_code = 204
+    return response
+
+
+@router.post("/change-password", status_code=204)
+async def change_password(
+    body: ChangePasswordRequest,
+    request: Request,
+    response: Response,
+    principal: Annotated[Principal, Depends(require_csrf)],
+    uow: SqlUnitOfWork = Depends(uow_dep),
+    settings: Settings = Depends(settings_dep),
+) -> Response:
+    """Change a live account password and invalidate every current session.
+
+    A stolen browser session must not be enough to silently replace a password:
+    the current password is always required, and MFA-enabled accounts must prove
+    possession again.  Signing every device out is deliberate; it creates a
+    clean post-change authentication boundary rather than guessing which device
+    should still be trusted.
+    """
+
+    await rate_limiter.check(
+        f"change-password:{principal.user_id}:{_client_ip(request)}",
+        5,
+        3600,
+        redis_url=settings.redis_url,
+    )
+    user = await uow.session.scalar(
+        sa.select(UserORM).where(UserORM.id == principal.user_id).with_for_update()
+    )
+    auth_session = await uow.session.get(AuthSessionORM, principal.auth_session_id)
+    if user is None or auth_session is None or not verify_password(user.password_hash, body.current_password):
+        raise HTTPException(status_code=401, detail="password confirmation failed")
+    if user.mfa_enabled_at is not None:
+        if not body.mfa_code or not _consume_mfa_code(user, body.mfa_code, settings):
+            raise HTTPException(status_code=400, detail="MFA code or recovery code is invalid")
+        auth_session.mfa_verified_at = datetime.now(UTC)
+    if settings.admin_mfa_required and principal.has_role("admin", "super_admin") and user.mfa_enabled_at is None:
+        raise HTTPException(
+            status_code=403,
+            detail={
+                "code": "admin_mfa_enrollment_required",
+                "message": "administrator MFA enrollment required",
+            },
+        )
+    try:
+        user.password_hash = hash_password(body.new_password)
+    except ValueError as exc:
+        raise HTTPException(status_code=422, detail=str(exc)) from exc
+    revoked = await uow.session.execute(
+        sa.update(AuthSessionORM)
+        .where(AuthSessionORM.user_id == user.id, AuthSessionORM.revoked_at.is_(None))
+        .values(revoked_at=datetime.now(UTC), mfa_verified_at=None)
+    )
+    uow.session.add(
+        _security_audit(
+            actor_id=user.id,
+            action="auth.password_changed",
+            request=request,
+            details={"sessions_revoked": _affected_rows(revoked)},
+        )
     )
     await uow.commit()
     _clear_auth_cookies(response, settings)
@@ -774,9 +1043,41 @@ async def sessions(
     ]
 
 
+@router.delete("/sessions", status_code=200)
+async def revoke_other_sessions(
+    request: Request,
+    principal: Annotated[Principal, Depends(require_csrf)],
+    uow: SqlUnitOfWork = Depends(uow_dep),
+) -> dict[str, int]:
+    """Keep the current browser while invalidating every other device."""
+
+    revoked = await uow.session.execute(
+        sa.update(AuthSessionORM)
+        .where(
+            AuthSessionORM.user_id == principal.user_id,
+            AuthSessionORM.id != principal.auth_session_id,
+            AuthSessionORM.revoked_at.is_(None),
+        )
+        .values(revoked_at=datetime.now(UTC), mfa_verified_at=None)
+    )
+    count = _affected_rows(revoked)
+    if count:
+        uow.session.add(
+            _security_audit(
+                actor_id=principal.user_id,
+                action="auth.other_sessions_revoked",
+                request=request,
+                details={"sessions_revoked": count},
+            )
+        )
+        await uow.commit()
+    return {"revoked": count}
+
+
 @router.delete("/sessions/{session_id}", status_code=204)
 async def revoke_session(
     session_id: str,
+    request: Request,
     principal: Annotated[Principal, Depends(require_csrf)],
     response: Response,
     uow: SqlUnitOfWork = Depends(uow_dep),
@@ -790,6 +1091,15 @@ async def revoke_session(
     if row is None:
         raise HTTPException(status_code=404, detail="session not found")
     row.revoked_at = datetime.now(UTC)
+    row.mfa_verified_at = None
+    uow.session.add(
+        _security_audit(
+            actor_id=principal.user_id,
+            action="auth.session_revoked",
+            request=request,
+            details={"current_session": row.id == principal.auth_session_id},
+        )
+    )
     await uow.commit()
     if row.id == principal.auth_session_id:
         _clear_auth_cookies(response, settings)

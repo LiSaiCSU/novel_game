@@ -4,17 +4,33 @@ from __future__ import annotations
 
 import json
 from datetime import UTC, datetime
+from hashlib import sha256
 from typing import Annotated, Any, Literal
 
 import sqlalchemy as sa
 import yaml
-from fastapi import APIRouter, Depends, File, HTTPException, Request, Response, UploadFile
+from fastapi import APIRouter, Depends, File, Form, HTTPException, Request, Response, UploadFile
 from pydantic import BaseModel, Field
 
+from apps.api.billing import (
+    InsufficientWalletCredits,
+    TurnReservation,
+    reserve_turn_credits,
+    settle_turn_credits,
+)
 from apps.api.content_import import IMPORT_MAX_BYTES, import_document
 from apps.api.creator_access import owned_project
+from apps.api.creator_ai import (
+    TEXT_IMPORT_MAX_BYTES,
+    blueprint_document,
+    creator_ai_runtime,
+    decode_story_text,
+    generate_blueprint,
+    record_creator_usage,
+)
 from apps.api.deps import settings_dep, uow_dep
 from apps.api.product_analytics import record_product_event
+from apps.api.runtime import release_runtime_service
 from apps.api.security import (
     Principal,
     opaque_token,
@@ -47,7 +63,9 @@ router = APIRouter(prefix="/creator", tags=["v1-creator"])
 
 
 class ProjectCreate(BaseModel):
-    slug: str = Field(pattern=r"^[a-z0-9]+(?:-[a-z0-9]+)*$", max_length=100)
+    slug: str | None = Field(
+        default=None, pattern=r"^[a-z0-9]+(?:-[a-z0-9]+)*$", max_length=100
+    )
     title: str = Field(min_length=1, max_length=120)
     summary: str = Field(default="", max_length=1000)
     locale: str = Field(default="zh-CN", max_length=20)
@@ -101,16 +119,19 @@ async def project_templates() -> list[dict[str, Any]]:
     return list_project_templates()
 
 
-@router.post("/projects", status_code=201)
-async def create_project(
+async def _create_project(
     body: ProjectCreate,
-    principal: Annotated[Principal, Depends(require_csrf)],
-    uow: SqlUnitOfWork = Depends(uow_dep),
+    principal: Principal,
+    uow: SqlUnitOfWork,
+    *,
+    project_metadata: dict[str, Any] | None = None,
+    commit: bool = True,
 ) -> dict[str, Any]:
     await set_tenant_context(uow.session, principal.user_id)
+    slug = body.slug or f"story-{new_id()}"
     collision = await uow.session.scalar(
         sa.select(ProjectORM.id).where(
-            ProjectORM.owner_id == principal.user_id, ProjectORM.slug == body.slug
+            ProjectORM.owner_id == principal.user_id, ProjectORM.slug == slug
         )
     )
     if collision:
@@ -122,7 +143,7 @@ async def create_project(
             else build_project_template(
                 body.template_key,
                 title=body.title,
-                slug=body.slug,
+                slug=slug,
                 summary=body.summary,
                 locale=body.locale,
                 rating=body.rating,
@@ -130,7 +151,7 @@ async def create_project(
         )
     except ValueError as exc:
         raise HTTPException(status_code=422, detail=str(exc)) from exc
-    if package.manifest.slug != body.slug:
+    if package.manifest.slug != slug:
         raise HTTPException(status_code=422, detail="project slug must match manifest slug")
     if package.manifest.trusted_rule_plugin:
         raise HTTPException(
@@ -139,12 +160,13 @@ async def create_project(
     project = ProjectORM(
         id=new_id(),
         owner_id=principal.user_id,
-        slug=body.slug,
+        slug=slug,
         title=package.manifest.title,
         summary=package.manifest.summary,
         locale=package.manifest.locale,
         rating=package.manifest.rating,
         current_revision=1,
+        project_metadata=dict(project_metadata or {}),
     )
     revision = ProjectRevisionORM(
         id=new_id(),
@@ -170,8 +192,18 @@ async def create_project(
         dedupe_key=project.id,
         properties={"template_key": body.template_key},
     )
-    await uow.commit()
+    if commit:
+        await uow.commit()
     return _project_view(project)
+
+
+@router.post("/projects", status_code=201)
+async def create_project(
+    body: ProjectCreate,
+    principal: Annotated[Principal, Depends(require_csrf)],
+    uow: SqlUnitOfWork = Depends(uow_dep),
+) -> dict[str, Any]:
+    return await _create_project(body, principal, uow)
 
 
 @router.post("/import", status_code=201)
@@ -199,7 +231,7 @@ async def import_project(
         package = ContentPackageV2.model_validate(document)
     except ValueError as exc:
         raise HTTPException(status_code=422, detail=str(exc)) from exc
-    return await create_project(
+    return await _create_project(
         ProjectCreate(
             slug=package.manifest.slug,
             title=package.manifest.title,
@@ -211,6 +243,199 @@ async def import_project(
         principal,
         uow,
     )
+
+
+@router.post("/import-story", status_code=201)
+async def import_story_text(
+    response: Response,
+    file: Annotated[UploadFile, File()],
+    idempotency_key: Annotated[str, Form(min_length=8, max_length=110)],
+    principal: Annotated[Principal, Depends(require_csrf)],
+    uow: SqlUnitOfWork = Depends(uow_dep),
+    settings: Settings = Depends(settings_dep),
+    title: Annotated[str, Form(max_length=120)] = "",
+    rating: Annotated[Literal["all", "13+", "16+", "18+"], Form()] = "16+",
+    model_mode: Annotated[Literal["platform", "byok"], Form()] = "platform",
+    provider: Annotated[str, Form(max_length=60)] = "",
+) -> dict[str, Any]:
+    """Turn a writer's text into an editable, compiler-safe starter project.
+
+    This is intentionally not a generic document-upload store.  The raw text
+    stays only in request memory, is sent once to the selected model, and is
+    discarded after a small, validated game draft is produced.  The hash lets
+    a retry prove it refers to the same source without retaining the source.
+    """
+
+    raw = await file.read(TEXT_IMPORT_MAX_BYTES + 1)
+    if len(raw) > TEXT_IMPORT_MAX_BYTES:
+        raise HTTPException(status_code=413, detail="text import exceeds the 1 MB limit")
+    try:
+        await scan_upload(settings, raw)
+    except UploadMalwareDetected as exc:
+        raise HTTPException(
+            status_code=422, detail="uploaded text failed malware screening"
+        ) from exc
+    except UploadScanUnavailable as exc:
+        raise HTTPException(
+            status_code=503, detail="upload screening is temporarily unavailable"
+        ) from exc
+    try:
+        text = decode_story_text(raw, file.filename or "story.txt")
+    except ValueError as exc:
+        raise HTTPException(status_code=422, detail=str(exc)) from exc
+
+    source_hash = sha256(raw).hexdigest()
+    await set_tenant_context(uow.session, principal.user_id)
+    slug = f"story-{sha256(f'{principal.user_id}:{idempotency_key}'.encode()).hexdigest()[:18]}"
+
+    async def start() -> dict[str, Any]:
+        existing = await uow.session.scalar(
+            sa.select(ProjectORM).where(
+                ProjectORM.owner_id == principal.user_id,
+                ProjectORM.slug == slug,
+            )
+        )
+        if existing is not None:
+            imported = dict(existing.project_metadata or {}).get("guided_text_import", {})
+            if imported.get("source_sha256") != source_hash:
+                raise HTTPException(
+                    status_code=409,
+                    detail={
+                        "code": "creator_import_key_reused",
+                        "message": "This retry key belongs to a different source text. Start a new import.",
+                    },
+                )
+            response.status_code = 200
+            return {**_project_view(existing), "idempotent_replay": True}
+
+        try:
+            runtime = await creator_ai_runtime(
+                uow=uow,
+                user_id=principal.user_id,
+                settings=settings,
+                mode=model_mode,
+                credential_provider=provider or None,
+            )
+        except ValueError as exc:
+            raise HTTPException(
+                status_code=409,
+                detail={
+                    "code": "creator_model_unavailable",
+                    "message": "The selected model is unavailable or your platform AI quota is exhausted.",
+                },
+            ) from exc
+
+        reservation: TurnReservation | None = None
+        if model_mode == "platform":
+            try:
+                reservation = await reserve_turn_credits(
+                    uow,
+                    user_id=principal.user_id,
+                    playthrough_id=None,
+                    # Wallet holds cap their key at 120 characters. The
+                    # client key permits 110 characters, so use a compact
+                    # namespace without silently truncating the caller key.
+                    idempotency_key=f"creator:{idempotency_key}",
+                    reservation_kind="creator",
+                )
+            except InsufficientWalletCredits as exc:
+                raise HTTPException(
+                    status_code=402,
+                    detail={"code": "insufficient_credits", "message": str(exc)},
+                ) from exc
+
+        try:
+            blueprint = await generate_blueprint(runtime, text=text, requested_title=title)
+            project_title = title.strip() or blueprint.title
+            package = blueprint_document(
+                blueprint,
+                slug=slug,
+                title=project_title,
+                rating=rating,
+            )
+            usage = await record_creator_usage(
+                runtime,
+                user_id=principal.user_id,
+                uow=uow,
+            )
+            created = await _create_project(
+                ProjectCreate(
+                    slug=slug,
+                    title=project_title,
+                    summary=package.manifest.summary,
+                    locale=package.manifest.locale,
+                    rating=rating,
+                    document=package.model_dump(mode="json"),
+                    template_key="guided_text_import",
+                ),
+                principal,
+                uow,
+                project_metadata={
+                    "guided_text_import": {
+                        "source_sha256": source_hash,
+                        "source_characters": len(text),
+                        "model_mode": model_mode,
+                    }
+                },
+                commit=False,
+            )
+            await record_product_event(
+                uow,
+                principal,
+                "creator_text_imported",
+                project_id=created["id"],
+                dedupe_key=f"creator-text:{created['id']}",
+                properties={"source_characters": len(text), "model_mode": model_mode},
+            )
+            if reservation is None:
+                await uow.commit()
+            else:
+                await settle_turn_credits(
+                    uow,
+                    reservation,
+                    billable_cost_microunits=usage.billable_cost_microunits,
+                    action_completed=True,
+                )
+            return {**created, "idempotent_replay": False}
+        except HTTPException:
+            await uow.rollback()
+            usage = await record_creator_usage(runtime, user_id=principal.user_id, uow=uow)
+            if reservation is None:
+                await uow.commit()
+            else:
+                await settle_turn_credits(
+                    uow,
+                    reservation,
+                    billable_cost_microunits=usage.billable_cost_microunits,
+                    action_completed=False,
+                )
+            raise
+        except Exception as exc:
+            # The model call may have produced partial usage records.  Record
+            # them for operations, but release the hold because no draft was
+            # delivered to the writer.
+            await uow.rollback()
+            usage = await record_creator_usage(runtime, user_id=principal.user_id, uow=uow)
+            if reservation is None:
+                await uow.commit()
+            else:
+                await settle_turn_credits(
+                    uow,
+                    reservation,
+                    billable_cost_microunits=usage.billable_cost_microunits,
+                    action_completed=False,
+                )
+            raise HTTPException(
+                status_code=502,
+                detail={
+                    "code": "creator_draft_failed",
+                    "message": "We could not create a draft. Your text was not saved; please try again.",
+                },
+            ) from exc
+
+    locks = release_runtime_service.infrastructure.lock_backend(settings)
+    async with locks.acquire(f"creator-text-import:{principal.user_id}:{idempotency_key}"):
+        return await start()
 
 
 @router.get("/projects")

@@ -11,6 +11,12 @@ import sqlalchemy as sa
 from fastapi import APIRouter, Depends, HTTPException, Response
 from pydantic import BaseModel, Field
 
+from apps.api.billing import (
+    InsufficientWalletCredits,
+    TurnReservation,
+    reserve_turn_credits,
+    settle_turn_credits,
+)
 from apps.api.deps import settings_dep, uow_dep
 from apps.api.product_analytics import record_product_event
 from apps.api.runtime import (
@@ -21,8 +27,8 @@ from apps.api.runtime import (
 )
 from apps.api.security import Principal, require_csrf, token_hash, verified_principal
 from apps.api.tenancy import set_tenant_context
-from database.models.orm import SaveSlotORM
-from database.models.platform import ContentReleaseORM, PlaythroughORM
+from database.models.orm import NarrativeSegmentORM, SaveSlotORM
+from database.models.platform import ContentReleaseORM, PlaythroughORM, WalletHoldORM
 from database.repositories.sql import SqlUnitOfWork
 from database.saves import SaveService
 from database.seeding import persist_bundle
@@ -81,6 +87,10 @@ class PlaythroughCreate(BaseModel):
     player_config: dict[str, Any] = Field(default_factory=dict)
     preview: bool = False
     share_token: str | None = None
+    # Creating a story can ask the platform model to write a paid opening.
+    # A caller that wants that service must provide the same retry protection
+    # as a normal paid turn.  BYOK and creator previews do not use it.
+    idempotency_key: str | None = Field(default=None, min_length=8, max_length=110)
 
 
 class PlayAction(BaseModel):
@@ -271,92 +281,237 @@ async def _ending_snapshot(
     return package, session, state, context, evaluations
 
 
+async def _opening_start_response(
+    uow: SqlUnitOfWork,
+    playthrough: PlaythroughORM,
+    settings: Settings,
+) -> dict[str, Any]:
+    """Rebuild a successful start response without invoking the model again.
+
+    A browser can lose the response after the opening was generated and paid
+    for.  The durable narrative log, rather than an in-memory response cache,
+    is the source of truth for retrying that start request.
+    """
+
+    release = await uow.session.get(ContentReleaseORM, playthrough.release_id)
+    session = await uow.sessions.get(playthrough.game_session_id or "")
+    if release is None or session is None:
+        raise HTTPException(status_code=409, detail="playthrough runtime is incomplete")
+    rows = (
+        await uow.session.scalars(
+            sa.select(NarrativeSegmentORM)
+            .where(NarrativeSegmentORM.session_id == session.id)
+            .order_by(NarrativeSegmentORM.created_at.asc(), NarrativeSegmentORM.id.asc())
+        )
+    ).all()
+    opening = next((row.text for row in rows if row.kind == "chapter" and row.text.strip()), None)
+    if opening is None:
+        raise HTTPException(
+            status_code=409,
+            detail={
+                "code": "playthrough_opening_unavailable",
+                "message": "the original opening did not finish; start again with a new request key",
+            },
+        )
+    beat: dict[str, Any] | None = None
+    for row in rows:
+        if row.kind != BEAT_SEGMENT:
+            continue
+        try:
+            candidate = json.loads(row.text)
+        except (TypeError, ValueError):
+            continue
+        if isinstance(candidate, dict):
+            beat = candidate
+            break
+    pack = release_content_cache.resolve(release, settings)
+    state = await build_world_state(uow, pack, session.world_id, session.player_character_id)
+    return {
+        "id": playthrough.id,
+        "release_id": release.id,
+        "session_id": session.id,
+        "opening": opening,
+        "beat": beat,
+        "choices": await _opening_choices(uow, session.id),
+        "state": state.scene_summary(),
+        "idempotent_replay": True,
+    }
+
+
 @router.post("/playthroughs", status_code=201)
 async def create_playthrough(
     body: PlaythroughCreate,
+    response: Response,
     principal: Annotated[Principal, Depends(require_csrf)],
     uow: SqlUnitOfWork = Depends(uow_dep),
     settings: Settings = Depends(settings_dep),
 ) -> dict[str, Any]:
     await set_tenant_context(uow.session, principal.user_id)
-    release = await uow.session.get(ContentReleaseORM, body.release_id)
-    if release is None or release.moderation_status not in {"approved"}:
-        raise HTTPException(status_code=404, detail="release not found")
-    if body.preview and release.owner_id != principal.user_id:
-        raise HTTPException(status_code=404, detail="release not found")
-    if not body.preview and release.visibility not in {"public", "unlisted"}:
-        raise HTTPException(status_code=404, detail="release not found")
-    if release.visibility == "unlisted" and release.owner_id != principal.user_id:
-        supplied = token_hash(body.share_token or "", settings.auth_pepper)
-        if not release.share_token_hash or supplied != release.share_token_hash:
+
+    async def start() -> dict[str, Any]:
+        release = await uow.session.get(ContentReleaseORM, body.release_id)
+        if release is None or release.moderation_status not in {"approved"}:
             raise HTTPException(status_code=404, detail="release not found")
-    scenario = body.scenario_key or release.artifact["manifest"]["entry_scenario"]
-    allowed = {item["key"] for item in release.artifact["content"]["scenarios"]}
-    if scenario not in allowed:
-        raise HTTPException(status_code=422, detail="scenario does not exist")
-    pack = release_content_cache.resolve(release, settings)
-    bundle = build_world(
-        pack,
-        world_seed=f"play-{new_id()}",
-        player=_player_spec(release, body),
-        session_seed=f"session-{new_id()}",
-    )
-    assert bundle.session is not None
-    player_config = dict(body.player_config)
-    requested_length = str(player_config.get("narrative_length") or DEFAULT_NARRATIVE_LENGTH)
-    if requested_length not in NARRATIVE_LENGTH_PRESETS:
-        raise HTTPException(status_code=422, detail="unknown narrative length preset")
-    player_config["narrative_length"] = requested_length
-    player_config["narrative_max_chars"] = NARRATIVE_LENGTH_PRESETS[requested_length]["max_chars"]
-    playthrough = PlaythroughORM(
-        id=new_id(),
-        user_id=principal.user_id,
-        release_id=release.id,
-        scenario_key=scenario,
-        world_id=bundle.world.id,
-        game_session_id=bundle.session.id,
-        name=body.name,
-        is_preview=body.preview,
-        expires_at=datetime.now(UTC) + timedelta(hours=24) if body.preview else None,
-        player_config=player_config,
-    )
-    bundle.world.release_id = release.id
-    bundle.world.playthrough_id = playthrough.id
-    bundle.session.playthrough_id = playthrough.id
-    runtime = await _runtime_for(release, playthrough, principal, uow, settings)
-    uow.session.add(playthrough)
-    # RLS on worlds checks the owning playthrough. Flush the owner row first so
-    # the policy can see it in this same transaction.
-    await uow.session.flush()
-    await persist_bundle(uow.session, bundle)
-    await uow.commit()
-    player = bundle.character_by_key(PLAYER_KEY)
-    assert player is not None
-    state = await build_world_state(uow, runtime.pack, bundle.world.id, player.id)
-    prologue = await runtime.orchestrator.open_session(uow, bundle.session, state)
-    await release_runtime_service.record_usage(runtime, principal.user_id, playthrough.id, uow)
-    await record_product_event(
-        uow,
-        principal,
-        "preview_started" if body.preview else "playthrough_started",
-        playthrough_id=playthrough.id,
-        release_id=release.id,
-        dedupe_key=playthrough.id,
-        properties={
-            "scenario_key": scenario,
-            **({"model_mode": runtime.credential_mode} if not body.preview else {}),
-        },
-    )
-    await uow.commit()
-    return {
-        "id": playthrough.id,
-        "release_id": release.id,
-        "session_id": bundle.session.id,
-        "opening": prologue.text,
-        "beat": prologue.beat.model_dump(mode="json") if prologue.beat else None,
-        "choices": await _opening_choices(uow, bundle.session.id),
-        "state": state.scene_summary(),
-    }
+        if body.preview and release.owner_id != principal.user_id:
+            raise HTTPException(status_code=404, detail="release not found")
+        if not body.preview and release.visibility not in {"public", "unlisted"}:
+            raise HTTPException(status_code=404, detail="release not found")
+        if release.visibility == "unlisted" and release.owner_id != principal.user_id:
+            supplied = token_hash(body.share_token or "", settings.auth_pepper)
+            if not release.share_token_hash or supplied != release.share_token_hash:
+                raise HTTPException(status_code=404, detail="release not found")
+        scenario = body.scenario_key or release.artifact["manifest"]["entry_scenario"]
+        allowed = {item["key"] for item in release.artifact["content"]["scenarios"]}
+        if scenario not in allowed:
+            raise HTTPException(status_code=422, detail="scenario does not exist")
+
+        # A completed paid opening is durable even if its HTTP response was
+        # lost.  Check it before resolving credentials or making a new model
+        # reservation, so retries remain available during a later outage.
+        opening_key = f"opening:{body.idempotency_key}" if body.idempotency_key else None
+        if opening_key:
+            existing_hold = await uow.session.scalar(
+                sa.select(WalletHoldORM).where(
+                    WalletHoldORM.user_id == principal.user_id,
+                    WalletHoldORM.idempotency_key == opening_key,
+                )
+            )
+            if existing_hold is not None and existing_hold.playthrough_id:
+                existing_playthrough = await uow.session.scalar(
+                    sa.select(PlaythroughORM).where(
+                        PlaythroughORM.id == existing_hold.playthrough_id,
+                        PlaythroughORM.user_id == principal.user_id,
+                    )
+                )
+                if existing_playthrough is not None:
+                    response.status_code = 200
+                    return await _opening_start_response(uow, existing_playthrough, settings)
+
+        pack = release_content_cache.resolve(release, settings)
+        bundle = build_world(
+            pack,
+            world_seed=f"play-{new_id()}",
+            player=_player_spec(release, body),
+            session_seed=f"session-{new_id()}",
+        )
+        assert bundle.session is not None
+        player_config = dict(body.player_config)
+        requested_length = str(player_config.get("narrative_length") or DEFAULT_NARRATIVE_LENGTH)
+        if requested_length not in NARRATIVE_LENGTH_PRESETS:
+            raise HTTPException(status_code=422, detail="unknown narrative length preset")
+        player_config["narrative_length"] = requested_length
+        player_config["narrative_max_chars"] = NARRATIVE_LENGTH_PRESETS[requested_length]["max_chars"]
+        playthrough = PlaythroughORM(
+            id=new_id(),
+            user_id=principal.user_id,
+            release_id=release.id,
+            scenario_key=scenario,
+            world_id=bundle.world.id,
+            game_session_id=bundle.session.id,
+            name=body.name,
+            is_preview=body.preview,
+            expires_at=datetime.now(UTC) + timedelta(hours=24) if body.preview else None,
+            player_config=player_config,
+        )
+        bundle.world.release_id = release.id
+        bundle.world.playthrough_id = playthrough.id
+        bundle.session.playthrough_id = playthrough.id
+        runtime = await _runtime_for(release, playthrough, principal, uow, settings)
+
+        reservation: TurnReservation | None = None
+        if not body.preview and runtime.credential_mode != "byok":
+            try:
+                reservation = await reserve_turn_credits(
+                    uow,
+                    user_id=principal.user_id,
+                    # The game has not been written yet.  Link the durable
+                    # hold after its owner row is flushed below.
+                    playthrough_id=None,
+                    idempotency_key=opening_key,
+                    reservation_kind="opening",
+                )
+            except InsufficientWalletCredits as exc:
+                raise HTTPException(
+                    status_code=402,
+                    detail={"code": "insufficient_credits", "message": str(exc)},
+                ) from exc
+
+        try:
+            uow.session.add(playthrough)
+            # RLS on worlds checks the owning playthrough. Flush the owner row first so
+            # the policy can see it in this same transaction.
+            await uow.session.flush()
+            await persist_bundle(uow.session, bundle)
+            if reservation is not None:
+                hold = await uow.session.scalar(
+                    sa.select(WalletHoldORM)
+                    .where(WalletHoldORM.id == reservation.hold_id)
+                    .with_for_update()
+                )
+                if hold is None:
+                    raise HTTPException(status_code=409, detail="opening reservation is unavailable")
+                if hold.playthrough_id not in {None, playthrough.id}:
+                    raise HTTPException(status_code=409, detail="opening reservation is already linked")
+                hold.playthrough_id = playthrough.id
+            await uow.commit()
+            player = bundle.character_by_key(PLAYER_KEY)
+            assert player is not None
+            state = await build_world_state(uow, runtime.pack, bundle.world.id, player.id)
+            prologue = await runtime.orchestrator.open_session(uow, bundle.session, state)
+            usage = await release_runtime_service.record_usage(
+                runtime, principal.user_id, playthrough.id, uow
+            )
+            await settle_turn_credits(
+                uow,
+                reservation,
+                billable_cost_microunits=usage.billable_cost_microunits,
+                action_completed=not prologue.degraded,
+            )
+        except Exception:
+            # The reservation was intentionally committed before inference.
+            # Never leave it frozen, and never charge for an opening that did
+            # not return a usable chapter.
+            await uow.rollback()
+            usage = await release_runtime_service.record_usage(
+                runtime, principal.user_id, playthrough.id, uow
+            )
+            await settle_turn_credits(
+                uow,
+                reservation,
+                billable_cost_microunits=usage.billable_cost_microunits,
+                action_completed=False,
+            )
+            raise
+
+        await record_product_event(
+            uow,
+            principal,
+            "preview_started" if body.preview else "playthrough_started",
+            playthrough_id=playthrough.id,
+            release_id=release.id,
+            dedupe_key=playthrough.id,
+            properties={
+                "scenario_key": scenario,
+                **({"model_mode": runtime.credential_mode} if not body.preview else {}),
+            },
+        )
+        await uow.commit()
+        return {
+            "id": playthrough.id,
+            "release_id": release.id,
+            "session_id": bundle.session.id,
+            "opening": prologue.text,
+            "beat": prologue.beat.model_dump(mode="json") if prologue.beat else None,
+            "choices": await _opening_choices(uow, bundle.session.id),
+            "state": state.scene_summary(),
+            "idempotent_replay": False,
+        }
+
+    if body.idempotency_key:
+        locks = release_runtime_service.infrastructure.lock_backend(settings)
+        async with locks.acquire(f"playthrough-opening:{principal.user_id}:{body.idempotency_key}"):
+            return await start()
+    return await start()
 
 
 @router.get("/playthroughs")

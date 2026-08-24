@@ -35,6 +35,8 @@ async def test_metrics_use_route_templates_and_prometheus_format(client) -> None
     assert "text/plain" in response.headers["content-type"]
     assert "narrative_http_requests_total" in response.text
     assert 'route="/api/health"' in response.text
+    assert "narrative_http_request_duration_seconds_bucket" in response.text
+    assert 'le="+Inf"' in response.text
 
 
 async def test_admin_quota_and_role_controls_are_authorized_and_audited(client) -> None:
@@ -276,6 +278,14 @@ def _code_from(email_body: str) -> str:
     return match.group(1)
 
 
+def _reset_token_from(email_body: str) -> str:
+    import re
+
+    match = re.search(r"[?&]token=([A-Za-z0-9_-]{20,})", email_body)
+    assert match, email_body
+    return match.group(1)
+
+
 async def test_registration_emails_a_four_digit_code_that_verifies_idempotently(
     client, sent_emails
 ) -> None:
@@ -469,6 +479,162 @@ async def test_mfa_recovery_code_is_single_use_and_totp_replay_is_rejected(clien
     assert second.status_code == 400
 
 
+async def test_password_reset_replaces_stale_links_and_revokes_sessions(client, sent_emails) -> None:
+    """Only the newest reset email can change a password, even across tabs."""
+
+    registered = await client.post(
+        "/api/v1/auth/register",
+        json={
+            "email": "reset-player@example.com",
+            "password": "correct-horse-reset",
+            "display_name": "重置玩家",
+        },
+    )
+    assert registered.status_code == 201
+    first_request = await client.post(
+        "/api/v1/auth/forgot-password", json={"email": "reset-player@example.com"}
+    )
+    second_request = await client.post(
+        "/api/v1/auth/forgot-password", json={"email": "reset-player@example.com"}
+    )
+    assert first_request.status_code == second_request.status_code == 202
+    assert len(sent_emails) == 3
+    stale_token = _reset_token_from(sent_emails[1][2])
+    current_token = _reset_token_from(sent_emails[2][2])
+
+    stale = await client.post(
+        "/api/v1/auth/reset-password",
+        json={"token": stale_token, "password": "new-correct-horse-reset"},
+    )
+    assert stale.status_code == 400
+    completed = await client.post(
+        "/api/v1/auth/reset-password",
+        json={"token": current_token, "password": "new-correct-horse-reset"},
+    )
+    assert completed.status_code == 204
+    assert (
+        await client.post(
+            "/api/v1/auth/login",
+            json={"email": "reset-player@example.com", "password": "correct-horse-reset"},
+        )
+    ).status_code == 401
+    assert (
+        await client.post(
+            "/api/v1/auth/login",
+            json={"email": "reset-player@example.com", "password": "new-correct-horse-reset"},
+        )
+    ).status_code == 200
+
+
+async def test_live_password_change_and_recovery_code_rotation_are_step_up_protected(
+    client, sent_emails
+) -> None:
+    """MFA users can recover safely without leaving old devices trusted."""
+
+    import time
+
+    from apps.api.security import _totp
+
+    registered = await client.post(
+        "/api/v1/auth/register",
+        json={
+            "email": "security-player@example.com",
+            "password": "correct-horse-security",
+            "display_name": "安全玩家",
+        },
+    )
+    assert registered.status_code == 201
+    verified = await client.post(
+        "/api/v1/auth/verify-email",
+        json={"email": "security-player@example.com", "code": _code_from(sent_emails[0][2])},
+    )
+    assert verified.status_code == 200, verified.text
+    csrf = client.cookies.get("ng_csrf")
+    enrollment = await client.post(
+        "/api/v1/auth/mfa/enroll",
+        headers={"X-CSRF-Token": csrf},
+        json={"password": "correct-horse-security"},
+    )
+    assert enrollment.status_code == 200, enrollment.text
+    confirmed = await client.post(
+        "/api/v1/auth/mfa/confirm",
+        headers={"X-CSRF-Token": csrf},
+        json={"code": _totp(enrollment.json()["secret"], int(time.time() // 30))},
+    )
+    assert confirmed.status_code == 200, confirmed.text
+    original_codes = confirmed.json()["recovery_codes"]
+
+    rotated = await client.post(
+        "/api/v1/auth/mfa/recovery-codes",
+        headers={"X-CSRF-Token": csrf},
+        json={"password": "correct-horse-security", "code": original_codes[0]},
+    )
+    assert rotated.status_code == 200, rotated.text
+    new_codes = rotated.json()["recovery_codes"]
+    assert len(new_codes) == 10
+    stale_code = await client.post(
+        "/api/v1/auth/mfa/step-up",
+        headers={"X-CSRF-Token": csrf},
+        json={"code": original_codes[1]},
+    )
+    assert stale_code.status_code == 400
+
+    changed = await client.post(
+        "/api/v1/auth/change-password",
+        headers={"X-CSRF-Token": csrf},
+        json={
+            "current_password": "correct-horse-security",
+            "new_password": "new-correct-horse-security",
+            "mfa_code": new_codes[0],
+        },
+    )
+    assert changed.status_code == 204, changed.text
+    assert (await client.get("/api/v1/auth/me")).status_code == 401
+    assert (
+        await client.post(
+            "/api/v1/auth/login",
+            json={"email": "security-player@example.com", "password": "correct-horse-security"},
+        )
+    ).status_code == 401
+    assert (
+        await client.post(
+            "/api/v1/auth/login",
+            json={"email": "security-player@example.com", "password": "new-correct-horse-security"},
+        )
+    ).status_code == 200
+    events = await client.get("/api/v1/auth/security-events")
+    assert events.status_code == 200, events.text
+    actions = [entry["action"] for entry in events.json()["entries"]]
+    assert "auth.mfa_recovery_codes_rotated" in actions
+    assert "auth.password_changed" in actions
+    assert all(set(entry) == {"action", "created_at", "sessions_revoked", "recovery_codes_issued"} for entry in events.json()["entries"])
+
+
+async def test_user_can_revoke_every_other_session_without_logging_out(client) -> None:
+    registered = await client.post(
+        "/api/v1/auth/register",
+        json={
+            "email": "session-player@example.com",
+            "password": "correct-horse-session",
+            "display_name": "设备玩家",
+        },
+    )
+    assert registered.status_code == 201
+    second_login = await client.post(
+        "/api/v1/auth/login",
+        json={"email": "session-player@example.com", "password": "correct-horse-session"},
+    )
+    assert second_login.status_code == 200
+    csrf = client.cookies.get("ng_csrf")
+    revoked = await client.delete("/api/v1/auth/sessions", headers={"X-CSRF-Token": csrf})
+    assert revoked.status_code == 200, revoked.text
+    assert revoked.json()["revoked"] == 1
+    remaining = await client.get("/api/v1/auth/sessions")
+    assert remaining.status_code == 200, remaining.text
+    assert len(remaining.json()) == 1
+    assert remaining.json()[0]["current"] is True
+
+
 async def test_new_device_login_is_detected_without_leaking_password_state(client) -> None:
     import sqlalchemy as sa
 
@@ -604,6 +770,132 @@ async def test_creator_can_start_from_server_verified_template(client) -> None:
     assert validated.status_code == 200
     assert validated.json()["valid"] is True
     assert validated.json()["author_tests"]["passed_count"] == 2
+
+    # The guided "start from an idea" flow intentionally hides a URL slug.
+    # The server creates an immutable safe identifier instead of asking a
+    # first-time writer to understand a technical routing field.
+    guided = await client.post(
+        "/api/v1/creator/projects",
+        headers={"X-CSRF-Token": csrf},
+        json={
+            "title": "不必填写网址的故事",
+            "summary": "角色必须在黎明前交出一封没有署名的信。",
+            "template_key": "relationship_drama",
+        },
+    )
+    assert guided.status_code == 201, guided.text
+    guided_project = await client.get(f"/api/v1/creator/projects/{guided.json()['id']}")
+    assert guided_project.status_code == 200
+    assert guided_project.json()["document"]["manifest"]["slug"].startswith("story-")
+
+
+async def test_creator_txt_import_creates_safe_draft_and_replays_idempotently(
+    client, monkeypatch
+) -> None:
+    import sqlalchemy as sa
+
+    import database.session as db_session
+    from apps.api.creator_ai import CreatorUsageSettlement, StoryBlueprint
+    from apps.api.routers import creator as creator_router
+    from database.models.platform import ProjectORM
+
+    blueprint = StoryBlueprint.model_validate(
+        {
+            "title": "模型提取的标题",
+            "summary": "一封信让夜班管理员不得不追查真相。",
+            "tags": ["悬疑"],
+            "world_name": "雨夜旧城",
+            "world_description": "连日暴雨掩盖着车站的秘密。",
+            "opening_title": "没有收件人的信",
+            "opening_premise": "打烊前，玩家在失物柜发现明天日期的来信。",
+            "central_conflict": "有人试图夺走那封信。",
+            "central_question": "寄信人如何知道明天？",
+            "next_story_beat": "追查雨伞上的车站编号。",
+            "narrative_tone": "克制、有时间压力。",
+            "source_summary": "一名夜班管理员发现来自未来的信。",
+            "locations": [
+                {"name": "失物招领处", "description": "潮湿的柜台和储物柜。"},
+                {"name": "末班车站", "description": "只剩雨声的站台。"},
+            ],
+            "characters": [
+                {"name": "林雾", "role": "夜班管理员", "goal": "找出寄信人", "tension": "害怕预言成真"},
+                {"name": "周澈", "role": "失物常客", "goal": "拿回雨伞", "tension": "隐瞒车站编号"},
+            ],
+        }
+    )
+
+    async def fake_runtime(**_kwargs):
+        return object()
+
+    async def fake_generate(_runtime, *, text: str, requested_title: str = ""):
+        assert "只应存在于请求内存中的原文" in text
+        assert requested_title == "雨夜失物招领处"
+        return blueprint
+
+    async def fake_usage(*_args, **_kwargs):
+        return CreatorUsageSettlement(billable_cost_microunits=0, records=0)
+
+    monkeypatch.setattr(creator_router, "creator_ai_runtime", fake_runtime)
+    monkeypatch.setattr(creator_router, "generate_blueprint", fake_generate)
+    monkeypatch.setattr(creator_router, "record_creator_usage", fake_usage)
+
+    registered = await client.post(
+        "/api/v1/auth/register",
+        json={
+            "email": "txt-author@example.com",
+            "password": "correct-horse-txt",
+            "display_name": "TXT 作者",
+        },
+    )
+    assert registered.status_code == 201
+    csrf = client.cookies.get("ng_csrf")
+    form = {
+        "idempotency_key": "creator-text-import-0001",
+        "title": "雨夜失物招领处",
+        "rating": "16+",
+        "model_mode": "platform",
+    }
+    source = "只应存在于请求内存中的原文\n第一章：雨落下来".encode()
+    created = await client.post(
+        "/api/v1/creator/import-story",
+        headers={"X-CSRF-Token": csrf},
+        data=form,
+        files={"file": ("chapter.txt", source, "text/plain")},
+    )
+    assert created.status_code == 201, created.text
+    project_id = created.json()["id"]
+    assert created.json()["idempotent_replay"] is False
+
+    project = await client.get(f"/api/v1/creator/projects/{project_id}")
+    assert project.status_code == 200
+    assert project.json()["document"]["manifest"]["title"] == "雨夜失物招领处"
+    assert project.json()["document"]["content"]["scenarios"][0]["title"] == "没有收件人的信"
+
+    replay = await client.post(
+        "/api/v1/creator/import-story",
+        headers={"X-CSRF-Token": csrf},
+        data=form,
+        files={"file": ("chapter.txt", source, "text/plain")},
+    )
+    assert replay.status_code == 200, replay.text
+    assert replay.json()["id"] == project_id
+    assert replay.json()["idempotent_replay"] is True
+
+    maker = db_session.get_sessionmaker()
+    async with maker() as session:
+        row = await session.scalar(sa.select(ProjectORM).where(ProjectORM.id == project_id))
+        assert row is not None
+        metadata = row.project_metadata["guided_text_import"]
+        assert metadata["source_characters"] == len(source.decode())
+        assert "只应存在于请求内存中的原文" not in str(row.project_metadata)
+
+    changed_source = await client.post(
+        "/api/v1/creator/import-story",
+        headers={"X-CSRF-Token": csrf},
+        data=form,
+        files={"file": ("chapter.txt", b"a different manuscript", "text/plain")},
+    )
+    assert changed_source.status_code == 409
 
 
 async def test_release_gate_rejects_failed_or_missing_declared_author_tests(client) -> None:
@@ -764,10 +1056,13 @@ async def test_product_analytics_requires_consent_and_withdrawal_erases_events(c
 async def test_due_account_worker_scrubs_identity_and_private_access(client) -> None:
     from datetime import UTC, datetime, timedelta
 
+    import sqlalchemy as sa
+
     import database.session as db_session
     from apps.worker.tasks import purge_due_accounts
-    from database.models.platform import UserORM
+    from database.models.platform import SupportCaseORM, UserNotificationORM, UserORM
     from engine.core.config import Settings
+    from engine.core.ids import new_id
 
     registered = await client.post(
         "/api/v1/auth/register",
@@ -779,12 +1074,32 @@ async def test_due_account_worker_scrubs_identity_and_private_access(client) -> 
     )
     user_id = registered.json()["id"]
     csrf = client.cookies.get("ng_csrf")
+    support_case = await client.post(
+        "/api/v1/support/cases",
+        headers={"X-CSRF-Token": csrf},
+        json={
+            "category": "account",
+            "subject": "Delete account support record",
+            "message": "This private correspondence must be erased with the account.",
+        },
+    )
+    assert support_case.status_code == 201, support_case.text
     scheduled = await client.delete("/api/v1/settings/account", headers={"X-CSRF-Token": csrf})
     assert scheduled.status_code == 202
     maker = db_session.get_sessionmaker()
     async with maker() as session:
         user = await session.get(UserORM, user_id)
         assert user is not None
+        session.add(
+            UserNotificationORM(
+                id=new_id(),
+                user_id=user_id,
+                kind="support.reply",
+                title="Private notification",
+                body="This must be erased with the account.",
+                href="/support",
+            )
+        )
         user.delete_after = datetime.now(UTC) - timedelta(seconds=1)
         await session.commit()
     assert await purge_due_accounts(Settings(require_verified_email=False)) == 1
@@ -795,9 +1110,31 @@ async def test_due_account_worker_scrubs_identity_and_private_access(client) -> 
         assert user.email == f"deleted-{user_id}@invalid.local"
         assert user.display_name == ""
         assert user.platform_quota_monthly == 0
+        remaining_support = int(
+            await session.scalar(
+                sa.select(sa.func.count())
+                .select_from(SupportCaseORM)
+                .where(SupportCaseORM.user_id == user_id)
+            )
+            or 0
+        )
+        assert remaining_support == 0
+        remaining_notifications = int(
+            await session.scalar(
+                sa.select(sa.func.count())
+                .select_from(UserNotificationORM)
+                .where(UserNotificationORM.user_id == user_id)
+            )
+            or 0
+        )
+        assert remaining_notifications == 0
 
 
 async def test_async_personal_export_excludes_secrets_and_is_owner_only(client) -> None:
+    import database.session as db_session
+    from database.models.platform import UserNotificationORM
+    from engine.core.ids import new_id
+
     registered = await client.post(
         "/api/v1/auth/register",
         json={
@@ -807,7 +1144,31 @@ async def test_async_personal_export_excludes_secrets_and_is_owner_only(client) 
         },
     )
     assert registered.status_code == 201
+    user_id = registered.json()["id"]
     csrf = client.cookies.get("ng_csrf")
+    support_case = await client.post(
+        "/api/v1/support/cases",
+        headers={"X-CSRF-Token": csrf},
+        json={
+            "category": "technical",
+            "subject": "Export my support record",
+            "message": "This correspondence is part of my personal data export.",
+        },
+    )
+    assert support_case.status_code == 201, support_case.text
+    maker = db_session.get_sessionmaker()
+    async with maker() as session:
+        session.add(
+            UserNotificationORM(
+                id=new_id(),
+                user_id=user_id,
+                kind="campaign.redeemed",
+                title="活动权益已到账",
+                body="Export credit notification",
+                href="/wallet",
+            )
+        )
+        await session.commit()
     created = await client.post("/api/v1/settings/data-exports", headers={"X-CSRF-Token": csrf})
     assert created.status_code == 202, created.text
     assert created.json()["status"] == "ready"
@@ -822,6 +1183,10 @@ async def test_async_personal_export_excludes_secrets_and_is_owner_only(client) 
     assert "encrypted_secret" not in serialized
     assert "turn_traces" not in serialized
     assert all("payload" not in save for save in document["saves"])
+    assert document["support_cases"][0]["subject"] == "Export my support record"
+    assert document["support_messages"][0]["body"] == "This correspondence is part of my personal data export."
+    assert document["notifications"][0]["title"] == "活动权益已到账"
+    assert document["notifications"][0]["href"] == "/wallet"
     assert document["account"]["product_analytics"] is False
     assert document["product_events"] == []
 

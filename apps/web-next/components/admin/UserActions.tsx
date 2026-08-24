@@ -116,11 +116,43 @@ export default function UserActions({
     }
   }
 
+  async function adjustWallet() {
+    const raw = window.prompt(`调整 ${user.email} 的叙点余额（正数发放，负数扣减）`, "100");
+    if (raw === null) return;
+    const creditDelta = Number(raw);
+    if (!Number.isSafeInteger(creditDelta) || creditDelta === 0) return;
+    const reason = reasonFor(`${creditDelta > 0 ? "发放" : "扣减"} ${user.email} 的叙点`);
+    if (!reason) return;
+    if (
+      !window.confirm(
+        `确认${creditDelta > 0 ? "发放" : "扣减"} ${Math.abs(creditDelta).toLocaleString()} 叙点？此操作会写入不可变账本。`,
+      )
+    )
+      return;
+    await run(() =>
+      api(`/admin/commerce/users/${user.id}/adjustments`, {
+        method: "POST",
+        body: JSON.stringify({
+          credit_delta: creditDelta,
+          reason,
+          entry_type: creditDelta > 0 ? "grant" : "adjustment",
+          idempotency_key: crypto.randomUUID(),
+        }),
+      }),
+    );
+  }
+
   async function openStory(playthroughId: string) {
+    const reason = reasonFor(`查看 ${user.email} 的故事正文（只读）`);
+    if (!reason) return;
     setBusy(true);
     try {
       const detail = await api<{ chapters: Chapter[] }>(
         `/admin/users/${user.id}/inspect/${playthroughId}`,
+        {
+          method: "POST",
+          body: JSON.stringify({ reason }),
+        },
       );
       setChapters(detail.chapters);
     } catch (exception) {
@@ -160,6 +192,9 @@ export default function UserActions({
         )}
         <button type="button" disabled={busy} onClick={() => void simple("usage/reset", "重置本月用量")}>
           重置本月用量
+        </button>
+        <button type="button" disabled={busy} onClick={() => void adjustWallet()}>
+          调整叙点
         </button>
         <button type="button" disabled={busy} onClick={() => void inspect()}>
           只读查看存档

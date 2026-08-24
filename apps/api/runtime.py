@@ -12,6 +12,7 @@ from typing import Literal
 import sqlalchemy as sa
 
 from apps.api.llm_config import load_platform_llm_config
+from apps.api.metrics import commerce_metrics
 from apps.api.security import SecretBox
 from database.models.platform import (
     ContentReleaseORM,
@@ -133,6 +134,15 @@ class ReleaseRuntime:
     settings: Settings
 
 
+@dataclass(frozen=True, slots=True)
+class UsageSettlement:
+    """Provider cost recorded for observability and the fair player charge."""
+
+    records: int = 0
+    total_cost_microunits: int = 0
+    billable_cost_microunits: int = 0
+
+
 class ReleaseContentCache:
     """Caches immutable content only; mutable LLM traces never cross requests."""
 
@@ -194,6 +204,48 @@ class RuntimeInfrastructure:
         return backend
 
 
+async def platform_tokens_available(
+    user_id: str, uow: SqlUnitOfWork, settings: Settings
+) -> int:
+    """Return the remaining platform-funded quota for any model feature.
+
+    Gameplay and creator assistance are both platform-funded inference. They
+    must draw down the same user-scoped daily/monthly budget rather than
+    letting an authoring endpoint bypass the controls placed on play.
+    """
+
+    now = datetime.now(UTC)
+    day_start = now.replace(hour=0, minute=0, second=0, microsecond=0)
+    month_start = day_start.replace(day=1)
+    token_sum = sa.func.coalesce(
+        sa.func.sum(UsageLedgerORM.input_tokens + UsageLedgerORM.output_tokens), 0
+    )
+    daily = int(
+        await uow.session.scalar(
+            sa.select(token_sum).where(
+                UsageLedgerORM.user_id == user_id,
+                UsageLedgerORM.created_at >= day_start,
+                UsageLedgerORM.provider != "byok",
+            )
+        )
+        or 0
+    )
+    monthly = int(
+        await uow.session.scalar(
+            sa.select(token_sum).where(
+                UsageLedgerORM.user_id == user_id,
+                UsageLedgerORM.created_at >= month_start,
+                UsageLedgerORM.provider != "byok",
+            )
+        )
+        or 0
+    )
+    user = await uow.session.get(UserORM, user_id)
+    user_monthly = user.platform_quota_monthly if user else settings.llm_monthly_token_limit
+    monthly_limit = min(settings.llm_monthly_token_limit, user_monthly)
+    return min(settings.llm_daily_token_limit - daily, monthly_limit - monthly)
+
+
 class ReleaseRuntimeService:
     def __init__(self, content: ReleaseContentCache, infrastructure: RuntimeInfrastructure) -> None:
         self.content = content
@@ -238,7 +290,7 @@ class ReleaseRuntimeService:
             available = settings.llm_turn_token_limit
         else:
             credential_mode = "platform"
-            available = await self._platform_tokens_available(user_id, uow, settings)
+            available = await platform_tokens_available(user_id, uow, settings)
             if available <= 0:
                 raise InferenceQuotaExceeded("platform inference quota exhausted")
             try:
@@ -266,47 +318,13 @@ class ReleaseRuntimeService:
             settings=runtime_settings,
         )
 
-    async def _platform_tokens_available(
-        self, user_id: str, uow: SqlUnitOfWork, settings: Settings
-    ) -> int:
-        now = datetime.now(UTC)
-        day_start = now.replace(hour=0, minute=0, second=0, microsecond=0)
-        month_start = day_start.replace(day=1)
-        token_sum = sa.func.coalesce(
-            sa.func.sum(UsageLedgerORM.input_tokens + UsageLedgerORM.output_tokens), 0
-        )
-        daily = int(
-            await uow.session.scalar(
-                sa.select(token_sum).where(
-                    UsageLedgerORM.user_id == user_id,
-                    UsageLedgerORM.created_at >= day_start,
-                    UsageLedgerORM.provider != "byok",
-                )
-            )
-            or 0
-        )
-        monthly = int(
-            await uow.session.scalar(
-                sa.select(token_sum).where(
-                    UsageLedgerORM.user_id == user_id,
-                    UsageLedgerORM.created_at >= month_start,
-                    UsageLedgerORM.provider != "byok",
-                )
-            )
-            or 0
-        )
-        user = await uow.session.get(UserORM, user_id)
-        user_monthly = user.platform_quota_monthly if user else settings.llm_monthly_token_limit
-        monthly_limit = min(settings.llm_monthly_token_limit, user_monthly)
-        return min(settings.llm_daily_token_limit - daily, monthly_limit - monthly)
-
     async def record_usage(
         self,
         runtime: ReleaseRuntime,
         user_id: str,
         playthrough_id: str,
         uow: SqlUnitOfWork,
-    ) -> None:
+    ) -> UsageSettlement:
         llm = runtime.orchestrator.d.llm
         records = list(llm.records) if llm is not None else []
         now = datetime.now(UTC)
@@ -321,6 +339,7 @@ class ReleaseRuntimeService:
             or 0
         )
         added_cost = 0
+        billable_cost = 0
         for record in records:
             cost = 0
             if runtime.credential_mode != "byok":
@@ -332,6 +351,9 @@ class ReleaseRuntimeService:
                     record.completion_tokens,
                 )
             added_cost += cost
+            billable = record.valid and not record.degraded
+            if billable:
+                billable_cost += cost
             uow.session.add(
                 UsageLedgerORM(
                     id=new_id(),
@@ -342,11 +364,17 @@ class ReleaseRuntimeService:
                     input_tokens=record.prompt_tokens,
                     output_tokens=record.completion_tokens,
                     cost_microunits=cost,
-                    success=record.valid and not record.degraded,
+                    success=billable,
                 )
             )
+            commerce_metrics.llm_usage(
+                provider="byok" if runtime.credential_mode == "byok" else record.provider,
+                model=record.model,
+                tokens=record.prompt_tokens + record.completion_tokens,
+                cost_microunits=cost,
+                success=billable,
+            )
         if records:
-            await uow.commit()
             threshold = runtime.settings.llm_daily_cost_alert_microunits
             if threshold and prior_cost < threshold <= prior_cost + added_cost:
                 logger.warning(
@@ -354,6 +382,11 @@ class ReleaseRuntimeService:
                     prior_cost + added_cost,
                     threshold,
                 )
+        return UsageSettlement(
+            records=len(records),
+            total_cost_microunits=added_cost,
+            billable_cost_microunits=billable_cost,
+        )
 
 
 release_content_cache = ReleaseContentCache()

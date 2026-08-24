@@ -32,10 +32,29 @@ type MfaStatus = {
   recovery_codes_remaining: number;
 };
 type MfaEnrollment = { secret: string; otpauth_uri: string };
+type SecurityEvent = {
+  action: string;
+  created_at: string;
+  sessions_revoked: number;
+  recovery_codes_issued: number;
+};
 type Privacy = {
   product_analytics: boolean;
   consent_updated_at?: string | null;
   collection: { events: string; never: string[]; retention: string };
+};
+
+const securityActionLabels: Record<string, string> = {
+  "auth.login_failed": "检测到一次未成功的登录尝试",
+  "auth.login_anomaly": "检测到新设备登录",
+  "auth.mfa_enabled": "已启用双重验证",
+  "auth.mfa_disabled": "已关闭双重验证",
+  "auth.mfa_recovery_codes_rotated": "已重新生成恢复码",
+  "auth.password_reset_requested": "已请求密码重置邮件",
+  "auth.password_reset_completed": "已通过邮件重置密码",
+  "auth.password_changed": "已在账户设置中更改密码",
+  "auth.other_sessions_revoked": "已撤销其他登录设备",
+  "auth.session_revoked": "已撤销一个登录设备",
 };
 
 export default function Settings() {
@@ -44,11 +63,15 @@ export default function Settings() {
   const [usage, setUsage] = useState<Usage>();
   const [sessions, setSessions] = useState<Session[]>([]);
   const [mfa, setMfa] = useState<MfaStatus>();
+  const [securityEvents, setSecurityEvents] = useState<SecurityEvent[]>([]);
   const [privacy, setPrivacy] = useState<Privacy>();
   const [mfaEnrollment, setMfaEnrollment] = useState<MfaEnrollment>();
   const [mfaPassword, setMfaPassword] = useState("");
   const [mfaCode, setMfaCode] = useState("");
   const [recoveryCodes, setRecoveryCodes] = useState<string[]>([]);
+  const [currentPassword, setCurrentPassword] = useState("");
+  const [newPassword, setNewPassword] = useState("");
+  const [passwordMfaCode, setPasswordMfaCode] = useState("");
   const [message, setMessage] = useState("");
   const [providerPreset, setProviderPreset] = useState("compatible:deepseek");
   const [baseUrl, setBaseUrl] = useState("https://api.deepseek.com");
@@ -67,12 +90,14 @@ export default function Settings() {
       api<Usage>("/settings/llm-usage"),
       api<Session[]>("/auth/sessions"),
       api<MfaStatus>("/auth/mfa"),
+      api<{ entries: SecurityEvent[] }>("/auth/security-events"),
       api<Privacy>("/settings/privacy"),
-    ]).then(([credentials, nextUsage, devices, mfaStatus, privacyPreferences]) => {
+    ]).then(([credentials, nextUsage, devices, mfaStatus, nextSecurityEvents, privacyPreferences]) => {
       setKeys(credentials);
       setUsage(nextUsage);
       setSessions(devices);
       setMfa(mfaStatus);
+      setSecurityEvents(nextSecurityEvents?.entries ?? []);
       setPrivacy(privacyPreferences);
     });
 
@@ -125,6 +150,29 @@ export default function Settings() {
     setMessage(session.current ? "当前设备已退出。" : "设备会话已撤销。");
     if (session.current) router.push("/login");
     else await load();
+  }
+
+  async function revokeOtherSessions() {
+    const result = await api<{ revoked: number }>("/auth/sessions", { method: "DELETE" });
+    setMessage(result.revoked ? `已撤销 ${result.revoked} 台其他设备。` : "没有其他活跃设备。");
+    await load();
+  }
+
+  async function changePassword(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    await api("/auth/change-password", {
+      method: "POST",
+      body: JSON.stringify({
+        current_password: currentPassword,
+        new_password: newPassword,
+        mfa_code: passwordMfaCode,
+      }),
+    });
+    setCurrentPassword("");
+    setNewPassword("");
+    setPasswordMfaCode("");
+    setMessage("密码已更新，所有设备均已退出。请使用新密码重新登录。");
+    router.push("/login");
   }
 
   async function exportData() {
@@ -214,6 +262,17 @@ export default function Settings() {
     setMfaCode("");
     setRecoveryCodes([]);
     setMessage("双重验证已关闭。");
+    await load();
+  }
+
+  async function rotateRecoveryCodes() {
+    const result = await api<{ recovery_codes: string[] }>("/auth/mfa/recovery-codes", {
+      method: "POST",
+      body: JSON.stringify({ password: mfaPassword, code: mfaCode }),
+    });
+    setRecoveryCodes(result.recovery_codes);
+    setMfaCode("");
+    setMessage("已生成新的恢复码；此前所有恢复码均已失效，请立即离线保存新码。");
     await load();
   }
 
@@ -384,7 +443,20 @@ export default function Settings() {
         </section>
 
         <section className="panel">
-          <h2>登录设备</h2>
+          <div className="entityToolbar">
+            <div>
+              <h2>登录设备</h2>
+              <p>发现陌生设备时，可只保留当前设备。</p>
+            </div>
+            {sessions.length > 1 && (
+              <button
+                className="dangerLink"
+                onClick={() => revokeOtherSessions().catch((exception) => setMessage(exception.message))}
+              >
+                撤销其他设备
+              </button>
+            )}
+          </div>
           {sessions.map((session) => (
             <div className="credentialRow" key={session.id}>
               <span>
@@ -404,6 +476,53 @@ export default function Settings() {
             </div>
           ))}
         </section>
+
+        <form className="panel stack" onSubmit={(event) => void changePassword(event)}>
+          <div>
+            <h2>更改密码</h2>
+            <p className="studioHint">
+              修改后会立即撤销所有登录设备。若已启用双重验证，还需要输入当前验证码或一枚恢复码。
+            </p>
+          </div>
+          <label className="field">
+            <span>当前密码</span>
+            <input
+              className="input"
+              type="password"
+              autoComplete="current-password"
+              value={currentPassword}
+              onChange={(event) => setCurrentPassword(event.target.value)}
+              required
+            />
+          </label>
+          <label className="field">
+            <span>新密码（至少 12 位）</span>
+            <input
+              className="input"
+              type="password"
+              minLength={12}
+              autoComplete="new-password"
+              value={newPassword}
+              onChange={(event) => setNewPassword(event.target.value)}
+              required
+            />
+          </label>
+          {mfa?.enabled && (
+            <label className="field">
+              <span>双重验证代码或恢复码</span>
+              <input
+                className="input"
+                autoComplete="one-time-code"
+                value={passwordMfaCode}
+                onChange={(event) => setPasswordMfaCode(event.target.value)}
+                required
+              />
+            </label>
+          )}
+          <button className="button primary" disabled={!currentPassword || !newPassword || (mfa?.enabled && !passwordMfaCode)}>
+            更新密码并退出所有设备
+          </button>
+        </form>
 
         <section className="panel stack mfaPanel" id="mfa">
           <div>
@@ -489,7 +608,7 @@ export default function Settings() {
             <>
               <p className="studioHint">剩余恢复码：{mfa.recovery_codes_remaining}</p>
               <label className="field">
-                <span>关闭时再次确认密码</span>
+                <span>安全操作时再次确认密码</span>
                 <input
                   className="input"
                   type="password"
@@ -498,6 +617,13 @@ export default function Settings() {
                   autoComplete="current-password"
                 />
               </label>
+              <button
+                className="button secondary"
+                disabled={!mfaPassword || !mfaCode}
+                onClick={() => rotateRecoveryCodes().catch((exception) => setMessage(exception.message))}
+              >
+                重新生成恢复码
+              </button>
               <button
                 className="dangerLink"
                 disabled={!mfaPassword || !mfaCode}
@@ -514,6 +640,34 @@ export default function Settings() {
                 <code key={code}>{code}</code>
               ))}
             </div>
+          )}
+        </section>
+
+        <section className="panel stack securityEventsPanel">
+          <div>
+            <h2>账户安全记录</h2>
+            <p className="studioHint">仅显示与登录、密码、双重验证和设备撤销有关的事件，不包含故事内容或密钥。</p>
+          </div>
+          {securityEvents.length ? (
+            <div className="securityEvents">
+              {securityEvents.map((entry) => (
+                <article key={`${entry.action}-${entry.created_at}`}>
+                  <div>
+                    <b>{securityActionLabels[entry.action] ?? entry.action}</b>
+                    <small>{new Date(entry.created_at).toLocaleString("zh-CN")}</small>
+                  </div>
+                  {(entry.sessions_revoked > 0 || entry.recovery_codes_issued > 0) && (
+                    <span>
+                      {entry.sessions_revoked > 0 && `已撤销 ${entry.sessions_revoked} 个会话`}
+                      {entry.sessions_revoked > 0 && entry.recovery_codes_issued > 0 && " · "}
+                      {entry.recovery_codes_issued > 0 && `已签发 ${entry.recovery_codes_issued} 枚恢复码`}
+                    </span>
+                  )}
+                </article>
+              ))}
+            </div>
+          ) : (
+            <p className="studioHint">尚无可显示的账户安全事件。</p>
           )}
         </section>
 

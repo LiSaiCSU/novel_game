@@ -6,6 +6,13 @@ import { api } from "@/lib/api";
 import { interfaceLabel, roleLabels } from "@/lib/display";
 import PlatformModelPanel from "@/components/admin/PlatformModelPanel";
 import PlatformOpsPanel from "@/components/admin/PlatformOpsPanel";
+import CommerceOpsPanel from "@/components/admin/CommerceOpsPanel";
+import CatalogOpsPanel from "@/components/admin/CatalogOpsPanel";
+import CampaignOpsPanel from "@/components/admin/CampaignOpsPanel";
+import AuditTrailPanel from "@/components/admin/AuditTrailPanel";
+import OperationsAlertsPanel from "@/components/admin/OperationsAlertsPanel";
+import SuperAdminPanel from "@/components/admin/SuperAdminPanel";
+import SupportOpsPanel from "@/components/admin/SupportOpsPanel";
 import UserActions from "@/components/admin/UserActions";
 
 type Summary = {
@@ -14,6 +21,23 @@ type Summary = {
   pending_moderation: number;
   llm_tokens: number;
   llm_failures: number;
+  operations_window_hours: number;
+  llm_calls_24h: number;
+  llm_failures_24h: number;
+  llm_failure_rate_24h: number;
+  llm_tokens_24h: number;
+  llm_cost_microunits_24h: number;
+  active_sessions: number;
+  security_events_24h: number;
+  support_open_cases: number;
+  support_unassigned_cases: number;
+  model_usage_24h: {
+    provider: string;
+    calls: number;
+    tokens: number;
+    cost_microunits: number;
+    failures: number;
+  }[];
 };
 type User = {
   id: string;
@@ -161,6 +185,67 @@ export default function AdminCenter() {
               <b>{summary?.llm_failures ?? 0}</b>
             </article>
           </section>
+          <section className="panel stack operationsHealth" id="operations-health">
+            <div className="entityToolbar">
+              <div>
+                <h2>运行健康</h2>
+                <p>最近 {summary?.operations_window_hours ?? 24} 小时的聚合信号；不包含玩家身份、故事正文或密钥。</p>
+              </div>
+              <span className={summary?.llm_failures_24h ? "statusPill pending" : "statusPill live"}>
+                {summary?.llm_failures_24h ? "需要关注模型失败" : "模型调用正常"}
+              </span>
+            </div>
+            <div className="operationsHealthGrid">
+              <article>
+                <span>模型调用</span>
+                <b>{(summary?.llm_calls_24h ?? 0).toLocaleString()}</b>
+              </article>
+              <article>
+                <span>失败率</span>
+                <b>{((summary?.llm_failure_rate_24h ?? 0) * 100).toFixed(2)}%</b>
+              </article>
+              <article>
+                <span>模型 Token</span>
+                <b>{(summary?.llm_tokens_24h ?? 0).toLocaleString()}</b>
+              </article>
+              <article>
+                <span>成本（微单位）</span>
+                <b>{(summary?.llm_cost_microunits_24h ?? 0).toLocaleString()}</b>
+              </article>
+              <article>
+                <span>活跃会话</span>
+                <b>{(summary?.active_sessions ?? 0).toLocaleString()}</b>
+              </article>
+              <article>
+                <span>安全事件</span>
+                <b>{(summary?.security_events_24h ?? 0).toLocaleString()}</b>
+              </article>
+              <article>
+                <span>待处理支持请求</span>
+                <b>{(summary?.support_open_cases ?? 0).toLocaleString()}</b>
+              </article>
+              <article>
+                <span>未分派请求</span>
+                <b>{(summary?.support_unassigned_cases ?? 0).toLocaleString()}</b>
+              </article>
+            </div>
+            {summary?.model_usage_24h.length ? (
+              <div className="modelHealthRows">
+                {summary.model_usage_24h.map((row) => (
+                  <article key={row.provider}>
+                    <b>{row.provider}</b>
+                    <span>{row.calls.toLocaleString()} 次调用</span>
+                    <span>{row.tokens.toLocaleString()} Token</span>
+                    <span>{row.cost_microunits.toLocaleString()} 微单位</span>
+                    <span className={row.failures ? "healthWarning" : ""}>{row.failures} 次失败</span>
+                  </article>
+                ))}
+              </div>
+            ) : (
+              <p className="studioHint">这个窗口尚无平台或 BYOK 模型用量记录。</p>
+            )}
+          </section>
+          <OperationsAlertsPanel />
           <PlatformModelPanel />
           <section className="panel stack">
             <div className="entityToolbar">
@@ -196,6 +281,12 @@ export default function AdminCenter() {
             </p>
           </section>
           <PlatformOpsPanel onChanged={() => load(query).catch((x) => setError(x.message))} />
+          <CommerceOpsPanel />
+          <CatalogOpsPanel />
+          <CampaignOpsPanel />
+          <SupportOpsPanel />
+          <AuditTrailPanel />
+          <SuperAdminPanel users={users} />
           <section className="panel">
             <div className="entityToolbar">
               <div>

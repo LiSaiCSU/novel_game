@@ -78,7 +78,10 @@ sudo bash scripts/promote-admin.sh 你的邮箱@example.com
 
 重新登录后即可执行管理员操作。命令同时授予 `admin` 和 `reviewer`，不会修改密码或跳过邮箱
 验证。MFA 默认是可选的；需要强制管理员二次验证时，将生产环境中的
-`ADMIN_MFA_REQUIRED` 改为 `true` 并重新部署。
+`ADMIN_MFA_REQUIRED` 改为 `true` 并重新部署。生产环境还应在首次管理员完成邮箱验证前设置
+`SUPER_ADMIN_EMAILS=owner@example.com`（支持逗号分隔）。该部署侧白名单只负责首次授予
+`admin` + `super_admin`；之后的授权与撤销必须在已完成 MFA step-up 的最高权限治理面板中完成，
+并且系统拒绝撤销最后一名超级管理员。
 
 ## 3. 日常更新
 

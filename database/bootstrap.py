@@ -15,6 +15,7 @@ from PIL import Image
 import database.session as db_session
 from database.models.platform import (
     AssetORM,
+    AuditLogORM,
     ContentReleaseORM,
     ProjectORM,
     ProjectRevisionORM,
@@ -32,6 +33,69 @@ SYSTEM_USER_ID = "00000000-0000-0000-0000-000000000001"
 
 class AssetStore(Protocol):
     async def put(self, key: str, payload: bytes, content_type: str) -> None: ...
+
+
+def configured_super_admin_emails(settings: Settings) -> frozenset[str]:
+    """Return an intentionally deployment-owned list of bootstrap accounts."""
+
+    return frozenset(
+        item.strip().casefold()
+        for item in settings.super_admin_emails.replace("\n", ",").split(",")
+        if item.strip()
+    )
+
+
+async def ensure_configured_super_admins(settings: Settings) -> int:
+    """Grant the break-glass role only to verified, server-configured users.
+
+    This solves the initial-admin problem without giving an ordinary database
+    administrator a browser-accessible way to bootstrap the highest role.
+    Removing an address from the environment does *not* silently demote an
+    account; demotion remains a deliberate, audited super-admin operation.
+    """
+
+    emails = configured_super_admin_emails(settings)
+    if not emails:
+        return 0
+    maker = db_session.get_sessionmaker(settings)
+    async with maker() as session:
+        users = (
+            await session.scalars(
+                sa.select(UserORM).where(
+                    UserORM.email.in_(emails),
+                    UserORM.email_verified_at.is_not(None),
+                    UserORM.status == "active",
+                )
+            )
+        ).all()
+        promoted = 0
+        for user in users:
+            existing = set(
+                (
+                    await session.scalars(
+                        sa.select(UserRoleORM.role).where(UserRoleORM.user_id == user.id)
+                    )
+                ).all()
+            )
+            added = {"admin", "super_admin"} - existing
+            if not added:
+                continue
+            session.add_all(UserRoleORM(id=new_id(), user_id=user.id, role=role) for role in added)
+            session.add(
+                AuditLogORM(
+                    id=new_id(),
+                    actor_id=None,
+                    action="system.super_admin_bootstrapped",
+                    target_type="user",
+                    target_id=user.id,
+                    request_id="bootstrap",
+                    details={"roles_added": sorted(added), "source": "SUPER_ADMIN_EMAILS"},
+                )
+            )
+            promoted += 1
+        if promoted:
+            await session.commit()
+        return promoted
 
 
 @lru_cache(maxsize=32)

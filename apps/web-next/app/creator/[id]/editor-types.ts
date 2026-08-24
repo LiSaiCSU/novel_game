@@ -102,7 +102,7 @@ export type AuthorTestSuite = {
 };
 
 export const tabs = [
-  "概览",
+  "故事工作台",
   "世界与入口",
   "场景与地点",
   "人物",
@@ -112,9 +112,9 @@ export const tabs = [
   "叙事风格",
   "规则",
   "玩法测试",
-  "图片素材",
+  "封面与图片",
   "版本差异",
-  "内容包",
+  "高级 JSON",
   "发布中心",
 ];
 export const clone = <T>(value: T): T => structuredClone(value);

@@ -3,7 +3,7 @@
 import { AlertTriangle, ArrowLeft, CheckCircle2, PanelRightOpen, X } from "lucide-react";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
-import { type FormEvent, useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { api, ApiError } from "@/lib/api";
 import { AuthorTestStudio } from "./author-test-studio";
 import { EntityList, Field, JsonEditor } from "./editor-controls";
@@ -19,14 +19,15 @@ import {
   type ProjectRevision,
   type Release,
 } from "./editor-types";
-import { AssetManager, ReleaseCenter, VersionDiff } from "./project-operations";
+import { CoverManager } from "./cover-manager";
+import { ReleaseCenter, VersionDiff } from "./project-operations";
 import { EndingStudio, KnowledgeStudio, LocationWorkspace } from "./world-studios";
 
 export default function Editor() {
   const { id } = useParams<{ id: string }>();
   const router = useRouter();
   const [document, setDocument] = useState<Package>();
-  const [tab, setTab] = useState("概览");
+  const [tab, setTab] = useState("故事工作台");
   const [diagnostics, setDiagnostics] = useState<Diagnostic[]>([]);
   const [releases, setReleases] = useState<Release[]>([]);
   const [revisions, setRevisions] = useState<ProjectRevision[]>([]);
@@ -209,9 +210,7 @@ export default function Editor() {
     await navigator.clipboard?.writeText(url);
     setStatus("只读分享链接已复制；再次生成会让旧链接失效");
   }
-  async function uploadAsset(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-    const form = new FormData(event.currentTarget);
+  async function uploadAsset(form: FormData) {
     setStatus("正在清理图片元数据并生成安全制品…");
     try {
       const asset = await api<Asset>(`/creator/projects/${id}/assets`, {
@@ -221,13 +220,15 @@ export default function Editor() {
       setAssets((items) => [asset, ...items]);
       change((next) => {
         next.manifest.assets = [
-          ...(next.manifest.assets ?? []).filter((item) => item.key !== asset.key),
+          ...(next.manifest.assets ?? []).filter(
+            (item) => item.key !== asset.key && (asset.kind !== "cover" || item.kind !== "cover"),
+          ),
           { key: asset.key, kind: asset.kind, path: asset.path, alt: asset.alt },
         ];
       });
-      event.currentTarget.reset();
     } catch (error) {
       setStatus(`素材上传失败：${(error as Error).message}`);
+      throw error;
     }
   }
   async function preview() {
@@ -287,7 +288,7 @@ export default function Editor() {
     事实与秘密: document.content.facts.length,
     任务与剧情线: document.content.plot_threads.length + document.content.quests.length,
     结局设计: document.content.endings?.length ?? 0,
-    图片素材: assets.length,
+    封面与图片: assets.length,
     版本差异: revisions.length,
     发布中心: releases.length,
   };
@@ -374,7 +375,7 @@ export default function Editor() {
             </button>
           </section>
         )}
-        {tab === "概览" && (
+        {tab === "故事工作台" && (
           <div className="formGrid">
             <Field
               label="作品标题"
@@ -577,9 +578,9 @@ export default function Editor() {
             }}
           />
         )}
-        {tab === "图片素材" && <AssetManager assets={assets} upload={uploadAsset} />}
+        {tab === "封面与图片" && <CoverManager assets={assets} upload={uploadAsset} />}
         {tab === "版本差异" && <VersionDiff revisions={revisions} />}
-        {tab === "内容包" && (
+        {tab === "高级 JSON" && (
           <div>
             <p className="studioHint">
               高级模式直接查看规范制品。粘贴内容后离开文本框才会应用，以免半段 JSON 覆盖有效版本。

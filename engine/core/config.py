@@ -145,6 +145,10 @@ class Settings(BaseSettings):
     require_verified_email: bool = True
     admin_mfa_required: bool = True
     mfa_step_up_minutes: int = Field(default=720, ge=5, le=1440)
+    # A deployment-owned bootstrap list, never editable in the browser.  A
+    # verified matching account receives both ``admin`` and ``super_admin``;
+    # after that, only a super administrator can manage that higher role.
+    super_admin_emails: str = ""
     adult_catalog_enabled: bool = False
     assets_dir: str = "./data/assets"
     object_store_backend: str = "local"

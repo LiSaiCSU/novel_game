@@ -39,7 +39,12 @@ class Principal:
     analytics_consent: bool = False
 
     def has_role(self, *roles: str) -> bool:
-        return bool(self.roles.intersection(roles))
+        if self.roles.intersection(roles):
+            return True
+        # Super administrators are provisioned with ``admin`` as well, but
+        # this fallback keeps a legacy row from being accidentally locked out
+        # while it awaits the next bootstrap reconciliation.
+        return "super_admin" in self.roles and "admin" in roles
 
 
 def normalize_email(value: str) -> str:
@@ -226,7 +231,7 @@ def require_roles(*roles: str):
 
 
 async def require_admin_mfa(principal: Principal, settings: Settings) -> None:
-    if not settings.admin_mfa_required or not principal.has_role("admin"):
+    if not settings.admin_mfa_required or not principal.has_role("admin", "super_admin"):
         return
     maker = db_session.get_sessionmaker()
     async with maker() as session:
