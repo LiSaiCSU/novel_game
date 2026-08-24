@@ -1,0 +1,605 @@
+characters:
+- key: anchor
+  name: 萧彻
+  type: MAJOR_NPC
+  age: 24
+  gender: female
+  location: abandoned_archive
+  faction: organizer
+  faction_rank: 年轻皇帝
+  realm: ordinary
+  realm_stage: newcomer
+  stats:
+    strength: 10
+    agility: 11
+    perception: 12
+    intelligence: 14
+    willpower: 12
+    charisma: 13
+  background: 年轻皇帝。在大晟·皇城冷宫的今晚，任何一个人都不能只靠旁观离开。
+  personality:
+    traits:
+      guarded: 0.65
+      driven: 0.72
+    values:
+    - 真相
+    - 活下去
+    taboos:
+    - 替人背锅
+    speech_style: 短句、给出能核验的细节，不替任何人做决定
+    risk_tolerance: 0.55
+  emotion:
+    dominant: tense
+    valence: -0.15
+    arousal: 0.6
+    intensity: 0.55
+  long_term_goal: 让废后案尽快结束
+  short_term_goals:
+  - 让废后案尽快结束
+  - 在倒计时结束前确认谁在说谎
+  schedule:
+    default: work
+    slots:
+    - phase: morning
+      activity: work
+      location: abandoned_archive
+    - phase: night
+      activity: rest
+      location: laundry_court
+  items: []
+  skills:
+  - investigation
+  reputation:
+    global: 10
+    by_faction:
+      organizer: 45
+  secret: 他收到的赈灾汇报是伪造的
+  capabilities:
+  - 观察
+  - 交涉
+  - 行动
+- key: rival
+  name: 沈知微
+  type: MAJOR_NPC
+  age: 25
+  gender: male
+  location: laundry_court
+  faction: authority
+  faction_rank: 冷宫女官
+  realm: ordinary
+  realm_stage: newcomer
+  stats:
+    strength: 11
+    agility: 12
+    perception: 13
+    intelligence: 15
+    willpower: 13
+    charisma: 14
+  background: 冷宫女官。在大晟·皇城冷宫的今晚，任何一个人都不能只靠旁观离开。
+  personality:
+    traits:
+      guarded: 0.65
+      driven: 0.72
+    values:
+    - 真相
+    - 活下去
+    taboos:
+    - 替人背锅
+    speech_style: 短句、给出能核验的细节，不替任何人做决定
+    risk_tolerance: 0.55
+  emotion:
+    dominant: tense
+    valence: -0.15
+    arousal: 0.6
+    intensity: 0.55
+  long_term_goal: 保住被关押的妹妹
+  short_term_goals:
+  - 保住被关押的妹妹
+  - 在倒计时结束前确认谁在说谎
+  schedule:
+    default: work
+    slots:
+    - phase: morning
+      activity: work
+      location: laundry_court
+    - phase: night
+      activity: rest
+      location: imperial_kitchen
+  items: []
+  skills:
+  - negotiation
+  reputation:
+    global: 13
+    by_faction:
+      authority: 48
+  secret: 她抄过原始赈灾名册
+  capabilities:
+  - 观察
+  - 交涉
+  - 行动
+- key: ally
+  name: 裴行简
+  type: MAJOR_NPC
+  age: 26
+  gender: female
+  location: imperial_kitchen
+  faction: witnesses
+  faction_rank: 御史
+  realm: ordinary
+  realm_stage: newcomer
+  stats:
+    strength: 12
+    agility: 13
+    perception: 14
+    intelligence: 16
+    willpower: 14
+    charisma: 10
+  background: 御史。在大晟·皇城冷宫的今晚，任何一个人都不能只靠旁观离开。
+  personality:
+    traits:
+      guarded: 0.65
+      driven: 0.72
+    values:
+    - 真相
+    - 活下去
+    taboos:
+    - 替人背锅
+    speech_style: 短句、给出能核验的细节，不替任何人做决定
+    risk_tolerance: 0.55
+  emotion:
+    dominant: tense
+    valence: -0.15
+    arousal: 0.6
+    intensity: 0.55
+  long_term_goal: 查清漕仓缺粮
+  short_term_goals:
+  - 查清漕仓缺粮
+  - 在倒计时结束前确认谁在说谎
+  schedule:
+    default: work
+    slots:
+    - phase: morning
+      activity: work
+      location: imperial_kitchen
+    - phase: night
+      activity: rest
+      location: palace_wall
+  items: []
+  skills:
+  - investigation
+  reputation:
+    global: 16
+    by_faction:
+      witnesses: 51
+  secret: 他曾投过废后弹劾票
+  capabilities:
+  - 观察
+  - 交涉
+  - 行动
+- key: witness
+  name: 顾太后
+  type: MAJOR_NPC
+  age: 27
+  gender: male
+  location: palace_wall
+  faction: authority
+  faction_rank: 太后
+  realm: ordinary
+  realm_stage: newcomer
+  stats:
+    strength: 13
+    agility: 10
+    perception: 15
+    intelligence: 12
+    willpower: 15
+    charisma: 11
+  background: 太后。在大晟·皇城冷宫的今晚，任何一个人都不能只靠旁观离开。
+  personality:
+    traits:
+      guarded: 0.65
+      driven: 0.72
+    values:
+    - 真相
+    - 活下去
+    taboos:
+    - 替人背锅
+    speech_style: 短句、给出能核验的细节，不替任何人做决定
+    risk_tolerance: 0.55
+  emotion:
+    dominant: tense
+    valence: -0.15
+    arousal: 0.6
+    intensity: 0.55
+  long_term_goal: 维持皇室体面
+  short_term_goals:
+  - 维持皇室体面
+  - 在倒计时结束前确认谁在说谎
+  schedule:
+    default: work
+    slots:
+    - phase: morning
+      activity: work
+      location: palace_wall
+    - phase: night
+      activity: rest
+      location: ancestral_hall
+  items: []
+  skills:
+  - investigation
+  reputation:
+    global: 19
+    by_faction:
+      authority: 54
+  secret: 她知道废后案被人利用
+  capabilities:
+  - 观察
+  - 交涉
+  - 行动
+- key: gatekeeper
+  name: 陆昭仪
+  type: MAJOR_NPC
+  age: 28
+  gender: female
+  location: ancestral_hall
+  faction: organizer
+  faction_rank: 新宠妃
+  realm: ordinary
+  realm_stage: newcomer
+  stats:
+    strength: 10
+    agility: 11
+    perception: 16
+    intelligence: 13
+    willpower: 12
+    charisma: 12
+  background: 新宠妃。在大晟·皇城冷宫的今晚，任何一个人都不能只靠旁观离开。
+  personality:
+    traits:
+      guarded: 0.65
+      driven: 0.72
+    values:
+    - 真相
+    - 活下去
+    taboos:
+    - 替人背锅
+    speech_style: 短句、给出能核验的细节，不替任何人做决定
+    risk_tolerance: 0.55
+  emotion:
+    dominant: tense
+    valence: -0.15
+    arousal: 0.6
+    intensity: 0.55
+  long_term_goal: 摆脱被当作棋子的处境
+  short_term_goals:
+  - 摆脱被当作棋子的处境
+  - 在倒计时结束前确认谁在说谎
+  schedule:
+    default: work
+    slots:
+    - phase: morning
+      activity: work
+      location: ancestral_hall
+    - phase: night
+      activity: rest
+      location: censor_office
+  items: []
+  skills:
+  - negotiation
+  reputation:
+    global: 22
+    by_faction:
+      organizer: 57
+  secret: 她把一枚内库钥匙藏进香囊
+  capabilities:
+  - 观察
+  - 交涉
+  - 行动
+- key: broker
+  name: 魏掌印
+  type: MAJOR_NPC
+  age: 29
+  gender: male
+  location: censor_office
+  faction: outsiders
+  faction_rank: 内务府总管
+  realm: ordinary
+  realm_stage: newcomer
+  stats:
+    strength: 11
+    agility: 12
+    perception: 12
+    intelligence: 14
+    willpower: 13
+    charisma: 13
+  background: 内务府总管。在大晟·皇城冷宫的今晚，任何一个人都不能只靠旁观离开。
+  personality:
+    traits:
+      guarded: 0.65
+      driven: 0.72
+    values:
+    - 真相
+    - 活下去
+    taboos:
+    - 替人背锅
+    speech_style: 短句、给出能核验的细节，不替任何人做决定
+    risk_tolerance: 0.55
+  emotion:
+    dominant: tense
+    valence: -0.15
+    arousal: 0.6
+    intensity: 0.55
+  long_term_goal: 毁掉漕运账链
+  short_term_goals:
+  - 毁掉漕运账链
+  - 在倒计时结束前确认谁在说谎
+  schedule:
+    default: work
+    slots:
+    - phase: morning
+      activity: work
+      location: censor_office
+    - phase: night
+      activity: rest
+      location: market_gate
+  items: []
+  skills:
+  - negotiation
+  reputation:
+    global: 25
+    by_faction:
+      outsiders: 60
+  secret: 退回冷宫的账册是他故意安排
+  capabilities:
+  - 观察
+  - 交涉
+  - 行动
+- key: outsider
+  name: 阿绫
+  type: MINOR_NPC
+  age: 30
+  gender: female
+  location: market_gate
+  faction: witnesses
+  faction_rank: 浣衣女
+  realm: ordinary
+  realm_stage: newcomer
+  stats:
+    strength: 12
+    agility: 13
+    perception: 13
+    intelligence: 15
+    willpower: 14
+    charisma: 14
+  background: 浣衣女。在大晟·皇城冷宫的今晚，任何一个人都不能只靠旁观离开。
+  personality:
+    traits:
+      guarded: 0.65
+      driven: 0.72
+    values:
+    - 真相
+    - 活下去
+    taboos:
+    - 替人背锅
+    speech_style: 短句、给出能核验的细节，不替任何人做决定
+    risk_tolerance: 0.55
+  emotion:
+    dominant: tense
+    valence: -0.15
+    arousal: 0.6
+    intensity: 0.55
+  long_term_goal: 拿回被克扣的工钱
+  short_term_goals:
+  - 拿回被克扣的工钱
+  - 在倒计时结束前确认谁在说谎
+  schedule:
+    default: work
+    slots:
+    - phase: morning
+      activity: work
+      location: market_gate
+    - phase: night
+      activity: rest
+      location: river_granary
+  items: []
+  skills:
+  - investigation
+  reputation:
+    global: 28
+    by_faction:
+      witnesses: 63
+  secret: 她见过假宫牌进出浣衣院
+  capabilities:
+  - 观察
+  - 交涉
+  - 行动
+- key: insider
+  name: 周粮商
+  type: MINOR_NPC
+  age: 31
+  gender: male
+  location: river_granary
+  faction: organizer
+  faction_rank: 京畿粮商
+  realm: ordinary
+  realm_stage: newcomer
+  stats:
+    strength: 13
+    agility: 10
+    perception: 14
+    intelligence: 16
+    willpower: 15
+    charisma: 10
+  background: 京畿粮商。在大晟·皇城冷宫的今晚，任何一个人都不能只靠旁观离开。
+  personality:
+    traits:
+      guarded: 0.65
+      driven: 0.72
+    values:
+    - 真相
+    - 活下去
+    taboos:
+    - 替人背锅
+    speech_style: 短句、给出能核验的细节，不替任何人做决定
+    risk_tolerance: 0.55
+  emotion:
+    dominant: tense
+    valence: -0.15
+    arousal: 0.6
+    intensity: 0.55
+  long_term_goal: 拿到朝廷欠款
+  short_term_goals:
+  - 拿到朝廷欠款
+  - 在倒计时结束前确认谁在说谎
+  schedule:
+    default: work
+    slots:
+    - phase: morning
+      activity: work
+      location: river_granary
+    - phase: night
+      activity: rest
+      location: empress_garden
+  items: []
+  skills:
+  - negotiation
+  reputation:
+    global: 31
+    by_faction:
+      organizer: 66
+  secret: 他保留了一张双重签收单
+  capabilities:
+  - 观察
+  - 交涉
+  - 行动
+- key: wildcard
+  name: 许嬷嬷
+  type: MINOR_NPC
+  age: 32
+  gender: female
+  location: empress_garden
+  faction: outsiders
+  faction_rank: 冷宫掌事
+  realm: ordinary
+  realm_stage: newcomer
+  stats:
+    strength: 10
+    agility: 11
+    perception: 15
+    intelligence: 12
+    willpower: 12
+    charisma: 11
+  background: 冷宫掌事。在大晟·皇城冷宫的今晚，任何一个人都不能只靠旁观离开。
+  personality:
+    traits:
+      guarded: 0.65
+      driven: 0.72
+    values:
+    - 真相
+    - 活下去
+    taboos:
+    - 替人背锅
+    speech_style: 短句、给出能核验的细节，不替任何人做决定
+    risk_tolerance: 0.55
+  emotion:
+    dominant: tense
+    valence: -0.15
+    arousal: 0.6
+    intensity: 0.55
+  long_term_goal: 让冷宫的人活过冬天
+  short_term_goals:
+  - 让冷宫的人活过冬天
+  - 在倒计时结束前确认谁在说谎
+  schedule:
+    default: work
+    slots:
+    - phase: morning
+      activity: work
+      location: empress_garden
+    - phase: night
+      activity: rest
+      location: night_watch
+  items: []
+  skills:
+  - negotiation
+  reputation:
+    global: 34
+    by_faction:
+      outsiders: 69
+  secret: 她有通往废苑的旧钥匙
+  capabilities:
+  - 观察
+  - 交涉
+  - 行动
+relationships:
+- a: anchor
+  b: player
+  affection: 0
+  trust: 8
+  respect: 5
+  suspicion: 15
+  familiarity: 8
+  boundaries: 60
+- a: rival
+  b: player
+  affection: 0
+  trust: 6
+  respect: 4
+  suspicion: 19
+  familiarity: 9
+  boundaries: 60
+- a: ally
+  b: player
+  affection: 0
+  trust: 4
+  respect: 3
+  suspicion: 23
+  familiarity: 10
+  boundaries: 60
+- a: witness
+  b: player
+  affection: 0
+  trust: 2
+  respect: 2
+  suspicion: 27
+  familiarity: 11
+  boundaries: 60
+- a: gatekeeper
+  b: player
+  affection: 0
+  trust: 0
+  respect: 1
+  suspicion: 31
+  familiarity: 12
+  boundaries: 60
+- a: broker
+  b: player
+  affection: 0
+  trust: -2
+  respect: 0
+  suspicion: 35
+  familiarity: 13
+  boundaries: 60
+- a: outsider
+  b: player
+  affection: 0
+  trust: -4
+  respect: -1
+  suspicion: 39
+  familiarity: 14
+  boundaries: 60
+- a: insider
+  b: player
+  affection: 0
+  trust: -6
+  respect: -2
+  suspicion: 43
+  familiarity: 15
+  boundaries: 60
+- a: wildcard
+  b: player
+  affection: 0
+  trust: -8
+  respect: -3
+  suspicion: 47
+  familiarity: 16
+  boundaries: 60

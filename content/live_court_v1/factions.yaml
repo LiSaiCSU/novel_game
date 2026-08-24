@@ -1,0 +1,65 @@
+factions:
+- key: organizer
+  name: 组织方
+  type: institution
+  description: 掌握入口、流程与对外说法的一方。
+  values:
+  - 控制
+  - 体面
+  goals:
+  - 让默认方案执行
+  resources:
+    money: 60
+    information: 70
+    influence: 65
+    people: 55
+  relations:
+    witnesses: -20
+- key: authority
+  name: 执行机构
+  type: institution
+  description: 拥有程序、门禁或正式权限，但内部意见并不一致。
+  values:
+  - 秩序
+  - 程序
+  goals:
+  - 控制风险
+  resources:
+    money: 45
+    information: 65
+    influence: 70
+    people: 45
+  relations:
+    outsiders: -10
+- key: witnesses
+  name: 现场见证者
+  type: civic
+  description: 知道片段事实、需要被说明风险的人。
+  values:
+  - 安全
+  - 真相
+  goals:
+  - 活着离开
+  resources:
+    money: 15
+    information: 55
+    influence: 30
+    people: 80
+  relations:
+    organizer: -20
+- key: outsiders
+  name: 外部变量
+  type: coalition
+  description: 不完全站在任何一边，但能改变出口。
+  values:
+  - 自保
+  - 交易
+  goals:
+  - 获得关键材料
+  resources:
+    money: 30
+    information: 45
+    influence: 40
+    people: 35
+  relations:
+    authority: -10

@@ -1,0 +1,22 @@
+skills:
+- key: investigation
+  name: 核验
+  category: professional
+  description: 把记录、时间和现场痕迹放到同一条线上。
+  max_level: 5
+- key: negotiation
+  name: 限时交涉
+  category: social
+  description: 说明条件、代价和退出方式。
+  max_level: 5
+- key: survival
+  name: 现场应变
+  category: field
+  description: 先分清哪件事会立刻伤人。
+  max_level: 5
+- key: records
+  name: 档案复原
+  category: professional
+  description: 从缺页、版本与装订痕迹中找到被抹去的部分。
+  max_level: 5
+templates: {}

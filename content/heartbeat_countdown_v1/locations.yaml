@@ -1,0 +1,154 @@
+location_types:
+- key: district
+  name: 区域
+- key: room
+  name: 场景
+locations:
+- key: demo_stage
+  name: 科技节主舞台
+  type: district
+  parent: null
+  danger: 0
+  spirit_density: 1
+  description: 大屏幕倒数一小时，台词提词器却显示你的心里话。
+  travel:
+    sound_lab: 3
+    backstage: 4
+    coffee_bar: 5
+    rooftop: 6
+    privacy_office: 7
+    podcast_booth: 3
+    archive_room: 4
+    riverwalk: 5
+    investor_lounge: 6
+    equipment_store: 7
+    subway_exit: 3
+    legal_room: 4
+    food_truck: 5
+    quiet_room: 6
+- key: sound_lab
+  name: 声波实验室
+  type: room
+  parent: null
+  danger: 0
+  spirit_density: 1
+  description: 三副耳机的连接线像一场不合时宜的红线。
+  travel:
+    demo_stage: 3
+- key: backstage
+  name: 发布会后台
+  type: room
+  parent: null
+  danger: 0
+  spirit_density: 1
+  description: 每个人都在问产品能不能上线，没有人问能不能先下线。
+  travel:
+    demo_stage: 3
+- key: coffee_bar
+  name: 园区咖啡吧
+  type: room
+  parent: null
+  danger: 1
+  spirit_density: 1
+  description: 前任点了你三年前的口味，店员尴尬得像系统提示。
+  travel:
+    demo_stage: 3
+- key: rooftop
+  name: 创意园天台
+  type: room
+  parent: null
+  danger: 0
+  spirit_density: 1
+  description: 适合谈心，也适合躲开媒体的长镜头。
+  travel:
+    demo_stage: 3
+- key: privacy_office
+  name: 数据合规办公室
+  type: room
+  parent: null
+  danger: 0
+  spirit_density: 1
+  description: 一张同意书能救产品，也能让关系更难装糊涂。
+  travel:
+    demo_stage: 3
+- key: podcast_booth
+  name: 播客录音棚
+  type: room
+  parent: null
+  danger: 1
+  spirit_density: 1
+  description: 安静得能听见谁在偷偷深呼吸。
+  travel:
+    demo_stage: 3
+- key: archive_room
+  name: 产品档案室
+  type: room
+  parent: null
+  danger: 0
+  spirit_density: 1
+  description: 第一版测试笔记写着一个被划掉的警告。
+  travel:
+    demo_stage: 3
+- key: riverwalk
+  name: 江边步道
+  type: room
+  parent: null
+  danger: 0
+  spirit_density: 1
+  description: 晚风很适合道歉，不适合继续假装没听见。
+  travel:
+    demo_stage: 3
+- key: investor_lounge
+  name: 投资人休息区
+  type: room
+  parent: null
+  danger: 0
+  spirit_density: 1
+  description: 他们只问数据增长，不懂谁愿意被听见。
+  travel:
+    demo_stage: 3
+- key: equipment_store
+  name: 器材库
+  type: room
+  parent: null
+  danger: 1
+  spirit_density: 1
+  description: 备用耳机缺的刚好是第三副。
+  travel:
+    demo_stage: 3
+- key: subway_exit
+  name: 园区地铁口
+  type: room
+  parent: null
+  danger: 0
+  spirit_density: 1
+  description: 前任说赶车，脚步却一直没动。
+  travel:
+    demo_stage: 3
+- key: legal_room
+  name: 法务小会议室
+  type: room
+  parent: null
+  danger: 0
+  spirit_density: 1
+  description: 解除试验需要每位参与者明确确认。
+  travel:
+    demo_stage: 3
+- key: food_truck
+  name: 夜市餐车
+  type: room
+  parent: null
+  danger: 0
+  spirit_density: 1
+  description: 新同事点错辣度后还嘴硬说自己没哭。
+  travel:
+    demo_stage: 3
+- key: quiet_room
+  name: 无声休息室
+  type: room
+  parent: null
+  danger: 1
+  spirit_density: 1
+  description: 只有在这里，三个人的心声才不会被系统记录。
+  travel:
+    demo_stage: 3

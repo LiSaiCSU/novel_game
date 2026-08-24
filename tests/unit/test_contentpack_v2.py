@@ -38,6 +38,16 @@ CONTENT = Path(__file__).resolve().parents[2] / "content"
         "shelter_broadcast_v1",
         "three_year_pact_v1",
         "second_chance_v1",
+        "seoul_blackout_v1",
+        "zombie_station_v1",
+        "war_radio_v1",
+        "exiled_empress_v1",
+        "jade_gate_expedition_v1",
+        "room_404_v1",
+        "jiangshi_courier_v1",
+        "heartbeat_countdown_v1",
+        "abyss_oxygen_v1",
+        "live_court_v1",
     ),
 )
 def test_new_official_content_has_a_valid_landscape_cover(key: str) -> None:
@@ -91,7 +101,13 @@ def test_official_content_has_a_three_act_player_first_opening(key: str) -> None
 
 @pytest.mark.parametrize(
     "key",
-    ("wedding_verdict_v1", "divorce_ledger_v1", "shelter_broadcast_v1"),
+    (
+        "wedding_verdict_v1", "divorce_ledger_v1", "shelter_broadcast_v1",
+        "seoul_blackout_v1", "zombie_station_v1", "war_radio_v1",
+        "exiled_empress_v1", "jade_gate_expedition_v1", "room_404_v1",
+        "jiangshi_courier_v1", "heartbeat_countdown_v1", "abyss_oxygen_v1",
+        "live_court_v1",
+    ),
 )
 def test_microdrama_packs_have_full_interactive_structure(key: str) -> None:
     pack = load_content_pack(CONTENT, key)
@@ -137,6 +153,10 @@ async def test_all_official_content_declares_and_passes_author_tests() -> None:
         "cultivation_v1", "campus_romance_v1", "tomb_lantern_v1",
         "fog_harbor_v1", "spirit_pact_v1",
         "wedding_verdict_v1", "divorce_ledger_v1", "shelter_broadcast_v1",
+        "seoul_blackout_v1", "zombie_station_v1", "war_radio_v1",
+        "exiled_empress_v1", "jade_gate_expedition_v1", "room_404_v1",
+        "jiangshi_courier_v1", "heartbeat_countdown_v1", "abyss_oxygen_v1",
+        "live_court_v1",
     ):
         package = project_v1_as_v2(load_content_pack(CONTENT, key))
         suite = await run_author_tests(package, content_dir=str(CONTENT / key))

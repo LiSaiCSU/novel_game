@@ -18,6 +18,10 @@ async def compile_official_content() -> None:
         "fog_harbor_v1", "spirit_pact_v1",
         "three_year_pact_v1", "second_chance_v1",
         "wedding_verdict_v1", "divorce_ledger_v1", "shelter_broadcast_v1",
+        "seoul_blackout_v1", "zombie_station_v1", "war_radio_v1",
+        "exiled_empress_v1", "jade_gate_expedition_v1", "room_404_v1",
+        "jiangshi_courier_v1", "heartbeat_countdown_v1", "abyss_oxygen_v1",
+        "live_court_v1",
     ):
         package = project_v1_as_v2(load_content_pack(settings.content_path, key))
         release = compile_package(package)

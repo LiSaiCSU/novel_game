@@ -1,0 +1,605 @@
+characters:
+- key: anchor
+  name: 伊莲娜
+  type: MAJOR_NPC
+  age: 24
+  gender: female
+  location: antenna_ridge
+  faction: organizer
+  faction_rank: 战地医生
+  realm: ordinary
+  realm_stage: newcomer
+  stats:
+    strength: 10
+    agility: 11
+    perception: 12
+    intelligence: 14
+    willpower: 12
+    charisma: 13
+  background: 战地医生。在虚构的北境·阿斯塔前线的今晚，任何一个人都不能只靠旁观离开。
+  personality:
+    traits:
+      guarded: 0.65
+      driven: 0.72
+    values:
+    - 真相
+    - 活下去
+    taboos:
+    - 替人背锅
+    speech_style: 短句、给出能核验的细节，不替任何人做决定
+    risk_tolerance: 0.55
+  emotion:
+    dominant: tense
+    valence: -0.15
+    arousal: 0.6
+    intensity: 0.55
+  long_term_goal: 让医院撑到停火
+  short_term_goals:
+  - 让医院撑到停火
+  - 在倒计时结束前确认谁在说谎
+  schedule:
+    default: work
+    slots:
+    - phase: morning
+      activity: work
+      location: antenna_ridge
+    - phase: night
+      activity: rest
+      location: field_hospital
+  items: []
+  skills:
+  - investigation
+  reputation:
+    global: 10
+    by_faction:
+      organizer: 45
+  secret: 她保存了炮击坐标的原始记录
+  capabilities:
+  - 观察
+  - 交涉
+  - 行动
+- key: rival
+  name: 阿迪尔
+  type: MAJOR_NPC
+  age: 25
+  gender: male
+  location: field_hospital
+  faction: authority
+  faction_rank: 独立记者
+  realm: ordinary
+  realm_stage: newcomer
+  stats:
+    strength: 11
+    agility: 12
+    perception: 13
+    intelligence: 15
+    willpower: 13
+    charisma: 14
+  background: 独立记者。在虚构的北境·阿斯塔前线的今晚，任何一个人都不能只靠旁观离开。
+  personality:
+    traits:
+      guarded: 0.65
+      driven: 0.72
+    values:
+    - 真相
+    - 活下去
+    taboos:
+    - 替人背锅
+    speech_style: 短句、给出能核验的细节，不替任何人做决定
+    risk_tolerance: 0.55
+  emotion:
+    dominant: tense
+    valence: -0.15
+    arousal: 0.6
+    intensity: 0.55
+  long_term_goal: 拿到可公开核验的证据
+  short_term_goals:
+  - 拿到可公开核验的证据
+  - 在倒计时结束前确认谁在说谎
+  schedule:
+    default: work
+    slots:
+    - phase: morning
+      activity: work
+      location: field_hospital
+    - phase: night
+      activity: rest
+      location: ceasefire_tent
+  items: []
+  skills:
+  - negotiation
+  reputation:
+    global: 13
+    by_faction:
+      authority: 48
+  secret: 他的直播牌照已被双方吊销
+  capabilities:
+  - 观察
+  - 交涉
+  - 行动
+- key: ally
+  name: 马库斯
+  type: MAJOR_NPC
+  age: 26
+  gender: female
+  location: ceasefire_tent
+  faction: witnesses
+  faction_rank: 通信军官
+  realm: ordinary
+  realm_stage: newcomer
+  stats:
+    strength: 12
+    agility: 13
+    perception: 14
+    intelligence: 16
+    willpower: 14
+    charisma: 10
+  background: 通信军官。在虚构的北境·阿斯塔前线的今晚，任何一个人都不能只靠旁观离开。
+  personality:
+    traits:
+      guarded: 0.65
+      driven: 0.72
+    values:
+    - 真相
+    - 活下去
+    taboos:
+    - 替人背锅
+    speech_style: 短句、给出能核验的细节，不替任何人做决定
+    risk_tolerance: 0.55
+  emotion:
+    dominant: tense
+    valence: -0.15
+    arousal: 0.6
+    intensity: 0.55
+  long_term_goal: 让伪造声明准时播出
+  short_term_goals:
+  - 让伪造声明准时播出
+  - 在倒计时结束前确认谁在说谎
+  schedule:
+    default: work
+    slots:
+    - phase: morning
+      activity: work
+      location: ceasefire_tent
+    - phase: night
+      activity: rest
+      location: supply_depot
+  items: []
+  skills:
+  - investigation
+  reputation:
+    global: 16
+    by_faction:
+      witnesses: 51
+  secret: 他不知道命令来自军火商中间人
+  capabilities:
+  - 观察
+  - 交涉
+  - 行动
+- key: witness
+  name: 诺娅
+  type: MAJOR_NPC
+  age: 27
+  gender: male
+  location: supply_depot
+  faction: authority
+  faction_rank: 停火观察员
+  realm: ordinary
+  realm_stage: newcomer
+  stats:
+    strength: 13
+    agility: 10
+    perception: 15
+    intelligence: 12
+    willpower: 15
+    charisma: 11
+  background: 停火观察员。在虚构的北境·阿斯塔前线的今晚，任何一个人都不能只靠旁观离开。
+  personality:
+    traits:
+      guarded: 0.65
+      driven: 0.72
+    values:
+    - 真相
+    - 活下去
+    taboos:
+    - 替人背锅
+    speech_style: 短句、给出能核验的细节，不替任何人做决定
+    risk_tolerance: 0.55
+  emotion:
+    dominant: tense
+    valence: -0.15
+    arousal: 0.6
+    intensity: 0.55
+  long_term_goal: 确认两军都撤离桥头
+  short_term_goals:
+  - 确认两军都撤离桥头
+  - 在倒计时结束前确认谁在说谎
+  schedule:
+    default: work
+    slots:
+    - phase: morning
+      activity: work
+      location: supply_depot
+    - phase: night
+      activity: rest
+      location: old_town_square
+  items: []
+  skills:
+  - investigation
+  reputation:
+    global: 19
+    by_faction:
+      authority: 54
+  secret: 她发现己方地图被替换
+  capabilities:
+  - 观察
+  - 交涉
+  - 行动
+- key: gatekeeper
+  name: 塔拉斯
+  type: MAJOR_NPC
+  age: 28
+  gender: female
+  location: old_town_square
+  faction: organizer
+  faction_rank: 货运站长
+  realm: ordinary
+  realm_stage: newcomer
+  stats:
+    strength: 10
+    agility: 11
+    perception: 16
+    intelligence: 13
+    willpower: 12
+    charisma: 12
+  background: 货运站长。在虚构的北境·阿斯塔前线的今晚，任何一个人都不能只靠旁观离开。
+  personality:
+    traits:
+      guarded: 0.65
+      driven: 0.72
+    values:
+    - 真相
+    - 活下去
+    taboos:
+    - 替人背锅
+    speech_style: 短句、给出能核验的细节，不替任何人做决定
+    risk_tolerance: 0.55
+  emotion:
+    dominant: tense
+    valence: -0.15
+    arousal: 0.6
+    intensity: 0.55
+  long_term_goal: 放走被扣的医疗货车
+  short_term_goals:
+  - 放走被扣的医疗货车
+  - 在倒计时结束前确认谁在说谎
+  schedule:
+    default: work
+    slots:
+    - phase: morning
+      activity: work
+      location: old_town_square
+    - phase: night
+      activity: rest
+      location: river_crossing
+  items: []
+  skills:
+  - negotiation
+  reputation:
+    global: 22
+    by_faction:
+      organizer: 57
+  secret: 无编号列车装的是武器部件
+  capabilities:
+  - 观察
+  - 交涉
+  - 行动
+- key: broker
+  name: 萨米尔
+  type: MAJOR_NPC
+  age: 29
+  gender: male
+  location: river_crossing
+  faction: outsiders
+  faction_rank: 避难所志愿者
+  realm: ordinary
+  realm_stage: newcomer
+  stats:
+    strength: 11
+    agility: 12
+    perception: 12
+    intelligence: 14
+    willpower: 13
+    charisma: 13
+  background: 避难所志愿者。在虚构的北境·阿斯塔前线的今晚，任何一个人都不能只靠旁观离开。
+  personality:
+    traits:
+      guarded: 0.65
+      driven: 0.72
+    values:
+    - 真相
+    - 活下去
+    taboos:
+    - 替人背锅
+    speech_style: 短句、给出能核验的细节，不替任何人做决定
+    risk_tolerance: 0.55
+  emotion:
+    dominant: tense
+    valence: -0.15
+    arousal: 0.6
+    intensity: 0.55
+  long_term_goal: 让民众听到可靠消息
+  short_term_goals:
+  - 让民众听到可靠消息
+  - 在倒计时结束前确认谁在说谎
+  schedule:
+    default: work
+    slots:
+    - phase: morning
+      activity: work
+      location: river_crossing
+    - phase: night
+      activity: rest
+      location: press_truck
+  items: []
+  skills:
+  - negotiation
+  reputation:
+    global: 25
+    by_faction:
+      outsiders: 60
+  secret: 他弟弟在对岸医院
+  capabilities:
+  - 观察
+  - 交涉
+  - 行动
+- key: outsider
+  name: 维拉
+  type: MINOR_NPC
+  age: 30
+  gender: female
+  location: press_truck
+  faction: witnesses
+  faction_rank: 电台主持人
+  realm: ordinary
+  realm_stage: newcomer
+  stats:
+    strength: 12
+    agility: 13
+    perception: 13
+    intelligence: 15
+    willpower: 14
+    charisma: 14
+  background: 电台主持人。在虚构的北境·阿斯塔前线的今晚，任何一个人都不能只靠旁观离开。
+  personality:
+    traits:
+      guarded: 0.65
+      driven: 0.72
+    values:
+    - 真相
+    - 活下去
+    taboos:
+    - 替人背锅
+    speech_style: 短句、给出能核验的细节，不替任何人做决定
+    risk_tolerance: 0.55
+  emotion:
+    dominant: tense
+    valence: -0.15
+    arousal: 0.6
+    intensity: 0.55
+  long_term_goal: 保持频道不断播
+  short_term_goals:
+  - 保持频道不断播
+  - 在倒计时结束前确认谁在说谎
+  schedule:
+    default: work
+    slots:
+    - phase: morning
+      activity: work
+      location: press_truck
+    - phase: night
+      activity: rest
+      location: signal_tower
+  items: []
+  skills:
+  - investigation
+  reputation:
+    global: 28
+    by_faction:
+      witnesses: 63
+  secret: 她能识别伪造声明里的声音剪辑
+  capabilities:
+  - 观察
+  - 交涉
+  - 行动
+- key: insider
+  name: 奥森
+  type: MINOR_NPC
+  age: 31
+  gender: male
+  location: signal_tower
+  faction: organizer
+  faction_rank: 退役爆破手
+  realm: ordinary
+  realm_stage: newcomer
+  stats:
+    strength: 13
+    agility: 10
+    perception: 14
+    intelligence: 16
+    willpower: 15
+    charisma: 10
+  background: 退役爆破手。在虚构的北境·阿斯塔前线的今晚，任何一个人都不能只靠旁观离开。
+  personality:
+    traits:
+      guarded: 0.65
+      driven: 0.72
+    values:
+    - 真相
+    - 活下去
+    taboos:
+    - 替人背锅
+    speech_style: 短句、给出能核验的细节，不替任何人做决定
+    risk_tolerance: 0.55
+  emotion:
+    dominant: tense
+    valence: -0.15
+    arousal: 0.6
+    intensity: 0.55
+  long_term_goal: 清出天线山脊
+  short_term_goals:
+  - 清出天线山脊
+  - 在倒计时结束前确认谁在说谎
+  schedule:
+    default: work
+    slots:
+    - phase: morning
+      activity: work
+      location: signal_tower
+    - phase: night
+      activity: rest
+      location: command_post
+  items: []
+  skills:
+  - negotiation
+  reputation:
+    global: 31
+    by_faction:
+      organizer: 66
+  secret: 他曾炸过那座被标为安全的桥
+  capabilities:
+  - 观察
+  - 交涉
+  - 行动
+- key: wildcard
+  name: 米娅
+  type: MINOR_NPC
+  age: 32
+  gender: female
+  location: command_post
+  faction: outsiders
+  faction_rank: 翻译员
+  realm: ordinary
+  realm_stage: newcomer
+  stats:
+    strength: 10
+    agility: 11
+    perception: 15
+    intelligence: 12
+    willpower: 12
+    charisma: 11
+  background: 翻译员。在虚构的北境·阿斯塔前线的今晚，任何一个人都不能只靠旁观离开。
+  personality:
+    traits:
+      guarded: 0.65
+      driven: 0.72
+    values:
+    - 真相
+    - 活下去
+    taboos:
+    - 替人背锅
+    speech_style: 短句、给出能核验的细节，不替任何人做决定
+    risk_tolerance: 0.55
+  emotion:
+    dominant: tense
+    valence: -0.15
+    arousal: 0.6
+    intensity: 0.55
+  long_term_goal: 对照两份协议文本
+  short_term_goals:
+  - 对照两份协议文本
+  - 在倒计时结束前确认谁在说谎
+  schedule:
+    default: work
+    slots:
+    - phase: morning
+      activity: work
+      location: command_post
+    - phase: night
+      activity: rest
+      location: orchard
+  items: []
+  skills:
+  - negotiation
+  reputation:
+    global: 34
+    by_faction:
+      outsiders: 69
+  secret: 其中一份少了平民撤离条款
+  capabilities:
+  - 观察
+  - 交涉
+  - 行动
+relationships:
+- a: anchor
+  b: player
+  affection: 0
+  trust: 8
+  respect: 5
+  suspicion: 15
+  familiarity: 8
+  boundaries: 60
+- a: rival
+  b: player
+  affection: 0
+  trust: 6
+  respect: 4
+  suspicion: 19
+  familiarity: 9
+  boundaries: 60
+- a: ally
+  b: player
+  affection: 0
+  trust: 4
+  respect: 3
+  suspicion: 23
+  familiarity: 10
+  boundaries: 60
+- a: witness
+  b: player
+  affection: 0
+  trust: 2
+  respect: 2
+  suspicion: 27
+  familiarity: 11
+  boundaries: 60
+- a: gatekeeper
+  b: player
+  affection: 0
+  trust: 0
+  respect: 1
+  suspicion: 31
+  familiarity: 12
+  boundaries: 60
+- a: broker
+  b: player
+  affection: 0
+  trust: -2
+  respect: 0
+  suspicion: 35
+  familiarity: 13
+  boundaries: 60
+- a: outsider
+  b: player
+  affection: 0
+  trust: -4
+  respect: -1
+  suspicion: 39
+  familiarity: 14
+  boundaries: 60
+- a: insider
+  b: player
+  affection: 0
+  trust: -6
+  respect: -2
+  suspicion: 43
+  familiarity: 15
+  boundaries: 60
+- a: wildcard
+  b: player
+  affection: 0
+  trust: -8
+  respect: -3
+  suspicion: 47
+  familiarity: 16
+  boundaries: 60

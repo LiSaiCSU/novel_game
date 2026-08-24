@@ -1,0 +1,154 @@
+location_types:
+- key: district
+  name: 区域
+- key: room
+  name: 场景
+locations:
+- key: radio_bunker
+  name: 前线地下电台
+  type: district
+  parent: null
+  danger: 0
+  spirit_density: 1
+  description: 铁门上贴着‘保持中立’，发射机旁却放着三份命令。
+  travel:
+    antenna_ridge: 3
+    field_hospital: 4
+    ceasefire_tent: 5
+    supply_depot: 6
+    old_town_square: 7
+    river_crossing: 3
+    press_truck: 4
+    signal_tower: 5
+    command_post: 6
+    orchard: 7
+    rail_yard: 3
+    civilian_shelter: 4
+    memorial_wall: 5
+    emergency_airstrip: 6
+- key: antenna_ridge
+  name: 天线山脊
+  type: room
+  parent: null
+  danger: 0
+  spirit_density: 1
+  description: 风能把信号送远，也能把人暴露在望远镜里。
+  travel:
+    radio_bunker: 3
+- key: field_hospital
+  name: 野战医院
+  type: room
+  parent: null
+  danger: 0
+  spirit_density: 1
+  description: 发电机每停一次，病房就少一盏灯。
+  travel:
+    radio_bunker: 3
+- key: ceasefire_tent
+  name: 停火谈判帐篷
+  type: room
+  parent: null
+  danger: 1
+  spirit_density: 1
+  description: 桌上两份地图的桥梁位置并不相同。
+  travel:
+    radio_bunker: 3
+- key: supply_depot
+  name: 补给仓库
+  type: room
+  parent: null
+  danger: 0
+  spirit_density: 1
+  description: 医疗箱底下压着一份不该出现在前线的运单。
+  travel:
+    radio_bunker: 3
+- key: old_town_square
+  name: 旧城广场
+  type: room
+  parent: null
+  danger: 0
+  spirit_density: 1
+  description: 钟楼停在炮击开始的那一分钟。
+  travel:
+    radio_bunker: 3
+- key: river_crossing
+  name: 北河渡口
+  type: room
+  parent: null
+  danger: 1
+  spirit_density: 1
+  description: 停火生效前最后一批平民还在排队过河。
+  travel:
+    radio_bunker: 3
+- key: press_truck
+  name: 独立记者转播车
+  type: room
+  parent: null
+  danger: 0
+  spirit_density: 1
+  description: 车上的卫星链路能播出真相，也能被定位。
+  travel:
+    radio_bunker: 3
+- key: signal_tower
+  name: 废弃信号塔
+  type: room
+  parent: null
+  danger: 0
+  spirit_density: 1
+  description: 塔顶挂着一面没有标识的白旗。
+  travel:
+    radio_bunker: 3
+- key: command_post
+  name: 联合指挥所
+  type: room
+  parent: null
+  danger: 0
+  spirit_density: 1
+  description: 每个人都说自己只是在执行上级命令。
+  travel:
+    radio_bunker: 3
+- key: orchard
+  name: 焦土果园
+  type: room
+  parent: null
+  danger: 1
+  spirit_density: 1
+  description: 树下埋着一台仍能读取的战地录音机。
+  travel:
+    radio_bunker: 3
+- key: rail_yard
+  name: 边境货运站
+  type: room
+  parent: null
+  danger: 0
+  spirit_density: 1
+  description: 一列无编号列车正在等待天亮。
+  travel:
+    radio_bunker: 3
+- key: civilian_shelter
+  name: 市民避难所
+  type: room
+  parent: null
+  danger: 0
+  spirit_density: 1
+  description: 收音机是他们唯一知道外面发生什么的窗口。
+  travel:
+    radio_bunker: 3
+- key: memorial_wall
+  name: 失踪者纪念墙
+  type: room
+  parent: null
+  danger: 0
+  spirit_density: 1
+  description: 墙上的名字比官方名单多了七个。
+  travel:
+    radio_bunker: 3
+- key: emergency_airstrip
+  name: 临时跑道
+  type: room
+  parent: null
+  danger: 1
+  spirit_density: 1
+  description: 一架医疗机只有在正确的频段听到口令才会降落。
+  travel:
+    radio_bunker: 3

@@ -1,0 +1,154 @@
+location_types:
+- key: district
+  name: 区域
+- key: room
+  name: 场景
+locations:
+- key: live_court
+  name: 网络法庭主庭
+  type: district
+  parent: null
+  danger: 0
+  spirit_density: 1
+  description: 倒计时、证据屏和百万弹幕挤在同一面墙上。
+  travel:
+    evidence_lab: 3
+    old_office: 4
+    data_center: 5
+    public_defense: 6
+    witness_lounge: 7
+    media_hall: 3
+    bank_archive: 4
+    server_rooftop: 5
+    maintenance_room: 6
+    cyber_unit: 7
+    coffee_shop: 3
+    appeal_archive: 4
+    control_booth: 5
+    exit_steps: 6
+- key: evidence_lab
+  name: 电子证据实验室
+  type: room
+  parent: null
+  danger: 0
+  spirit_density: 1
+  description: 一秒音频能被切成十种故事。
+  travel:
+    live_court: 3
+- key: old_office
+  name: 旧办公区
+  type: room
+  parent: null
+  danger: 0
+  spirit_density: 1
+  description: 那台老空调还在按错误的节奏响。
+  travel:
+    live_court: 3
+- key: data_center
+  name: 云端数据中心
+  type: room
+  parent: null
+  danger: 1
+  spirit_density: 1
+  description: 登录日志的时区比人更容易撒谎。
+  travel:
+    live_court: 3
+- key: public_defense
+  name: 公设辩护室
+  type: room
+  parent: null
+  danger: 0
+  spirit_density: 1
+  description: 律师只有二十分钟，也有二十个问题。
+  travel:
+    live_court: 3
+- key: witness_lounge
+  name: 证人等候室
+  type: room
+  parent: null
+  danger: 0
+  spirit_density: 1
+  description: 每扇门外都有人劝证人‘别惹麻烦’。
+  travel:
+    live_court: 3
+- key: media_hall
+  name: 媒体大厅
+  type: room
+  parent: null
+  danger: 1
+  spirit_density: 1
+  description: 采访灯比庭审灯更亮。
+  travel:
+    live_court: 3
+- key: bank_archive
+  name: 银行流水档案室
+  type: room
+  parent: null
+  danger: 0
+  spirit_density: 1
+  description: 转账路径在一笔退款处打了结。
+  travel:
+    live_court: 3
+- key: server_rooftop
+  name: 机房天台
+  type: room
+  parent: null
+  danger: 0
+  spirit_density: 1
+  description: 备份天线能播出原始时间戳。
+  travel:
+    live_court: 3
+- key: maintenance_room
+  name: 空调维修间
+  type: room
+  parent: null
+  danger: 0
+  spirit_density: 1
+  description: 报修单里藏着那天谁真正进过办公室。
+  travel:
+    live_court: 3
+- key: cyber_unit
+  name: 网安协作室
+  type: room
+  parent: null
+  danger: 1
+  spirit_density: 1
+  description: 他们能验证日志，也被上级要求保持中立。
+  travel:
+    live_court: 3
+- key: coffee_shop
+  name: 法院街咖啡店
+  type: room
+  parent: null
+  danger: 0
+  spirit_density: 1
+  description: 证人说愿意见你，但只在摄像头外。
+  travel:
+    live_court: 3
+- key: appeal_archive
+  name: 再审档案库
+  type: room
+  parent: null
+  danger: 0
+  spirit_density: 1
+  description: 三年前有一宗极像的案子被草草结案。
+  travel:
+    live_court: 3
+- key: control_booth
+  name: 直播导播间
+  type: room
+  parent: null
+  danger: 0
+  spirit_density: 1
+  description: 延迟十五秒，正好够人剪掉一句话。
+  travel:
+    live_court: 3
+- key: exit_steps
+  name: 法院台阶
+  type: room
+  parent: null
+  danger: 1
+  spirit_density: 1
+  description: 无罪或有罪，镜头都会在这里等你。
+  travel:
+    live_court: 3

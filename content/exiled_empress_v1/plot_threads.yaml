@@ -1,0 +1,454 @@
+plot_threads:
+- key: thread_hook
+  name: 开场的不可逆事件
+  status: active
+  importance: 0.88
+  stage: 0
+  participants:
+  - player
+  - anchor
+  unresolved_questions:
+  - 谁设下了第一道局
+  foreshadowing:
+  - 一条可核验的细节与公开说法不一致
+  - 有人提前准备了错误的出口
+  related_facts:
+  - fact_hook
+  - fact_public_story
+  next_beat_hint: 围绕‘开场的不可逆事件’的下一步不再只是解释，而会改变大晟·皇城冷宫里谁拥有决定权。
+  escalation_pressure: 0.82
+  scheduled_beats:
+  - at_minutes_from_start: 12
+    event_type: CONFRONTATION
+    beat: 开场的不可逆事件出现第一条无法忽略的证据。
+    participants:
+    - player
+  - at_minutes_from_start: 32
+    event_type: DISCOVERY
+    beat: 第二份记录与此前的版本互相矛盾。
+    participants:
+    - ally
+  - at_minutes_from_start: 54
+    event_type: CONFRONTATION
+    beat: 有人要求玩家立刻选择公开、隐瞒或交换条件。
+    participants:
+    - rival
+- key: thread_record
+  name: 被拆开的关键记录
+  status: active
+  importance: 0.93
+  stage: 0
+  participants:
+  - player
+  - ally
+  unresolved_questions:
+  - 三份记录如何互相核验
+  foreshadowing:
+  - 一条可核验的细节与公开说法不一致
+  - 有人提前准备了错误的出口
+  related_facts:
+  - fact_missing_record
+  - fact_public_story
+  next_beat_hint: 围绕‘被拆开的关键记录’的下一步不再只是解释，而会改变大晟·皇城冷宫里谁拥有决定权。
+  escalation_pressure: 0.84
+  scheduled_beats:
+  - at_minutes_from_start: 54
+    event_type: DISCOVERY
+    beat: 被拆开的关键记录出现第一条无法忽略的证据。
+    participants:
+    - player
+  - at_minutes_from_start: 74
+    event_type: DISCOVERY
+    beat: 第二份记录与此前的版本互相矛盾。
+    participants:
+    - ally
+  - at_minutes_from_start: 96
+    event_type: CONFRONTATION
+    beat: 有人要求玩家立刻选择公开、隐瞒或交换条件。
+    participants:
+    - rival
+- key: thread_alliance
+  name: 每个人的退出条件
+  status: active
+  importance: 0.88
+  stage: 0
+  participants:
+  - player
+  - witness
+  unresolved_questions:
+  - 谁会在压力下倒向另一边
+  foreshadowing:
+  - 一条可核验的细节与公开说法不一致
+  - 有人提前准备了错误的出口
+  related_facts:
+  - fact_missing_record
+  - fact_public_story
+  next_beat_hint: 围绕‘每个人的退出条件’的下一步不再只是解释，而会改变大晟·皇城冷宫里谁拥有决定权。
+  escalation_pressure: 0.86
+  scheduled_beats:
+  - at_minutes_from_start: 96
+    event_type: PROMISE
+    beat: 每个人的退出条件出现第一条无法忽略的证据。
+    participants:
+    - player
+  - at_minutes_from_start: 116
+    event_type: DISCOVERY
+    beat: 第二份记录与此前的版本互相矛盾。
+    participants:
+    - ally
+  - at_minutes_from_start: 138
+    event_type: CONFRONTATION
+    beat: 有人要求玩家立刻选择公开、隐瞒或交换条件。
+    participants:
+    - rival
+- key: thread_operator
+  name: 躲在规则后的人
+  status: active
+  importance: 0.93
+  stage: 0
+  participants:
+  - player
+  - gatekeeper
+  unresolved_questions:
+  - 谁从错误路线获利
+  foreshadowing:
+  - 一条可核验的细节与公开说法不一致
+  - 有人提前准备了错误的出口
+  related_facts:
+  - fact_missing_record
+  - fact_hidden_operator
+  next_beat_hint: 围绕‘躲在规则后的人’的下一步不再只是解释，而会改变大晟·皇城冷宫里谁拥有决定权。
+  escalation_pressure: 0.8799999999999999
+  scheduled_beats:
+  - at_minutes_from_start: 138
+    event_type: SECRET_DISCLOSURE
+    beat: 躲在规则后的人出现第一条无法忽略的证据。
+    participants:
+    - player
+  - at_minutes_from_start: 158
+    event_type: DISCOVERY
+    beat: 第二份记录与此前的版本互相矛盾。
+    participants:
+    - ally
+  - at_minutes_from_start: 180
+    event_type: CONFRONTATION
+    beat: 有人要求玩家立刻选择公开、隐瞒或交换条件。
+    participants:
+    - rival
+- key: thread_clock
+  name: 三日赐死诏
+  status: active
+  importance: 0.88
+  stage: 0
+  participants:
+  - player
+  - rival
+  unresolved_questions:
+  - 倒计时结束时会发生什么
+  foreshadowing:
+  - 一条可核验的细节与公开说法不一致
+  - 有人提前准备了错误的出口
+  related_facts:
+  - fact_missing_record
+  - fact_hidden_operator
+  next_beat_hint: 围绕‘三日赐死诏’的下一步不再只是解释，而会改变大晟·皇城冷宫里谁拥有决定权。
+  escalation_pressure: 0.8999999999999999
+  scheduled_beats:
+  - at_minutes_from_start: 180
+    event_type: ENVIRONMENT_SHIFT
+    beat: 三日赐死诏出现第一条无法忽略的证据。
+    participants:
+    - player
+  - at_minutes_from_start: 200
+    event_type: DISCOVERY
+    beat: 第二份记录与此前的版本互相矛盾。
+    participants:
+    - ally
+  - at_minutes_from_start: 222
+    event_type: CONFRONTATION
+    beat: 有人要求玩家立刻选择公开、隐瞒或交换条件。
+    participants:
+    - rival
+- key: thread_verdict
+  name: 最后的公开选择
+  status: active
+  importance: 0.93
+  stage: 0
+  participants:
+  - player
+  - outsider
+  unresolved_questions:
+  - 真相应被谁听见、怎样被使用
+  foreshadowing:
+  - 一条可核验的细节与公开说法不一致
+  - 有人提前准备了错误的出口
+  related_facts:
+  - fact_missing_record
+  - fact_hidden_operator
+  next_beat_hint: 围绕‘最后的公开选择’的下一步不再只是解释，而会改变大晟·皇城冷宫里谁拥有决定权。
+  escalation_pressure: 0.9199999999999999
+  scheduled_beats:
+  - at_minutes_from_start: 222
+    event_type: FACTION_MOVE
+    beat: 最后的公开选择出现第一条无法忽略的证据。
+    participants:
+    - player
+  - at_minutes_from_start: 242
+    event_type: DISCOVERY
+    beat: 第二份记录与此前的版本互相矛盾。
+    participants:
+    - ally
+  - at_minutes_from_start: 264
+    event_type: CONFRONTATION
+    beat: 有人要求玩家立刻选择公开、隐瞒或交换条件。
+    participants:
+    - rival
+quests:
+- key: quest_1_1
+  name: 开场的不可逆事件·取证
+  giver: anchor
+  status: offered
+  goal:
+    type: investigate
+    location: cold_palace
+  constraints:
+    deadline_minutes: 90
+  rewards:
+    resource:
+      clue: 8
+  failure_conditions:
+  - deadline_passed
+  - evidence_destroyed
+  world_consequences:
+    on_success:
+      advance_thread: thread_hook
+  plot_thread: thread_hook
+- key: quest_1_2
+  name: 开场的不可逆事件·决定
+  giver: anchor
+  status: offered
+  goal:
+    type: decide
+    location: abandoned_archive
+  constraints:
+    deadline_minutes: 110
+  rewards:
+    resource:
+      clue: resolve
+  failure_conditions:
+  - deadline_passed
+  - choice_taken_by_other
+  world_consequences:
+    on_success:
+      advance_thread: thread_hook
+  plot_thread: thread_hook
+- key: quest_2_1
+  name: 被拆开的关键记录·取证
+  giver: ally
+  status: offered
+  goal:
+    type: investigate
+    location: laundry_court
+  constraints:
+    deadline_minutes: 145
+  rewards:
+    resource:
+      clue: 10
+  failure_conditions:
+  - deadline_passed
+  - evidence_destroyed
+  world_consequences:
+    on_success:
+      advance_thread: thread_record
+  plot_thread: thread_record
+- key: quest_2_2
+  name: 被拆开的关键记录·决定
+  giver: ally
+  status: offered
+  goal:
+    type: decide
+    location: imperial_kitchen
+  constraints:
+    deadline_minutes: 165
+  rewards:
+    resource:
+      clue: resolve
+  failure_conditions:
+  - deadline_passed
+  - choice_taken_by_other
+  world_consequences:
+    on_success:
+      advance_thread: thread_record
+  plot_thread: thread_record
+- key: quest_3_1
+  name: 每个人的退出条件·取证
+  giver: witness
+  status: offered
+  goal:
+    type: investigate
+    location: palace_wall
+  constraints:
+    deadline_minutes: 200
+  rewards:
+    resource:
+      clue: 12
+  failure_conditions:
+  - deadline_passed
+  - evidence_destroyed
+  world_consequences:
+    on_success:
+      advance_thread: thread_alliance
+  plot_thread: thread_alliance
+- key: quest_3_2
+  name: 每个人的退出条件·决定
+  giver: witness
+  status: offered
+  goal:
+    type: decide
+    location: ancestral_hall
+  constraints:
+    deadline_minutes: 220
+  rewards:
+    resource:
+      clue: resolve
+  failure_conditions:
+  - deadline_passed
+  - choice_taken_by_other
+  world_consequences:
+    on_success:
+      advance_thread: thread_alliance
+  plot_thread: thread_alliance
+- key: quest_4_1
+  name: 躲在规则后的人·取证
+  giver: gatekeeper
+  status: offered
+  goal:
+    type: investigate
+    location: censor_office
+  constraints:
+    deadline_minutes: 255
+  rewards:
+    resource:
+      clue: 14
+  failure_conditions:
+  - deadline_passed
+  - evidence_destroyed
+  world_consequences:
+    on_success:
+      advance_thread: thread_operator
+  plot_thread: thread_operator
+- key: quest_4_2
+  name: 躲在规则后的人·决定
+  giver: gatekeeper
+  status: offered
+  goal:
+    type: decide
+    location: market_gate
+  constraints:
+    deadline_minutes: 275
+  rewards:
+    resource:
+      clue: resolve
+  failure_conditions:
+  - deadline_passed
+  - choice_taken_by_other
+  world_consequences:
+    on_success:
+      advance_thread: thread_operator
+  plot_thread: thread_operator
+- key: quest_5_1
+  name: 三日赐死诏·取证
+  giver: outsider
+  status: offered
+  goal:
+    type: investigate
+    location: river_granary
+  constraints:
+    deadline_minutes: 310
+  rewards:
+    resource:
+      clue: 16
+  failure_conditions:
+  - deadline_passed
+  - evidence_destroyed
+  world_consequences:
+    on_success:
+      advance_thread: thread_clock
+  plot_thread: thread_clock
+- key: quest_5_2
+  name: 三日赐死诏·决定
+  giver: outsider
+  status: offered
+  goal:
+    type: decide
+    location: empress_garden
+  constraints:
+    deadline_minutes: 330
+  rewards:
+    resource:
+      clue: resolve
+  failure_conditions:
+  - deadline_passed
+  - choice_taken_by_other
+  world_consequences:
+    on_success:
+      advance_thread: thread_clock
+  plot_thread: thread_clock
+- key: quest_6_1
+  name: 最后的公开选择·取证
+  giver: insider
+  status: offered
+  goal:
+    type: investigate
+    location: night_watch
+  constraints:
+    deadline_minutes: 365
+  rewards:
+    resource:
+      clue: 18
+  failure_conditions:
+  - deadline_passed
+  - evidence_destroyed
+  world_consequences:
+    on_success:
+      advance_thread: thread_verdict
+  plot_thread: thread_verdict
+- key: quest_6_2
+  name: 最后的公开选择·决定
+  giver: insider
+  status: offered
+  goal:
+    type: decide
+    location: medicine_store
+  constraints:
+    deadline_minutes: 385
+  rewards:
+    resource:
+      clue: resolve
+  failure_conditions:
+  - deadline_passed
+  - choice_taken_by_other
+  world_consequences:
+    on_success:
+      advance_thread: thread_verdict
+  plot_thread: thread_verdict
+clocks:
+- key: clock_deadline
+  name: 三日赐死诏
+  kind: deadline
+  thread: thread_clock
+  segments: 6
+  minutes_per_segment: 60
+  consequence: 倒计时归零，最危险的默认方案会自动执行。
+- key: clock_truth
+  name: 可核验证据链
+  kind: project
+  thread: thread_record
+  segments: 6
+  consequence: 纸质记录、设备痕迹和目击证词必须相互印证。
+- key: clock_trust
+  name: 临时同盟
+  kind: danger
+  thread: thread_alliance
+  segments: 5
+  consequence: 没有被说明代价的合作会在压力下瓦解。

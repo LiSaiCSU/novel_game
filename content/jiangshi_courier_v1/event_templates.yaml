@@ -1,0 +1,73 @@
+event_types:
+- key: MOVE
+  importance: 0.05
+  visibility: LOCAL
+- key: CONVERSATION
+  importance: 0.12
+  visibility: LOCAL
+- key: DEATH
+  importance: 1.0
+  visibility: PUBLIC
+- key: RESCUE
+  importance: 0.9
+  visibility: LOCAL
+- key: BETRAYAL
+  importance: 0.95
+  visibility: PRIVATE
+- key: PROMISE
+  importance: 0.55
+  visibility: PRIVATE
+- key: SECRET_DISCLOSURE
+  importance: 0.9
+  visibility: PRIVATE
+- key: ITEM_ACQUIRED
+  importance: 0.25
+  visibility: PRIVATE
+- key: NPC_APPROACH
+  importance: 0.45
+  visibility: LOCAL
+- key: RUMOR_SPREAD
+  importance: 0.4
+  visibility: PUBLIC
+- key: FACTION_MOVE
+  importance: 0.6
+  visibility: FACTION
+- key: QUEST_OFFER
+  importance: 0.32
+  visibility: LOCAL
+- key: DISCOVERY
+  importance: 0.65
+  visibility: PRIVATE
+- key: ENVIRONMENT_SHIFT
+  importance: 0.45
+  visibility: PUBLIC
+- key: CONFRONTATION
+  importance: 0.75
+  visibility: LOCAL
+- key: FORESHADOWING
+  importance: 0.25
+  visibility: LOCAL
+offline_templates:
+- key: systems_keep_moving
+  lod:
+  - 1
+  - 2
+  weight: 20
+  scope: information
+  requires:
+    has_public_facts: true
+  effects:
+    spread_information: true
+  narrative_hint: 场外系统不会为了任何人暂停。
+- key: people_change_positions
+  lod:
+  - 1
+  - 2
+  weight: 20
+  scope: character
+  requires:
+    character_type:
+    - MAJOR_NPC
+  effects:
+    move_along_schedule: true
+  narrative_hint: 有人先动了，留下可追查的痕迹。

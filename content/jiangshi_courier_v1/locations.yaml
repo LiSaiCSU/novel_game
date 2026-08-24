@@ -1,0 +1,154 @@
+location_types:
+- key: district
+  name: 区域
+- key: room
+  name: 场景
+locations:
+- key: night_station
+  name: 夜行驿站
+  type: district
+  parent: null
+  danger: 0
+  spirit_density: 1
+  description: 扫码枪能识别纸钱，却识别不了棺材里的投诉。
+  travel:
+    coffin_cart: 3
+    bamboo_bridge: 4
+    paper_shop: 5
+    old_temple: 6
+    reservoir_edge: 7
+    village_square: 3
+    funeral_parlor: 4
+    cliff_path: 5
+    abandoned_school: 6
+    toll_booth: 7
+    watch_house: 3
+    dam_control: 4
+    market_lane: 5
+    ancestral_hall: 6
+- key: coffin_cart
+  name: 避光运棺车
+  type: room
+  parent: null
+  danger: 0
+  spirit_density: 1
+  description: 车厢温湿度显示比乘客还挑剔。
+  travel:
+    night_station: 3
+- key: bamboo_bridge
+  name: 竹影桥
+  type: room
+  parent: null
+  danger: 0
+  spirit_density: 1
+  description: 桥上不能回头，桥下却有一盏在追车的灯。
+  travel:
+    night_station: 3
+- key: paper_shop
+  name: 纸扎铺
+  type: room
+  parent: null
+  danger: 1
+  spirit_density: 1
+  description: 老板卖的纸手机会真的响一次。
+  travel:
+    night_station: 3
+- key: old_temple
+  name: 山神旧庙
+  type: room
+  parent: null
+  danger: 0
+  spirit_density: 1
+  description: 香灰里压着一张水库施工图。
+  travel:
+    night_station: 3
+- key: reservoir_edge
+  name: 沉水库岸
+  type: room
+  parent: null
+  danger: 0
+  spirit_density: 1
+  description: 水位退下去时会露出半截牌坊。
+  travel:
+    night_station: 3
+- key: village_square
+  name: 旧镇牌楼
+  type: room
+  parent: null
+  danger: 1
+  spirit_density: 1
+  description: 子夜后，淹没的街道会在雾里显形。
+  travel:
+    night_station: 3
+- key: funeral_parlor
+  name: 白事铺后堂
+  type: room
+  parent: null
+  danger: 0
+  spirit_density: 1
+  description: 每份订单都有两张不同的死亡证明。
+  travel:
+    night_station: 3
+- key: cliff_path
+  name: 崖边驿道
+  type: room
+  parent: null
+  danger: 0
+  spirit_density: 1
+  description: 车辙只进不出，像有谁一直在绕圈。
+  travel:
+    night_station: 3
+- key: abandoned_school
+  name: 旧镇小学
+  type: room
+  parent: null
+  danger: 0
+  spirit_density: 1
+  description: 黑板上还写着三十年前的放假通知。
+  travel:
+    night_station: 3
+- key: toll_booth
+  name: 夜路收费亭
+  type: room
+  parent: null
+  danger: 1
+  spirit_density: 1
+  description: 收费员只收旧铜钱，不收现金。
+  travel:
+    night_station: 3
+- key: watch_house
+  name: 守夜人小屋
+  type: room
+  parent: null
+  danger: 0
+  spirit_density: 1
+  description: 墙上挂着历代赶尸人的路线牌。
+  travel:
+    night_station: 3
+- key: dam_control
+  name: 水库闸房
+  type: room
+  parent: null
+  danger: 0
+  spirit_density: 1
+  description: 闸门日志有一页被人撕去。
+  travel:
+    night_station: 3
+- key: market_lane
+  name: 阴阳集巷
+  type: room
+  parent: null
+  danger: 0
+  spirit_density: 1
+  description: 卖早餐的摊主比所有人都清楚谁还活着。
+  travel:
+    night_station: 3
+- key: ancestral_hall
+  name: 陈家祠堂
+  type: room
+  parent: null
+  danger: 1
+  spirit_density: 1
+  description: 客户说这里不是终点，是他要作证的地方。
+  travel:
+    night_station: 3

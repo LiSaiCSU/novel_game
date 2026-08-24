@@ -1,0 +1,35 @@
+progression_name: 行动权
+realms:
+- key: ordinary
+  name: 局中人
+  order: 0
+  stages:
+  - key: newcomer
+    name: 被卷入
+    order: 0
+  - key: capable
+    name: 能行动
+    order: 1
+  power_coefficient: 1
+  max_health: 100
+  max_spiritual_power: 100
+  lifespan_years: 100
+  xp_to_next_stage: 100
+  breakthrough_base_chance: 1
+spiritual_roots:
+- key: professional
+  name: 专长
+  speed: 1
+  breakthrough_mod: 0
+  weight: 1
+mental_states:
+- key: steady
+  name: 冷静
+  min: 0
+  max: 1.01
+  breakthrough_mod: 0
+bottleneck:
+  gain_on_failure: 0
+  max: 0
+  penalty_per_point: 0
+  decay_per_month: 0

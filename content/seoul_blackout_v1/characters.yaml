@@ -1,0 +1,605 @@
+characters:
+- key: anchor
+  name: 姜允书
+  type: MAJOR_NPC
+  age: 24
+  gender: female
+  location: service_corridor
+  faction: organizer
+  faction_rank: 前奖学金生、玩家旧友
+  realm: ordinary
+  realm_stage: newcomer
+  stats:
+    strength: 10
+    agility: 11
+    perception: 12
+    intelligence: 14
+    willpower: 12
+    charisma: 13
+  background: 前奖学金生、玩家旧友。在首尔·汉江会馆的今晚，任何一个人都不能只靠旁观离开。
+  personality:
+    traits:
+      guarded: 0.65
+      driven: 0.72
+    values:
+    - 真相
+    - 活下去
+    taboos:
+    - 替人背锅
+    speech_style: 短句、给出能核验的细节，不替任何人做决定
+    risk_tolerance: 0.55
+  emotion:
+    dominant: tense
+    valence: -0.15
+    arousal: 0.6
+    intensity: 0.55
+  long_term_goal: 找回被取消的录取资格
+  short_term_goals:
+  - 找回被取消的录取资格
+  - 在倒计时结束前确认谁在说谎
+  schedule:
+    default: work
+    slots:
+    - phase: morning
+      activity: work
+      location: service_corridor
+    - phase: night
+      activity: rest
+      location: archive_lift
+  items: []
+  skills:
+  - investigation
+  reputation:
+    global: 10
+    by_faction:
+      organizer: 45
+  secret: 她手里的录取通知书日期比官方早一年
+  capabilities:
+  - 观察
+  - 交涉
+  - 行动
+- key: rival
+  name: 韩泰勋
+  type: MAJOR_NPC
+  age: 25
+  gender: male
+  location: archive_lift
+  faction: authority
+  faction_rank: 财团继承人
+  realm: ordinary
+  realm_stage: newcomer
+  stats:
+    strength: 11
+    agility: 12
+    perception: 13
+    intelligence: 15
+    willpower: 13
+    charisma: 14
+  background: 财团继承人。在首尔·汉江会馆的今晚，任何一个人都不能只靠旁观离开。
+  personality:
+    traits:
+      guarded: 0.65
+      driven: 0.72
+    values:
+    - 真相
+    - 活下去
+    taboos:
+    - 替人背锅
+    speech_style: 短句、给出能核验的细节，不替任何人做决定
+    risk_tolerance: 0.55
+  emotion:
+    dominant: tense
+    valence: -0.15
+    arousal: 0.6
+    intensity: 0.55
+  long_term_goal: 让所有人接受他的救援方案
+  short_term_goals:
+  - 让所有人接受他的救援方案
+  - 在倒计时结束前确认谁在说谎
+  schedule:
+    default: work
+    slots:
+    - phase: morning
+      activity: work
+      location: archive_lift
+    - phase: night
+      activity: rest
+      location: rooftop_garden
+  items: []
+  skills:
+  - negotiation
+  reputation:
+    global: 13
+    by_faction:
+      authority: 48
+  secret: 他知道氧气不会真正断，但不知道谁会先恐慌
+  capabilities:
+  - 观察
+  - 交涉
+  - 行动
+- key: ally
+  name: 崔敏静
+  type: MAJOR_NPC
+  age: 26
+  gender: female
+  location: rooftop_garden
+  faction: witnesses
+  faction_rank: 电视台制片人
+  realm: ordinary
+  realm_stage: newcomer
+  stats:
+    strength: 12
+    agility: 13
+    perception: 14
+    intelligence: 16
+    willpower: 14
+    charisma: 10
+  background: 电视台制片人。在首尔·汉江会馆的今晚，任何一个人都不能只靠旁观离开。
+  personality:
+    traits:
+      guarded: 0.65
+      driven: 0.72
+    values:
+    - 真相
+    - 活下去
+    taboos:
+    - 替人背锅
+    speech_style: 短句、给出能核验的细节，不替任何人做决定
+    risk_tolerance: 0.55
+  emotion:
+    dominant: tense
+    valence: -0.15
+    arousal: 0.6
+    intensity: 0.55
+  long_term_goal: 拿到独家直播画面
+  short_term_goals:
+  - 拿到独家直播画面
+  - 在倒计时结束前确认谁在说谎
+  schedule:
+    default: work
+    slots:
+    - phase: morning
+      activity: work
+      location: rooftop_garden
+    - phase: night
+      activity: rest
+      location: security_room
+  items: []
+  skills:
+  - investigation
+  reputation:
+    global: 16
+    by_faction:
+      witnesses: 51
+  secret: 匿名邀请函由她的旧账号发出
+  capabilities:
+  - 观察
+  - 交涉
+  - 行动
+- key: witness
+  name: 朴志浩
+  type: MAJOR_NPC
+  age: 27
+  gender: male
+  location: security_room
+  faction: authority
+  faction_rank: 安保工程师
+  realm: ordinary
+  realm_stage: newcomer
+  stats:
+    strength: 13
+    agility: 10
+    perception: 15
+    intelligence: 12
+    willpower: 15
+    charisma: 11
+  background: 安保工程师。在首尔·汉江会馆的今晚，任何一个人都不能只靠旁观离开。
+  personality:
+    traits:
+      guarded: 0.65
+      driven: 0.72
+    values:
+    - 真相
+    - 活下去
+    taboos:
+    - 替人背锅
+    speech_style: 短句、给出能核验的细节，不替任何人做决定
+    risk_tolerance: 0.55
+  emotion:
+    dominant: tense
+    valence: -0.15
+    arousal: 0.6
+    intensity: 0.55
+  long_term_goal: 绕过楼层锁定
+  short_term_goals:
+  - 绕过楼层锁定
+  - 在倒计时结束前确认谁在说谎
+  schedule:
+    default: work
+    slots:
+    - phase: morning
+      activity: work
+      location: security_room
+    - phase: night
+      activity: rest
+      location: old_library
+  items: []
+  skills:
+  - investigation
+  reputation:
+    global: 19
+    by_faction:
+      authority: 54
+  secret: 他曾替校方删过一段监控
+  capabilities:
+  - 观察
+  - 交涉
+  - 行动
+- key: gatekeeper
+  name: 李瑞妍
+  type: MAJOR_NPC
+  age: 28
+  gender: female
+  location: old_library
+  faction: organizer
+  faction_rank: 检察官
+  realm: ordinary
+  realm_stage: newcomer
+  stats:
+    strength: 10
+    agility: 11
+    perception: 16
+    intelligence: 13
+    willpower: 12
+    charisma: 12
+  background: 检察官。在首尔·汉江会馆的今晚，任何一个人都不能只靠旁观离开。
+  personality:
+    traits:
+      guarded: 0.65
+      driven: 0.72
+    values:
+    - 真相
+    - 活下去
+    taboos:
+    - 替人背锅
+    speech_style: 短句、给出能核验的细节，不替任何人做决定
+    risk_tolerance: 0.55
+  emotion:
+    dominant: tense
+    valence: -0.15
+    arousal: 0.6
+    intensity: 0.55
+  long_term_goal: 确认名单是否构成犯罪证据
+  short_term_goals:
+  - 确认名单是否构成犯罪证据
+  - 在倒计时结束前确认谁在说谎
+  schedule:
+    default: work
+    slots:
+    - phase: morning
+      activity: work
+      location: old_library
+    - phase: night
+      activity: rest
+      location: kitchen
+  items: []
+  skills:
+  - negotiation
+  reputation:
+    global: 22
+    by_faction:
+      organizer: 57
+  secret: 她母亲正是当年审核委员会成员
+  capabilities:
+  - 观察
+  - 交涉
+  - 行动
+- key: broker
+  name: 吴道贤
+  type: MAJOR_NPC
+  age: 29
+  gender: male
+  location: kitchen
+  faction: outsiders
+  faction_rank: 名誉院长助理
+  realm: ordinary
+  realm_stage: newcomer
+  stats:
+    strength: 11
+    agility: 12
+    perception: 12
+    intelligence: 14
+    willpower: 13
+    charisma: 13
+  background: 名誉院长助理。在首尔·汉江会馆的今晚，任何一个人都不能只靠旁观离开。
+  personality:
+    traits:
+      guarded: 0.65
+      driven: 0.72
+    values:
+    - 真相
+    - 活下去
+    taboos:
+    - 替人背锅
+    speech_style: 短句、给出能核验的细节，不替任何人做决定
+    risk_tolerance: 0.55
+  emotion:
+    dominant: tense
+    valence: -0.15
+    arousal: 0.6
+    intensity: 0.55
+  long_term_goal: 保住会馆和院长名誉
+  short_term_goals:
+  - 保住会馆和院长名誉
+  - 在倒计时结束前确认谁在说谎
+  schedule:
+    default: work
+    slots:
+    - phase: morning
+      activity: work
+      location: kitchen
+    - phase: night
+      activity: rest
+      location: parking_floor
+  items: []
+  skills:
+  - negotiation
+  reputation:
+    global: 25
+    by_faction:
+      outsiders: 60
+  secret: 负一层档案柜的钥匙在他袖扣里
+  capabilities:
+  - 观察
+  - 交涉
+  - 行动
+- key: outsider
+  name: 金夏琳
+  type: MINOR_NPC
+  age: 30
+  gender: female
+  location: parking_floor
+  faction: witnesses
+  faction_rank: 急诊医生
+  realm: ordinary
+  realm_stage: newcomer
+  stats:
+    strength: 12
+    agility: 13
+    perception: 13
+    intelligence: 15
+    willpower: 14
+    charisma: 14
+  background: 急诊医生。在首尔·汉江会馆的今晚，任何一个人都不能只靠旁观离开。
+  personality:
+    traits:
+      guarded: 0.65
+      driven: 0.72
+    values:
+    - 真相
+    - 活下去
+    taboos:
+    - 替人背锅
+    speech_style: 短句、给出能核验的细节，不替任何人做决定
+    risk_tolerance: 0.55
+  emotion:
+    dominant: tense
+    valence: -0.15
+    arousal: 0.6
+    intensity: 0.55
+  long_term_goal: 确保无人因恐慌受伤
+  short_term_goals:
+  - 确保无人因恐慌受伤
+  - 在倒计时结束前确认谁在说谎
+  schedule:
+    default: work
+    slots:
+    - phase: morning
+      activity: work
+      location: parking_floor
+    - phase: night
+      activity: rest
+      location: dean_office
+  items: []
+  skills:
+  - investigation
+  reputation:
+    global: 28
+    by_faction:
+      witnesses: 63
+  secret: 她认识那名从名单上消失的学生
+  capabilities:
+  - 观察
+  - 交涉
+  - 行动
+- key: insider
+  name: 郑宇成
+  type: MINOR_NPC
+  age: 31
+  gender: male
+  location: dean_office
+  faction: organizer
+  faction_rank: 礼宾经理
+  realm: ordinary
+  realm_stage: newcomer
+  stats:
+    strength: 13
+    agility: 10
+    perception: 14
+    intelligence: 16
+    willpower: 15
+    charisma: 10
+  background: 礼宾经理。在首尔·汉江会馆的今晚，任何一个人都不能只靠旁观离开。
+  personality:
+    traits:
+      guarded: 0.65
+      driven: 0.72
+    values:
+    - 真相
+    - 活下去
+    taboos:
+    - 替人背锅
+    speech_style: 短句、给出能核验的细节，不替任何人做决定
+    risk_tolerance: 0.55
+  emotion:
+    dominant: tense
+    valence: -0.15
+    arousal: 0.6
+    intensity: 0.55
+  long_term_goal: 维持秩序
+  short_term_goals:
+  - 维持秩序
+  - 在倒计时结束前确认谁在说谎
+  schedule:
+    default: work
+    slots:
+    - phase: morning
+      activity: work
+      location: dean_office
+    - phase: night
+      activity: rest
+      location: river_dock
+  items: []
+  skills:
+  - negotiation
+  reputation:
+    global: 31
+    by_faction:
+      organizer: 66
+  secret: 他把每个人的房卡复制了一份
+  capabilities:
+  - 观察
+  - 交涉
+  - 行动
+- key: wildcard
+  name: 宋恩雨
+  type: MINOR_NPC
+  age: 32
+  gender: female
+  location: river_dock
+  faction: outsiders
+  faction_rank: 实习礼宾
+  realm: ordinary
+  realm_stage: newcomer
+  stats:
+    strength: 10
+    agility: 11
+    perception: 15
+    intelligence: 12
+    willpower: 12
+    charisma: 11
+  background: 实习礼宾。在首尔·汉江会馆的今晚，任何一个人都不能只靠旁观离开。
+  personality:
+    traits:
+      guarded: 0.65
+      driven: 0.72
+    values:
+    - 真相
+    - 活下去
+    taboos:
+    - 替人背锅
+    speech_style: 短句、给出能核验的细节，不替任何人做决定
+    risk_tolerance: 0.55
+  emotion:
+    dominant: tense
+    valence: -0.15
+    arousal: 0.6
+    intensity: 0.55
+  long_term_goal: 拿回自己被扣下的工资
+  short_term_goals:
+  - 拿回自己被扣下的工资
+  - 在倒计时结束前确认谁在说谎
+  schedule:
+    default: work
+    slots:
+    - phase: morning
+      activity: work
+      location: river_dock
+    - phase: night
+      activity: rest
+      location: server_vault
+  items: []
+  skills:
+  - negotiation
+  reputation:
+    global: 34
+    by_faction:
+      outsiders: 69
+  secret: 她在洗衣房发现过带血的旧校徽
+  capabilities:
+  - 观察
+  - 交涉
+  - 行动
+relationships:
+- a: anchor
+  b: player
+  affection: 0
+  trust: 8
+  respect: 5
+  suspicion: 15
+  familiarity: 8
+  boundaries: 60
+- a: rival
+  b: player
+  affection: 0
+  trust: 6
+  respect: 4
+  suspicion: 19
+  familiarity: 9
+  boundaries: 60
+- a: ally
+  b: player
+  affection: 0
+  trust: 4
+  respect: 3
+  suspicion: 23
+  familiarity: 10
+  boundaries: 60
+- a: witness
+  b: player
+  affection: 0
+  trust: 2
+  respect: 2
+  suspicion: 27
+  familiarity: 11
+  boundaries: 60
+- a: gatekeeper
+  b: player
+  affection: 0
+  trust: 0
+  respect: 1
+  suspicion: 31
+  familiarity: 12
+  boundaries: 60
+- a: broker
+  b: player
+  affection: 0
+  trust: -2
+  respect: 0
+  suspicion: 35
+  familiarity: 13
+  boundaries: 60
+- a: outsider
+  b: player
+  affection: 0
+  trust: -4
+  respect: -1
+  suspicion: 39
+  familiarity: 14
+  boundaries: 60
+- a: insider
+  b: player
+  affection: 0
+  trust: -6
+  respect: -2
+  suspicion: 43
+  familiarity: 15
+  boundaries: 60
+- a: wildcard
+  b: player
+  affection: 0
+  trust: -8
+  respect: -3
+  suspicion: 47
+  familiarity: 16
+  boundaries: 60

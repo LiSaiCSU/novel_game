@@ -1,0 +1,605 @@
+characters:
+- key: anchor
+  name: 程雾
+  type: MAJOR_NPC
+  age: 24
+  gender: female
+  location: room_404
+  faction: organizer
+  faction_rank: 404住客
+  realm: ordinary
+  realm_stage: newcomer
+  stats:
+    strength: 10
+    agility: 11
+    perception: 12
+    intelligence: 14
+    willpower: 12
+    charisma: 13
+  background: 404住客。在雾港·云岚旅店的今晚，任何一个人都不能只靠旁观离开。
+  personality:
+    traits:
+      guarded: 0.65
+      driven: 0.72
+    values:
+    - 真相
+    - 活下去
+    taboos:
+    - 替人背锅
+    speech_style: 短句、给出能核验的细节，不替任何人做决定
+    risk_tolerance: 0.55
+  emotion:
+    dominant: tense
+    valence: -0.15
+    arousal: 0.6
+    intensity: 0.55
+  long_term_goal: 找回自己的真实姓名
+  short_term_goals:
+  - 找回自己的真实姓名
+  - 在倒计时结束前确认谁在说谎
+  schedule:
+    default: work
+    slots:
+    - phase: morning
+      activity: work
+      location: room_404
+    - phase: night
+      activity: rest
+      location: old_elevator
+  items: []
+  skills:
+  - investigation
+  reputation:
+    global: 10
+    by_faction:
+      organizer: 45
+  secret: 她是事故幸存者，不是亡者
+  capabilities:
+  - 观察
+  - 交涉
+  - 行动
+- key: rival
+  name: 许言
+  type: MAJOR_NPC
+  age: 25
+  gender: male
+  location: old_elevator
+  faction: authority
+  faction_rank: 夜班保安
+  realm: ordinary
+  realm_stage: newcomer
+  stats:
+    strength: 11
+    agility: 12
+    perception: 13
+    intelligence: 15
+    willpower: 13
+    charisma: 14
+  background: 夜班保安。在雾港·云岚旅店的今晚，任何一个人都不能只靠旁观离开。
+  personality:
+    traits:
+      guarded: 0.65
+      driven: 0.72
+    values:
+    - 真相
+    - 活下去
+    taboos:
+    - 替人背锅
+    speech_style: 短句、给出能核验的细节，不替任何人做决定
+    risk_tolerance: 0.55
+  emotion:
+    dominant: tense
+    valence: -0.15
+    arousal: 0.6
+    intensity: 0.55
+  long_term_goal: 守住旅店的门
+  short_term_goals:
+  - 守住旅店的门
+  - 在倒计时结束前确认谁在说谎
+  schedule:
+    default: work
+    slots:
+    - phase: morning
+      activity: work
+      location: old_elevator
+    - phase: night
+      activity: rest
+      location: boiler_room
+  items: []
+  skills:
+  - negotiation
+  reputation:
+    global: 13
+    by_faction:
+      authority: 48
+  secret: 他十年前在渡轮码头值勤
+  capabilities:
+  - 观察
+  - 交涉
+  - 行动
+- key: ally
+  name: 林蓁
+  type: MAJOR_NPC
+  age: 26
+  gender: female
+  location: boiler_room
+  faction: witnesses
+  faction_rank: 事故记者
+  realm: ordinary
+  realm_stage: newcomer
+  stats:
+    strength: 12
+    agility: 13
+    perception: 14
+    intelligence: 16
+    willpower: 14
+    charisma: 10
+  background: 事故记者。在雾港·云岚旅店的今晚，任何一个人都不能只靠旁观离开。
+  personality:
+    traits:
+      guarded: 0.65
+      driven: 0.72
+    values:
+    - 真相
+    - 活下去
+    taboos:
+    - 替人背锅
+    speech_style: 短句、给出能核验的细节，不替任何人做决定
+    risk_tolerance: 0.55
+  emotion:
+    dominant: tense
+    valence: -0.15
+    arousal: 0.6
+    intensity: 0.55
+  long_term_goal: 重开调查报道
+  short_term_goals:
+  - 重开调查报道
+  - 在倒计时结束前确认谁在说谎
+  schedule:
+    default: work
+    slots:
+    - phase: morning
+      activity: work
+      location: boiler_room
+    - phase: night
+      activity: rest
+      location: rooftop_pool
+  items: []
+  skills:
+  - investigation
+  reputation:
+    global: 16
+    by_faction:
+      witnesses: 51
+  secret: 她曾发表过错误的死亡名单
+  capabilities:
+  - 观察
+  - 交涉
+  - 行动
+- key: witness
+  name: 周阿姨
+  type: MAJOR_NPC
+  age: 27
+  gender: male
+  location: rooftop_pool
+  faction: authority
+  faction_rank: 旅店厨师
+  realm: ordinary
+  realm_stage: newcomer
+  stats:
+    strength: 13
+    agility: 10
+    perception: 15
+    intelligence: 12
+    willpower: 15
+    charisma: 11
+  background: 旅店厨师。在雾港·云岚旅店的今晚，任何一个人都不能只靠旁观离开。
+  personality:
+    traits:
+      guarded: 0.65
+      driven: 0.72
+    values:
+    - 真相
+    - 活下去
+    taboos:
+    - 替人背锅
+    speech_style: 短句、给出能核验的细节，不替任何人做决定
+    risk_tolerance: 0.55
+  emotion:
+    dominant: tense
+    valence: -0.15
+    arousal: 0.6
+    intensity: 0.55
+  long_term_goal: 让每个住客吃到热饭
+  short_term_goals:
+  - 让每个住客吃到热饭
+  - 在倒计时结束前确认谁在说谎
+  schedule:
+    default: work
+    slots:
+    - phase: morning
+      activity: work
+      location: rooftop_pool
+    - phase: night
+      activity: rest
+      location: laundry
+  items: []
+  skills:
+  - investigation
+  reputation:
+    global: 19
+    by_faction:
+      authority: 54
+  secret: 她认得每一位从登记簿出现的人
+  capabilities:
+  - 观察
+  - 交涉
+  - 行动
+- key: gatekeeper
+  name: 韩牧
+  type: MAJOR_NPC
+  age: 28
+  gender: female
+  location: laundry
+  faction: organizer
+  faction_rank: 港务处主任
+  realm: ordinary
+  realm_stage: newcomer
+  stats:
+    strength: 10
+    agility: 11
+    perception: 16
+    intelligence: 13
+    willpower: 12
+    charisma: 12
+  background: 港务处主任。在雾港·云岚旅店的今晚，任何一个人都不能只靠旁观离开。
+  personality:
+    traits:
+      guarded: 0.65
+      driven: 0.72
+    values:
+    - 真相
+    - 活下去
+    taboos:
+    - 替人背锅
+    speech_style: 短句、给出能核验的细节，不替任何人做决定
+    risk_tolerance: 0.55
+  emotion:
+    dominant: tense
+    valence: -0.15
+    arousal: 0.6
+    intensity: 0.55
+  long_term_goal: 维持旧案结论
+  short_term_goals:
+  - 维持旧案结论
+  - 在倒计时结束前确认谁在说谎
+  schedule:
+    default: work
+    slots:
+    - phase: morning
+      activity: work
+      location: laundry
+    - phase: night
+      activity: rest
+      location: staff_office
+  items: []
+  skills:
+  - negotiation
+  reputation:
+    global: 22
+    by_faction:
+      organizer: 57
+  secret: 他签过删除幸存者信息的文件
+  capabilities:
+  - 观察
+  - 交涉
+  - 行动
+- key: broker
+  name: 唐小满
+  type: MAJOR_NPC
+  age: 29
+  gender: male
+  location: staff_office
+  faction: outsiders
+  faction_rank: 外卖骑手
+  realm: ordinary
+  realm_stage: newcomer
+  stats:
+    strength: 11
+    agility: 12
+    perception: 12
+    intelligence: 14
+    willpower: 13
+    charisma: 13
+  background: 外卖骑手。在雾港·云岚旅店的今晚，任何一个人都不能只靠旁观离开。
+  personality:
+    traits:
+      guarded: 0.65
+      driven: 0.72
+    values:
+    - 真相
+    - 活下去
+    taboos:
+    - 替人背锅
+    speech_style: 短句、给出能核验的细节，不替任何人做决定
+    risk_tolerance: 0.55
+  emotion:
+    dominant: tense
+    valence: -0.15
+    arousal: 0.6
+    intensity: 0.55
+  long_term_goal: 弄清自己为何会送到404
+  short_term_goals:
+  - 弄清自己为何会送到404
+  - 在倒计时结束前确认谁在说谎
+  schedule:
+    default: work
+    slots:
+    - phase: morning
+      activity: work
+      location: staff_office
+    - phase: night
+      activity: rest
+      location: ferry_terminal
+  items: []
+  skills:
+  - negotiation
+  reputation:
+    global: 25
+    by_faction:
+      outsiders: 60
+  secret: 她的定位记录总在十年前的码头
+  capabilities:
+  - 观察
+  - 交涉
+  - 行动
+- key: outsider
+  name: 李修
+  type: MINOR_NPC
+  age: 30
+  gender: female
+  location: ferry_terminal
+  faction: witnesses
+  faction_rank: 前任经理
+  realm: ordinary
+  realm_stage: newcomer
+  stats:
+    strength: 12
+    agility: 13
+    perception: 13
+    intelligence: 15
+    willpower: 14
+    charisma: 14
+  background: 前任经理。在雾港·云岚旅店的今晚，任何一个人都不能只靠旁观离开。
+  personality:
+    traits:
+      guarded: 0.65
+      driven: 0.72
+    values:
+    - 真相
+    - 活下去
+    taboos:
+    - 替人背锅
+    speech_style: 短句、给出能核验的细节，不替任何人做决定
+    risk_tolerance: 0.55
+  emotion:
+    dominant: tense
+    valence: -0.15
+    arousal: 0.6
+    intensity: 0.55
+  long_term_goal: 完成未写完的交接
+  short_term_goals:
+  - 完成未写完的交接
+  - 在倒计时结束前确认谁在说谎
+  schedule:
+    default: work
+    slots:
+    - phase: morning
+      activity: work
+      location: ferry_terminal
+    - phase: night
+      activity: rest
+      location: archive
+  items: []
+  skills:
+  - investigation
+  reputation:
+    global: 28
+    by_faction:
+      witnesses: 63
+  secret: 他没有离职，只是被登记为退房
+  capabilities:
+  - 观察
+  - 交涉
+  - 行动
+- key: insider
+  name: 苏姨
+  type: MINOR_NPC
+  age: 31
+  gender: male
+  location: archive
+  faction: organizer
+  faction_rank: 家属代表
+  realm: ordinary
+  realm_stage: newcomer
+  stats:
+    strength: 13
+    agility: 10
+    perception: 14
+    intelligence: 16
+    willpower: 15
+    charisma: 10
+  background: 家属代表。在雾港·云岚旅店的今晚，任何一个人都不能只靠旁观离开。
+  personality:
+    traits:
+      guarded: 0.65
+      driven: 0.72
+    values:
+    - 真相
+    - 活下去
+    taboos:
+    - 替人背锅
+    speech_style: 短句、给出能核验的细节，不替任何人做决定
+    risk_tolerance: 0.55
+  emotion:
+    dominant: tense
+    valence: -0.15
+    arousal: 0.6
+    intensity: 0.55
+  long_term_goal: 找到少掉的四个名字
+  short_term_goals:
+  - 找到少掉的四个名字
+  - 在倒计时结束前确认谁在说谎
+  schedule:
+    default: work
+    slots:
+    - phase: morning
+      activity: work
+      location: archive
+    - phase: night
+      activity: rest
+      location: chapel
+  items: []
+  skills:
+  - negotiation
+  reputation:
+    global: 31
+    by_faction:
+      organizer: 66
+  secret: 她手里有未公开的录音带
+  capabilities:
+  - 观察
+  - 交涉
+  - 行动
+- key: wildcard
+  name: 白舟
+  type: MINOR_NPC
+  age: 32
+  gender: female
+  location: chapel
+  faction: outsiders
+  faction_rank: 旅店维修工
+  realm: ordinary
+  realm_stage: newcomer
+  stats:
+    strength: 10
+    agility: 11
+    perception: 15
+    intelligence: 12
+    willpower: 12
+    charisma: 11
+  background: 旅店维修工。在雾港·云岚旅店的今晚，任何一个人都不能只靠旁观离开。
+  personality:
+    traits:
+      guarded: 0.65
+      driven: 0.72
+    values:
+    - 真相
+    - 活下去
+    taboos:
+    - 替人背锅
+    speech_style: 短句、给出能核验的细节，不替任何人做决定
+    risk_tolerance: 0.55
+  emotion:
+    dominant: tense
+    valence: -0.15
+    arousal: 0.6
+    intensity: 0.55
+  long_term_goal: 修好锅炉与电梯
+  short_term_goals:
+  - 修好锅炉与电梯
+  - 在倒计时结束前确认谁在说谎
+  schedule:
+    default: work
+    slots:
+    - phase: morning
+      activity: work
+      location: chapel
+    - phase: night
+      activity: rest
+      location: kitchen
+  items: []
+  skills:
+  - negotiation
+  reputation:
+    global: 34
+    by_faction:
+      outsiders: 69
+  secret: 他的钥匙能打开每一层不存在的门
+  capabilities:
+  - 观察
+  - 交涉
+  - 行动
+relationships:
+- a: anchor
+  b: player
+  affection: 0
+  trust: 8
+  respect: 5
+  suspicion: 15
+  familiarity: 8
+  boundaries: 60
+- a: rival
+  b: player
+  affection: 0
+  trust: 6
+  respect: 4
+  suspicion: 19
+  familiarity: 9
+  boundaries: 60
+- a: ally
+  b: player
+  affection: 0
+  trust: 4
+  respect: 3
+  suspicion: 23
+  familiarity: 10
+  boundaries: 60
+- a: witness
+  b: player
+  affection: 0
+  trust: 2
+  respect: 2
+  suspicion: 27
+  familiarity: 11
+  boundaries: 60
+- a: gatekeeper
+  b: player
+  affection: 0
+  trust: 0
+  respect: 1
+  suspicion: 31
+  familiarity: 12
+  boundaries: 60
+- a: broker
+  b: player
+  affection: 0
+  trust: -2
+  respect: 0
+  suspicion: 35
+  familiarity: 13
+  boundaries: 60
+- a: outsider
+  b: player
+  affection: 0
+  trust: -4
+  respect: -1
+  suspicion: 39
+  familiarity: 14
+  boundaries: 60
+- a: insider
+  b: player
+  affection: 0
+  trust: -6
+  respect: -2
+  suspicion: 43
+  familiarity: 15
+  boundaries: 60
+- a: wildcard
+  b: player
+  affection: 0
+  trust: -8
+  respect: -3
+  suspicion: 47
+  familiarity: 16
+  boundaries: 60

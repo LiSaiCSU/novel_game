@@ -1,0 +1,154 @@
+location_types:
+- key: district
+  name: 区域
+- key: room
+  name: 场景
+locations:
+- key: oxygen_core
+  name: 氧循环核心
+  type: district
+  parent: null
+  danger: 0
+  spirit_density: 1
+  description: 阀门显示的六小时比任何演讲都可靠。
+  travel:
+    observation_dome: 3
+    power_spine: 4
+    habitat_ring: 5
+    sub_dock: 6
+    mining_tunnel: 7
+    water_farm: 3
+    med_bay: 4
+    city_hall: 5
+    data_well: 6
+    maintenance_shaft: 7
+    school_pod: 3
+    archive_bubble: 4
+    waste_heat: 5
+    escape_lock: 6
+- key: observation_dome
+  name: 贵宾观景穹顶
+  type: room
+  parent: null
+  danger: 0
+  spirit_density: 1
+  description: 玻璃外是深海，玻璃内是被锁住的氧仓。
+  travel:
+    oxygen_core: 3
+- key: power_spine
+  name: 主电力脊柱
+  type: room
+  parent: null
+  danger: 0
+  spirit_density: 1
+  description: 每重启一段，就会让另一段熄灭。
+  travel:
+    oxygen_core: 3
+- key: habitat_ring
+  name: 居民舱环
+  type: room
+  parent: null
+  danger: 1
+  spirit_density: 1
+  description: 家庭氧气表正在一个接一个变黄。
+  travel:
+    oxygen_core: 3
+- key: sub_dock
+  name: 潜艇码头
+  type: room
+  parent: null
+  danger: 0
+  spirit_density: 1
+  description: 两艘救生潜艇只有一艘满电。
+  travel:
+    oxygen_core: 3
+- key: mining_tunnel
+  name: 采矿联络隧道
+  type: room
+  parent: null
+  danger: 0
+  spirit_density: 1
+  description: 事故报告被标成了设备维护。
+  travel:
+    oxygen_core: 3
+- key: water_farm
+  name: 海藻水培区
+  type: room
+  parent: null
+  danger: 1
+  spirit_density: 1
+  description: 能临时增氧，也需要大量电力。
+  travel:
+    oxygen_core: 3
+- key: med_bay
+  name: 深海医务舱
+  type: room
+  parent: null
+  danger: 0
+  spirit_density: 1
+  description: 医生必须先决定哪些设备不断电。
+  travel:
+    oxygen_core: 3
+- key: city_hall
+  name: 海城指挥厅
+  type: room
+  parent: null
+  danger: 0
+  spirit_density: 1
+  description: 公开广播和内部配给表完全不同。
+  travel:
+    oxygen_core: 3
+- key: data_well
+  name: 海底数据井
+  type: room
+  parent: null
+  danger: 0
+  spirit_density: 1
+  description: 地面公司的远程指令还在重复发送。
+  travel:
+    oxygen_core: 3
+- key: maintenance_shaft
+  name: 外壳检修井
+  type: room
+  parent: null
+  danger: 1
+  spirit_density: 1
+  description: 外部压力让每一次开门都要付出代价。
+  travel:
+    oxygen_core: 3
+- key: school_pod
+  name: 居民学校舱
+  type: room
+  parent: null
+  danger: 0
+  spirit_density: 1
+  description: 孩子们正在练习一次并不存在的安全演习。
+  travel:
+    oxygen_core: 3
+- key: archive_bubble
+  name: 旧城档案泡
+  type: room
+  parent: null
+  danger: 0
+  spirit_density: 1
+  description: 第一批移民留下了备用氧仓设计。
+  travel:
+    oxygen_core: 3
+- key: waste_heat
+  name: 余热回收站
+  type: room
+  parent: null
+  danger: 0
+  spirit_density: 1
+  description: 一组废热机能给海藻区续命。
+  travel:
+    oxygen_core: 3
+- key: escape_lock
+  name: 紧急气闸
+  type: room
+  parent: null
+  danger: 1
+  spirit_density: 1
+  description: 撤离名单已经生成，却没有署名。
+  travel:
+    oxygen_core: 3

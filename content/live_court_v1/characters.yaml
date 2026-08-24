@@ -1,0 +1,605 @@
+characters:
+- key: anchor
+  name: 梁默
+  type: MAJOR_NPC
+  age: 24
+  gender: female
+  location: evidence_lab
+  faction: organizer
+  faction_rank: 公设辩护律师
+  realm: ordinary
+  realm_stage: newcomer
+  stats:
+    strength: 10
+    agility: 11
+    perception: 12
+    intelligence: 14
+    willpower: 12
+    charisma: 13
+  background: 公设辩护律师。在澄江市·网络法庭的今晚，任何一个人都不能只靠旁观离开。
+  personality:
+    traits:
+      guarded: 0.65
+      driven: 0.72
+    values:
+    - 真相
+    - 活下去
+    taboos:
+    - 替人背锅
+    speech_style: 短句、给出能核验的细节，不替任何人做决定
+    risk_tolerance: 0.55
+  emotion:
+    dominant: tense
+    valence: -0.15
+    arousal: 0.6
+    intensity: 0.55
+  long_term_goal: 在最后陈述前找到硬证据
+  short_term_goals:
+  - 在最后陈述前找到硬证据
+  - 在倒计时结束前确认谁在说谎
+  schedule:
+    default: work
+    slots:
+    - phase: morning
+      activity: work
+      location: evidence_lab
+    - phase: night
+      activity: rest
+      location: old_office
+  items: []
+  skills:
+  - investigation
+  reputation:
+    global: 10
+    by_faction:
+      organizer: 45
+  secret: 他曾输过一宗相似合成录音案
+  capabilities:
+  - 观察
+  - 交涉
+  - 行动
+- key: rival
+  name: 苏青
+  type: MAJOR_NPC
+  age: 25
+  gender: male
+  location: old_office
+  faction: authority
+  faction_rank: 电子证据鉴定人
+  realm: ordinary
+  realm_stage: newcomer
+  stats:
+    strength: 11
+    agility: 12
+    perception: 13
+    intelligence: 15
+    willpower: 13
+    charisma: 14
+  background: 电子证据鉴定人。在澄江市·网络法庭的今晚，任何一个人都不能只靠旁观离开。
+  personality:
+    traits:
+      guarded: 0.65
+      driven: 0.72
+    values:
+    - 真相
+    - 活下去
+    taboos:
+    - 替人背锅
+    speech_style: 短句、给出能核验的细节，不替任何人做决定
+    risk_tolerance: 0.55
+  emotion:
+    dominant: tense
+    valence: -0.15
+    arousal: 0.6
+    intensity: 0.55
+  long_term_goal: 验证录音真伪
+  short_term_goals:
+  - 验证录音真伪
+  - 在倒计时结束前确认谁在说谎
+  schedule:
+    default: work
+    slots:
+    - phase: morning
+      activity: work
+      location: old_office
+    - phase: night
+      activity: rest
+      location: data_center
+  items: []
+  skills:
+  - negotiation
+  reputation:
+    global: 13
+    by_faction:
+      authority: 48
+  secret: 她的初稿被人删改过
+  capabilities:
+  - 观察
+  - 交涉
+  - 行动
+- key: ally
+  name: 程铭
+  type: MAJOR_NPC
+  age: 26
+  gender: female
+  location: data_center
+  faction: witnesses
+  faction_rank: 检方技术顾问
+  realm: ordinary
+  realm_stage: newcomer
+  stats:
+    strength: 12
+    agility: 13
+    perception: 14
+    intelligence: 16
+    willpower: 14
+    charisma: 10
+  background: 检方技术顾问。在澄江市·网络法庭的今晚，任何一个人都不能只靠旁观离开。
+  personality:
+    traits:
+      guarded: 0.65
+      driven: 0.72
+    values:
+    - 真相
+    - 活下去
+    taboos:
+    - 替人背锅
+    speech_style: 短句、给出能核验的细节，不替任何人做决定
+    risk_tolerance: 0.55
+  emotion:
+    dominant: tense
+    valence: -0.15
+    arousal: 0.6
+    intensity: 0.55
+  long_term_goal: 维护证据链可信度
+  short_term_goals:
+  - 维护证据链可信度
+  - 在倒计时结束前确认谁在说谎
+  schedule:
+    default: work
+    slots:
+    - phase: morning
+      activity: work
+      location: data_center
+    - phase: night
+      activity: rest
+      location: public_defense
+  items: []
+  skills:
+  - investigation
+  reputation:
+    global: 16
+    by_faction:
+      witnesses: 51
+  secret: 他发现时区错误却没有上报
+  capabilities:
+  - 观察
+  - 交涉
+  - 行动
+- key: witness
+  name: 顾薇
+  type: MAJOR_NPC
+  age: 27
+  gender: male
+  location: public_defense
+  faction: authority
+  faction_rank: 关键证人
+  realm: ordinary
+  realm_stage: newcomer
+  stats:
+    strength: 13
+    agility: 10
+    perception: 15
+    intelligence: 12
+    willpower: 15
+    charisma: 11
+  background: 关键证人。在澄江市·网络法庭的今晚，任何一个人都不能只靠旁观离开。
+  personality:
+    traits:
+      guarded: 0.65
+      driven: 0.72
+    values:
+    - 真相
+    - 活下去
+    taboos:
+    - 替人背锅
+    speech_style: 短句、给出能核验的细节，不替任何人做决定
+    risk_tolerance: 0.55
+  emotion:
+    dominant: tense
+    valence: -0.15
+    arousal: 0.6
+    intensity: 0.55
+  long_term_goal: 保护自己和弟弟
+  short_term_goals:
+  - 保护自己和弟弟
+  - 在倒计时结束前确认谁在说谎
+  schedule:
+    default: work
+    slots:
+    - phase: morning
+      activity: work
+      location: public_defense
+    - phase: night
+      activity: rest
+      location: witness_lounge
+  items: []
+  skills:
+  - investigation
+  reputation:
+    global: 19
+    by_faction:
+      authority: 54
+  secret: 她见过真正的操盘者
+  capabilities:
+  - 观察
+  - 交涉
+  - 行动
+- key: gatekeeper
+  name: 何律
+  type: MAJOR_NPC
+  age: 28
+  gender: female
+  location: witness_lounge
+  faction: organizer
+  faction_rank: 直播平台主管
+  realm: ordinary
+  realm_stage: newcomer
+  stats:
+    strength: 10
+    agility: 11
+    perception: 16
+    intelligence: 13
+    willpower: 12
+    charisma: 12
+  background: 直播平台主管。在澄江市·网络法庭的今晚，任何一个人都不能只靠旁观离开。
+  personality:
+    traits:
+      guarded: 0.65
+      driven: 0.72
+    values:
+    - 真相
+    - 活下去
+    taboos:
+    - 替人背锅
+    speech_style: 短句、给出能核验的细节，不替任何人做决定
+    risk_tolerance: 0.55
+  emotion:
+    dominant: tense
+    valence: -0.15
+    arousal: 0.6
+    intensity: 0.55
+  long_term_goal: 不让庭审失控
+  short_term_goals:
+  - 不让庭审失控
+  - 在倒计时结束前确认谁在说谎
+  schedule:
+    default: work
+    slots:
+    - phase: morning
+      activity: work
+      location: witness_lounge
+    - phase: night
+      activity: rest
+      location: media_hall
+  items: []
+  skills:
+  - negotiation
+  reputation:
+    global: 22
+    by_faction:
+      organizer: 57
+  secret: 导播间存在十五秒人工延迟
+  capabilities:
+  - 观察
+  - 交涉
+  - 行动
+- key: broker
+  name: 郑遥
+  type: MAJOR_NPC
+  age: 29
+  gender: male
+  location: media_hall
+  faction: outsiders
+  faction_rank: 银行风控员
+  realm: ordinary
+  realm_stage: newcomer
+  stats:
+    strength: 11
+    agility: 12
+    perception: 12
+    intelligence: 14
+    willpower: 13
+    charisma: 13
+  background: 银行风控员。在澄江市·网络法庭的今晚，任何一个人都不能只靠旁观离开。
+  personality:
+    traits:
+      guarded: 0.65
+      driven: 0.72
+    values:
+    - 真相
+    - 活下去
+    taboos:
+    - 替人背锅
+    speech_style: 短句、给出能核验的细节，不替任何人做决定
+    risk_tolerance: 0.55
+  emotion:
+    dominant: tense
+    valence: -0.15
+    arousal: 0.6
+    intensity: 0.55
+  long_term_goal: 找出退款节点
+  short_term_goals:
+  - 找出退款节点
+  - 在倒计时结束前确认谁在说谎
+  schedule:
+    default: work
+    slots:
+    - phase: morning
+      activity: work
+      location: media_hall
+    - phase: night
+      activity: rest
+      location: bank_archive
+  items: []
+  skills:
+  - negotiation
+  reputation:
+    global: 25
+    by_faction:
+      outsiders: 60
+  secret: 他保留了未经脱敏的原始流水
+  capabilities:
+  - 观察
+  - 交涉
+  - 行动
+- key: outsider
+  name: 唐工
+  type: MINOR_NPC
+  age: 30
+  gender: female
+  location: bank_archive
+  faction: witnesses
+  faction_rank: 空调维修员
+  realm: ordinary
+  realm_stage: newcomer
+  stats:
+    strength: 12
+    agility: 13
+    perception: 13
+    intelligence: 15
+    willpower: 14
+    charisma: 14
+  background: 空调维修员。在澄江市·网络法庭的今晚，任何一个人都不能只靠旁观离开。
+  personality:
+    traits:
+      guarded: 0.65
+      driven: 0.72
+    values:
+    - 真相
+    - 活下去
+    taboos:
+    - 替人背锅
+    speech_style: 短句、给出能核验的细节，不替任何人做决定
+    risk_tolerance: 0.55
+  emotion:
+    dominant: tense
+    valence: -0.15
+    arousal: 0.6
+    intensity: 0.55
+  long_term_goal: 证明谁到过旧办公室
+  short_term_goals:
+  - 证明谁到过旧办公室
+  - 在倒计时结束前确认谁在说谎
+  schedule:
+    default: work
+    slots:
+    - phase: morning
+      activity: work
+      location: bank_archive
+    - phase: night
+      activity: rest
+      location: server_rooftop
+  items: []
+  skills:
+  - investigation
+  reputation:
+    global: 28
+    by_faction:
+      witnesses: 63
+  secret: 他记得那天的工号并不属于玩家
+  capabilities:
+  - 观察
+  - 交涉
+  - 行动
+- key: insider
+  name: 沈策
+  type: MINOR_NPC
+  age: 31
+  gender: male
+  location: server_rooftop
+  faction: organizer
+  faction_rank: 投资公司负责人
+  realm: ordinary
+  realm_stage: newcomer
+  stats:
+    strength: 13
+    agility: 10
+    perception: 14
+    intelligence: 16
+    willpower: 15
+    charisma: 10
+  background: 投资公司负责人。在澄江市·网络法庭的今晚，任何一个人都不能只靠旁观离开。
+  personality:
+    traits:
+      guarded: 0.65
+      driven: 0.72
+    values:
+    - 真相
+    - 活下去
+    taboos:
+    - 替人背锅
+    speech_style: 短句、给出能核验的细节，不替任何人做决定
+    risk_tolerance: 0.55
+  emotion:
+    dominant: tense
+    valence: -0.15
+    arousal: 0.6
+    intensity: 0.55
+  long_term_goal: 维持诈骗案结论
+  short_term_goals:
+  - 维持诈骗案结论
+  - 在倒计时结束前确认谁在说谎
+  schedule:
+    default: work
+    slots:
+    - phase: morning
+      activity: work
+      location: server_rooftop
+    - phase: night
+      activity: rest
+      location: maintenance_room
+  items: []
+  skills:
+  - negotiation
+  reputation:
+    global: 31
+    by_faction:
+      organizer: 66
+  secret: 合成录音的项目资金来自他
+  capabilities:
+  - 观察
+  - 交涉
+  - 行动
+- key: wildcard
+  name: 米可
+  type: MINOR_NPC
+  age: 32
+  gender: female
+  location: maintenance_room
+  faction: outsiders
+  faction_rank: 法庭书记员
+  realm: ordinary
+  realm_stage: newcomer
+  stats:
+    strength: 10
+    agility: 11
+    perception: 15
+    intelligence: 12
+    willpower: 12
+    charisma: 11
+  background: 法庭书记员。在澄江市·网络法庭的今晚，任何一个人都不能只靠旁观离开。
+  personality:
+    traits:
+      guarded: 0.65
+      driven: 0.72
+    values:
+    - 真相
+    - 活下去
+    taboos:
+    - 替人背锅
+    speech_style: 短句、给出能核验的细节，不替任何人做决定
+    risk_tolerance: 0.55
+  emotion:
+    dominant: tense
+    valence: -0.15
+    arousal: 0.6
+    intensity: 0.55
+  long_term_goal: 确保程序完整
+  short_term_goals:
+  - 确保程序完整
+  - 在倒计时结束前确认谁在说谎
+  schedule:
+    default: work
+    slots:
+    - phase: morning
+      activity: work
+      location: maintenance_room
+    - phase: night
+      activity: rest
+      location: cyber_unit
+  items: []
+  skills:
+  - negotiation
+  reputation:
+    global: 34
+    by_faction:
+      outsiders: 69
+  secret: 她能调出被删的庭审校验日志
+  capabilities:
+  - 观察
+  - 交涉
+  - 行动
+relationships:
+- a: anchor
+  b: player
+  affection: 0
+  trust: 8
+  respect: 5
+  suspicion: 15
+  familiarity: 8
+  boundaries: 60
+- a: rival
+  b: player
+  affection: 0
+  trust: 6
+  respect: 4
+  suspicion: 19
+  familiarity: 9
+  boundaries: 60
+- a: ally
+  b: player
+  affection: 0
+  trust: 4
+  respect: 3
+  suspicion: 23
+  familiarity: 10
+  boundaries: 60
+- a: witness
+  b: player
+  affection: 0
+  trust: 2
+  respect: 2
+  suspicion: 27
+  familiarity: 11
+  boundaries: 60
+- a: gatekeeper
+  b: player
+  affection: 0
+  trust: 0
+  respect: 1
+  suspicion: 31
+  familiarity: 12
+  boundaries: 60
+- a: broker
+  b: player
+  affection: 0
+  trust: -2
+  respect: 0
+  suspicion: 35
+  familiarity: 13
+  boundaries: 60
+- a: outsider
+  b: player
+  affection: 0
+  trust: -4
+  respect: -1
+  suspicion: 39
+  familiarity: 14
+  boundaries: 60
+- a: insider
+  b: player
+  affection: 0
+  trust: -6
+  respect: -2
+  suspicion: 43
+  familiarity: 15
+  boundaries: 60
+- a: wildcard
+  b: player
+  affection: 0
+  trust: -8
+  respect: -3
+  suspicion: 47
+  familiarity: 16
+  boundaries: 60

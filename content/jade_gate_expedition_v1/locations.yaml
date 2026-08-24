@@ -1,0 +1,154 @@
+location_types:
+- key: district
+  name: 区域
+- key: room
+  name: 场景
+locations:
+- key: flooded_entrance
+  name: 山洪入口
+  type: district
+  parent: null
+  danger: 0
+  spirit_density: 1
+  description: 探方边缘的泥水还在往石门里倒灌。
+  travel:
+    jade_gate: 3
+    star_corridor: 4
+    wind_shaft: 5
+    mirror_chamber: 6
+    water_clock_room: 7
+    seventh_gate: 3
+    underground_wharf: 4
+    bronze_workshop: 5
+    record_chamber: 6
+    collapse_gallery: 7
+    emergency_camp: 3
+    old_quarry: 4
+    ridge_observatory: 5
+    rescue_shelter: 6
+- key: jade_gate
+  name: 第一道玉门
+  type: room
+  parent: null
+  danger: 0
+  spirit_density: 1
+  description: 门缝的铜环比任何现代锁都干净。
+  travel:
+    flooded_entrance: 3
+- key: star_corridor
+  name: 星图长廊
+  type: room
+  parent: null
+  danger: 0
+  spirit_density: 1
+  description: 顶壁星图会随水位改变缺口的位置。
+  travel:
+    flooded_entrance: 3
+- key: wind_shaft
+  name: 通风竖井
+  type: room
+  parent: null
+  danger: 1
+  spirit_density: 1
+  description: 风从地下吹出，带着不属于古墓的柴油味。
+  travel:
+    flooded_entrance: 3
+- key: mirror_chamber
+  name: 镜室
+  type: room
+  parent: null
+  danger: 0
+  spirit_density: 1
+  description: 青铜镜照出的不是人影，是下一扇门的开法。
+  travel:
+    flooded_entrance: 3
+- key: water_clock_room
+  name: 水钟室
+  type: room
+  parent: null
+  danger: 0
+  spirit_density: 1
+  description: 水滴每错一拍，某条通道就会封死。
+  travel:
+    flooded_entrance: 3
+- key: seventh_gate
+  name: 第七道门
+  type: room
+  parent: null
+  danger: 1
+  spirit_density: 1
+  description: 现代矿泉水瓶就摆在门槛内侧。
+  travel:
+    flooded_entrance: 3
+- key: underground_wharf
+  name: 地下引水码头
+  type: room
+  parent: null
+  danger: 0
+  spirit_density: 1
+  description: 石舟槽里卡着一只新式头灯。
+  travel:
+    flooded_entrance: 3
+- key: bronze_workshop
+  name: 铜工坊
+  type: room
+  parent: null
+  danger: 0
+  spirit_density: 1
+  description: 古代模具和现代切割片放在同一张石案上。
+  travel:
+    flooded_entrance: 3
+- key: record_chamber
+  name: 刻石档案室
+  type: room
+  parent: null
+  danger: 0
+  spirit_density: 1
+  description: 墙上的灌溉图正好对应山外失踪的村庄。
+  travel:
+    flooded_entrance: 3
+- key: collapse_gallery
+  name: 坍塌回廊
+  type: room
+  parent: null
+  danger: 1
+  spirit_density: 1
+  description: 不能用爆破，只能听声找空腔。
+  travel:
+    flooded_entrance: 3
+- key: emergency_camp
+  name: 保护区应急营地
+  type: room
+  parent: null
+  danger: 0
+  spirit_density: 1
+  description: 所有人的对讲机都收得到陌生频道。
+  travel:
+    flooded_entrance: 3
+- key: old_quarry
+  name: 废弃采石场
+  type: room
+  parent: null
+  danger: 0
+  spirit_density: 1
+  description: 盗采车辙在雨里还没完全消失。
+  travel:
+    flooded_entrance: 3
+- key: ridge_observatory
+  name: 山脊观测点
+  type: room
+  parent: null
+  danger: 0
+  spirit_density: 1
+  description: 无人机能看到地宫泄水口的真实位置。
+  travel:
+    flooded_entrance: 3
+- key: rescue_shelter
+  name: 临时避险洞
+  type: room
+  parent: null
+  danger: 1
+  spirit_density: 1
+  description: 被困的人留下了三段不同时间的求救录音。
+  travel:
+    flooded_entrance: 3

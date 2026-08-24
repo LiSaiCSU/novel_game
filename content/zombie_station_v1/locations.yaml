@@ -1,0 +1,154 @@
+location_types:
+- key: district
+  name: 区域
+- key: room
+  name: 场景
+locations:
+- key: terminal_platform
+  name: 零号线终点站台
+  type: district
+  parent: null
+  danger: 0
+  spirit_density: 1
+  description: 末班车门开着，黄色安全线内外都没有安全。
+  travel:
+    dispatch_center: 3
+    sealed_carriage: 4
+    maintenance_tunnel: 5
+    ticket_hall: 6
+    ventilation_room: 7
+    abandoned_platform: 3
+    medical_kiosk: 4
+    control_cab: 5
+    storm_drain: 6
+    freight_siding: 7
+    substation: 3
+    staff_locker: 4
+    surface_exit: 5
+    command_bus: 6
+- key: dispatch_center
+  name: 调度中心
+  type: room
+  parent: null
+  danger: 0
+  spirit_density: 1
+  description: 每一块屏幕都显示不同的到站时间。
+  travel:
+    terminal_platform: 3
+- key: sealed_carriage
+  name: 封锁车厢
+  type: room
+  parent: null
+  danger: 0
+  spirit_density: 1
+  description: 座椅下有一串没有人承认的冷链标签。
+  travel:
+    terminal_platform: 3
+- key: maintenance_tunnel
+  name: 检修隧道
+  type: room
+  parent: null
+  danger: 1
+  spirit_density: 1
+  description: 隧道壁上的应急灯每隔十米少一盏。
+  travel:
+    terminal_platform: 3
+- key: ticket_hall
+  name: 地下票厅
+  type: room
+  parent: null
+  danger: 0
+  spirit_density: 1
+  description: 闸机还在收票，却不再放人出去。
+  travel:
+    terminal_platform: 3
+- key: ventilation_room
+  name: 换气机房
+  type: room
+  parent: null
+  danger: 0
+  spirit_density: 1
+  description: 风机启动倒计时停在五小时五十九分。
+  travel:
+    terminal_platform: 3
+- key: abandoned_platform
+  name: 废弃三号站台
+  type: room
+  parent: null
+  danger: 1
+  spirit_density: 1
+  description: 旧线路图上多出一座从未命名的站。
+  travel:
+    terminal_platform: 3
+- key: medical_kiosk
+  name: 站内急救点
+  type: room
+  parent: null
+  danger: 0
+  spirit_density: 1
+  description: 药柜里少的不是药，是消毒记录。
+  travel:
+    terminal_platform: 3
+- key: control_cab
+  name: 列车驾驶室
+  type: room
+  parent: null
+  danger: 0
+  spirit_density: 1
+  description: 自动驾驶还在等待一位不存在的司机确认。
+  travel:
+    terminal_platform: 3
+- key: storm_drain
+  name: 雨水排放渠
+  type: room
+  parent: null
+  danger: 0
+  spirit_density: 1
+  description: 水流把一枚员工门卡冲向城外。
+  travel:
+    terminal_platform: 3
+- key: freight_siding
+  name: 冷链货运侧线
+  type: room
+  parent: null
+  danger: 1
+  spirit_density: 1
+  description: 最后一节货厢没有出现在官方编组表上。
+  travel:
+    terminal_platform: 3
+- key: substation
+  name: 牵引变电所
+  type: room
+  parent: null
+  danger: 0
+  spirit_density: 1
+  description: 停电能封住闸门，也可能困死里面的人。
+  travel:
+    terminal_platform: 3
+- key: staff_locker
+  name: 员工更衣室
+  type: room
+  parent: null
+  danger: 0
+  spirit_density: 1
+  description: 每个柜门上都贴着今晚的值班表。
+  travel:
+    terminal_platform: 3
+- key: surface_exit
+  name: 封闭地面出口
+  type: room
+  parent: null
+  danger: 0
+  spirit_density: 1
+  description: 上面是安静的夜市，下面的广播听得一清二楚。
+  travel:
+    terminal_platform: 3
+- key: command_bus
+  name: 应急指挥车
+  type: room
+  parent: null
+  danger: 1
+  spirit_density: 1
+  description: 车已到站，车上的命令却来自一小时前。
+  travel:
+    terminal_platform: 3

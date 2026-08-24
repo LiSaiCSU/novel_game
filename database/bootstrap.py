@@ -201,6 +201,20 @@ async def ensure_official_releases(
                 session, settings, asset_store, "shelter_broadcast_v1",
                 "shelter-broadcast", ["末日", "科幻", "生存", "短剧"],
             )
+        for pack_key, slug, tags in (
+            ("seoul_blackout_v1", "seoul-blackout", ["韩式", "逃杀", "密室", "悬疑"]),
+            ("zombie_station_v1", "last-train-terminal", ["丧尸", "末日", "地铁", "生存"]),
+            ("war_radio_v1", "frontline-radio", ["战争", "电台", "群像", "抉择"]),
+            ("exiled_empress_v1", "exiled-empress", ["穿越", "古装", "权谋", "逆袭"]),
+            ("jade_gate_expedition_v1", "jade-gate-expedition", ["地宫", "探险", "机关", "悬疑"]),
+            ("room_404_v1", "room-404", ["灵异", "酒店", "推理", "惊悚"]),
+            ("jiangshi_courier_v1", "jiangshi-courier", ["僵尸", "民俗", "喜剧", "冒险"]),
+            ("heartbeat_countdown_v1", "heartbeat-countdown", ["恋爱", "轻喜剧", "职场", "都市"]),
+            ("abyss_oxygen_v1", "abyss-oxygen", ["灾难", "科幻", "深海", "生存"]),
+            ("live_court_v1", "live-court", ["庭审", "直播", "反转", "悬疑"]),
+        ):
+            if (settings.content_path / pack_key).is_dir():
+                await _ensure_pack(session, settings, asset_store, pack_key, slug, tags)
         await session.commit()
 
 

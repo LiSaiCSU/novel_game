@@ -1,0 +1,25 @@
+epoch_label: 公历
+epoch_year: 2026
+minutes_per_hour: 60
+hours_per_day: 24
+days_per_month: 30
+months_per_year: 12
+day_phases:
+- key: morning
+  name: 上午
+  start_hour: 6
+  end_hour: 12
+- key: afternoon
+  name: 下午
+  start_hour: 12
+  end_hour: 18
+- key: night
+  name: 夜间
+  start_hour: 18
+  end_hour: 24
+start_year: 2026
+start_month: 9
+start_day: 20
+start_hour: 20
+start_minute: 0
+format: '{year}年{month}月{day}日 {phase}'

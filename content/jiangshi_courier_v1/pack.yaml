@@ -1,0 +1,293 @@
+key: jiangshi_courier_v1
+name: 夜班赶尸人：客户在棺材里给我差评
+genre: jiangshi_comedy
+version: 1.0.0
+engine_min_version: 0.2.0
+primary_progression_key: agency
+attribute_definitions:
+- key: composure
+  label: 定力
+  type: number
+- key: investigation
+  label: 调查
+  type: number
+- key: survival
+  label: 应变
+  type: number
+- key: persuasion
+  label: 交涉
+  type: number
+resource_definitions:
+- key: health
+  label: 状态
+  minimum: 0
+  maximum: 100
+  default: 100
+- key: clue
+  label: 线索
+  minimum: 0
+  maximum: 100
+  default: 20
+- key: resolve
+  label: 意志
+  minimum: 0
+  maximum: 100
+  default: 65
+- key: danger
+  label: 风险
+  minimum: 0
+  maximum: 100
+  default: 25
+progression_definitions:
+- key: agency
+  label: 行动权
+  tiers:
+  - key: caught
+    label: 被卷入
+    order: 0
+  - key: informed
+    label: 掌握线索
+    order: 1
+  - key: decisive
+    label: 能够决定
+    order: 2
+player_fields:
+- key: name
+  label: 姓名
+  type: text
+  required: true
+- key: age
+  label: 年龄
+  type: integer
+  required: true
+  default: 25
+  minimum: 22
+  maximum: 45
+- key: specialty
+  label: 你的专长
+  type: choice
+  required: true
+  default: analysis
+  choices:
+  - value: analysis
+    label: 分析·从混乱里找顺序
+  - value: negotiation
+    label: 交涉·让人把条件说清
+  - value: field
+    label: 现场·先让人活下来
+  - value: records
+    label: 档案·知道纸不会自己撒谎
+- key: personal_goal
+  label: 你想保住什么
+  type: text
+  required: true
+  default: 让真相和人都能离开这里
+language: zh-CN
+assets:
+- key: jiangshi_courier_v1_cover
+  kind: cover
+  path: official/jiangshi_courier_v1/jiangshi-courier-cover-v1.png
+  alt: 南岭夜路上，成年护送员推着避光运棺车穿过竹桥，棺盖露出一只拿着评价单的手，远处是月下水库
+author_tests:
+- key: opening_is_playable
+  name: 开场知识与地点正确
+  scenario: main_story
+  assertions:
+  - path: player.location
+    op: eq
+    expected: night_station
+  - path: knowledge.player.fact_hook
+    op: eq
+    expected: KNOWN
+- key: truth_ending_starts_locked
+  name: 结局不会在开场被误解锁
+  scenario: main_story
+  assertions:
+  - path: endings.ending_truth.available
+    op: eq
+    expected: false
+world:
+  name: 南岭·夜行驿道
+  description: 你接到第一单夜班护送，棺材里的‘客户’敲了三下盖板，并通过驿站小程序给了你一星评价：步子太快、湿度太大、请在天亮前把我送回家。可导航显示，他的家已经在三十年前被一座水库淹没。
+  start_location: night_station
+  world_seed_default: jiangshi_courier
+story:
+  title: 夜班赶尸人：客户在棺材里给我差评
+  opening_location: night_station
+  premise: 你接到第一单夜班护送，棺材里的‘客户’敲了三下盖板，并通过驿站小程序给了你一星评价：步子太快、湿度太大、请在天亮前把我送回家。可导航显示，他的家已经在三十年前被一座水库淹没。
+  opening_blueprint:
+    player_context: 玩家是刚接班的民俗遗体护送员，先给出已知风险、可验证线索与天亮前回魂，而非要求凭空信任任何人。
+    acts:
+    - purpose: 前五十字给出不可逆危机
+      must_show:
+      - 你接到第一单夜班护送，棺材里的‘客户’敲了三下盖板，并通过驿站小程序给了你一星评价：步子太快、湿度太大、请在天亮前把我送回家。可导航显示，他的家已经在三十年前被一座水库淹没。
+      - 倒计时已经开始
+      comic_beat: 笑点来自僵尸客户严肃投诉服务细节、纸人导航总爱带错路，以及传统规矩与现代物流条款互相打架。
+    - purpose: 交代玩家为什么不能直接离开
+      must_show:
+      - 玩家掌握一条可核验事实
+      - 至少一位盟友有自己的退出条件
+      comic_beat: 笑点只缓冲紧张，不取消后果。
+    - purpose: 把局部困境升级为公共选择
+      must_show:
+      - 公开说法出现矛盾
+      - 天亮前回魂
+      comic_beat: 荒唐的制度语言被现场现实拆穿。
+  starter_items:
+  - key: case_file
+    quantity: 1
+  - key: access_badge
+    quantity: 1
+  player_template:
+    constraints:
+      minimum_age: 22
+      maximum_age: 45
+    properties:
+      role: 刚接班的民俗遗体护送员
+  relationship_boundaries: 所有主要角色均为成年人。亲密、合作与高风险请求都必须以明确同意、可退出和信息用途透明为前提；拒绝后不得强迫推进。
+  endings:
+  - key: ending_truth
+    type: independent
+    title: 把真相送到该去的人手里
+    priority: 95
+    epilogue: 你没有替任何人宣布结论，却让每一份原始记录都回到能被核验的位置。局面由此被改写。
+    condition:
+      op: eq
+      args:
+      - op: get
+        args:
+        - quests.quest_2_1.status
+      - completed
+  - key: ending_alliance
+    type: bond
+    title: 留下的人一起决定
+    priority: 85
+    epilogue: 你没有独自成为英雄。每个知道代价的人都亲手确认了自己的选择，临时同盟变成了真正的承担。
+    condition:
+      op: and
+      args:
+      - op: eq
+        args:
+        - op: get
+          args:
+          - quests.quest_3_2.status
+        - completed
+      - op: eq
+        args:
+        - op: get
+          args:
+          - quests.quest_5_1.status
+        - completed
+  - key: ending_exit
+    type: independent
+    title: 从错误剧本里离开
+    priority: 70
+    epilogue: 你拒绝用另一个谎言换安全出口。离开时局势仍然复杂，但没有人能再替你写下一步。
+    condition:
+      op: eq
+      args:
+      - op: get
+        args:
+        - quests.quest_6_2.status
+      - completed
+  - key: ending_default
+    type: other
+    title: 默认方案
+    priority: 20
+    epilogue: 倒计时替所有人做了选择。最容易执行的版本赢了，真正的问题被留给后来的人。
+    condition:
+      op: eq
+      args:
+      - op: get
+        args:
+        - quests.quest_5_2.status
+      - failed
+narrative_style:
+  language: 中文
+  person: 第二人称
+  tense: 现在时
+  tone: 高密度jiangshi_comedy互动短剧：行动先于解释，反转必须由文件、权限、时序或人物选择回收。
+  target_length: 1300
+  avoid_phrases:
+  - 嘴角勾起一抹弧度
+  - 空气仿佛凝固
+  - 眼中闪过异色
+  - 一切才刚刚开始
+  phrase_repeat_window: 10
+  phrase_repeat_threshold: 2
+  pacing: explosive_microdrama
+  pacing_rules:
+  - 开场五十字内给出危机、期限和可选择的第一步。
+  - 每回合让权力、证据、路线或人物站位至少变化一项。
+  - 反转需要此前出现的证据支撑，禁止凭空升级身份。
+  guidance:
+  - 少写围观、沉默和空泛惊讶，多写可见动作与可核验后果。
+  - 笑点来自僵尸客户严肃投诉服务细节、纸人导航总爱带错路，以及传统规矩与现代物流条款互相打架。
+  - 避免把受害者、伤病或创伤当成笑点。
+theme:
+  accent: '#d28b2c'
+  background: '#162229'
+  surface: '#f3ead6'
+  text: '#2b211b'
+vocabulary:
+  profile_labels:
+    health: 状态
+    power: 线索
+    age_suffix: 岁
+    realm: 行动权
+    root: 专长
+    faction: 阵营
+    male: 男
+    female: 女
+    unspecified: 未指定
+    story_lead: 关键盟友
+    no_story_lead: 尚未结盟
+    absent: 当前不在场
+  relationship_labels:
+    affection: 好感
+    trust: 信任
+    respect: 尊重
+    fear: 忌惮
+    hatred: 敌意
+    suspicion: 怀疑
+    dependency: 依赖
+    familiarity: 熟悉
+    boundaries: 界限
+  action_aliases:
+    MOVE:
+    - 前往
+    - 进入
+    - 离开
+    TALK:
+    - 交谈
+    - 说明
+    - 交涉
+    ASK:
+    - 追问
+    - 质询
+    OBSERVE:
+    - 观察
+    - 检查
+    - 核对
+    SEARCH:
+    - 搜查
+    - 查找
+    - 调记录
+    USE_ITEM:
+    - 使用
+    - 出示
+    - 提交
+    USE_SKILL:
+    - 分析
+    - 判断
+    - 处理
+    REST:
+    - 休息
+    WAIT:
+    - 等待
+  status_labels:
+    offered: 待处理
+    active: 进行中
+    completed: 已完成
+    failed: 已失败
+    expired: 已超时

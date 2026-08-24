@@ -1,0 +1,24 @@
+npc_goal_action: '{name}没有等下一轮提问，先去处理{goal}。'
+knowledge_hedges:
+  UNKNOWN: '{name}没有这条信息。'
+  SUSPECTED: '{name}有怀疑，但拿不出完整证据。'
+  KNOWN: '{name}能说明来源与时间。'
+labels:
+  health: 状态
+  power: 线索
+  location: 地点
+  inventory: 材料
+  skills: 专长
+  relationships: 关系
+  quests: 目标
+  threads: 局势
+action:
+  MOVE: 你赶到{location}，倒计时没有因换场而停下。
+  TALK: 你把问题摆到{target}面前，对方必须给出回应。
+  ASK: 你追问{target}，得到一条能继续核验的信息。
+  OBSERVE: 你核对现场，发现一处会改变下一步的细节。
+  SEARCH: 你查找材料，把孤立线索接进证据链。
+  USE_ITEM: 你出示手中的材料，现场口径立刻变了。
+  USE_SKILL: 你用专业能力拆开了对方想混过去的部分。
+  CUSTOM: 你的行动迫使局面给出具体结果。
+  DEFAULT: 事情向前推进，也留下能追查的后果。

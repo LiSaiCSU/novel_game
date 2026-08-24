@@ -1,0 +1,48 @@
+rules:
+- key: work_builds_clues
+  trigger: after_action
+  condition:
+    op: in
+    args:
+    - op: get
+      args:
+      - action.action_type
+    - - OBSERVE
+      - SEARCH
+      - USE_SKILL
+  effects:
+  - op: adjust_player_resource
+    field: clue
+    value: 4
+  - op: adjust_player_resource
+    field: danger
+    value: 2
+- key: talk_builds_resolve
+  trigger: after_action
+  condition:
+    op: in
+    args:
+    - op: get
+      args:
+      - action.action_type
+    - - TALK
+      - ASK
+      - CONVERSATION
+  effects:
+  - op: adjust_player_resource
+    field: resolve
+    value: 2
+- key: rest_reduces_danger
+  trigger: after_action
+  condition:
+    op: in
+    args:
+    - op: get
+      args:
+      - action.action_type
+    - - REST
+      - WAIT
+  effects:
+  - op: adjust_player_resource
+    field: danger
+    value: -6

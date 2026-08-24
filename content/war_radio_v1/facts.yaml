@@ -1,0 +1,89 @@
+facts:
+- key: fact_hook
+  statement: 伪造声明的目的不是赢下一场战斗，而是让停火失败后某军火商的秘密运输继续通行。
+  truth_value: true
+  scope: WORLD
+  sensitivity: 0.8
+  related:
+  - player
+  - anchor
+  - rival
+  initial_knowledge:
+    player:
+      state: KNOWN
+      confidence: 1
+      source: DOCUMENT
+    anchor:
+      state: KNOWN
+      confidence: 0.9
+      source: WITNESSED
+- key: fact_hidden_operator
+  statement: 有人正利用日出停火签署把所有人的选择推向同一条错误路线。
+  truth_value: true
+  scope: FACTION
+  sensitivity: 0.92
+  related:
+  - rival
+  - gatekeeper
+  initial_knowledge:
+    rival:
+      state: KNOWN
+      confidence: 1
+      source: SEED
+    player:
+      state: SUSPECTED
+      confidence: 0.45
+      source: INFERRED
+- key: fact_missing_record
+  statement: 关键记录被分成了纸质、设备和目击三个部分，单独任何一份都不足以定案。
+  truth_value: true
+  scope: WORLD
+  sensitivity: 0.55
+  related:
+  - ally
+  - witness
+  initial_knowledge:
+    ally:
+      state: KNOWN
+      confidence: 1
+      source: SEED
+- key: fact_ally_boundary
+  statement: 每位盟友都可以拒绝高风险要求；合作必须说明代价、退出方式和信息用途。
+  truth_value: true
+  scope: WORLD
+  sensitivity: 0.1
+  related:
+  - player
+  - anchor
+  - ally
+  initial_knowledge:
+    player:
+      state: KNOWN
+      confidence: 1
+      source: SEED
+- key: fact_public_story
+  statement: 公开版本看似完整，但关键时间戳与现场记录不能同时成立。
+  truth_value: true
+  scope: WORLD
+  sensitivity: 0.65
+  related:
+  - outsider
+  - insider
+  initial_knowledge:
+    outsider:
+      state: KNOWN
+      confidence: 0.8
+      source: DOCUMENT
+- key: fact_exit_cost
+  statement: 最容易离开的路线会把代价转移给留下的人。
+  truth_value: true
+  scope: WORLD
+  sensitivity: 0.7
+  related:
+  - player
+  - wildcard
+  initial_knowledge:
+    wildcard:
+      state: KNOWN
+      confidence: 1
+      source: WITNESSED

@@ -1,0 +1,154 @@
+location_types:
+- key: district
+  name: 区域
+- key: room
+  name: 场景
+locations:
+- key: lobby
+  name: 云岚旅店前台
+  type: district
+  parent: null
+  danger: 0
+  spirit_density: 1
+  description: 登记簿总会在你眨眼时多一行字。
+  travel:
+    room_404: 3
+    old_elevator: 4
+    boiler_room: 5
+    rooftop_pool: 6
+    laundry: 7
+    staff_office: 3
+    ferry_terminal: 4
+    archive: 5
+    chapel: 6
+    kitchen: 7
+    service_stairs: 3
+    fog_alley: 4
+    harbor_watch: 5
+    mirror_suite: 6
+- key: room_404
+  name: 404客房
+  type: room
+  parent: null
+  danger: 0
+  spirit_density: 1
+  description: 门牌完好，房号在系统里却不存在。
+  travel:
+    lobby: 3
+- key: old_elevator
+  name: 老式电梯
+  type: room
+  parent: null
+  danger: 0
+  spirit_density: 1
+  description: 它只会停在有人说出真名的楼层。
+  travel:
+    lobby: 3
+- key: boiler_room
+  name: 地下锅炉房
+  type: room
+  parent: null
+  danger: 1
+  spirit_density: 1
+  description: 蒸汽管里偶尔传出渡轮鸣笛。
+  travel:
+    lobby: 3
+- key: rooftop_pool
+  name: 封闭天台泳池
+  type: room
+  parent: null
+  danger: 0
+  spirit_density: 1
+  description: 水面映出雾港十年前的灯塔。
+  travel:
+    lobby: 3
+- key: laundry
+  name: 地下洗衣房
+  type: room
+  parent: null
+  danger: 0
+  spirit_density: 1
+  description: 湿床单上有一串从海里走来的脚印。
+  travel:
+    lobby: 3
+- key: staff_office
+  name: 夜班办公室
+  type: room
+  parent: null
+  danger: 1
+  spirit_density: 1
+  description: 前任经理留下的交接本从第七页开始被撕掉。
+  travel:
+    lobby: 3
+- key: ferry_terminal
+  name: 旧渡轮码头
+  type: room
+  parent: null
+  danger: 0
+  spirit_density: 1
+  description: 事故纪念碑上少了四个名字。
+  travel:
+    lobby: 3
+- key: archive
+  name: 市政事故档案馆
+  type: room
+  parent: null
+  danger: 0
+  spirit_density: 1
+  description: 原始乘客名单被改过装订顺序。
+  travel:
+    lobby: 3
+- key: chapel
+  name: 码头小礼拜堂
+  type: room
+  parent: null
+  danger: 0
+  spirit_density: 1
+  description: 失踪者家属每年都在这里点同样数量的蜡烛。
+  travel:
+    lobby: 3
+- key: kitchen
+  name: 旅店后厨
+  type: room
+  parent: null
+  danger: 1
+  spirit_density: 1
+  description: 外卖袋上的收货人写着404住客的名字。
+  travel:
+    lobby: 3
+- key: service_stairs
+  name: 消防楼梯
+  type: room
+  parent: null
+  danger: 0
+  spirit_density: 1
+  description: 每走一层，墙上的日期就往回跳一年。
+  travel:
+    lobby: 3
+- key: fog_alley
+  name: 浓雾后巷
+  type: room
+  parent: null
+  danger: 0
+  spirit_density: 1
+  description: 送餐员从这里进来，却说没见过正门。
+  travel:
+    lobby: 3
+- key: harbor_watch
+  name: 港务塔
+  type: room
+  parent: null
+  danger: 0
+  spirit_density: 1
+  description: 航行日志记得那晚的雾，却不记得那艘船。
+  travel:
+    lobby: 3
+- key: mirror_suite
+  name: 镜面套房
+  type: room
+  parent: null
+  danger: 1
+  spirit_density: 1
+  description: 镜子里的人会先开口，但不一定会说谎。
+  travel:
+    lobby: 3

@@ -1,0 +1,154 @@
+action_plan:
+  max_total_minutes: 120
+time_costs:
+  TALK:
+    min: 2
+    max: 15
+  ASK:
+    min: 2
+    max: 15
+  OBSERVE:
+    min: 1
+    max: 10
+  SEARCH:
+    min: 5
+    max: 30
+  MOVE_LOCAL:
+    min: 1
+    max: 8
+  MOVE_REGIONAL:
+    min: 8
+    max: 30
+  USE_ITEM:
+    min: 1
+    max: 12
+  USE_SKILL:
+    min: 5
+    max: 25
+  REST:
+    min: 10
+    max: 60
+  WAIT:
+    min: 3
+    max: 45
+  CUSTOM:
+    min: 2
+    max: 30
+relationship:
+  dimensions:
+  - affection
+  - trust
+  - respect
+  - fear
+  - hatred
+  - suspicion
+  - dependency
+  - familiarity
+  - boundaries
+  ranges:
+    affection:
+      min: -100
+      max: 100
+      default: 0
+    trust:
+      min: -100
+      max: 100
+      default: 0
+    respect:
+      min: -100
+      max: 100
+      default: 0
+    fear:
+      min: 0
+      max: 100
+      default: 0
+    hatred:
+      min: 0
+      max: 100
+      default: 0
+    suspicion:
+      min: 0
+      max: 100
+      default: 20
+    dependency:
+      min: 0
+      max: 100
+      default: 0
+    familiarity:
+      min: 0
+      max: 100
+      default: 0
+    boundaries:
+      min: 0
+      max: 100
+      default: 55
+  max_delta_per_event:
+    trivial: 2
+    minor: 6
+    major: 20
+    life_changing: 40
+narrative:
+  tension_start: 68
+  tension_decay_per_day: 2
+  tension_gain_by_importance: 16
+  high_threshold: 82
+  max_consecutive_high_turns: 4
+director:
+  min_interval_turns: 1
+  thread_patience_minutes: 50
+  pacing_rules:
+  - 每次介入必须改变证据、权限、路线或人物站位。
+  - 不安排无后果的围观和惊呼。
+  high_importance_override: 0.85
+  max_events_per_day: 28
+  max_schedule_delay_minutes: 30
+  allowed_event_types:
+  - DEATH
+  - RESCUE
+  - BETRAYAL
+  - PROMISE
+  - SECRET_DISCLOSURE
+  - NPC_APPROACH
+  - RUMOR_SPREAD
+  - FACTION_MOVE
+  - QUEST_OFFER
+  - DISCOVERY
+  - ENVIRONMENT_SHIFT
+  - CONFRONTATION
+  - FORESHADOWING
+simulation:
+  tick_minutes:
+    lod1: 10
+    lod2: 30
+    lod3: 120
+  max_materialized_events_per_jump: 96
+  npc_goal_action_interval_minutes: 25
+auto_advance:
+  max_steps: 4
+  max_minutes: 45
+  npc_llm_per_step: 0
+  interrupt_importance: 0.65
+  interrupt_health_loss: 0.15
+  engaging_actions:
+  - TALK
+  - ASK
+  - SEARCH
+  - OBSERVE
+  hostile_actions:
+  - ATTACK
+  - STEAL
+  offer_events:
+  - QUEST_OFFER
+  - CONFRONTATION
+  - SECRET_DISCLOSURE
+  - BETRAYAL
+  - DEATH
+consistency:
+  strict: true
+  checks:
+  - alive
+  - location
+  - inventory
+  - knowledge
+  - faction
+  - time

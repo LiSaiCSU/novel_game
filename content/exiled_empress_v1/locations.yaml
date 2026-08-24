@@ -1,0 +1,154 @@
+location_types:
+- key: district
+  name: 区域
+- key: room
+  name: 场景
+locations:
+- key: cold_palace
+  name: 听雪冷宫
+  type: district
+  parent: null
+  danger: 0
+  spirit_density: 1
+  description: 门锁了，人却比宫里任何地方都多。
+  travel:
+    abandoned_archive: 3
+    laundry_court: 4
+    imperial_kitchen: 5
+    palace_wall: 6
+    ancestral_hall: 7
+    censor_office: 3
+    market_gate: 4
+    river_granary: 5
+    empress_garden: 6
+    night_watch: 7
+    medicine_store: 3
+    audience_hall: 4
+    prison_annex: 5
+    city_temple: 6
+- key: abandoned_archive
+  name: 废档库
+  type: room
+  parent: null
+  danger: 0
+  spirit_density: 1
+  description: 退回的赈灾账册堆到能当墙。
+  travel:
+    cold_palace: 3
+- key: laundry_court
+  name: 浣衣院
+  type: room
+  parent: null
+  danger: 0
+  spirit_density: 1
+  description: 每块宫牌都会在这里留下洗不掉的墨迹。
+  travel:
+    cold_palace: 3
+- key: imperial_kitchen
+  name: 御膳房后库
+  type: room
+  parent: null
+  danger: 1
+  spirit_density: 1
+  description: 米袋上的封条比圣旨更诚实。
+  travel:
+    cold_palace: 3
+- key: palace_wall
+  name: 西宫墙夹道
+  type: room
+  parent: null
+  danger: 0
+  spirit_density: 1
+  description: 送泔水的车能进出，送人不能。
+  travel:
+    cold_palace: 3
+- key: ancestral_hall
+  name: 太庙偏殿
+  type: room
+  parent: null
+  danger: 0
+  spirit_density: 1
+  description: 旧皇后的画像背后藏着一份未烧尽的名册。
+  travel:
+    cold_palace: 3
+- key: censor_office
+  name: 都察院值房
+  type: room
+  parent: null
+  danger: 1
+  spirit_density: 1
+  description: 弹劾折子按颜色分筐，红筐从不进御前。
+  travel:
+    cold_palace: 3
+- key: market_gate
+  name: 西市宫门
+  type: room
+  parent: null
+  danger: 0
+  spirit_density: 1
+  description: 宫外商户等着收回被拖欠的赈济粮款。
+  travel:
+    cold_palace: 3
+- key: river_granary
+  name: 京畿漕仓
+  type: room
+  parent: null
+  danger: 0
+  spirit_density: 1
+  description: 账上满仓，地上只剩谷壳。
+  travel:
+    cold_palace: 3
+- key: empress_garden
+  name: 废苑
+  type: room
+  parent: null
+  danger: 0
+  spirit_density: 1
+  description: 花圃下埋着前朝的雨水管道。
+  travel:
+    cold_palace: 3
+- key: night_watch
+  name: 更房
+  type: room
+  parent: null
+  danger: 1
+  spirit_density: 1
+  description: 更牌能证明谁在什么时辰经过冷宫。
+  travel:
+    cold_palace: 3
+- key: medicine_store
+  name: 太医院药库
+  type: room
+  parent: null
+  danger: 0
+  spirit_density: 1
+  description: 赈灾药材的进出库数对不上。
+  travel:
+    cold_palace: 3
+- key: audience_hall
+  name: 承明殿
+  type: room
+  parent: null
+  danger: 0
+  spirit_density: 1
+  description: 所有人等着你跪下，没人等着你带账册进门。
+  travel:
+    cold_palace: 3
+- key: prison_annex
+  name: 女官禁室
+  type: room
+  parent: null
+  danger: 0
+  spirit_density: 1
+  description: 替人抄写诏书的女官被关在最里面。
+  travel:
+    cold_palace: 3
+- key: city_temple
+  name: 城隍庙赈棚
+  type: room
+  parent: null
+  danger: 1
+  spirit_density: 1
+  description: 真正挨饿的人知道哪一批粮从没到过。
+  travel:
+    cold_palace: 3

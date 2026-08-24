@@ -1,0 +1,154 @@
+location_types:
+- key: district
+  name: 区域
+- key: room
+  name: 场景
+locations:
+- key: reunion_hall
+  name: 汉江会馆校友厅
+  type: district
+  parent: null
+  danger: 0
+  spirit_density: 1
+  description: 香槟塔还没倒，九张椅子下的门锁却已亮红。
+  travel:
+    service_corridor: 3
+    archive_lift: 4
+    rooftop_garden: 5
+    security_room: 6
+    old_library: 7
+    kitchen: 3
+    parking_floor: 4
+    dean_office: 5
+    river_dock: 6
+    server_vault: 7
+    chapel: 3
+    laundry_room: 4
+    medical_bay: 5
+    freight_exit: 6
+- key: service_corridor
+  name: 后勤走廊
+  type: room
+  parent: null
+  danger: 0
+  spirit_density: 1
+  description: 宴会厅的背景音乐在这里变成断断续续的警报。
+  travel:
+    reunion_hall: 3
+- key: archive_lift
+  name: 封存档案电梯
+  type: room
+  parent: null
+  danger: 0
+  spirit_density: 1
+  description: 电梯只停在不存在的负一层。
+  travel:
+    reunion_hall: 3
+- key: rooftop_garden
+  name: 玻璃屋顶花园
+  type: room
+  parent: null
+  danger: 1
+  spirit_density: 1
+  description: 能看到汉江夜景，也能看到唯一一架没有起飞的无人机。
+  travel:
+    reunion_hall: 3
+- key: security_room
+  name: 安保监控室
+  type: room
+  parent: null
+  danger: 0
+  spirit_density: 1
+  description: 九块屏幕里有一块比现实快了三分钟。
+  travel:
+    reunion_hall: 3
+- key: old_library
+  name: 旧校史馆
+  type: room
+  parent: null
+  danger: 0
+  spirit_density: 1
+  description: 落灰的毕业册被人撕走了其中两页。
+  travel:
+    reunion_hall: 3
+- key: kitchen
+  name: 宴会后厨
+  type: room
+  parent: null
+  danger: 1
+  spirit_density: 1
+  description: 主厨把应急广播当成新的上菜口令。
+  travel:
+    reunion_hall: 3
+- key: parking_floor
+  name: 地下停车层
+  type: room
+  parent: null
+  danger: 0
+  spirit_density: 1
+  description: 每辆车的车牌都贴着同一个校徽贴纸。
+  travel:
+    reunion_hall: 3
+- key: dean_office
+  name: 名誉院长室
+  type: room
+  parent: null
+  danger: 0
+  spirit_density: 1
+  description: 墙上全是成功校友，唯独没有奖学金生。
+  travel:
+    reunion_hall: 3
+- key: river_dock
+  name: 汉江临时码头
+  type: room
+  parent: null
+  danger: 0
+  spirit_density: 1
+  description: 一艘观光船在零点前不会靠岸。
+  travel:
+    reunion_hall: 3
+- key: server_vault
+  name: 校友数据机房
+  type: room
+  parent: null
+  danger: 1
+  spirit_density: 1
+  description: 备用电源只够开一次门或发一次全员通知。
+  travel:
+    reunion_hall: 3
+- key: chapel
+  name: 会馆礼拜堂
+  type: room
+  parent: null
+  danger: 0
+  spirit_density: 1
+  description: 告解室里留着一部仍在充电的旧手机。
+  travel:
+    reunion_hall: 3
+- key: laundry_room
+  name: 制服洗衣房
+  type: room
+  parent: null
+  danger: 0
+  spirit_density: 1
+  description: 所有礼宾制服胸牌都被换成了数字。
+  travel:
+    reunion_hall: 3
+- key: medical_bay
+  name: 会馆医务室
+  type: room
+  parent: null
+  danger: 0
+  spirit_density: 1
+  description: 氧气面罩数量刚好少一个。
+  travel:
+    reunion_hall: 3
+- key: freight_exit
+  name: 货运卸货口
+  type: room
+  parent: null
+  danger: 1
+  spirit_density: 1
+  description: 门禁日志显示有人在宴会开始前带走了一箱纸质档案。
+  travel:
+    reunion_hall: 3
