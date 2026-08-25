@@ -11,7 +11,7 @@ from typing import Literal
 
 import sqlalchemy as sa
 
-from apps.api.llm_config import load_platform_llm_config
+from apps.api.llm_config import load_platform_llm_settings
 from apps.api.metrics import commerce_metrics
 from apps.api.security import SecretBox
 from database.models.platform import (
@@ -294,7 +294,7 @@ class ReleaseRuntimeService:
             if available <= 0:
                 raise InferenceQuotaExceeded("platform inference quota exhausted")
             try:
-                runtime_settings, _config = await load_platform_llm_config(uow.session, settings)
+                runtime_settings, _rows = await load_platform_llm_settings(uow.session, settings)
             except ValueError as exc:
                 raise RuntimeConfigurationError(
                     "platform model credential cannot be decrypted"

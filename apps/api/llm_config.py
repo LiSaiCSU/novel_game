@@ -6,10 +6,11 @@ import json
 from ipaddress import ip_address
 from urllib.parse import urlsplit
 
+import sqlalchemy as sa
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from apps.api.security import SecretBox
-from database.models.platform import PlatformLlmConfigORM
+from database.models.platform import PlatformLlmConfigORM, PlatformLlmEndpointORM
 from engine.core.config import Settings
 
 PLATFORM_LLM_CONFIG_ID = "00000000-0000-0000-0000-000000000002"
@@ -179,3 +180,119 @@ def _environment_extra_body(raw: str) -> dict[str, object]:
     except json.JSONDecodeError:
         return {}
     return value if isinstance(value, dict) else {}
+
+
+async def load_platform_endpoints(session: AsyncSession) -> list[PlatformLlmEndpointORM]:
+    """Return the configured chain, most preferred first."""
+
+    rows = await session.scalars(
+        sa.select(PlatformLlmEndpointORM).order_by(
+            PlatformLlmEndpointORM.priority, PlatformLlmEndpointORM.name
+        )
+    )
+    return list(rows)
+
+
+def endpoint_chain_payload(
+    rows: list[PlatformLlmEndpointORM], settings: Settings
+) -> list[dict[str, object]]:
+    """Decrypt the enabled endpoints into the shape ``build_provider`` reads.
+
+    A credential that cannot be decrypted is dropped rather than raised: one
+    stale key must not take down a chain whose whole purpose is to survive a
+    single endpoint going bad.
+    """
+
+    box = SecretBox(settings.credential_encryption_key)
+    payload: list[dict[str, object]] = []
+    for row in rows:
+        if not row.enabled:
+            continue
+        secret = ""
+        if row.encrypted_secret:
+            try:
+                secret = box.decrypt(row.encrypted_secret)
+            except ValueError:
+                continue
+        payload.append(
+            {
+                "id": row.id,
+                "name": row.name or row.provider,
+                "provider": row.provider,
+                "base_url": row.base_url,
+                "api_key": secret,
+                "narrative_model": row.narrative_model,
+                "reasoning_model": row.reasoning_model or row.narrative_model,
+                "extra_body": dict(row.narrative_extra_body or {}),
+            }
+        )
+    return payload
+
+
+async def load_platform_llm_settings(
+    session: AsyncSession, settings: Settings
+) -> tuple[Settings, list[PlatformLlmEndpointORM]]:
+    """Effective settings for the whole endpoint chain.
+
+    The first enabled endpoint supplies the model names the ``ModelRouter``
+    resolves per role; the rest ride along in ``llm_endpoints`` so the provider
+    can fail over without the router knowing anything about endpoints.
+    """
+
+    rows = await load_platform_endpoints(session)
+    payload = endpoint_chain_payload(rows, settings)
+    if not payload:
+        # No usable chain: keep the historical single-row/environment behaviour.
+        effective, _row = await load_platform_llm_config(session, settings)
+        return effective, rows
+
+    head = payload[0]
+    narrative_model = str(head["narrative_model"])
+    reasoning_model = str(head["reasoning_model"]) or narrative_model
+    extra_body = json.dumps(head.get("extra_body") or {}, ensure_ascii=False)
+    update: dict[str, object] = {
+        "llm_provider": str(head["provider"]),
+        "llm_base_url": str(head["base_url"]),
+        "llm_api_key": str(head["api_key"]),
+        "llm_api_keys": "",
+        "openai_api_key": "",
+        "anthropic_api_key": "",
+        "compatible_api_key": "",
+        "llm_model": narrative_model,
+        "llm_extra_body": extra_body,
+        "llm_reasoning_extra_body": extra_body,
+        "narrative_model": narrative_model,
+        "intent_model": reasoning_model,
+        "npc_model": reasoning_model,
+        "npc_major_model": reasoning_model,
+        "director_model": reasoning_model,
+        "steward_model": reasoning_model,
+        "memory_model": reasoning_model,
+        "embedding_model": "",
+        "llm_endpoints": json.dumps(payload, ensure_ascii=False),
+    }
+    return settings.model_copy(update=update), rows
+
+
+def endpoint_view(row: PlatformLlmEndpointORM) -> dict[str, object]:
+    """Operator-facing state. The secret itself is never returned."""
+
+    return {
+        "id": row.id,
+        "name": row.name,
+        "enabled": row.enabled,
+        "priority": row.priority,
+        "provider": row.provider,
+        "base_url": row.base_url,
+        "narrative_model": row.narrative_model,
+        "reasoning_model": row.reasoning_model or row.narrative_model,
+        "narrative_extra_body": dict(row.narrative_extra_body or {}),
+        "reasoning_extra_body": dict(row.reasoning_extra_body or {}),
+        "key_configured": bool(row.encrypted_secret),
+        "key_hint": row.key_hint,
+        "last_ok_at": row.last_ok_at,
+        "last_error_at": row.last_error_at,
+        "last_error": row.last_error,
+        "consecutive_failures": row.consecutive_failures,
+        "updated_at": row.updated_at,
+    }

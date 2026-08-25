@@ -248,6 +248,42 @@ class PlatformLlmConfigORM(TimestampMixin, Base):
     )
 
 
+class PlatformLlmEndpointORM(TimestampMixin, Base):
+    """One reachable model endpoint in the platform's ordered failover chain.
+
+    The older single-row ``platform_llm_config`` could only describe one way to
+    reach a model, so a bad key or a gateway outage took the whole platform
+    down. Each row here is an independent connection with its own credential
+    and its own model names, and ``priority`` decides the order they are tried.
+    """
+
+    __tablename__ = "platform_llm_endpoints"
+    id: Mapped[str] = mapped_column(sa.String(36), primary_key=True)
+    name: Mapped[str] = mapped_column(sa.String(80), default="")
+    enabled: Mapped[bool] = mapped_column(sa.Boolean, default=True)
+    #: Lower is preferred. Ties break on ``name`` so ordering stays stable.
+    priority: Mapped[int] = mapped_column(sa.Integer, default=100, index=True)
+    provider: Mapped[str] = mapped_column(sa.String(60), default="compatible")
+    base_url: Mapped[str] = mapped_column(sa.String(500), default="")
+    encrypted_secret: Mapped[str | None] = mapped_column(sa.Text, nullable=True)
+    key_hint: Mapped[str] = mapped_column(sa.String(16), default="")
+    narrative_model: Mapped[str] = mapped_column(sa.String(160), default="")
+    reasoning_model: Mapped[str] = mapped_column(sa.String(160), default="")
+    narrative_extra_body: Mapped[dict[str, Any]] = mapped_column(JSONType, default=dict)
+    reasoning_extra_body: Mapped[dict[str, Any]] = mapped_column(JSONType, default=dict)
+    #: Health, written by the turn path so operators can see reality rather
+    #: than the last manual test result.
+    last_ok_at: Mapped[datetime | None] = mapped_column(sa.DateTime(timezone=True), nullable=True)
+    last_error_at: Mapped[datetime | None] = mapped_column(
+        sa.DateTime(timezone=True), nullable=True
+    )
+    last_error: Mapped[str] = mapped_column(sa.String(200), default="")
+    consecutive_failures: Mapped[int] = mapped_column(sa.Integer, default=0)
+    updated_by: Mapped[str | None] = mapped_column(
+        sa.String(36), sa.ForeignKey("users.id", ondelete="SET NULL"), nullable=True
+    )
+
+
 class UsageLedgerORM(Base):
     __tablename__ = "usage_ledger"
     id: Mapped[str] = mapped_column(sa.String(36), primary_key=True)

@@ -266,6 +266,7 @@ class LLMClient:
             ),
             json_mode=json_mode,
             extra_body=dict(self.extra_body_by_role.get(choice.role, self.extra_body)),
+            role=str(choice.role),
         )
 
     async def _call(

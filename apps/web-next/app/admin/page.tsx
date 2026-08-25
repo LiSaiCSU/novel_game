@@ -4,7 +4,7 @@ import { FormEvent, useEffect, useState } from "react";
 import Link from "next/link";
 import { api } from "@/lib/api";
 import { interfaceLabel, roleLabels } from "@/lib/display";
-import PlatformModelPanel from "@/components/admin/PlatformModelPanel";
+import LlmEndpointsPanel from "@/components/admin/LlmEndpointsPanel";
 import PlatformOpsPanel from "@/components/admin/PlatformOpsPanel";
 import CommerceOpsPanel from "@/components/admin/CommerceOpsPanel";
 import CatalogOpsPanel from "@/components/admin/CatalogOpsPanel";
@@ -246,7 +246,7 @@ export default function AdminCenter() {
             )}
           </section>
           <OperationsAlertsPanel />
-          <PlatformModelPanel />
+          <LlmEndpointsPanel />
           <section className="panel stack">
             <div className="entityToolbar">
               <div>

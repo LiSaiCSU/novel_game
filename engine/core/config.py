@@ -43,6 +43,10 @@ class Settings(BaseSettings):
     # used as a round-robin pool for concurrent requests.
     llm_api_key: str = ""
     llm_api_keys: str = ""
+    #: JSON list of ordered platform endpoints, populated from the database at
+    #: request time. Each entry carries its own credential and model names so a
+    #: failed endpoint can be skipped for the next one mid-chain.
+    llm_endpoints: str = ""
     llm_base_url: str = ""
     llm_model: str = ""
     anthropic_api_key: str = ""

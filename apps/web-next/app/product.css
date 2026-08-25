@@ -4134,3 +4134,91 @@ a {
     grid-template-columns: 1fr;
   }
 }
+
+.endpointList {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  gap: 10px;
+}
+
+.endpointList > li {
+  padding: 12px 14px;
+  border: 1px solid rgba(120, 140, 120, 0.28);
+  border-radius: 11px;
+  background: rgba(255, 255, 255, 0.55);
+}
+
+.endpointList > li.disabled {
+  opacity: 0.6;
+}
+
+.endpointHead {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+}
+
+.endpointHead > div:first-of-type {
+  flex: 1 1 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.endpointHead small {
+  font-size: 12px;
+  color: var(--muted, #5d6b5d);
+}
+
+.endpointRank {
+  flex: 0 0 auto;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  font-size: 12px;
+  background: rgba(63, 125, 90, 0.14);
+}
+
+.endpointHealth.ok {
+  color: #2f6b4a;
+}
+
+.endpointHealth.bad {
+  color: #92364a;
+}
+
+.endpointActions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.endpointStages {
+  margin: 10px 0 0;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  gap: 4px;
+}
+
+.endpointStages li {
+  display: flex;
+  gap: 8px;
+  padding: 6px 9px;
+  border-radius: 8px;
+  font-size: 12.5px;
+}
+
+.endpointStages li.ok {
+  background: rgba(63, 125, 90, 0.12);
+  color: #2f6b4a;
+}
+
+.endpointStages li.bad {
+  background: #fae8eb;
+  color: #92364a;
+}

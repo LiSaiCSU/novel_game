@@ -32,6 +32,10 @@ class LLMRequest:
     #: things like a thinking-mode switch reach the endpoint without any vendor
     #: name appearing in engine code - it always comes from configuration.
     extra_body: dict[str, Any] = field(default_factory=dict)
+    #: Which engine role asked for this call. Carried on the request so a
+    #: failover chain can pick each endpoint's own model name for the role
+    #: instead of replaying a model that only exists on the first endpoint.
+    role: str = ""
 
 
 class LLMUsage(BaseModel):

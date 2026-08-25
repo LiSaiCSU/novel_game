@@ -29,6 +29,7 @@ from apps.api.routers import (
     debug,
     game,
     gameplay,
+    llm_endpoints,
     media,
     moderation,
     notifications,
@@ -220,6 +221,7 @@ def create_app() -> FastAPI:
     app.include_router(admin.router, prefix="/api/v1")
     app.include_router(creator.router, prefix="/api/v1")
     app.include_router(creator_assets.router, prefix="/api/v1")
+    app.include_router(llm_endpoints.router, prefix="/api/v1")
     app.include_router(moderation.router, prefix="/api/v1")
     app.include_router(catalog.router, prefix="/api/v1")
     app.include_router(commerce.router, prefix="/api/v1")

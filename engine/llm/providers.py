@@ -13,6 +13,7 @@ from collections.abc import AsyncIterator
 from typing import Any
 
 from engine.core.errors import LLMError, LLMTimeout, LLMTruncated
+from engine.llm.failover import FailoverProvider, FailoverTarget
 from engine.llm.provider import (
     LLMRequest,
     LLMResponse,
@@ -387,8 +388,69 @@ def _pool(providers: list[Any]) -> Any:
     return providers[0] if len(providers) == 1 else ProviderPool(providers)
 
 
+#: Roles that share the platform's "reasoning" model profile. Only the visible
+#: prose role runs on the narrative model.
+_REASONING_ROLES = ("intent", "npc", "npc_major", "director", "steward", "memory")
+
+
+def _http_provider(kind: str, key: str, base_url: str, timeout: float) -> Any:
+    if kind == "anthropic":
+        return AnthropicProvider(key, base_url, timeout)
+    if kind == "openai":
+        return OpenAIProvider(key, base_url, timeout)
+    return CompatibleProvider(key, base_url, timeout)
+
+
+def _endpoint_targets(settings: Any) -> list[FailoverTarget]:
+    """Build the ordered endpoint chain an administrator configured, if any."""
+    raw = (getattr(settings, "llm_endpoints", "") or "").strip()
+    if not raw:
+        return []
+    try:
+        entries = json.loads(raw)
+    except json.JSONDecodeError:
+        return []
+    if not isinstance(entries, list):
+        return []
+    timeout = float(getattr(settings, "llm_timeout_seconds", 60.0))
+    targets: list[FailoverTarget] = []
+    for entry in entries:
+        if not isinstance(entry, dict):
+            continue
+        kind = str(entry.get("provider", "compatible")).lower()
+        base_url = str(entry.get("base_url", ""))
+        keys = _split_api_keys(str(entry.get("api_key", "")))
+        if kind == "compatible" and base_url and not keys:
+            # Self-hosted OpenAI-compatible servers often need no credential.
+            keys = [""]
+        if not keys:
+            continue
+        narrative = str(entry.get("narrative_model", ""))
+        reasoning = str(entry.get("reasoning_model", "")) or narrative
+        models = {"narrative": narrative}
+        models.update({role: reasoning for role in _REASONING_ROLES})
+        try:
+            provider = _pool([_http_provider(kind, key, base_url, timeout) for key in keys])
+        except LLMError:
+            # One misconfigured endpoint must not hide the healthy ones behind it.
+            continue
+        targets.append(
+            FailoverTarget(
+                provider=provider,
+                name=str(entry.get("name", "")) or kind,
+                models={role: model for role, model in models.items() if model},
+                default_model=narrative,
+                extra_body=dict(entry.get("extra_body") or {}),
+            )
+        )
+    return targets
+
+
 def build_provider(settings: Any) -> Any:
     """Factory driven purely by configuration."""
+    targets = _endpoint_targets(settings)
+    if targets:
+        return FailoverProvider(targets)
     kind = (getattr(settings, "llm_provider", "null") or "null").lower()
     timeout = float(getattr(settings, "llm_timeout_seconds", 60.0))
     if kind == "anthropic":

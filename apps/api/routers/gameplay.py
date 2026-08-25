@@ -254,11 +254,15 @@ async def stream_playthrough_action(
                 await uow.rollback()
                 await queue.put(("error", exc))
             finally:
+                # Never touch an ORM attribute here: the except branch above rolls the
+                # turn back, which expires every instance, and a lazy refresh from this
+                # context raises MissingGreenlet - aborting the block before the credit
+                # reservation is settled and leaking the hold.
                 try:
                     if not action_failed:
                         play.updated_at = datetime.now(UTC)
                     usage = await release_runtime_service.record_usage(
-                        runtime, principal.user_id, play.id, uow
+                        runtime, principal.user_id, playthrough_id, uow
                     )
                     await settle_turn_credits(
                         uow,

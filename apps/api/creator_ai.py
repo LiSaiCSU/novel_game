@@ -16,7 +16,7 @@ from typing import Any, Literal
 import sqlalchemy as sa
 from pydantic import BaseModel, Field, field_validator
 
-from apps.api.llm_config import load_platform_llm_config
+from apps.api.llm_config import load_platform_llm_settings
 from apps.api.metrics import commerce_metrics
 from apps.api.runtime import _byok_runtime_settings, llm_cost_microunits, platform_tokens_available
 from apps.api.security import SecretBox
@@ -175,7 +175,7 @@ async def creator_ai_runtime(
     if mode == "platform":
         if await platform_tokens_available(user_id, uow, settings) <= 0:
             raise ValueError("platform inference quota exhausted")
-        effective, _config = await load_platform_llm_config(uow.session, settings)
+        effective, _rows = await load_platform_llm_settings(uow.session, settings)
     else:
         provider_name = (credential_provider or "").strip()
         credential = await uow.session.scalar(
