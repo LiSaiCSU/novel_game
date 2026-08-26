@@ -11,6 +11,13 @@ Streaming needs care. Once a chunk has been handed to the caller the turn is
 already partly rendered, so switching endpoints mid-answer would splice two
 different continuations together. A stream therefore only fails over while it
 has produced nothing.
+
+Not every exception means an endpoint is unhealthy. ``LLMTruncated`` says the
+model spent its whole output budget on hidden reasoning and produced nothing
+usable; the client answers that by doubling the budget and asking again. Moving
+to the next endpoint instead would send the same too-small budget somewhere
+else, hide the signal the client is waiting for, and end the turn with no text
+even though every request returned HTTP 200.
 """
 
 from __future__ import annotations
@@ -20,7 +27,7 @@ from collections.abc import AsyncIterator, Callable
 from dataclasses import dataclass, field, replace
 from typing import Any
 
-from engine.core.errors import LLMError
+from engine.core.errors import LLMError, LLMTruncated
 from engine.llm.provider import LLMRequest, LLMResponse
 
 logger = logging.getLogger("aiworld.llm.failover")
@@ -93,6 +100,11 @@ class FailoverProvider:
         for index, target in enumerate(targets):
             try:
                 response = await target.provider.generate_text(target.prepare(request))
+            except LLMTruncated:
+                # A budget signal, not a broken endpoint. The client grows the
+                # budget and retries; swallowing this loses the whole turn.
+                self._record(target, True)
+                raise
             except Exception as exc:
                 last = exc
                 self._record(target, False, type(exc).__name__)
@@ -120,6 +132,9 @@ class FailoverProvider:
                 async for chunk in target.provider.stream_text(target.prepare(request)):
                     produced = True
                     yield chunk
+            except LLMTruncated:
+                self._record(target, True)
+                raise
             except Exception as exc:
                 last = exc
                 self._record(target, False, type(exc).__name__)

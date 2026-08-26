@@ -423,10 +423,19 @@ async def support_operators(
     await set_tenant_context(uow.session, principal.user_id)
     rows = (
         await uow.session.execute(
+            # Deduplicate on the id rather than the row: SELECT DISTINCT over
+            # every user column reaches the json ones, and PostgreSQL has no
+            # equality operator for json. SQLite accepts it, so this only ever
+            # failed in production.
             sa.select(UserORM)
-            .join(UserRoleORM, UserRoleORM.user_id == UserORM.id)
-            .where(UserORM.status == "active", UserRoleORM.role.in_(("admin", "super_admin")))
-            .distinct()
+            .where(
+                UserORM.status == "active",
+                UserORM.id.in_(
+                    sa.select(UserRoleORM.user_id).where(
+                        UserRoleORM.role.in_(("admin", "super_admin"))
+                    )
+                ),
+            )
             .order_by(UserORM.display_name.asc(), UserORM.email.asc())
         )
     ).scalars().all()

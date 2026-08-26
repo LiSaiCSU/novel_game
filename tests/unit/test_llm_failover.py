@@ -4,7 +4,7 @@ from collections.abc import AsyncIterator
 
 import pytest
 
-from engine.core.errors import LLMError
+from engine.core.errors import LLMError, LLMTruncated
 from engine.llm.failover import FailoverProvider, FailoverTarget
 from engine.llm.provider import LLMMessage, LLMRequest, LLMResponse, LLMUsage
 
@@ -151,3 +151,76 @@ async def test_health_callback_sees_each_outcome() -> None:
     await provider.generate_text(_request())
 
     assert seen == [("primary", False), ("spare", True)]
+
+
+class Truncating:
+    """An endpoint that answers HTTP 200 but spends the budget on hidden thought."""
+
+    name = "truncating"
+    available = True
+
+    def __init__(self, *, succeed_at: int) -> None:
+        self.succeed_at = succeed_at
+        self.budgets: list[int] = []
+
+    async def generate_text(self, request: LLMRequest) -> LLMResponse:
+        self.budgets.append(request.max_output_tokens)
+        if request.max_output_tokens < self.succeed_at:
+            raise LLMTruncated("no usable content [finish_reason=length]")
+        return LLMResponse(text="正文", usage=LLMUsage(), latency_ms=1)
+
+    async def stream_text(self, request: LLMRequest) -> AsyncIterator[str]:
+        self.budgets.append(request.max_output_tokens)
+        if request.max_output_tokens < self.succeed_at:
+            raise LLMTruncated("no usable content [finish_reason=length]")
+        yield "正文"
+
+
+async def test_a_truncated_answer_is_not_treated_as_a_broken_endpoint() -> None:
+    # The client answers LLMTruncated by doubling the budget and asking again.
+    # Failing over instead sends the same too-small budget somewhere else and
+    # hides the signal, so the turn ends with no text despite HTTP 200s.
+    primary, spare = Truncating(succeed_at=4096), Recorder()
+    provider = FailoverProvider(
+        [FailoverTarget(primary, name="primary"), FailoverTarget(spare, name="spare")]
+    )
+
+    with pytest.raises(LLMTruncated):
+        await provider.generate_text(_request())
+
+    assert spare.seen == []
+
+
+async def test_streaming_also_lets_a_truncation_reach_the_budget_escalator() -> None:
+    primary, spare = Truncating(succeed_at=4096), Recorder()
+    provider = FailoverProvider(
+        [FailoverTarget(primary, name="primary"), FailoverTarget(spare, name="spare")]
+    )
+
+    with pytest.raises(LLMTruncated):
+        async for _chunk in provider.stream_text(_request()):
+            pass
+
+    assert spare.seen == []
+
+
+async def test_the_chain_survives_a_budget_escalation_end_to_end() -> None:
+    """The real path: client -> failover -> endpoint, with the retry intact."""
+    from engine.core.config import Settings
+    from engine.core.types import LLMRole
+    from engine.llm.client import LLMClient
+    from engine.llm.router import ModelRouter
+
+    endpoint = Truncating(succeed_at=4096)
+    provider = FailoverProvider([FailoverTarget(endpoint, name="primary")])
+    settings = Settings(llm_model="prose-model", narrative_model="prose-model")
+    client = LLMClient(
+        provider, ModelRouter(settings), registry=None, truncation_retries=4
+    )
+
+    response = await client.generate_text(LLMRole.NARRATIVE, "写一段场景。")
+
+    assert response.text == "正文"
+    # Each retry doubles, which is what turns an empty answer into a scene.
+    assert endpoint.budgets == sorted(endpoint.budgets)
+    assert endpoint.budgets[-1] >= 4096

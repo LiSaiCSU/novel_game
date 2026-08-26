@@ -581,3 +581,55 @@ async def test_postgres_world_state_snapshot_is_one_owned_statement() -> None:
             await session.commit()
         await app_engine.dispose()
         await owner_engine.dispose()
+
+
+@pytest.mark.skipif(
+    not OWNER_URL,
+    reason="set TEST_POSTGRES_OWNER_URL",
+)
+async def test_operator_lookup_does_not_deduplicate_over_json_columns() -> None:
+    """SELECT DISTINCT over a user row reaches its json columns.
+
+    PostgreSQL has no equality operator for ``json``, so such a query raises
+    UndefinedFunctionError. SQLite accepts it happily, which is how the support
+    console shipped a query that returned 500 for every administrator.
+    """
+    from apps.api.routers.support import support_operators
+
+    engine = create_async_engine(OWNER_URL)
+    maker = async_sessionmaker(engine, expire_on_commit=False)
+    admin_id = str(uuid.uuid4())
+    try:
+        async with maker() as session:
+            session.add(
+                UserORM(
+                    id=admin_id,
+                    email=f"ops-{admin_id[:8]}@example.com",
+                    password_hash="x",
+                    display_name="运维",
+                    status="active",
+                    email_verified_at=datetime.now(UTC),
+                )
+            )
+            session.add(
+                UserRoleORM(id=str(uuid.uuid4()), user_id=admin_id, role="admin")
+            )
+            await session.commit()
+
+        async with maker() as session:
+            uow = SqlUnitOfWork(session)
+
+            class _Principal:
+                user_id = admin_id
+
+            result = await support_operators(_Principal(), uow)  # type: ignore[arg-type]
+
+        assert any(item["id"] == admin_id for item in result["items"])
+    finally:
+        async with maker() as session:
+            await session.execute(
+                sa.text("DELETE FROM user_roles WHERE user_id = :id"), {"id": admin_id}
+            )
+            await session.execute(sa.text("DELETE FROM users WHERE id = :id"), {"id": admin_id})
+            await session.commit()
+        await engine.dispose()
