@@ -11,7 +11,11 @@ from __future__ import annotations
 
 import pytest
 
-from apps.api.llm_config import endpoint_chain_payload, load_platform_endpoints
+from apps.api.llm_config import (
+    endpoint_chain_payload,
+    load_platform_endpoints,
+    load_platform_llm_settings,
+)
 from apps.api.security import SecretBox
 from database.models.platform import PlatformLlmEndpointORM
 from engine.llm.providers import build_provider
@@ -186,6 +190,11 @@ async def test_chain_payload_orders_by_priority_and_skips_disabled(client) -> No
                     encrypted_secret=box.encrypt("sk-primary"),
                     narrative_model="prose-model",
                     reasoning_model="cheap-model",
+                    narrative_extra_body={"thinking": {"type": "disabled"}},
+                    reasoning_extra_body={
+                        "thinking": {"type": "enabled"},
+                        "reasoning_effort": "low",
+                    },
                 ),
                 PlatformLlmEndpointORM(
                     id=new_id(),
@@ -201,11 +210,19 @@ async def test_chain_payload_orders_by_priority_and_skips_disabled(client) -> No
         )
         await session.commit()
         rows = await load_platform_endpoints(session)
+        effective, _ = await load_platform_llm_settings(session, settings)
 
     payload = endpoint_chain_payload(rows, settings)
 
     assert [item["name"] for item in payload] == ["primary", "backup"]
     assert [item["api_key"] for item in payload] == ["sk-primary", "sk-backup"]
+    assert payload[0]["narrative_extra_body"] == {"thinking": {"type": "disabled"}}
+    assert payload[0]["reasoning_extra_body"] == {
+        "thinking": {"type": "enabled"},
+        "reasoning_effort": "low",
+    }
+    assert effective.llm_extra_body == "{}"
+    assert effective.llm_reasoning_extra_body == "{}"
 
 
 def test_build_provider_produces_a_failover_chain_with_per_endpoint_models() -> None:
@@ -224,6 +241,11 @@ def test_build_provider_produces_a_failover_chain_with_per_endpoint_models() -> 
                     "api_key": "sk-primary",
                     "narrative_model": "prose-model",
                     "reasoning_model": "cheap-model",
+                    "narrative_extra_body": {"thinking": {"type": "disabled"}},
+                    "reasoning_extra_body": {
+                        "thinking": {"type": "enabled"},
+                        "reasoning_effort": "low",
+                    },
                 },
                 {
                     "name": "backup",
@@ -247,6 +269,24 @@ def test_build_provider_produces_a_failover_chain_with_per_endpoint_models() -> 
     assert provider.targets[0].models["director"] == "cheap-model"
     assert provider.targets[1].models["narrative"] == "gateway-model"
     assert provider.targets[1].models["director"] == "gateway-mini"
+
+    from engine.llm.provider import LLMRequest
+
+    narrative = provider.targets[0].prepare(
+        LLMRequest(model="ignored", messages=[], role="narrative", extra_body={"client": True})
+    )
+    reasoning = provider.targets[0].prepare(
+        LLMRequest(model="ignored", messages=[], role="director", extra_body={"client": True})
+    )
+    assert narrative.extra_body == {
+        "client": True,
+        "thinking": {"type": "disabled"},
+    }
+    assert reasoning.extra_body == {
+        "client": True,
+        "thinking": {"type": "enabled"},
+        "reasoning_effort": "low",
+    }
 
 
 @pytest.mark.parametrize(

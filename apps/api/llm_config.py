@@ -223,7 +223,14 @@ def endpoint_chain_payload(
                 "api_key": secret,
                 "narrative_model": row.narrative_model,
                 "reasoning_model": row.reasoning_model or row.narrative_model,
+                # Keep the legacy alias for older workers during a rolling
+                # deploy, but preserve both profiles for current runtimes.
+                # Collapsing these into one value silently re-enabled vendor
+                # thinking on every role and made DeepSeek V4 consume the
+                # entire output budget before producing visible text.
                 "extra_body": dict(row.narrative_extra_body or {}),
+                "narrative_extra_body": dict(row.narrative_extra_body or {}),
+                "reasoning_extra_body": dict(row.reasoning_extra_body or {}),
             }
         )
     return payload
@@ -249,7 +256,6 @@ async def load_platform_llm_settings(
     head = payload[0]
     narrative_model = str(head["narrative_model"])
     reasoning_model = str(head["reasoning_model"]) or narrative_model
-    extra_body = json.dumps(head.get("extra_body") or {}, ensure_ascii=False)
     update: dict[str, object] = {
         "llm_provider": str(head["provider"]),
         "llm_base_url": str(head["base_url"]),
@@ -259,8 +265,11 @@ async def load_platform_llm_settings(
         "anthropic_api_key": "",
         "compatible_api_key": "",
         "llm_model": narrative_model,
-        "llm_extra_body": extra_body,
-        "llm_reasoning_extra_body": extra_body,
+        # Endpoint profiles travel inside ``llm_endpoints`` and are applied by
+        # each FailoverTarget. Copying the first endpoint's body onto the
+        # request would leak its vendor switches into every fallback target.
+        "llm_extra_body": "{}",
+        "llm_reasoning_extra_body": "{}",
         "narrative_model": narrative_model,
         "intent_model": reasoning_model,
         "npc_model": reasoning_model,

@@ -507,7 +507,7 @@ def completion_prompt(package: ContentPackageV2, gaps: dict[str, list[str]]) -> 
         f"<title>{package.manifest.title}</title>\n"
         f"<summary>{package.manifest.summary}</summary>\n"
         f"<world>{content.world.get('name', '')}：{content.world.get('description', '')}</world>\n"
-        f"<premise>{(scenario or {}).get('premise', '')}</premise>\n"
+        f"<premise>{scenario.premise if scenario else ''}</premise>\n"
         f"<characters>{characters}</characters>\n"
         f"<locations>{locations}</locations>\n"
         f"<threads>{threads}</threads>\n"

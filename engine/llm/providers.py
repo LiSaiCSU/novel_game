@@ -429,6 +429,14 @@ def _endpoint_targets(settings: Any) -> list[FailoverTarget]:
         reasoning = str(entry.get("reasoning_model", "")) or narrative
         models = {"narrative": narrative}
         models.update({role: reasoning for role in _REASONING_ROLES})
+        narrative_profile = entry.get("narrative_extra_body")
+        if narrative_profile is None:
+            narrative_profile = entry.get("extra_body") or {}
+        reasoning_profile = entry.get("reasoning_extra_body")
+        if reasoning_profile is None:
+            reasoning_profile = narrative_profile
+        narrative_extra_body = dict(narrative_profile)
+        reasoning_extra_body = dict(reasoning_profile)
         try:
             provider = _pool([_http_provider(kind, key, base_url, timeout) for key in keys])
         except LLMError:
@@ -440,7 +448,13 @@ def _endpoint_targets(settings: Any) -> list[FailoverTarget]:
                 name=str(entry.get("name", "")) or kind,
                 models={role: model for role, model in models.items() if model},
                 default_model=narrative,
-                extra_body=dict(entry.get("extra_body") or {}),
+                # ``extra_body`` remains the default for old serialized
+                # endpoint chains. Current chains carry independent profiles.
+                extra_body=narrative_extra_body,
+                extra_body_by_role={
+                    "narrative": narrative_extra_body,
+                    **{role: reasoning_extra_body for role in _REASONING_ROLES},
+                },
             )
         )
     return targets

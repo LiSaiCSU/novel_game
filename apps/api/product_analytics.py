@@ -26,6 +26,7 @@ ProductEventName = Literal[
     "project_validated",
     "release_created",
     "creator_text_imported",
+    "creator_draft_completed",
 ]
 
 _PROPERTY_ALLOWLIST: Final[dict[str, frozenset[str]]] = {
@@ -38,6 +39,7 @@ _PROPERTY_ALLOWLIST: Final[dict[str, frozenset[str]]] = {
     "project_validated": frozenset({"valid", "error_count"}),
     "release_created": frozenset({"visibility"}),
     "creator_text_imported": frozenset({"source_characters", "model_mode"}),
+    "creator_draft_completed": frozenset({"added", "model_mode"}),
 }
 
 

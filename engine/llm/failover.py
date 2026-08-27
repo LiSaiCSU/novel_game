@@ -43,6 +43,9 @@ class FailoverTarget:
     models: dict[str, str] = field(default_factory=dict)
     default_model: str = ""
     extra_body: dict[str, Any] = field(default_factory=dict)
+    #: Role-specific vendor switches. A fallback endpoint may use another
+    #: vendor, so these belong to the target instead of the head of the chain.
+    extra_body_by_role: dict[str, dict[str, Any]] = field(default_factory=dict)
 
     @property
     def available(self) -> bool:
@@ -53,8 +56,11 @@ class FailoverTarget:
 
         model = self.models.get(request.role) or self.default_model or request.model
         extra_body = dict(request.extra_body)
-        if self.extra_body:
-            extra_body = {**self.extra_body, **extra_body}
+        target_extra = self.extra_body_by_role.get(request.role, self.extra_body)
+        if target_extra:
+            # Endpoint-specific switches win over the first endpoint's
+            # request defaults when failover crosses vendors.
+            extra_body = {**extra_body, **target_extra}
         return replace(request, model=model, extra_body=extra_body)
 
 
