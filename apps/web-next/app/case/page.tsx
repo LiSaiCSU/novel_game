@@ -1,21 +1,23 @@
 "use client";
 
-import { ArrowRight, Clock3, Fingerprint, Gavel, Search, Trash2, Users } from "lucide-react";
+import { ArrowRight, Clock3, Fingerprint, Route, Shuffle, Star, Trash2 } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { CardSkeletons, ErrorState, RetryButton } from "@/components/ui/async-state";
 import { api } from "@/lib/api";
 import "./case.css";
 
 type CaseSummary = {
   key: string;
+  mode: "deduction" | "scheme";
   title: string;
   tagline: string;
   setting: string;
   estimated_minutes: string;
   minutes_total: number;
   suspects: number;
+  routes_total: number;
 };
 
 type RunSummary = {
@@ -25,16 +27,33 @@ type RunSummary = {
   status: "briefing" | "active" | "deadline" | "closed";
   ending_title: string | null;
   solved: boolean;
+  route: string | null;
+  grade: string | null;
   minutes_left: number | null;
   updated_at: string | null;
 };
 
 const statusLabel: Record<RunSummary["status"], string> = {
   briefing: "还没开始",
-  active: "调查中",
+  active: "进行中",
   deadline: "等待指认",
-  closed: "已结案",
+  closed: "已结束",
 };
+
+const modeLabel: Record<CaseSummary["mode"], string> = {
+  scheme: "十分钟博弈",
+  deduction: "推理对决",
+};
+
+function runLine(run: RunSummary): string {
+  if (run.status !== "closed") {
+    const left =
+      run.status === "active" && run.minutes_left !== null ? ` · 剩 ${run.minutes_left} 分钟` : "";
+    return `${statusLabel[run.status]}${left}`;
+  }
+  const grade = run.grade ? `${run.grade} · ` : run.solved ? "✓ " : "";
+  return `${grade}${run.ending_title ?? "已结束"}`;
+}
 
 export default function CaseLobby() {
   const router = useRouter();
@@ -59,6 +78,20 @@ export default function CaseLobby() {
       .catch(() => setSignedIn(false));
   }, [reloadKey]);
 
+  // Short schemes first: they are the quickest way in.
+  const ordered = useMemo(
+    () => [...cases].sort((a, b) => Number(a.mode !== "scheme") - Number(b.mode !== "scheme")),
+    [cases],
+  );
+
+  const found = useMemo(() => {
+    const byCase: Record<string, Set<string>> = {};
+    for (const run of runs) {
+      if (run.solved && run.route) (byCase[run.case_key] ??= new Set()).add(run.route);
+    }
+    return byCase;
+  }, [runs]);
+
   async function start(key: string) {
     if (!signedIn) {
       router.push("/login?next=/case");
@@ -79,7 +112,7 @@ export default function CaseLobby() {
   }
 
   async function remove(run: RunSummary) {
-    if (!window.confirm(`删除这份「${run.title}」案卷？`)) return;
+    if (!window.confirm(`删除这份「${run.title}」记录？`)) return;
     try {
       await api(`/case-runs/${run.id}`, { method: "DELETE" });
       setRuns((current) => current.filter((item) => item.id !== run.id));
@@ -92,25 +125,25 @@ export default function CaseLobby() {
     <div className="page caseLobby">
       <header className="caseLobbyHero">
         <p className="eyebrow">
-          <Fingerprint size={15} aria-hidden="true" /> 推理对决
+          <Fingerprint size={15} aria-hidden="true" /> 十分钟一局
         </p>
-        <h1>每个人都在说谎。你只有一次指认的机会。</h1>
+        <h1>一个目标，五种赢法。你只有这一次机会。</h1>
         <p>
-          勘查现场、问话、拿证据戳穿谎言，在时间耗尽之前说出凶手、凶器和动机。
-          大部分时候你只需要做选择；想自己发问，AI 会扮演对方回答你。
+          每一局开场就告诉你要做成什么、还剩几分钟。揭穿、交易、借刀、诈，甚至转身就走——
+          怎么赢由你选，赢得漂不漂亮另算。每一局证据藏的地方都会变，这一次没走通的路，下一次也许就在眼前。
         </p>
         <ul className="caseLobbyRules">
           <li>
-            <Search size={16} aria-hidden="true" /> 找证据
+            <Clock3 size={16} aria-hidden="true" /> 8—12 分钟一局
           </li>
           <li>
-            <Users size={16} aria-hidden="true" /> 戳穿说法
+            <Route size={16} aria-hidden="true" /> 多条路线
           </li>
           <li>
-            <Clock3 size={16} aria-hidden="true" /> 跟时间赛跑
+            <Shuffle size={16} aria-hidden="true" /> 每局不同
           </li>
           <li>
-            <Gavel size={16} aria-hidden="true" /> 一次指认
+            <Star size={16} aria-hidden="true" /> 三星评级
           </li>
         </ul>
       </header>
@@ -119,32 +152,40 @@ export default function CaseLobby() {
 
       <section aria-labelledby="cases-title">
         <h2 id="cases-title" className="caseLobbyHead">
-          案件
+          剧本
         </h2>
         {loading && <CardSkeletons count={1} />}
         {!loading && !cases.length && !error && (
           <ErrorState
-            title="还没有可以调查的案子"
-            description="案件列表是空的。"
+            title="还没有可以玩的剧本"
+            description="剧本列表是空的。"
             action={<RetryButton onClick={() => setReloadKey((key) => key + 1)} />}
           />
         )}
         <div className="caseLobbyGrid">
-          {cases.map((item) => (
-            <article className="caseLobbyCard" key={item.key}>
-              <p className="eyebrow">{item.setting}</p>
+          {ordered.map((item) => (
+            <article className={`caseLobbyCard mode-${item.mode}`} key={item.key}>
+              <p className="eyebrow">
+                <span className="caseModeTag">{modeLabel[item.mode]}</span> {item.setting}
+              </p>
               <h3>{item.title}</h3>
               <p>{item.tagline}</p>
               <p className="caseHint">
-                {item.suspects} 名嫌疑人 · 游戏内 {item.minutes_total} 分钟 · 约{" "}
-                {item.estimated_minutes}
+                {item.mode === "scheme"
+                  ? `已找到解法 ${found[item.key]?.size ?? 0}/${item.routes_total} · 约 ${item.estimated_minutes}`
+                  : `${item.suspects} 名嫌疑人 · 游戏内 ${item.minutes_total} 分钟 · 约 ${item.estimated_minutes}`}
               </p>
               <button
                 className="button primary"
                 onClick={() => void start(item.key)}
                 disabled={starting === item.key}
               >
-                {starting === item.key ? "正在打开案卷……" : "接手这件案子"} <ArrowRight size={16} />
+                {starting === item.key
+                  ? "正在开场……"
+                  : item.mode === "scheme"
+                    ? "开局"
+                    : "接手这件案子"}{" "}
+                <ArrowRight size={16} />
               </button>
             </article>
           ))}
@@ -154,27 +195,19 @@ export default function CaseLobby() {
       {signedIn && runs.length > 0 && (
         <section aria-labelledby="runs-title">
           <h2 id="runs-title" className="caseLobbyHead">
-            我的案卷
+            我的记录
           </h2>
           <ul className="caseRunList">
             {runs.map((run) => (
               <li key={run.id}>
                 <Link href={`/case/${run.id}`}>
                   <b>{run.title}</b>
-                  <span>
-                    {run.status === "closed"
-                      ? `${run.solved ? "✓ " : ""}${run.ending_title ?? "已结案"}`
-                      : `${statusLabel[run.status]}${
-                          run.status === "active" && run.minutes_left !== null
-                            ? ` · 剩 ${run.minutes_left} 分钟`
-                            : ""
-                        }`}
-                  </span>
+                  <span>{runLine(run)}</span>
                 </Link>
                 <button
                   className="caseIconButton"
                   onClick={() => void remove(run)}
-                  aria-label="删除案卷"
+                  aria-label="删除记录"
                 >
                   <Trash2 size={16} aria-hidden="true" />
                 </button>

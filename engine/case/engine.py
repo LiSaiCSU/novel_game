@@ -1,8 +1,8 @@
-"""Deterministic rules for the deduction mode.
+"""Deterministic rules for authored cases (deduction and scheme modes).
 
 Every outcome here is decided by the authored case, never by a model: a lie
-breaks only under the evidence written against it, patience drops by a fixed
-amount, a bluff rolls a seeded die. The language model is allowed to *pick*
+breaks only under the evidence written against it, patience and stance move
+by fixed amounts, a bluff and the hidden variables roll a seeded die. The language model is allowed to *pick*
 one of these moves on the player's behalf when they type freely, and to say
 something in character when nothing applies - it cannot invent a result.
 """
@@ -17,6 +17,7 @@ from engine.case.schema import (
     CaseDefinition,
     Character,
     Effects,
+    Extra,
     Option,
     Requirement,
 )
@@ -54,12 +55,16 @@ class CaseEngine:
 
     # ------------------------------------------------------------------
     def new_state(self, seed: str) -> CaseState:
+        rng = GameRNG(seed).derive("variables")
         return CaseState(
             case_key=self.case.key,
             case_version=self.case.version,
             seed=seed,
             minutes_left=self.case.minutes_total,
             patience={c.key: c.patience for c in self.case.characters},
+            stance={c.key: c.stance for c in self.case.characters if c.stance is not None},
+            variables={v.key: rng.choice(v.options) for v in self.case.variables},
+            evidence=list(self.case.starting_evidence),
         )
 
     def apply(self, state: CaseState, move: Move) -> CaseState:
@@ -130,6 +135,7 @@ class CaseEngine:
             for line in option.lines:
                 self._log(state, "npc", line, speaker=character.key)
             self._apply_effects(state, character, option.effects)
+            self._apply_extras(state, character, option.extras)
         else:
             assert option.gamble is not None
             self._log(state, "fail", self._text("bluff_failed"))
@@ -193,7 +199,9 @@ class CaseEngine:
         self._spend(state)
 
     def _accuse(self, state: CaseState, move: Move) -> None:
-        accusation = self.case.accusation
+        accusation, endings = self.case.accusation, self.case.endings
+        if accusation is None or endings is None:
+            raise MoveRejected("this case has no accusation")
         suspects = {c.key for c in self.case.characters if c.suspect}
         if move.culprit not in suspects:
             raise MoveRejected("unknown suspect")
@@ -242,17 +250,17 @@ class CaseEngine:
         met_count = sum(1 for pillar in pillars if pillar["met"])
         if not right_culprit:
             ending_key = f"wrong:{move.culprit}"
-            ending = self.case.endings.wrong[move.culprit]
+            ending = endings.wrong[move.culprit]
         elif met_count == len(pillars):
-            ending_key, ending = "truth", self.case.endings.truth
+            ending_key, ending = "truth", endings.truth
         elif met_count >= 2:
-            ending_key, ending = "partial", self.case.endings.partial
+            ending_key, ending = "partial", endings.partial
         else:
-            ending_key, ending = "escaped", self.case.endings.escaped
+            ending_key, ending = "escaped", endings.escaped
 
         epilogues = [
             item.text
-            for item in self.case.endings.epilogues
+            for item in endings.epilogues
             if item.flag in state.flags
             and (item.unless_culprit is None or item.unless_culprit != move.culprit)
             and (item.if_culprit is None or item.if_culprit == move.culprit)
@@ -261,6 +269,7 @@ class CaseEngine:
         state.status = "closed"
         state.current = None
         state.result = {
+            "mode": "deduction",
             "ending": ending_key,
             "solved": ending_key == "truth",
             "title": ending.title,
@@ -292,6 +301,14 @@ class CaseEngine:
             and all(key not in state.flags for key in requirement.not_flags)
             and all(key in state.examined for key in requirement.examined)
             and all(key not in state.evidence for key in requirement.lacks_evidence)
+            and (
+                not requirement.any_evidence
+                or any(key in state.evidence for key in requirement.any_evidence)
+            )
+            and all(state.variables.get(key) == value for key, value in requirement.variables.items())
+            and all(
+                state.stance.get(key, 0) >= value for key, value in requirement.stance_min.items()
+            )
         )
 
     def option_available(self, state: CaseState, character: Character, option: Option) -> bool:
@@ -375,9 +392,9 @@ class CaseEngine:
             )
         ]
         held = set(state.evidence)
-        ready = all(
-            any(set(group) <= held for group in pillar.any_of)
-            for pillar in self.case.accusation.pillars
+        accusation = self.case.accusation
+        ready = accusation is not None and all(
+            any(set(group) <= held for group in pillar.any_of) for pillar in accusation.pillars
         )
         if ready:
             return self._text("hint_ready")
@@ -403,6 +420,7 @@ class CaseEngine:
             for line in statement.on_break.lines:
                 self._log(state, "npc", line, speaker=character.key)
             self._apply_effects(state, character, statement.on_break.effects)
+            self._apply_extras(state, character, statement.on_break.extras)
 
     def _apply_effects(self, state: CaseState, character: Character | None, effects: Effects) -> None:
         for key in effects.statements:
@@ -415,9 +433,17 @@ class CaseEngine:
                 self._log(
                     state, "evidence", self._text("evidence_gained", name=item.name), evidence=key
                 )
+        for key in effects.remove_evidence:
+            if key in state.evidence:
+                state.evidence.remove(key)
+                if self.case.texts.evidence_lost:
+                    item = self.case.evidence_item(key)
+                    self._log(state, "system", self._text("evidence_lost", name=item.name))
         for key in effects.flags:
             if key not in state.flags:
                 state.flags.append(key)
+        for key, delta in effects.stance.items():
+            self._adjust_stance(state, key, delta)
         for key in effects.breaks:
             assert character is not None
             self._break(state, character, key)
@@ -427,6 +453,78 @@ class CaseEngine:
             if effects.silence and character.key not in state.silent:
                 state.silent.append(character.key)
                 state.patience[character.key] = 0
+        if effects.route is not None and state.status != "closed":
+            self._finish_route(state, effects.route)
+
+    def _apply_extras(
+        self, state: CaseState, character: Character | None, extras: list[Extra]
+    ) -> None:
+        for extra in extras:
+            if state.status == "closed":
+                return
+            if self.requirement_met(state, extra.requires):
+                for line in extra.lines:
+                    kind: LogKind = "npc" if character is not None else "narration"
+                    self._log(state, kind, line, speaker=character.key if character else None)
+                self._apply_effects(state, character, extra.effects)
+
+    def _adjust_stance(self, state: CaseState, key: str, delta: int) -> None:
+        if not delta or key not in state.stance:
+            return
+        state.stance[key] = max(-3, min(3, state.stance[key] + delta))
+        template = self.case.texts.stance_up if delta > 0 else self.case.texts.stance_down
+        if template:
+            name = self.case.character(key).name
+            self._log(state, "system", template.format(name=name), speaker=key)
+
+    def _finish_route(self, state: CaseState, route_key: str) -> None:
+        """Close a scheme run through one authored route and grade it."""
+        scheme = self.case.scheme
+        assert scheme is not None
+        route = self.case.route(route_key)
+        for flag in route.flags:
+            if flag not in state.flags:
+                state.flags.append(flag)
+        stars = [
+            {"key": star.key, "label": star.label, "met": route.success
+             and self.requirement_met(state, star.requires)}
+            for star in scheme.stars
+        ]
+        earned = sum(1 for star in stars if star["met"])
+        if not route.success:
+            grade = "F"
+        else:
+            ladder = ["C", "B", "A", "S"]
+            grade = ladder[min(len(ladder) - 1, len(ladder) - 1 - (len(stars) - earned))]
+            if route.grade_cap and ladder.index(grade) > ladder.index(route.grade_cap):
+                grade = route.grade_cap
+        epilogues = [
+            item.text
+            for item in scheme.epilogues
+            if item.flag in state.flags
+            and (item.unless_flag is None or item.unless_flag not in state.flags)
+        ]
+        lies = [s.key for c in self.case.characters for s in c.statements if s.lie]
+        self._log(state, "verdict", route.title)
+        state.status = "closed"
+        state.current = None
+        state.result = {
+            "mode": "scheme",
+            "ending": route.key,
+            "route": route.key,
+            "solved": route.success,
+            "title": route.title,
+            "label": route.label,
+            "text": route.text.strip(),
+            "grade": grade,
+            "stars": stars,
+            "epilogues": epilogues,
+            "minutes_left": max(0, state.minutes_left),
+            "lies_broken": len([key for key in state.broken if key in lies]),
+            "lies_total": len(lies),
+            "evidence_found": len(state.evidence),
+            "evidence_total": len(self.case.evidence),
+        }
 
     def _adjust_patience(self, state: CaseState, character: Character, delta: int) -> None:
         if character.key in state.silent:
@@ -443,16 +541,29 @@ class CaseEngine:
         if value == 0:
             state.silent.append(character.key)
             self._log(state, "narration", character.silent_line, speaker=character.key)
+            self._apply_effects(state, character, character.on_silence)
 
     def _spend(self, state: CaseState) -> None:
+        if state.status == "closed":
+            return
         state.minutes_left = max(0, state.minutes_left - self.case.action_minutes)
         for event in sorted(self.case.events, key=lambda e: -e.at_minutes_left):
-            if event.key not in state.fired_events and state.minutes_left <= event.at_minutes_left:
-                state.fired_events.append(event.key)
+            if event.key in state.fired_events or state.minutes_left > event.at_minutes_left:
+                continue
+            # A moment that has passed is gone, whether or not it happened.
+            state.fired_events.append(event.key)
+            if self.requirement_met(state, event.requires):
                 self._log(state, "event", event.text, speaker=event.speaker)
+                self._apply_effects(state, None, event.effects)
+            if state.status == "closed":
+                return
         if state.minutes_left <= 0 and state.status == "active":
-            state.status = "deadline"
-            self._log(state, "event", self.case.accusation.forced_line)
+            if self.case.scheme is not None:
+                self._finish_route(state, self.case.scheme.timeout_route)
+            else:
+                assert self.case.accusation is not None
+                state.status = "deadline"
+                self._log(state, "event", self.case.accusation.forced_line)
 
     def _log(
         self,

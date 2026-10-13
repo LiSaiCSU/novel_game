@@ -32,7 +32,7 @@ type CurrentUser = {
 type NotificationInbox = { unread_total: number };
 
 const primaryNavigation = [
-  { href: "/case", label: "推理对决", icon: Fingerprint },
+  { href: "/case", label: "十分钟一局", icon: Fingerprint },
   { href: "/library", label: "作品库", icon: Compass },
   { href: "/play", label: "我的故事", icon: BookOpenText },
   { href: "/pricing", label: "价格与权益", icon: CircleDollarSign },

@@ -1,10 +1,11 @@
 import { Gavel, X } from "lucide-react";
 import { useState } from "react";
-import type { CaseRun, MoveBody } from "./case-types";
+import type { Accusation as AccusationOptions, CaseRun, MoveBody } from "./case-types";
 import { EvidenceCard } from "./evidence";
 
 type Props = {
   run: CaseRun;
+  options: AccusationOptions;
   busy: boolean;
   forced: boolean;
   onAccuse: (body: MoveBody) => void;
@@ -14,8 +15,7 @@ type Props = {
 const steps = ["谁", "用什么", "为什么", "拿什么证明"] as const;
 
 /** One chance: who, with what, why, and the exhibits that hold it up. */
-export function Accusation({ run, busy, forced, onAccuse, onClose }: Props) {
-  const options = run.accusation;
+export function Accusation({ run, options, busy, forced, onAccuse, onClose }: Props) {
   const [step, setStep] = useState(0);
   const [culprit, setCulprit] = useState("");
   const [weapon, setWeapon] = useState("");

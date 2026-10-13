@@ -1,12 +1,21 @@
 import { Check, MessageSquareText, Search, Send, Stamp } from "lucide-react";
 import { type FormEvent, useState } from "react";
-import type { CaseCharacter, CaseLocation, CaseOption, CaseRun, MoveBody } from "./case-types";
+import {
+  type CaseCharacter,
+  type CaseLocation,
+  type CaseOption,
+  type CaseRun,
+  type MoveBody,
+  stanceLabel,
+} from "./case-types";
 
 const optionTags: Record<CaseOption["kind"], string> = {
   ask: "问",
   press: "逼问",
   comfort: "安抚",
   bluff: "诈",
+  trade: "交易",
+  act: "行动",
 };
 
 type Props = {
@@ -28,6 +37,17 @@ export function Patience({ character }: { character: CaseCharacter }) {
       {Array.from({ length: character.patience_max }, (_, index) => (
         <i key={index} className={index < character.patience ? "on" : undefined} />
       ))}
+    </span>
+  );
+}
+
+/** Where someone stands, for the people whose loyalty can be won. */
+export function StanceChip({ character }: { character: CaseCharacter }) {
+  if (character.stance === null) return null;
+  const tone = character.stance >= 2 ? "ally" : character.stance <= -1 ? "hostile" : "neutral";
+  return (
+    <span className={`caseStance ${tone}`} title="立场">
+      {stanceLabel(character.stance)}
     </span>
   );
 }
@@ -87,6 +107,7 @@ export function CaseDock({ run, busy, onMove, onChallenge, onSay }: Props) {
               >
                 <b>{character.name}</b>
                 {character.silent ? <small>不再开口</small> : <Patience character={character} />}
+                <StanceChip character={character} />
               </button>
             ))}
           </div>

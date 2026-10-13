@@ -53,18 +53,20 @@ export function Briefing({ run, busy, onBegin, onClose }: Props) {
 
           {page === castPage && (
             <section>
-              <h2>船上的人</h2>
-              <p className="caseVictim">
-                <b>死者</b>
-                {run.case.victim}
-              </p>
+              <h2>登场人物</h2>
+              {run.case.victim && (
+                <p className="caseVictim">
+                  <b>死者</b>
+                  {run.case.victim}
+                </p>
+              )}
               <div className="caseCastGrid">
                 {run.characters.map((character) => (
                   <div className="caseCastCard" key={character.key}>
                     <b>{character.name}</b>
                     <small>
                       {character.role}
-                      {!character.suspect && " · 可以帮你"}
+                      {run.case.mode === "deduction" && !character.suspect && " · 可以帮你"}
                     </small>
                     <p>{character.description}</p>
                   </div>
@@ -76,7 +78,7 @@ export function Briefing({ run, busy, onBegin, onClose }: Props) {
 
           {page === rulesPage && (
             <section>
-              <h2>怎么查</h2>
+              <h2>怎么玩</h2>
               <p className="caseGoal">
                 <Search size={16} aria-hidden="true" />
                 {run.case.goal}

@@ -1213,6 +1213,192 @@
   color: var(--case-red);
 }
 
+/* ---------- Scheme mode ---------- */
+.caseModeTag {
+  display: inline-block;
+  margin-right: 6px;
+  padding: 1px 8px;
+  border-radius: 99px;
+  background: var(--case-ink);
+  color: #fff;
+  letter-spacing: 0.05em;
+}
+
+.caseLobbyCard.mode-scheme {
+  border-color: var(--case-red);
+  background: linear-gradient(180deg, #fff6f2, var(--case-paper));
+}
+
+.caseStance {
+  display: inline-block;
+  margin-left: 4px;
+  padding: 0 6px;
+  border-radius: 4px;
+  font-size: 11px;
+  line-height: 18px;
+  font-weight: 600;
+  vertical-align: middle;
+}
+
+.caseStance.ally {
+  background: #e3efe0;
+  color: var(--case-green);
+}
+
+.caseStance.neutral {
+  background: #efe7d6;
+  color: var(--case-brass);
+}
+
+.caseStance.hostile {
+  background: var(--case-red-soft);
+  color: var(--case-red);
+}
+
+.caseObjective {
+  margin-bottom: 14px;
+  padding: 12px;
+  border: 1px solid var(--case-red);
+  border-radius: 10px;
+  background: #fff6f2;
+}
+
+.caseObjective p {
+  margin: 0;
+  font-family: var(--case-serif);
+  line-height: 1.7;
+}
+
+.caseObjective ul {
+  list-style: none;
+  margin: 8px 0 0;
+  padding: 0;
+  display: grid;
+  gap: 4px;
+  font-size: 13px;
+  color: var(--case-brass);
+}
+
+.caseObjective li {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.caseOption.trade .caseTag {
+  background: var(--case-brass);
+}
+
+.caseOption.act .caseTag {
+  background: var(--case-ink);
+}
+
+.caseGradeRow {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.caseGradeRow h2 {
+  margin: 2px 0 0;
+}
+
+.caseGrade {
+  display: grid;
+  place-items: center;
+  width: 64px;
+  height: 64px;
+  margin: 0;
+  flex: none;
+  border: 3px solid currentColor;
+  border-radius: 12px;
+  font-family: var(--case-serif);
+  font-size: 36px;
+  font-weight: 700;
+  transform: rotate(-6deg);
+  color: var(--case-muted);
+}
+
+.caseGrade.grade-S {
+  color: #b8860b;
+}
+
+.caseGrade.grade-A {
+  color: var(--case-green);
+}
+
+.caseGrade.grade-F {
+  color: var(--case-red);
+}
+
+.caseStars {
+  list-style: none;
+  padding: 0;
+  margin: 12px 0;
+  display: grid;
+  gap: 4px;
+  font-family: system-ui, sans-serif;
+  font-size: 14px;
+}
+
+.caseStars li {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.caseStars li.ok {
+  color: #b8860b;
+}
+
+.caseStars li.miss {
+  color: var(--case-muted);
+  text-decoration: line-through;
+}
+
+.caseRoutes {
+  margin: 14px 0;
+  padding: 12px 14px;
+  border: 1px dashed var(--case-line);
+  border-radius: 10px;
+  background: var(--case-paper);
+}
+
+.caseRoutes h3 {
+  margin: 0 0 8px;
+  font-size: 15px;
+}
+
+.caseRoutes ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 6px;
+  font-family: system-ui, sans-serif;
+  font-size: 13.5px;
+}
+
+.caseRoutes li {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+  color: var(--case-muted);
+}
+
+.caseRoutes li svg {
+  flex: none;
+  align-self: center;
+}
+
+.caseRoutes li.found {
+  color: var(--case-ink);
+}
+
+.caseRoutes li small {
+  color: var(--case-muted);
+}
+
 .caseMobileNav {
   display: none;
 }

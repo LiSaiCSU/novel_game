@@ -1,6 +1,14 @@
 "use client";
 
-import { BookOpen, FolderOpen, Gavel, Lightbulb, MessageSquareText, Users } from "lucide-react";
+import {
+  BookOpen,
+  FolderOpen,
+  Gavel,
+  Lightbulb,
+  MessageSquareText,
+  Star,
+  Users,
+} from "lucide-react";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import { useState } from "react";
@@ -8,7 +16,7 @@ import { ErrorState, LoadingState, RetryButton } from "@/components/ui/async-sta
 import { api } from "@/lib/api";
 import { Accusation } from "./accusation";
 import { Briefing } from "./briefing";
-import { CaseDock, Patience } from "./case-dock";
+import { CaseDock, Patience, StanceChip } from "./case-dock";
 import { CaseLog } from "./case-log";
 import type { CaseCharacter, CaseRun, MoveBody } from "./case-types";
 import { EvidenceFolder, EvidencePicker } from "./evidence";
@@ -82,7 +90,10 @@ export default function CasePage() {
   }
 
   const closed = run.status === "closed";
-  const danger = run.minutes_left <= 30;
+  const scheme = run.scheme;
+  // A third of the clock left is when the room should start to feel small.
+  const danger = run.minutes_left <= Math.ceil(run.case.minutes_total / 4);
+  const routesFound = scheme?.routes.filter((route) => route.discovered).length ?? 0;
   const pending = game.busy === "say" ? "对方正在想怎么回答你……" : "";
 
   return (
@@ -90,19 +101,20 @@ export default function CasePage() {
       <header className="caseTop">
         <div className="caseTitle">
           <Link href="/case" className="eyebrow">
-            推理对决
+            {scheme ? "十分钟博弈" : "推理对决"}
           </Link>
           <h1>{run.case.title}</h1>
         </div>
         <div className={`caseClock ${danger ? "danger" : ""}`} aria-live="polite">
           <span>
-            距靠岸 <b>{run.minutes_left}</b> 分钟
+            {run.case.clock_label || "剩余"} <b>{run.minutes_left}</b> 分钟
           </span>
           <progress max={run.case.minutes_total} value={run.minutes_left} aria-label="剩余时间" />
         </div>
         <p className="caseProgress">
           戳穿 {run.progress.lies_broken}/{run.progress.lies_total} · 证据{" "}
           {run.progress.evidence_found}
+          {scheme && ` · 解法 ${routesFound}/${scheme.routes.length}`}
         </p>
         <div className="caseTools">
           <button className="button" onClick={() => setBriefingOpen(true)}>
@@ -118,7 +130,7 @@ export default function CasePage() {
               <Lightbulb size={16} aria-hidden="true" /> 整理思路
             </button>
           )}
-          {!closed && (
+          {!closed && run.accusation && (
             <button
               className="button primary"
               onClick={() => setAccusing(true)}
@@ -131,6 +143,21 @@ export default function CasePage() {
       </header>
 
       <aside className="caseRail caseCastRail" aria-label="人物">
+        {scheme && (
+          <section className="caseObjective" aria-label="目标">
+            <p className="eyebrow">目标</p>
+            <p>{run.case.goal}</p>
+            {scheme.stars.length > 0 && (
+              <ul>
+                {scheme.stars.map((star) => (
+                  <li key={star}>
+                    <Star size={13} aria-hidden="true" /> {star}
+                  </li>
+                ))}
+              </ul>
+            )}
+          </section>
+        )}
         <h2>人物</h2>
         {run.characters.map((character) => (
           <button
@@ -143,9 +170,11 @@ export default function CasePage() {
               <b>{character.name}</b>
               {character.silent ? <small>不再开口</small> : <Patience character={character} />}
             </span>
-            <small>{character.role}</small>
+            <small>
+              {character.role} <StanceChip character={character} />
+            </small>
             <p>{character.description}</p>
-            {character.met && (
+            {character.met && character.statements.length > 0 && (
               <small className="caseDossierCount">
                 说法 {character.statements.length} · 已戳穿{" "}
                 {character.statements.filter((s) => s.broken).length}
@@ -167,7 +196,12 @@ export default function CasePage() {
         />
         {game.error && <p className="error caseInlineError">{game.error}</p>}
         {closed && run.result ? (
-          <Verdict result={run.result} busy={restarting} onRestart={() => void restart()} />
+          <Verdict
+            result={run.result}
+            routes={scheme?.routes ?? []}
+            busy={restarting}
+            onRestart={() => void restart()}
+          />
         ) : (
           <CaseDock
             key={run.current ?? "scene"}
@@ -225,8 +259,9 @@ export default function CasePage() {
         />
       )}
 
-      {(accusing || forced) && !closed && (
+      {(accusing || forced) && !closed && run.accusation && (
         <Accusation
+          options={run.accusation}
           run={run}
           busy={!!game.busy}
           forced={forced}

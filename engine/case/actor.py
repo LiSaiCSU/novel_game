@@ -81,6 +81,7 @@ def actor_prompt(
         "case_actor",
         "v1",
         name=character.name,
+        player=case.texts.player_name,
         identity=character.role,
         description=character.description,
         voice=character.voice,

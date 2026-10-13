@@ -1,0 +1,777 @@
+key: wedding_fifteen
+version: 1
+mode: scheme
+title: 婚礼还剩十五分钟
+tagline: 重生回到婚礼开场前，这一次，换你来掀桌
+setting: 现在 · 上海外滩 · 一家五星酒店的婚宴
+estimated_minutes: 8—12 分钟
+clock_label: 距婚礼开始
+minutes_total: 15
+action_minutes: 1
+goal: 十一点五十八分，婚礼进行曲响起之前，让这场婚礼办不成。
+
+briefing:
+  - title: 前世
+    body: |
+      三年前的今天，你嫁给了陆景深。
+
+      婚礼开场前十五分钟，律师递来一份「婚前财产协议」，说签个字走个流程。你爸在隔壁签了一份担保书，也说是走个流程。
+
+      三年后，陆氏集团的对赌到期。那两份文件，把你家的五金厂和你爸半辈子的积蓄，全部填进了陆家的窟窿。
+
+      你被赶出陆家那天下着雨。最后一个来看你的人是你最好的朋友苏晚——她挽着陆景深的胳膊，手上戴着本该属于你的戒指。
+  - title: 醒来
+    body: |
+      你在一阵发胶味里睁开眼。
+
+      镜子里是二十六岁的自己，穿着那件定制婚纱。墙上的钟：十一点四十三分。门外，司仪在试麦。苏晚正弯着腰，替你别头纱。
+
+      「宝，紧张啦？」她笑着说。
+
+      你没有回答。接下来的每一分钟，你都记得。
+  - title: 你知道的，和你不知道的
+    body: |
+      你知道：律师手里那份协议有坑，前世你连看都没看；十一点五十，你爸会在家属休息室签下那份担保书；陆景深和苏晚，早就在一起了。
+
+      你不知道：证据在哪里——前世你从没找过；这屋里谁能帮你，谁会倒戈，谁能被收买。
+
+      而你只有十五分钟。
+  - title: 这一次
+    body: |
+      在婚礼进行曲响起之前，让这场婚礼办不成。
+
+      办成了只算及格。想赢得漂亮，还要争取三件事：你爸没签那份担保书；协议原件落在你手里；让陆景深和苏晚付出代价。
+
+      办法不止一种：揭穿、交易、借刀、诈，甚至转身就走。每一局，证据藏的地方、律师的软肋都会变——这一次没走通的路，下一次也许就在眼前。
+
+rules:
+  - title: 时间
+    body: 离婚礼开场还有 15 分钟。看一处地方、说一句话、拿出一样东西，都要花 1 分钟。走过去搭话不花时间。
+  - title: 赢
+    body: 婚礼办不成就算赢。不同的赢法，结局不同；三颗星拿到越多，评级越高。
+  - title: 立场
+    body: 有些人名字旁边写着立场。把一个人拉到你这边，他就会替你做你做不到的事。
+  - title: 拿出证据
+    body: 选中一句话，拿出能戳穿它的东西。戳穿了，对方口风就松了；拿错了，他们会起疑。
+  - title: 疑心
+    body: 圆点是对方的耐心。陆景深和苏晚只有两格——让他们起了疑心，你就再也没有机会了。
+  - title: 诈与交易
+    body: 「诈」是虚张声势，可能成，也可能砸；「交易」要付出你手里的东西，给出去就没了。
+  - title: 解法
+    body: 一共五种赢法。每一局结束，你都会知道还有几种没找到。
+
+opening: 十一点四十三分。苏晚别好最后一枚发卡，退后一步看了看：「完美。我去外面盯着。」门关上了。何律师留下的那份协议，压在你的捧花底下。
+
+characters:
+  - key: groom
+    name: 陆景深
+    role: 新郎 · 三十岁
+    description: 陆氏集团的独子，温文尔雅，宾客都夸他体贴。今天他的手机一直在震，每次都走到走廊尽头去接。
+    voice: 温柔、耐心，喜欢叫你「傻瓜」；被逼急了会把门关上，声音一下子变冷。
+    patience: 2
+    intro: （他推门进来，替你理了理头纱）紧张？傻瓜，签完字我们就出场。
+    statements:
+      - key: gr_process
+        text: 签字就是走个流程，我还能害你吗？
+        initial: true
+        lie: true
+        contradicted_by: [clause7, guarantee]
+        on_break:
+          lines:
+            - （他的笑僵了一下。）
+            - ……那是何律师拟的格式条款，我也没细看。你别多想，好吗？
+          effects:
+            statements: [gr_lawyer]
+      - key: gr_lawyer
+        text: 条款都是何律师拟的，我真的没细看。
+        lie: true
+        contradicted_by: [call, suwan_truth]
+        on_break:
+          lines:
+            - （他沉默了几秒，转身把门关上。再开口时，声音冷得像换了一个人。）
+            - ……你都知道了。对，下周三对赌到期，陆家需要你爸的担保。
+            - 知夏，就这一次。过了这关，你要什么，我都补给你。
+          effects:
+            flags: [groom_cornered]
+          extras:
+            - requires: {flags: [recording_on]}
+              lines: [（捧花里，手机的录音还在走。）]
+              effects: {evidence: [recording]}
+      - key: gr_suwan
+        text: 我跟苏晚？她是你闺蜜，我避嫌都来不及。
+        initial: true
+        lie: true
+        contradicted_by: [room_card, phone_msg, necklace, suwan_truth]
+        on_break:
+          lines:
+            - （他看了一眼门口，压低了声音。）
+            - ……那都是以前的事了。今天之后，我只对你一个人好。
+          effects:
+            flags: [affair_admitted]
+          extras:
+            - requires: {flags: [recording_on]}
+              lines: [（捧花里，手机的录音还在走。）]
+              effects: {evidence: [recording]}
+    options:
+      - key: gr_force
+        kind: act
+        label: 「你自己出去跟大家说：婚礼取消。理由随你编。不然这段录音，下一个听见的是你妈。」
+        requires:
+          evidence: [recording]
+        lines:
+          - （他盯着你的捧花看了很久。）
+          - ……好。
+          - （他整了整领带，推门出去。走廊里传来他的声音：「各位，实在抱歉——」）
+        effects:
+          route: r_himself
+      - key: gr_bluff
+        kind: bluff
+        label: 「刚才那些话，我都录下来了。现在出去，跟大家说婚礼取消。」
+        requires:
+          flags: [groom_cornered]
+          lacks_evidence: [recording]
+        lines:
+          - （他的脸一下子白了，手在门把上停了很久。）
+          - ……算你狠。
+          - （他推门出去。走廊里传来他的声音：「各位，实在抱歉——」）
+        effects:
+          route: r_himself
+        gamble:
+          chance: 0.4
+          failure_lines:
+            - 录了？（他笑了，朝你伸出手）拿出来，我听听。
+          failure_patience: -2
+    wrong_present:
+      - 傻瓜，你拿这个给我看干什么？
+      - 知夏，今天是我们的好日子，别闹了。
+    silent_line: （陆景深脸上的笑彻底没了。他掏出手机：「妈，知夏状态不太对，叫个医生上来。」）
+    on_silence:
+      route: r_calmed
+
+  - key: suwan
+    name: 苏晚
+    role: 伴娘 · 认识十五年的闺蜜
+    description: 今天比你还忙，前前后后张罗。脖子上有一条细细的铂金项链，你从没见她戴过。
+    voice: 亲昵、撒娇，一口一个「宝」；心虚时会笑得更大声，然后马上换话题。
+    patience: 2
+    intro: 宝，怎么啦？脸色这么白，是不是低血糖？我给你拿块巧克力。
+    statements:
+      - key: sw_home
+        text: 我昨晚在家睡的，今早六点就过来陪你了。
+        initial: true
+        lie: true
+        contradicted_by: [room_card, phone_msg]
+        on_break:
+          lines:
+            - （她手里的巧克力掉在了地上。）
+            - 宝，你听我解释，是他先找我的！
+            - 我求你，别在今天闹开……你想知道什么，我都告诉你。
+          effects:
+            flags: [affair_admitted]
+            statements: [sw_beg]
+          extras:
+            - requires: {flags: [recording_on]}
+              lines: [（捧花里，手机的录音还在走。）]
+              effects: {evidence: [recording]}
+      - key: sw_necklace
+        text: 这条项链？我自己买的，好看吧？
+        initial: true
+        lie: true
+        contradicted_by: [necklace]
+        on_break:
+          lines:
+            - （她下意识捂住吊坠。）
+            - ……是他送的。宝，我……
+            - 我求你，别在今天闹开……你想知道什么，我都告诉你。
+          effects:
+            flags: [affair_admitted]
+            statements: [sw_beg]
+          extras:
+            - requires: {flags: [recording_on]}
+              lines: [（捧花里，手机的录音还在走。）]
+              effects: {evidence: [recording]}
+      - key: sw_beg
+        text: 我什么都告诉你，只求你别在今天闹开。
+    options:
+      - key: sw_photo
+        kind: ask
+        label: 「帮我拍张照好不好？用你的手机，我的没电了。」
+        requires:
+          variables: {affair_proof: phone}
+        lines:
+          - 好呀！（她解锁手机递给你。就在你举起来的那一刻，屏幕顶上弹出一条消息——）
+        effects:
+          evidence: [phone_msg]
+      - key: sw_clasp
+        kind: ask
+        label: 「你项链扣歪了，我帮你弄一下。」
+        requires:
+          variables: {affair_proof: necklace}
+        lines:
+          - （她撩起头发。你捏住那枚小小的搭扣——吊坠背面刻着三个字母。）
+        effects:
+          evidence: [necklace]
+      - key: sw_truth
+        kind: trade
+        label: 「那就说实话。那份协议，到底是谁的主意？」
+        requires:
+          flags: [affair_admitted]
+        lines:
+          - （她咬着嘴唇，眼泪掉了下来。）
+          - 是景深。他说陆家下周就撑不住了，只要叔叔签了担保……
+          - 何律师也知道。第七条，就是照着景深的意思加的。宝，我也是被他骗的……
+        effects:
+          evidence: [suwan_truth]
+        extras:
+          - requires: {flags: [recording_on]}
+            lines: [（捧花里，手机的录音还在走。）]
+            effects: {evidence: [recording]}
+      - key: sw_threat
+        kind: press
+        label: 「你和陆景深的事，我全都知道。」
+        requires:
+          unbroken: [sw_home]
+          not_flags: [affair_admitted]
+        lines:
+          - （她愣了一秒，然后笑出了声。）宝，你说什么呢？谁跟你嚼的舌根？
+          - （她转身出了门。你听见她在走廊里压低声音打电话。）
+        effects:
+          patience: -1
+    wrong_present:
+      - 宝，你拿这个干嘛呀？
+      - 哎呀，你今天怎么怪怪的。
+    silent_line: （苏晚抓起手机出了门。走廊里传来她的声音：「景深，她好像知道了。」）
+    on_silence:
+      route: r_calmed
+
+  - key: mother
+    name: 周曼云
+    role: 婆婆 · 陆家主母
+    description: 陆氏集团的大股东。一辈子最看重两件事：陆家的名声，和陆家的钱。她一直觉得你家配不上陆家。
+    voice: 慢条斯理，句句带刺，叫你「许小姐」；真正动摇时会改口叫你「知夏」。
+    patience: 3
+    stance: 0
+    intro: （她上下打量你的婚纱）许小姐，再过十几分钟就要出场了。有什么事，等婚礼办完再说。
+    statements:
+      - key: mo_face
+        text: 我们陆家娶媳妇，从来不亏待人。
+        initial: true
+    options:
+      - key: mo_respect
+        kind: comfort
+        label: 「妈，有件事关系到陆家的名声。我不敢声张，只敢先告诉您一个人。」
+        lines:
+          - （她终于正眼看了你一下。）……说。
+        effects:
+          stance: {mother: 1}
+      - key: mo_affair
+        kind: press
+        label: 「景深和苏晚的事，您知道吗？」（把证据递给她）
+        requires:
+          any_evidence: [room_card, phone_msg, necklace, suwan_truth, recording]
+        lines:
+          - （她看完你递过去的东西，脸色一点一点沉了下来。）
+          - ……这种事，绝不能让外人知道。
+        effects:
+          stance: {mother: 1}
+      - key: mo_debt
+        kind: press
+        label: 「景深在外面签了对赌，下周三到期。他拿什么填？拿我们许家的担保。」
+        requires:
+          any_evidence: [call, guarantee, suwan_truth]
+        lines:
+          - （她握着茶杯的手指收紧了。）
+          - 对赌？他一个字都没跟我提过。
+        effects:
+          stance: {mother: 1}
+      - key: mo_threat
+        kind: press
+        label: 「您要是不叫停，我就让所有人知道您儿子是什么人。」
+        lines:
+          - （她冷笑一声。）许小姐，还没进陆家的门，就学会威胁长辈了？
+        effects:
+          stance: {mother: -2}
+          patience: -1
+      - key: mo_cancel
+        kind: act
+        label: 「妈，这场婚礼今天办了，明天陆家就是全城的笑话。现在叫停，还来得及体面。」
+        requires:
+          stance_min: {mother: 2}
+        lines:
+          - （她沉默了很久，摘下老花镜。）……知夏，你比我想的聪明。
+          - （她拿起对讲机：「通知司仪，新娘身体不适，婚礼延期。」）
+        effects:
+          route: r_mother
+    wrong_present:
+      - 许小姐，这是什么意思？
+      - 我没时间陪你玩这种把戏。
+    silent_line: （周曼云起身离开，经过门口时对保镖说了一句：「看好新娘。」）
+
+  - key: lawyer
+    name: 何既明
+    role: 陆家的律师 · 三十八岁
+    description: 替陆家做了八年法律顾问，西装笔挺。他放下协议后就一直站在门口，时不时看一眼手表。
+    voice: 措辞严谨，爱说「原则上」「从法律角度」；被说中要害时，会很长时间不说话。
+    patience: 3
+    intro: 许小姐，协议就在您桌上。原则上，签个字就行，十秒钟的事。
+    statements:
+      - key: lw_routine
+        text: 这是一份标准的婚前财产协议，没有任何特殊条款。
+        initial: true
+        lie: true
+        contradicted_by: [clause7, suwan_truth]
+        on_break:
+          lines:
+            - （他看了一眼第七条，长长地出了一口气。）
+            - ……这一条，是陆总坚持要加的。我提醒过他，站不住。
+          effects:
+            statements: [lw_job]
+      - key: lw_job
+        text: 我只是拟文件的人。签不签，是你们两家的事。
+    options:
+      - key: lw_read_money
+        kind: ask
+        label: 「何律师，您跟陆家做了几年了？」
+        requires:
+          variables: {lawyer: money}
+        lines:
+          - 八年。（他苦笑了一下）陆家给的不多，事儿可不少。
+          - （他抬手看表。表盘边上掉了一块漆——那块表是仿的。）
+        effects:
+          evidence: [lawyer_broke]
+      - key: lw_read_pride
+        kind: ask
+        label: 「何律师，您跟陆家做了几年了？」
+        requires:
+          variables: {lawyer: conscience}
+        lines:
+          - 八年。（他推了推眼镜）我入行那年发过誓，只经手站得住的文件。
+          - （说这句话的时候，他没有看你，看的是桌上那份协议。）
+        effects:
+          evidence: [lawyer_proud]
+      - key: lw_conscience_win
+        kind: comfort
+        label: 「何律师，第七条要是闹上法庭，被吊销执照的会是谁？您比我清楚。」
+        requires:
+          broken: [lw_routine]
+          variables: {lawyer: conscience}
+        lines:
+          - （他沉默了很久，从公文包里取出一个牛皮纸袋，放在桌上。）
+          - 这是原件。我今天……就当没带来过。
+        effects:
+          evidence: [original]
+          flags: [lawyer_turned]
+      - key: lw_conscience_fail
+        kind: comfort
+        label: 「何律师，第七条要是闹上法庭，被吊销执照的会是谁？您比我清楚。」
+        requires:
+          broken: [lw_routine]
+          variables: {lawyer: money}
+        lines:
+          - 吊销执照？（他笑了一声）许小姐，陆家请得起最好的律师团，我怕什么？
+        effects:
+          patience: -1
+      - key: lw_money_win
+        kind: trade
+        label: 「这里是一万块。买您今天『忘了带原件』。」（递出改口红包）
+        requires:
+          evidence: [red_packet]
+          broken: [lw_routine]
+          variables: {lawyer: money}
+        lines:
+          - （他看了一眼门口，把红包收进内袋，又从公文包里抽出一个牛皮纸袋，放在桌上。）
+          - ……我什么都没看见。
+        effects:
+          remove_evidence: [red_packet]
+          evidence: [original]
+          flags: [lawyer_turned]
+      - key: lw_money_fail
+        kind: trade
+        label: 「这里是一万块。买您今天『忘了带原件』。」（递出改口红包）
+        requires:
+          evidence: [red_packet]
+          broken: [lw_routine]
+          variables: {lawyer: conscience}
+        lines:
+          - （他把红包推了回来，脸沉了下去。）许小姐，您这是在侮辱我。
+        effects:
+          patience: -2
+    wrong_present:
+      - 许小姐，从法律角度，这说明不了什么。
+      - 请您专注在协议本身。
+    silent_line: （何律师合上公文包，走去了走廊：「陆总，新娘不太配合。」）
+
+  - key: emcee
+    name: 钱师傅
+    role: 婚礼司仪 · 五十岁
+    description: 干了二十年婚庆，什么场面都见过。全场的话筒，和大屏幕播放台的遥控器，都在他手里。
+    voice: 爽朗、圆滑，满嘴吉利话；一谈到钱，就突然变得很实在。
+    patience: 3
+    intro: 哎哟新娘子！今天真漂亮！还有十来分钟，咱们按流程走，保证热热闹闹的！
+    statements:
+      - key: mc_rules
+        text: 台上放什么，我只听新人家里的安排。
+        initial: true
+    options:
+      - key: mc_bribe
+        kind: trade
+        label: 「钱师傅，这个红包您收着。灯一暗，先放我手机里这段。」（递出改口红包）
+        requires:
+          evidence: [red_packet]
+          any_evidence: [room_card, phone_msg, necklace, recording]
+          not_flags: [emcee_ready]
+        lines:
+          - （他捏了捏红包的厚度，笑得眼睛眯成一条缝。）新娘子吩咐，那必须的！
+        effects:
+          remove_evidence: [red_packet]
+          flags: [emcee_ready]
+      - key: mc_bluff
+        kind: bluff
+        label: 「陆太太交代的：开场先放一段惊喜，素材在我这儿。」
+        requires:
+          any_evidence: [room_card, phone_msg, necklace, recording]
+          not_flags: [emcee_ready]
+        lines:
+          - 哦哦，陆太太交代的啊！行，您把手机给我。
+        effects:
+          flags: [emcee_ready]
+        gamble:
+          chance: 0.5
+          failure_lines:
+            - 陆太太？（他掏出对讲机）「陆太太，新娘说您让放个视频？」
+            - （对讲机里传来周曼云冷冷的声音：「什么视频？」）
+          failure_patience: -2
+      - key: mc_play
+        kind: act
+        label: 「就现在。灯一暗，就放。」
+        requires:
+          flags: [emcee_ready]
+        lines:
+          - （宴会厅的灯暗了下来。大屏幕上出现的，不是你们的婚纱照——）
+          - （全场安静了三秒，然后炸开了锅。）
+        effects:
+          route: r_screen
+    wrong_present:
+      - 新娘子，这个我可看不懂啊！
+    silent_line: （钱师傅摆摆手：「新娘子，咱按流程走，按流程走。」他再也不接你的话了。）
+
+  - key: father
+    name: 许国平
+    role: 你爸 · 五金厂厂长
+    description: 开了三十年五金厂，老实本分，看不懂什么法律条文。他正坐在家属休息室，对着一份文件找老花镜。
+    voice: 憨厚、絮叨，叫你「闺女」；只要女儿认真说的话，他都听。
+    patience: 3
+    stance: 0
+    intro: 闺女？你怎么跑过来了，婚纱可别弄脏了。陆家说让我签个字，走个流程。
+    statements:
+      - key: fa_process
+        text: 陆家说了，就是走个流程，签个名的事。
+        initial: true
+    options:
+      - key: fa_stop
+        kind: comfort
+        label: 「爸，这份文件您先别签。等我回来。」
+        requires:
+          not_flags: [father_signed, father_safe]
+        lines:
+          - 好好好，听闺女的。（他把笔放下了，又有点不放心地看了你一眼。）
+        effects:
+          flags: [father_safe]
+      - key: fa_show
+        kind: press
+        label: 「您看这一条——签了，咱家的厂，就成了陆家的抵押品。」
+        requires:
+          any_evidence: [clause7, guarantee]
+        lines:
+          - （他戴上老花镜，把那一行看了三遍。手开始发抖。）
+          - ……我这辈子签的字，没有一个是看清楚的。
+        effects:
+          stance: {father: 1}
+          flags: [father_safe]
+      - key: fa_affair
+        kind: press
+        label: 「爸，陆景深外面有人。是苏晚。」
+        requires:
+          any_evidence: [room_card, phone_msg, necklace, suwan_truth, recording]
+        lines:
+          - （他愣住了，半天才说出一句。）……晚晚？她从小在咱家吃饭长大的……
+        effects:
+          stance: {father: 1}
+      - key: fa_original
+        kind: press
+        label: 「这是协议原件，何律师亲手交给我的。您看第七条下面那行字。」
+        requires:
+          evidence: [original]
+        lines:
+          - （他把原件攥在手里，攥得纸都皱了。）
+        effects:
+          stance: {father: 1}
+      - key: fa_leave
+        kind: act
+        label: 「爸，带我回家。」
+        requires:
+          stance_min: {father: 2}
+        lines:
+          - （他站起来，把那份担保书撕成了两半。）
+          - （他走进宴会厅，对着陆家的主桌说：「这婚，我们许家不结了。」）
+        effects:
+          route: r_father
+    wrong_present:
+      - 闺女，爸看不懂这些……
+    silent_line: （你爸叹了口气，低头去找他的老花镜。）
+
+locations:
+  - key: bridal
+    name: 新娘化妆间
+    description: 镜子、捧花、挂着的头纱。何律师留下的协议，压在捧花底下。
+    spots:
+      - key: agreement
+        label: 翻开捧花底下的那份协议
+        narration: 前六条都是寻常的财产约定。你翻到附件——第七条的字，比别处小了一号。
+        effects:
+          evidence: [clause7]
+      - key: record
+        label: 打开手机录音，塞进捧花里
+        narration: 你把手机调成录音，屏幕朝下塞进捧花。从现在起，你身边说的每一句话都会留下来。
+        effects:
+          flags: [recording_on]
+      - key: escape
+        label: 拎起裙摆，从员工通道走
+        narration: 你踢掉高跟鞋，拎起裙摆，推开员工通道的门。身后有人喊你的名字，你没有回头。
+        effects:
+          route: r_escape
+  - key: groom_room
+    name: 新郎休息室
+    description: 他的西装外套挂在衣架上，桌上是没喝完的香槟。走廊尽头，他又在打电话。
+    spots:
+      - key: coat
+        label: 替他理一理挂着的西装外套
+        requires:
+          variables: {affair_proof: room_card}
+        narration: 你替他抚平外套上的褶子。内袋里，有一张硬硬的卡片。
+        effects:
+          evidence: [room_card]
+      - key: corridor
+        label: 走到走廊尽头，听他在电话里说什么
+        narration: 陆景深背对着你，声音压得很低：「……下周三，对。许家的担保今天必须签下来，签了就什么都好说。」
+        effects:
+          evidence: [call]
+  - key: family_room
+    name: 家属休息室
+    description: 你爸坐在角落的沙发上。陆家的人刚把一份文件递到他手里。
+    spots:
+      - key: guarantee_doc
+        label: 看一眼你爸手里的那份文件
+        narration: 你爸还在找老花镜。你看清了标题。
+        effects:
+          evidence: [guarantee]
+
+evidence:
+  - key: red_packet
+    name: 改口红包
+    kind: physical
+    description: 你手包里的改口红包，一万块现金。给出去，就没了。
+  - key: clause7
+    name: 协议第七条
+    kind: document
+    description: 附件第七条用小一号的字写着：乙方及其直系亲属，自愿就甲方及其关联企业的全部债务承担连带责任。这一条，能把许家整个搭进去。
+  - key: guarantee
+    name: 担保书
+    kind: document
+    description: 《连带责任担保书》：许氏五金厂为陆氏集团的对赌协议提供连带担保，金额两亿元。担保人一栏，还空着。
+  - key: call
+    name: 走廊里的电话
+    kind: testimony
+    description: 陆景深在电话里说：「下周三。许家的担保今天必须签下来，签了就什么都好说。」
+  - key: room_card
+    name: 1808 房卡
+    kind: physical
+    description: 酒店 1808 房的房卡，背面用圆珠笔写着日期——昨晚。苏晚说，她昨晚在家睡的。
+  - key: phone_msg
+    name: 苏晚手机上的消息
+    kind: observation
+    description: 一条备注为「J」的人发来的消息：「1808，昨晚的事别说漏嘴。等她签完字。」
+  - key: necklace
+    name: 吊坠背面的字母
+    kind: observation
+    description: 苏晚的吊坠背面刻着三个字母：L.J.S.——陆景深。
+  - key: suwan_truth
+    name: 苏晚的供词
+    kind: testimony
+    description: 苏晚承认：协议是陆景深的主意，为了让许家替陆氏的对赌兜底；第七条是照他的意思加的，何律师也知道。
+  - key: recording
+    name: 录音
+    kind: physical
+    description: 捧花里的手机，录下了那段话。这是谁也赖不掉的东西。
+  - key: lawyer_broke
+    name: 何律师的表
+    kind: observation
+    description: 他手上那块表是仿的，表盘掉了漆。八年了，陆家没给过他多少。
+  - key: lawyer_proud
+    name: 何律师的誓言
+    kind: observation
+    description: 他说入行那年发过誓，只经手站得住的文件。他在乎这个，比在乎钱多。
+  - key: original
+    name: 协议原件
+    kind: document
+    description: 何律师亲手交出的协议原件。第七条下面，有他用铅笔写的一行小字：陆氏对赌，下周三到期。
+
+starting_evidence: [red_packet]
+
+variables:
+  - key: affair_proof
+    options: [room_card, phone, necklace]
+  - key: lawyer
+    options: [money, conscience]
+
+events:
+  - key: makeup
+    at_minutes_left: 12
+    text: 化妆师在门外喊：「新娘还有十分钟补妆——」
+  - key: father_signs
+    at_minutes_left: 8
+    requires:
+      not_flags: [father_safe]
+    text: 家属休息室那边传来一声：「签好了！」——你爸把担保书递给了陆家的人。
+    effects:
+      flags: [father_signed]
+  - key: lights
+    at_minutes_left: 5
+    text: 宴会厅的灯暗了一半。司仪在试麦：「各位来宾，各位亲朋——」
+  - key: march
+    at_minutes_left: 2
+    speaker: groom
+    text: （门外传来敲门声）知夏，该出场了。
+
+scheme:
+  timeout_route: r_wedding
+  stars:
+    - key: father
+      label: 你爸没签那份担保书
+      requires:
+        flags: [father_safe]
+        not_flags: [father_signed]
+    - key: original
+      label: 协议原件在你手里
+      requires:
+        evidence: [original]
+    - key: paid
+      label: 让陆景深和苏晚付出代价
+      requires:
+        flags: [they_paid]
+  routes:
+    - key: r_screen
+      title: 全场都看见了
+      label: 大屏幕上的真相
+      teaser: 司仪手里，握着全场最大的一块屏幕。
+      flags: [they_paid]
+      text: |
+        大屏幕上，那样东西被放大到三米高。
+
+        宾客们先是安静，然后手机快门声连成一片。苏晚捂着脸冲出了宴会厅，陆景深站在台上，第一次不知道该把手放在哪里。
+
+        周曼云站起来，说了一句「婚礼取消」，声音在发抖。
+
+        你拎着裙摆从侧门离开。身后的闪光灯，一盏都没有照向你。
+    - key: r_mother
+      title: 体面
+      label: 婆婆亲自叫停
+      teaser: 这屋里，有人比你更怕这场婚礼丢人。
+      text: |
+        司仪的声音在宴会厅里响起：「因新娘身体不适，今天的婚礼延期举行。」
+
+        宾客们议论了一阵，陆续散了。没有人知道发生了什么——周曼云最擅长的，就是这个。
+
+        她送你到电梯口，第一次叫了你的名字：「知夏，陆家欠你一个人情。」
+
+        电梯门合上的那一刻，你知道：陆家的人情，有时候比陆家的钱更值钱。
+    - key: r_father
+      title: 爸爸带我回家
+      label: 父亲当众退婚
+      teaser: 你不是一个人来的。
+      text: |
+        你爸把撕成两半的担保书放在陆家的主桌上，牵起了你的手。
+
+        「这婚，我们许家不结了。」
+
+        他的手很粗，全是老茧，握得很紧。前世，你到最后都没能再握一次这只手。
+
+        走出酒店的时候，外滩的风很大。你爸脱下外套，披在你肩上。
+    - key: r_himself
+      title: 他自己低头
+      label: 让说谎的人亲口取消
+      teaser: 让说谎的人，亲口把它取消。
+      flags: [they_paid]
+      text: |
+        陆景深站在台上，握着话筒，说婚礼取消，原因是他自己「还没准备好」。
+
+        宾客一片哗然，周曼云的脸铁青。苏晚躲在人群里，不敢看你。
+
+        他走下台时经过你身边，压低声音：「录音，给我。」
+
+        你笑了笑：「下周三之前，你最好别惹我。」
+    - key: r_escape
+      title: 员工通道
+      label: 转身就走
+      teaser: 最简单的办法，也是最狼狈的。
+      grade_cap: B
+      text: |
+        你光着脚跑过酒店后厨，跑过堆满餐车的走廊，一直跑进外滩的风里。
+
+        婚礼没有办成。第二天，「新娘婚礼当天逃婚」上了热搜，配图是你拎着裙摆的背影。陆家对外说，你精神不太稳定。
+
+        没有人知道为什么。但至少，这一次你没有签字。
+    - key: r_wedding
+      title: 我愿意
+      label: 婚礼照常举行
+      success: false
+      text: |
+        婚礼进行曲响起，苏晚挽着你的手，把你送上了台。
+
+        司仪问你愿不愿意。全场都在看你，你爸在台下抹眼泪。
+
+        你张了张嘴。
+
+        ——三年后的那个雨夜，又在前面等着你了。
+    - key: r_calmed
+      title: 新娘太紧张了
+      label: 他们起了疑心
+      success: false
+      text: |
+        陆景深搂着你的肩，对所有人说：「她太紧张了，昨晚一夜没睡。」
+
+        周曼云叫来的医生给你倒了一杯水。你喝下去，再睁开眼时，婚礼进行曲已经响了。
+
+        你太早亮出了底牌。下一次，先别让他们起疑。
+  epilogues:
+    - flag: lawyer_turned
+      text: 当晚，何律师发来一条短信：「许小姐，如果需要，我可以出庭作证。」
+    - flag: father_signed
+      text: 你爸签下的那份担保书，还在陆家手里。下周三，它会变成一把刀。
+    - flag: affair_admitted
+      unless_flag: they_paid
+      text: 苏晚后来给你打了十几个电话，你一个都没接。
+    - flag: lawyer_turned
+      unless_flag: father_signed
+      text: 协议原件锁进了你的保险柜。第七条下面那行铅笔字写着：陆氏对赌，下周三到期。——这一局，才刚刚开始。
+
+texts:
+  player_name: 许知夏
+  list_separator: 、
+  examine: （{location}）{spot}
+  evidence_gained: 获得「{name}」
+  evidence_lost: 交出了「{name}」
+  lie_broken: 戳穿：「{statement}」
+  present: 「{quote}」——那这是什么？（拿出「{evidence}」）
+  present_quote_cut: "{text}……"
+  present_failed: 「{evidence}」说明不了这句话。
+  bluff_failed: 诈被识破了。
+  patience_lost: "{name}起了疑心（耐心 {delta}）"
+  stance_up: "{name}的态度松动了。"
+  stance_down: "{name}更防着你了。"
+  hint_breakable: 你盯着{name}那句话：「{statement}」——你手里，有东西能戳穿它。
+  hint_spot: "{name}说「{statement}」。你不信——去{location}看看。"
+  hint_person: "{name}说「{statement}」。也许{other}能帮你拆穿。"
+  hint_unmet: 还有人你没说上话：{names}。每个人，都可能是一条路。
+  hint_unseen: 还有地方没去：{locations}。
+  hint_exhausted: 能找的都找了。现在选一条路，走到底。

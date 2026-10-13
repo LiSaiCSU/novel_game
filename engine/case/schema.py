@@ -1,9 +1,16 @@
-"""Authored case definitions for the deduction mode.
+"""Authored case definitions.
 
-A case is a closed puzzle: the truth is fixed when it is written, every lie
-names the evidence that breaks it, and the accusation is graded against
-declared pillars. Nothing here is generated at play time, which is what lets
-the choices be good - each one was written by somebody who knew the answer.
+A case is a closed, hand-written situation. Two shapes share one engine:
+
+- ``deduction``: the truth is fixed, every lie names the evidence that breaks
+  it, and a single accusation is graded against declared pillars.
+- ``scheme``: one goal with several authored ways to reach it. Each route ends
+  the run the moment it is triggered; bonus stars grade how cleanly it was
+  done, and hidden variables rolled from the seed move the keys around so the
+  same story plays differently next time.
+
+Nothing here is generated at play time, which is what lets the choices be
+good - each one was written by somebody who knew every answer.
 """
 
 from __future__ import annotations
@@ -20,24 +27,39 @@ class _Strict(BaseModel):
 
 
 class Requirement(_Strict):
-    """Conditions over what the player has found, broken and triggered."""
+    """Conditions over what the player has found, broken, triggered and rolled."""
 
     evidence: list[str] = Field(default_factory=list)
+    any_evidence: list[str] = Field(default_factory=list)
     broken: list[str] = Field(default_factory=list)
     unbroken: list[str] = Field(default_factory=list)
     flags: list[str] = Field(default_factory=list)
     not_flags: list[str] = Field(default_factory=list)
     examined: list[str] = Field(default_factory=list)
     lacks_evidence: list[str] = Field(default_factory=list)
+    variables: dict[str, str] = Field(default_factory=dict)
+    stance_min: dict[str, int] = Field(default_factory=dict)
 
 
 class Effects(_Strict):
     evidence: list[str] = Field(default_factory=list)
+    remove_evidence: list[str] = Field(default_factory=list)
     statements: list[str] = Field(default_factory=list)
     breaks: list[str] = Field(default_factory=list)
     flags: list[str] = Field(default_factory=list)
     patience: int = 0
+    stance: dict[str, int] = Field(default_factory=dict)
     silence: bool = False
+    #: Scheme mode: end the run through this route.
+    route: str | None = None
+
+
+class Extra(_Strict):
+    """Effects that only happen if something was already true - order matters."""
+
+    requires: Requirement
+    lines: list[str] = Field(default_factory=list)
+    effects: Effects = Effects()
 
 
 class Evidence(_Strict):
@@ -65,6 +87,7 @@ class Location(_Strict):
 class StatementBreak(_Strict):
     lines: list[str]
     effects: Effects = Effects()
+    extras: list[Extra] = Field(default_factory=list)
 
 
 class Statement(_Strict):
@@ -94,11 +117,12 @@ class Gamble(_Strict):
 
 class Option(_Strict):
     key: str
-    kind: Literal["ask", "press", "comfort", "bluff"]
+    kind: Literal["ask", "press", "comfort", "bluff", "trade", "act"]
     label: str
     requires: Requirement = Requirement()
     lines: list[str]
     effects: Effects = Effects()
+    extras: list[Extra] = Field(default_factory=list)
     gamble: Gamble | None = None
     repeatable: bool = False
 
@@ -117,11 +141,15 @@ class Character(_Strict):
     voice: str
     suspect: bool = True
     patience: int = Field(default=3, ge=1, le=9)
+    #: Scheme mode: how far this person leans toward the player. ``None`` hides it.
+    stance: int | None = Field(default=None, ge=-3, le=3)
     intro: str
     statements: list[Statement] = Field(default_factory=list)
     options: list[Option] = Field(default_factory=list)
     wrong_present: list[str] = Field(min_length=1)
     silent_line: str
+    #: What happens when patience runs out, beyond falling silent.
+    on_silence: Effects = Effects()
 
 
 class Choice(_Strict):
@@ -147,6 +175,7 @@ class Epilogue(_Strict):
     text: str
     unless_culprit: str | None = None
     if_culprit: str | None = None
+    unless_flag: str | None = None
 
 
 class Accusation(_Strict):
@@ -168,11 +197,49 @@ class Endings(_Strict):
     epilogues: list[Epilogue] = Field(default_factory=list)
 
 
+class Route(_Strict):
+    """One authored way a scheme ends: a win to collect, or a way to lose."""
+
+    key: str
+    title: str
+    #: How it was done, in a few words, for the collection.
+    label: str
+    text: str
+    success: bool = True
+    #: Shown while the route is undiscovered, to tempt another run.
+    teaser: str = ""
+    flags: list[str] = Field(default_factory=list)
+    grade_cap: Literal["S", "A", "B", "C"] | None = None
+
+
+class Star(_Strict):
+    key: str
+    label: str
+    requires: Requirement
+
+
+class Variable(_Strict):
+    """A hidden fact rolled once per run, so the keys are not where they were."""
+
+    key: str
+    options: list[str] = Field(min_length=2)
+
+
+class Scheme(_Strict):
+    routes: list[Route]
+    timeout_route: str
+    stars: list[Star] = Field(default_factory=list)
+    epilogues: list[Epilogue] = Field(default_factory=list)
+
+
 class TimedEvent(_Strict):
     key: str
     at_minutes_left: int
     speaker: str | None = None
     text: str
+    #: The event only happens if this still holds when its time comes.
+    requires: Requirement = Requirement()
+    effects: Effects = Effects()
 
 
 class CaseTexts(_Strict):
@@ -191,15 +258,18 @@ class CaseTexts(_Strict):
     present_failed: str
     bluff_failed: str
     patience_lost: str
-    accuse: str
-    accuse_nothing: str
+    accuse: str = ""
+    accuse_nothing: str = ""
     hint_breakable: str
     hint_spot: str
     hint_person: str
     hint_unmet: str
-    hint_ready: str
+    hint_ready: str = ""
     hint_unseen: str
     hint_exhausted: str
+    evidence_lost: str = ""
+    stance_up: str = ""
+    stance_down: str = ""
 
 
 class BriefingPage(_Strict):
@@ -210,23 +280,28 @@ class BriefingPage(_Strict):
 class CaseDefinition(_Strict):
     key: str
     version: int
+    mode: Literal["deduction", "scheme"] = "deduction"
     title: str
     tagline: str
     setting: str
     estimated_minutes: str
-    minutes_total: int = Field(ge=10)
+    clock_label: str = ""
+    minutes_total: int = Field(ge=5)
     action_minutes: int = Field(default=5, ge=1)
     goal: str
     briefing: list[BriefingPage]
     rules: list[BriefingPage]
     opening: str
-    victim: str
+    victim: str = ""
     characters: list[Character]
     locations: list[Location]
     evidence: list[Evidence]
+    starting_evidence: list[str] = Field(default_factory=list)
+    variables: list[Variable] = Field(default_factory=list)
     events: list[TimedEvent] = Field(default_factory=list)
-    accusation: Accusation
-    endings: Endings
+    accusation: Accusation | None = None
+    endings: Endings | None = None
+    scheme: Scheme | None = None
     texts: CaseTexts
 
     # ------------------------------------------------------------------
@@ -263,6 +338,13 @@ class CaseDefinition(_Strict):
                 return item
         raise KeyError(key)
 
+    def route(self, key: str) -> Route:
+        assert self.scheme is not None
+        for route in self.scheme.routes:
+            if route.key == key:
+                return route
+        raise KeyError(key)
+
     # ------------------------------------------------------------------
     @model_validator(mode="after")
     def _references_resolve(self) -> CaseDefinition:
@@ -272,6 +354,8 @@ class CaseDefinition(_Strict):
         statements = {s.key for c in self.characters for s in c.statements}
         options = {o.key for c in self.characters for o in c.options}
         spots = {s.key for loc in self.locations for s in loc.spots}
+        variables = {v.key: set(v.options) for v in self.variables}
+        routes = {r.key for r in self.scheme.routes} if self.scheme else set()
 
         keys = [item.key for item in self.evidence] + list(statements) + list(options) + list(spots)
         duplicates = {key for key in keys if keys.count(key) > 1}
@@ -279,7 +363,7 @@ class CaseDefinition(_Strict):
             problems.append(f"duplicate keys: {sorted(duplicates)}")
 
         def check_requirement(where: str, requirement: Requirement) -> None:
-            for key in requirement.evidence + requirement.lacks_evidence:
+            for key in requirement.evidence + requirement.lacks_evidence + requirement.any_evidence:
                 if key not in evidence:
                     problems.append(f"{where}: unknown evidence {key}")
             for key in requirement.broken + requirement.unbroken:
@@ -288,35 +372,75 @@ class CaseDefinition(_Strict):
             for key in requirement.examined:
                 if key not in spots:
                     problems.append(f"{where}: unknown spot {key}")
+            for key, value in requirement.variables.items():
+                if value not in variables.get(key, set()):
+                    problems.append(f"{where}: unknown variable value {key}={value}")
+            for key in requirement.stance_min:
+                if key not in characters or self.character(key).stance is None:
+                    problems.append(f"{where}: {key} has no stance")
 
         def check_effects(where: str, effects: Effects) -> None:
-            for key in effects.evidence:
+            for key in effects.evidence + effects.remove_evidence:
                 if key not in evidence:
                     problems.append(f"{where}: unknown evidence {key}")
             for key in effects.statements + effects.breaks:
                 if key not in statements:
                     problems.append(f"{where}: unknown statement {key}")
+            for key in effects.stance:
+                if key not in characters or self.character(key).stance is None:
+                    problems.append(f"{where}: {key} has no stance")
+            if effects.route is not None and effects.route not in routes:
+                problems.append(f"{where}: unknown route {effects.route}")
 
+        def check_extras(where: str, extras: list[Extra]) -> None:
+            for extra in extras:
+                check_requirement(where, extra.requires)
+                check_effects(where, extra.effects)
+
+        for key in self.starting_evidence:
+            if key not in evidence:
+                problems.append(f"starting evidence: unknown evidence {key}")
         for location in self.locations:
             for spot in location.spots:
                 check_requirement(f"spot {spot.key}", spot.requires)
                 check_effects(f"spot {spot.key}", spot.effects)
         for character in self.characters:
+            check_effects(f"character {character.key} on_silence", character.on_silence)
             for statement in character.statements:
                 for key in statement.contradicted_by:
                     if key not in evidence:
                         problems.append(f"statement {statement.key}: unknown evidence {key}")
                 if statement.on_break:
                     check_effects(f"statement {statement.key}", statement.on_break.effects)
+                    check_extras(f"statement {statement.key}", statement.on_break.extras)
             for option in character.options:
                 check_requirement(f"option {option.key}", option.requires)
                 check_effects(f"option {option.key}", option.effects)
+                check_extras(f"option {option.key}", option.extras)
             own = {s.key for s in character.statements}
             for option in character.options:
                 for key in option.effects.breaks:
                     if key not in own:
                         problems.append(f"option {option.key} breaks another character's statement")
-        accusation = self.accusation
+        for event in self.events:
+            if event.speaker and event.speaker not in characters:
+                problems.append(f"event {event.key}: unknown speaker {event.speaker}")
+            check_requirement(f"event {event.key}", event.requires)
+            check_effects(f"event {event.key}", event.effects)
+
+        if self.mode == "deduction":
+            problems.extend(self._deduction_problems(characters, evidence))
+        else:
+            problems.extend(self._scheme_problems(routes, check_requirement))
+        if problems:
+            raise ContentValidationError("; ".join(problems), case=self.key)
+        return self
+
+    def _deduction_problems(self, characters: set[str], evidence: set[str]) -> list[str]:
+        problems: list[str] = []
+        accusation, endings = self.accusation, self.endings
+        if accusation is None or endings is None:
+            return ["a deduction case needs an accusation and endings"]
         if accusation.culprit not in characters:
             problems.append(f"accusation culprit {accusation.culprit} is not a character")
         if accusation.weapon not in {w.key for w in accusation.weapons}:
@@ -332,11 +456,42 @@ class CaseDefinition(_Strict):
                         problems.append(f"pillar {pillar.key}: unknown evidence {key}")
         suspects = {c.key for c in self.characters if c.suspect}
         for key in suspects - {accusation.culprit}:
-            if key not in self.endings.wrong:
+            if key not in endings.wrong:
                 problems.append(f"no wrong-accusation ending for suspect {key}")
-        for event in self.events:
-            if event.speaker and event.speaker not in characters:
-                problems.append(f"event {event.key}: unknown speaker {event.speaker}")
-        if problems:
-            raise ContentValidationError("; ".join(problems), case=self.key)
-        return self
+        return problems
+
+    def _scheme_problems(self, routes: set[str], check_requirement) -> list[str]:  # type: ignore[no-untyped-def]
+        scheme = self.scheme
+        if scheme is None:
+            return ["a scheme case needs routes"]
+        problems: list[str] = []
+        if scheme.timeout_route not in routes:
+            problems.append(f"unknown timeout route {scheme.timeout_route}")
+        if not any(route.success for route in scheme.routes):
+            problems.append("a scheme needs at least one winning route")
+        for star in scheme.stars:
+            check_requirement(f"star {star.key}", star.requires)
+        triggered = {
+            effects.route
+            for effects in self._all_effects()
+            if effects.route is not None
+        } | {scheme.timeout_route}
+        for route in routes - triggered:
+            problems.append(f"route {route} can never be reached")
+        return problems
+
+    def _all_effects(self) -> list[Effects]:
+        found: list[Effects] = []
+        for location in self.locations:
+            found.extend(spot.effects for spot in location.spots)
+        for character in self.characters:
+            found.append(character.on_silence)
+            for statement in character.statements:
+                if statement.on_break:
+                    found.append(statement.on_break.effects)
+                    found.extend(extra.effects for extra in statement.on_break.extras)
+            for option in character.options:
+                found.append(option.effects)
+                found.extend(extra.effects for extra in option.extras)
+        found.extend(event.effects for event in self.events)
+        return found

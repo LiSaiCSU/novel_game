@@ -101,3 +101,29 @@ async def test_free_text_needs_a_configured_model(client) -> None:
     # A refused free question costs no time.
     view = (await client.get(f"/api/v1/case-runs/{run_id}")).json()
     assert view["minutes_left"] == view["case"]["minutes_total"]
+
+
+async def test_scheme_routes_are_collected_across_runs(client) -> None:
+    csrf = await _register(client, "schemer@example.com")
+
+    async def new_run() -> dict:
+        response = await client.post(
+            "/api/v1/case-runs", headers={"X-CSRF-Token": csrf}, json={"case_key": "wedding_fifteen"}
+        )
+        assert response.status_code == 201, response.text
+        return response.json()
+
+    first = await new_run()
+    assert first["scheme"] and not any(r["discovered"] for r in first["scheme"]["routes"])
+    await _move(client, csrf, first["id"], kind="begin")
+    ended = (await _move(client, csrf, first["id"], kind="examine", target="escape")).json()
+    assert ended["status"] == "closed" and ended["result"]["route"] == "r_escape"
+    assert "variables" not in ended and "affair_proof" not in str(ended)
+
+    second = await new_run()
+    discovered = [r for r in second["scheme"]["routes"] if r["discovered"]]
+    assert [r["key"] for r in discovered] == ["r_escape"]
+    mine = (await client.get("/api/v1/case-runs")).json()
+    finished = [run for run in mine if run["status"] == "closed"]
+    assert [run["route"] for run in finished] == ["r_escape"]
+    assert finished[0]["grade"] in {"B", "C"}

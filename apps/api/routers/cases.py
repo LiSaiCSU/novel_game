@@ -65,6 +65,8 @@ def _run_summary(row: CaseRunORM, case: CaseDefinition | None) -> dict[str, Any]
         "ending": row.ending,
         "ending_title": result.get("title"),
         "solved": bool(result.get("solved")),
+        "route": result.get("route"),
+        "grade": result.get("grade"),
         "minutes_left": state.get("minutes_left"),
         "updated_at": row.updated_at.isoformat() if row.updated_at else None,
     }
@@ -77,6 +79,34 @@ async def _owned_run(uow: SqlUnitOfWork, run_id: str, user_id: str) -> CaseRunOR
     if row is None:
         raise HTTPException(status_code=404, detail="case run not found")
     return row
+
+
+async def _discovered_routes(uow: SqlUnitOfWork, user_id: str, case_key: str) -> set[str]:
+    """Winning routes this player has already found in this case, across runs."""
+    rows = (
+        await uow.session.scalars(
+            sa.select(CaseRunORM.state).where(
+                CaseRunORM.user_id == user_id,
+                CaseRunORM.case_key == case_key,
+                CaseRunORM.status == "closed",
+            )
+        )
+    ).all()
+    found: set[str] = set()
+    for state in rows:
+        result = (state or {}).get("result") or {}
+        if result.get("solved") and result.get("route"):
+            found.add(str(result["route"]))
+    return found
+
+
+async def _view(
+    uow: SqlUnitOfWork, engine: CaseEngine, state: CaseState, user_id: str
+) -> dict[str, Any]:
+    discovered: set[str] = set()
+    if engine.case.scheme is not None:
+        discovered = await _discovered_routes(uow, user_id, engine.case.key)
+    return case_view(engine, state, discovered)
 
 
 def _save(row: CaseRunORM, state: CaseState) -> None:
@@ -139,7 +169,7 @@ async def start_run(
     _save(row, state)
     uow.session.add(row)
     await uow.commit()
-    return {"id": run_id, **case_view(engine, state)}
+    return {"id": run_id, **(await _view(uow, engine, state, principal.user_id))}
 
 
 @router.get("/case-runs/{run_id}")
@@ -152,7 +182,8 @@ async def get_run(
     await set_tenant_context(uow.session, principal.user_id)
     row = await _owned_run(uow, run_id, principal.user_id)
     engine = _engine(settings, row.case_key)
-    return {"id": row.id, **case_view(engine, CaseState.model_validate(row.state))}
+    state = CaseState.model_validate(row.state)
+    return {"id": row.id, **(await _view(uow, engine, state, principal.user_id))}
 
 
 @router.delete("/case-runs/{run_id}", status_code=204)
@@ -206,7 +237,7 @@ async def make_move(
             raise _rejected(exc) from exc
         _save(row, state)
         await uow.commit()
-        return {"id": row.id, **case_view(engine, state)}
+        return {"id": row.id, **(await _view(uow, engine, state, principal.user_id))}
 
 
 class CaseSay(BaseModel):
@@ -316,4 +347,8 @@ async def say(
         _record_usage(uow, llm, settings, principal.user_id)
         _save(row, state)
         await uow.commit()
-        return {"id": row.id, "interpreted_as": move.kind, **case_view(engine, state)}
+        return {
+            "id": row.id,
+            "interpreted_as": move.kind,
+            **(await _view(uow, engine, state, principal.user_id)),
+        }

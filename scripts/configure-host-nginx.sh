@@ -37,6 +37,24 @@ WEB_HOST_PORT="${WEB_HOST_PORT:-3100}"
 API_HOST_PORT="$(read_env_value API_HOST_PORT)"
 API_HOST_PORT="${API_HOST_PORT:-8100}"
 
+# Public 443 may already belong to another TLS front end, such as an SNI router
+# that forwards to nginx with the PROXY protocol. An explicit NGINX_TLS_LISTEN,
+# or a PROXY-protocol listen already in this site, wins over a stock 443.
+TLS_LISTEN="$(read_env_value NGINX_TLS_LISTEN)"
+if [[ -z "$TLS_LISTEN" && -f "$AVAILABLE" ]]; then
+  TLS_LISTEN="$(sed -n 's/^[[:space:]]*listen[[:space:]]\{1,\}\([^;]*proxy_protocol[^;]*\);.*/\1/p' "$AVAILABLE" | head -n 1)"
+fi
+TLS_LISTEN_PATTERN='^[][A-Za-z0-9.:_ -]+$'
+if [[ -n "$TLS_LISTEN" ]]; then
+  if [[ ! "$TLS_LISTEN" =~ $TLS_LISTEN_PATTERN ]]; then
+    echo "Invalid NGINX_TLS_LISTEN in $ENV_FILE." >&2
+    exit 1
+  fi
+  TLS_LISTEN_LINES="    listen $TLS_LISTEN;"
+else
+  TLS_LISTEN_LINES=$'    listen 443 ssl http2;\n    listen [::]:443 ssl http2;'
+fi
+
 if [[ ! "$DOMAIN" =~ ^[A-Za-z0-9.-]+$ ]]; then
   echo "Invalid DOMAIN in $ENV_FILE." >&2
   exit 1
@@ -144,8 +162,7 @@ server {
 }
 
 server {
-    listen 443 ssl http2;
-    listen [::]:443 ssl http2;
+$TLS_LISTEN_LINES
     server_name $DOMAIN;
 
     ssl_certificate /etc/letsencrypt/live/$DOMAIN/fullchain.pem;

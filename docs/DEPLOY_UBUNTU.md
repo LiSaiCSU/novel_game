@@ -38,6 +38,15 @@ sudo env REVERSE_PROXY_MODE=nginx WEB_HOST_PORT=3100 API_HOST_PORT=8100 \
 
 脚本会新增独立的 `novelgame.online` 虚拟主机并调用 Certbot，不会停止或覆盖其他域名配置。
 
+如果公网 443 由 HAProxy 之类的 SNI 路由器占用、再以 PROXY protocol 转给 Nginx，
+在 `/etc/novegame/novegame.env` 中写明 TLS 监听方式，例如：
+
+```dotenv
+NGINX_TLS_LISTEN='127.0.0.1:8443 ssl http2 proxy_protocol'
+```
+
+未设置时，脚本会沿用站点文件里已有的 `proxy_protocol` 监听行；两者都没有才使用标准的 `listen 443`。
+
 首次执行会交互式询问：
 
 - 域名，默认 `novelgame.online`；

@@ -16,7 +16,7 @@ export type Evidence = {
 
 export type Statement = { key: string; text: string; broken: boolean };
 
-export type OptionKind = "ask" | "press" | "comfort" | "bluff";
+export type OptionKind = "ask" | "press" | "comfort" | "bluff" | "trade" | "act";
 
 export type CaseOption = { key: string; kind: OptionKind; label: string };
 
@@ -30,6 +30,8 @@ export type CaseCharacter = {
   silent: boolean;
   patience: number;
   patience_max: number;
+  /** Scheme mode: how far this person leans toward the player; null when not tracked. */
+  stance: number | null;
   statements: Statement[];
   options: CaseOption[];
 };
@@ -68,17 +70,28 @@ export type Page = { title: string; body: string };
 
 export type Pillar = { key: string; label: string; met: boolean };
 
+export type CaseMode = "deduction" | "scheme";
+
+export type Grade = "S" | "A" | "B" | "C" | "F";
+
 export type CaseResult = {
+  mode: CaseMode;
   ending: string;
   solved: boolean;
   title: string;
   text: string;
   epilogues: string[];
-  accused: string;
-  culprit_correct: boolean;
-  weapon_correct: boolean;
-  motive_correct: boolean;
-  pillars: Pillar[];
+  // Deduction
+  accused?: string;
+  culprit_correct?: boolean;
+  weapon_correct?: boolean;
+  motive_correct?: boolean;
+  pillars?: Pillar[];
+  // Scheme
+  route?: string;
+  label?: string;
+  grade?: Grade;
+  stars?: Pillar[];
   minutes_left: number;
   lies_broken: number;
   lies_total: number;
@@ -92,14 +105,17 @@ export type CaseRun = {
   id: string;
   case: {
     key: string;
+    mode: CaseMode;
     title: string;
     tagline: string;
     setting: string;
     estimated_minutes: string;
     minutes_total: number;
     suspects: number;
+    routes_total: number;
     goal: string;
     victim: string;
+    clock_label: string;
     action_minutes: number;
     briefing: Page[];
     rules: Page[];
@@ -117,16 +133,42 @@ export type CaseRun = {
     evidence_found: number;
     evidence_total: number;
   };
-  accusation: {
-    suspects: Array<{ key: string; name: string; role: string }>;
-    weapons: Array<{ key: string; label: string }>;
-    motives: Array<{ key: string; label: string }>;
-    max_evidence: number;
-    pillars: string[];
-  };
+  accusation: Accusation | null;
+  scheme: {
+    stars: string[];
+    routes: RouteCard[];
+  } | null;
   result: CaseResult | null;
   interpreted_as?: string;
 };
+
+export type Accusation = {
+  suspects: Array<{ key: string; name: string; role: string }>;
+  weapons: Array<{ key: string; label: string }>;
+  motives: Array<{ key: string; label: string }>;
+  max_evidence: number;
+  pillars: string[];
+};
+
+/** A way to win. Its name stays hidden until the player has found it once. */
+export type RouteCard = {
+  key: string | null;
+  title: string | null;
+  label: string | null;
+  teaser: string;
+  discovered: boolean;
+};
+
+export const stanceLabel = (stance: number): string =>
+  stance <= -2
+    ? "敌对"
+    : stance === -1
+      ? "戒备"
+      : stance === 0
+        ? "观望"
+        : stance === 1
+          ? "动摇"
+          : "站你这边";
 
 export type MoveBody = {
   kind: "begin" | "talk" | "examine" | "option" | "present" | "think" | "accuse";
