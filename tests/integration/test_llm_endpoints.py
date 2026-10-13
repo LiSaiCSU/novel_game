@@ -302,9 +302,7 @@ def test_preflight_explains_transport_failures_in_operator_terms(
 ) -> None:
     from apps.api.routers.llm_endpoints import _explain
 
-    row = PlatformLlmEndpointORM(
-        id="x", provider="compatible", base_url="https://api.example.com"
-    )
+    row = PlatformLlmEndpointORM(id="x", provider="compatible", base_url="https://api.example.com")
 
     message = _explain(RuntimeError(error_text), row)
 
@@ -336,3 +334,42 @@ def test_preflight_calls_a_timeout_what_it_will_mean_during_play() -> None:
     message = _explain(TimeoutError("ReadTimeout"), row)
 
     assert "超时" in message and "回合" in message
+
+
+async def test_preflight_rejects_empty_opening_even_when_streaming_would_work(monkeypatch):
+    from apps.api.routers import llm_endpoints
+    from engine.llm.provider import LLMResponse
+
+    class Provider:
+        async def generate_text(self, request):
+            assert request.role == "narrative"
+            assert request.max_output_tokens > 2000
+            assert request.extra_body == {"chat_template_kwargs": {"enable_thinking": False}}
+            assert "包裹" in request.messages[0].content
+            return LLMResponse(text="")
+
+        async def stream_text(self, request):
+            pytest.fail("An empty opening must fail before the short stream probe")
+            yield ""
+
+    monkeypatch.setattr(llm_endpoints, "_http_provider", lambda *args: Provider())
+    row = PlatformLlmEndpointORM(
+        id="test",
+        provider="openai",
+        base_url="https://example.com/v1",
+        narrative_model="Qwen",
+        narrative_extra_body={"chat_template_kwargs": {"enable_thinking": False}},
+    )
+    result = await llm_endpoints._probe(row, _settings(), "narrative")
+    assert result["ok"] is False
+    assert "开场" in result["detail"]
+
+
+def test_preflight_explains_qwen_reasoning_budget_exhaustion():
+    from apps.api.routers.llm_endpoints import _explain
+    from engine.core.errors import LLMTruncated
+
+    row = PlatformLlmEndpointORM(narrative_model="Qwen")
+    detail = _explain(LLMTruncated("no content"), row)
+    assert "chat_template_kwargs" in detail
+    assert "enable_thinking" in detail

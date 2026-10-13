@@ -40,6 +40,8 @@ from engine.core.ids import new_id
 from engine.core.logging import get_logger
 from engine.llm.provider import LLMMessage, LLMRequest
 from engine.llm.providers import _http_provider, _split_api_keys
+from engine.narrative.style import NarrativeStyle
+from prompts.registry import PromptRegistry
 
 router = APIRouter(prefix="/admin/llm-endpoints", tags=["v1-admin"])
 logger = get_logger("aiworld.admin.llm")
@@ -49,6 +51,38 @@ logger = get_logger("aiworld.admin.llm")
 _PREFLIGHT_NARRATIVE_TOKENS = 700
 _PREFLIGHT_REASONING_TOKENS = 900
 _MAX_ENDPOINTS = 8
+
+
+def _opening_probe_request(row: PlatformLlmEndpointORM, settings: Settings) -> LLMRequest:
+    """Use the real opening template with synthetic facts, never a player's save."""
+    template = PromptRegistry(settings.prompts_path).get(
+        "prologue", settings.prompt_version_prologue
+    )
+    values = dict.fromkeys(template.placeholders(), "-")
+    values.update(
+        target_length="1360",
+        max_length="1600",
+        language="中文",
+        person="第二人称",
+        world_name="雨夜车站",
+        location="候车大厅",
+        time_label="末班车前一小时",
+        player_summary="林，成年送货员",
+        player_background="熟悉车站的送货员",
+        present_characters="陈，成年车站职员，负责值班",
+        story_premise="一件包裹在车站丢失，末班车将在一小时后开出。",
+        opening_blueprint="先发现包裹不见，再向值班职员核对，最后给出三个具体行动。",
+        visible_facts="包裹不见了。末班车将在一小时后开出。",
+        beat_marker="---BEAT---",
+    )
+    return LLMRequest(
+        model=row.narrative_model,
+        messages=[LLMMessage(content=template.render(**values))],
+        temperature=0.85,
+        max_output_tokens=NarrativeStyle.output_token_budget(1600, template.max_output_tokens),
+        extra_body=dict(row.narrative_extra_body or {}),
+        role="narrative",
+    )
 
 
 class EndpointWrite(BaseModel):
@@ -136,9 +170,7 @@ async def create_endpoint(
     await set_tenant_context(uow.session, principal.user_id)
     existing = await load_platform_endpoints(uow.session)
     if len(existing) >= _MAX_ENDPOINTS:
-        raise HTTPException(
-            status_code=409, detail=f"最多只能配置 {_MAX_ENDPOINTS} 个端点"
-        )
+        raise HTTPException(status_code=409, detail=f"最多只能配置 {_MAX_ENDPOINTS} 个端点")
     row = PlatformLlmEndpointORM(id=new_id())
     _apply(row, body, settings)
     uow.session.add(row)
@@ -218,9 +250,7 @@ async def delete_endpoint(
             status_code=409, detail="这是最后一个可用端点，删除后平台将无法生成内容"
         )
     uow.session.add(
-        _audit(
-            request, principal, "platform_llm_endpoint.deleted", row.id, {"name": row.name}
-        )
+        _audit(request, principal, "platform_llm_endpoint.deleted", row.id, {"name": row.name})
     )
     await uow.session.delete(row)
     await uow.commit()
@@ -239,26 +269,35 @@ async def _probe(
             return {"stage": stage, "ok": False, "detail": "凭证无法解密，请重新填写密钥"}
     if not keys:
         keys = [""]
-    model = row.narrative_model if stage == "narrative" else (
-        row.reasoning_model or row.narrative_model
+    model = (
+        row.narrative_model
+        if stage == "narrative"
+        else (row.reasoning_model or row.narrative_model)
     )
     if not model.strip():
         return {"stage": stage, "ok": False, "detail": "模型名称未配置"}
 
-    provider = _http_provider(row.provider, keys[0], row.base_url, float(settings.llm_timeout_seconds))
-    extra = dict(
-        row.narrative_extra_body if stage == "narrative" else row.reasoning_extra_body
+    provider = _http_provider(
+        row.provider, keys[0], row.base_url, float(settings.llm_timeout_seconds)
     )
+    extra = dict(row.narrative_extra_body if stage == "narrative" else row.reasoning_extra_body)
     started = datetime.now(UTC)
     try:
         if stage == "narrative":
+            # A short SSE scene can pass while a real opening spends its whole
+            # budget on hidden reasoning. Exercise both paths before reporting OK.
+            opening = await provider.generate_text(_opening_probe_request(row, settings))
+            if len(opening.text.strip()) < 40:
+                return {"stage": stage, "ok": False, "detail": "开场正文为空或过短"}
             # Stream a realistic scene length. A gateway that answers a short
             # non-streaming ping but stalls on SSE fails exactly here, which is
             # the failure the old test could never see.
             request = LLMRequest(
                 model=model,
                 system="你是一个中文小说叙述者。只输出正文，不要解释。",
-                messages=[LLMMessage(content="用第二人称写一段约四百字的场景描写，主题是雨夜的车站。")],
+                messages=[
+                    LLMMessage(content="用第二人称写一段约四百字的场景描写，主题是雨夜的车站。")
+                ],
                 temperature=0.7,
                 max_output_tokens=_PREFLIGHT_NARRATIVE_TOKENS,
                 extra_body=extra,
@@ -274,7 +313,7 @@ async def _probe(
                     "ok": False,
                     "detail": f"流式输出过短（{len(text.strip())} 字），模型可能不支持流式或被网关截断",
                 }
-            detail = f"流式输出 {len(text.strip())} 字"
+            detail = f"开场输出 {len(opening.text.strip())} 字，流式输出 {len(text.strip())} 字"
         else:
             # The reasoning roles all ask for schema-shaped JSON, so the probe
             # has to prove the endpoint honours json mode at a real budget.
@@ -284,7 +323,7 @@ async def _probe(
                 messages=[
                     LLMMessage(
                         content=(
-                            'Return a JSON object shaped exactly like '
+                            "Return a JSON object shaped exactly like "
                             '{"summary": string, "steps": [string, string], "score": number}. '
                             "Fill it with any plausible content about a rainy train station."
                         )
@@ -329,6 +368,14 @@ def _explain(exc: Exception, row: PlatformLlmEndpointORM) -> str:
 
     name = type(exc).__name__
     text = str(exc)
+    if name == "LLMTruncated":
+        hint = (
+            '；Qwen 可在额外参数中配置 {"chat_template_kwargs":{"enable_thinking":false}}，'
+            "具体以网关支持的参数为准"
+            if "qwen" in row.narrative_model.casefold()
+            else ""
+        )
+        return f"模型耗尽输出额度却没有可用正文，请检查思考模式与输出额度{hint}"
     if "404" in text:
         hint = ""
         if row.provider in {"compatible", "openai"} and not row.base_url.rstrip("/").endswith(
