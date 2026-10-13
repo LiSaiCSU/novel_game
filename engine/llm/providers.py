@@ -128,6 +128,25 @@ class _HTTPProviderBase:
         except Exception as exc:
             raise LLMError(f"{self.name} request failed: {exc}") from exc
 
+    async def _stream_lines(
+        self, url: str, headers: dict[str, str], payload: dict[str, Any]
+    ) -> AsyncIterator[str]:
+        import httpx
+
+        try:
+            async with httpx.AsyncClient(timeout=self.timeout) as client, client.stream(
+                "POST", url, headers=headers, json=payload
+            ) as response:
+                response.raise_for_status()
+                async for line in response.aiter_lines():
+                    yield line
+        except httpx.TimeoutException as exc:
+            raise LLMTimeout(f"{self.name} stream timed out") from exc
+        except httpx.HTTPStatusError as exc:
+            raise LLMError(f"{self.name} returned {exc.response.status_code}") from exc
+        except httpx.HTTPError as exc:
+            raise LLMError(f"{self.name} stream failed: {type(exc).__name__}") from exc
+
 
 class AnthropicProvider(_HTTPProviderBase):
     name = "anthropic"
@@ -175,8 +194,6 @@ class AnthropicProvider(_HTTPProviderBase):
         )
 
     async def stream_text(self, request: LLMRequest) -> AsyncIterator[str]:
-        import httpx
-
         payload: dict[str, Any] = {
             "model": request.model,
             "max_tokens": request.max_output_tokens,
@@ -186,24 +203,25 @@ class AnthropicProvider(_HTTPProviderBase):
         }
         if request.system:
             payload["system"] = request.system
-        async with httpx.AsyncClient(timeout=self.timeout) as client, client.stream(
-            "POST", f"{self.base_url}/v1/messages", headers=self._headers(), json=payload
-        ) as response:
-            response.raise_for_status()
-            async for line in response.aiter_lines():
-                if not line.startswith("data:"):
-                    continue
-                body = line[5:].strip()
-                if not body or body == "[DONE]":
-                    continue
-                try:
-                    event = json.loads(body)
-                except json.JSONDecodeError:
-                    continue
-                if event.get("type") == "content_block_delta":
-                    piece = (event.get("delta") or {}).get("text", "")
-                    if piece:
-                        yield piece
+        if request.stop:
+            payload["stop_sequences"] = request.stop
+        payload.update(request.extra_body)
+        async for line in self._stream_lines(
+            f"{self.base_url}/v1/messages", self._headers(), payload
+        ):
+            if not line.startswith("data:"):
+                continue
+            body = line[5:].strip()
+            if not body or body == "[DONE]":
+                continue
+            try:
+                event = json.loads(body)
+            except json.JSONDecodeError:
+                continue
+            if event.get("type") == "content_block_delta":
+                piece = (event.get("delta") or {}).get("text", "")
+                if piece:
+                    yield piece
 
 
 class OpenAIProvider(_HTTPProviderBase):
@@ -286,29 +304,22 @@ class OpenAIProvider(_HTTPProviderBase):
         )
 
     async def stream_text(self, request: LLMRequest) -> AsyncIterator[str]:
-        import httpx
-
-        async with httpx.AsyncClient(timeout=self.timeout) as client, client.stream(
-            "POST",
-            f"{self.base_url}/chat/completions",
-            headers=self._headers(),
-            json=self._payload(request, stream=True),
-        ) as response:
-            response.raise_for_status()
-            async for line in response.aiter_lines():
-                if not line.startswith("data:"):
-                    continue
-                body = line[5:].strip()
-                if not body or body == "[DONE]":
-                    continue
-                try:
-                    event = json.loads(body)
-                except json.JSONDecodeError:
-                    continue
-                for choice in event.get("choices", []):
-                    piece = (choice.get("delta") or {}).get("content")
-                    if piece:
-                        yield piece
+        async for line in self._stream_lines(
+            f"{self.base_url}/chat/completions", self._headers(), self._payload(request, stream=True)
+        ):
+            if not line.startswith("data:"):
+                continue
+            body = line[5:].strip()
+            if not body or body == "[DONE]":
+                continue
+            try:
+                event = json.loads(body)
+            except json.JSONDecodeError:
+                continue
+            for choice in event.get("choices", []):
+                piece = (choice.get("delta") or {}).get("content")
+                if piece:
+                    yield piece
 
 
 class CompatibleProvider(OpenAIProvider):

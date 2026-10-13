@@ -15,6 +15,44 @@ from engine.llm.providers import CompatibleProvider, ProviderPool, ScriptedProvi
 from engine.llm.router import ModelRouter
 
 
+@pytest.mark.parametrize("failure", ["status", "timeout", "disconnect"])
+async def test_stream_transport_errors_use_engine_errors(monkeypatch, failure) -> None:
+    import httpx
+
+    from engine.core.errors import LLMTimeout
+
+    def handler(request):
+        if failure == "timeout":
+            raise httpx.ReadTimeout("slow upstream", request=request)
+        if failure == "disconnect":
+            raise httpx.RemoteProtocolError("upstream disconnected", request=request)
+        return httpx.Response(401, json={"error": "invalid key"})
+
+    original_client = httpx.AsyncClient
+    monkeypatch.setattr(
+        httpx, "AsyncClient",
+        lambda **kwargs: original_client(transport=httpx.MockTransport(handler), **kwargs),
+    )
+    provider = CompatibleProvider("test-key", "https://example.com/v1")
+    expected = LLMTimeout if failure == "timeout" else LLMError
+    with pytest.raises(expected):
+        async for _ in provider.stream_text(LLMRequest(model="Qwen", messages=[])):
+            pass
+
+
+@pytest.mark.asyncio
+async def test_empty_stream_is_not_recorded_as_success() -> None:
+    client = LLMClient(
+        ScriptedProvider(default=""),
+        ModelRouter(Settings(llm_model="writer")),
+        registry=None,
+    )
+    with pytest.raises(LLMError, match="no streamed content"):
+        async for _ in client.stream_text(LLMRole.NARRATIVE, "write"):
+            pass
+    assert client.records == []
+
+
 def test_default_model_fills_all_text_roles_and_allows_overrides() -> None:
     router = ModelRouter(
         Settings(

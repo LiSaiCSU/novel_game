@@ -121,6 +121,34 @@ async def test_streaming_does_not_fail_over_once_the_player_has_seen_text() -> N
     assert spare.seen == []
 
 
+@pytest.mark.parametrize("chunks", [[], ["", ""]])
+async def test_empty_stream_fails_over_and_records_failed_health(chunks) -> None:
+    class EmptyProvider(Recorder):
+        async def stream_text(self, request):
+            for chunk in chunks:
+                yield chunk
+
+    health = []
+    provider = FailoverProvider(
+        [FailoverTarget(EmptyProvider(), name="empty"), FailoverTarget(Recorder(), name="spare")],
+        on_result=lambda *result: health.append(result),
+    )
+    assert [chunk async for chunk in provider.stream_text(_request())] == ["前半段", "后半段"]
+    assert health == [("empty", False, "LLMError"), ("spare", True, "")]
+
+
+async def test_all_empty_streams_raise_instead_of_succeeding() -> None:
+    class EmptyProvider(Recorder):
+        async def stream_text(self, request):
+            if False:
+                yield ""
+
+    provider = FailoverProvider([FailoverTarget(EmptyProvider())])
+    with pytest.raises(LLMError, match="every configured endpoint failed"):
+        async for _ in provider.stream_text(_request()):
+            pass
+
+
 async def test_skips_endpoints_that_report_themselves_unavailable() -> None:
     missing_credential = Recorder()
     missing_credential.available = False

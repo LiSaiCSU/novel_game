@@ -125,6 +125,8 @@ class LLMClient:
             collected.append(chunk)
             yield chunk
         text = "".join(collected)
+        if not text.strip():
+            raise LLMError("model returned no streamed content", model=choice.model)
         self.records.append(
             LLMCallRecord(
                 role=str(role),

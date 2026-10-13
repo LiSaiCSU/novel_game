@@ -136,8 +136,12 @@ class FailoverProvider:
             produced = False
             try:
                 async for chunk in target.provider.stream_text(target.prepare(request)):
+                    if not chunk:
+                        continue
                     produced = True
                     yield chunk
+                if not produced:
+                    raise LLMError("endpoint returned no streamed content")
             except LLMTruncated:
                 self._record(target, True)
                 raise
