@@ -1,0 +1,1372 @@
+/* Deduction mode: an old case file. Paper, ink, a red stamp for broken lies. */
+
+.caseShell,
+.caseLobby,
+.caseBriefing,
+.caseModal {
+  --case-ink: #2a2320;
+  --case-muted: #6f625a;
+  --case-paper: #f3ece1;
+  --case-card: #fbf7f0;
+  --case-line: #ddd0bf;
+  --case-red: #a3322b;
+  --case-red-soft: #f6e1dc;
+  --case-brass: #8a6a35;
+  --case-green: #3f6b4a;
+  --case-serif: "Songti SC", "STSong", "Noto Serif SC", "Source Han Serif SC", "SimSun", serif;
+}
+
+/* ---------- Lobby ---------- */
+.caseLobby {
+  color: var(--case-ink);
+}
+
+.caseLobbyHero {
+  max-width: 820px;
+  padding: 8px 0 30px;
+}
+
+.caseLobbyHero .eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.caseLobbyHero h1 {
+  font-family: var(--case-serif);
+  font-size: clamp(28px, 4vw, 42px);
+  line-height: 1.25;
+  margin: 10px 0 14px;
+}
+
+.caseLobbyHero > p {
+  color: var(--case-muted);
+  line-height: 1.8;
+  max-width: 640px;
+}
+
+.caseLobbyRules {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  list-style: none;
+  margin: 20px 0 0;
+  padding: 0;
+}
+
+.caseLobbyRules li {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 7px 12px;
+  border: 1px solid var(--case-line);
+  border-radius: 999px;
+  background: var(--case-card);
+  font-size: 14px;
+}
+
+.caseLobbyHead {
+  font-family: var(--case-serif);
+  font-size: 20px;
+  margin: 26px 0 12px;
+}
+
+.caseLobbyGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 360px), 1fr));
+  gap: 16px;
+}
+
+.caseLobbyCard {
+  padding: 24px;
+  border: 1px solid var(--case-line);
+  border-radius: 14px;
+  background: linear-gradient(180deg, var(--case-card), var(--case-paper));
+  box-shadow: 0 10px 30px rgba(60, 40, 20, 0.08);
+}
+
+.caseLobbyCard h3 {
+  font-family: var(--case-serif);
+  font-size: 24px;
+  margin: 8px 0;
+}
+
+.caseLobbyCard .button {
+  margin-top: 8px;
+}
+
+.caseRunList {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: grid;
+  gap: 8px;
+  max-width: 720px;
+}
+
+.caseRunList li {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  border: 1px solid var(--case-line);
+  border-radius: 10px;
+  background: var(--case-card);
+}
+
+.caseRunList a {
+  flex: 1;
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 12px 14px;
+  color: inherit;
+  text-decoration: none;
+}
+
+.caseRunList a span {
+  color: var(--case-muted);
+  font-size: 14px;
+}
+
+/* ---------- Shared bits ---------- */
+.caseHint {
+  color: var(--case-muted);
+  font-size: 13px;
+  line-height: 1.7;
+}
+
+.caseIconButton {
+  display: inline-grid;
+  place-items: center;
+  width: 34px;
+  height: 34px;
+  border: 1px solid var(--case-line);
+  border-radius: 8px;
+  background: var(--case-card);
+  color: var(--case-ink);
+  cursor: pointer;
+  flex: none;
+}
+
+.caseStamp {
+  display: inline-block;
+  padding: 2px 10px;
+  border: 2px solid var(--case-red);
+  border-radius: 4px;
+  color: var(--case-red);
+  font-family: var(--case-serif);
+  font-weight: 700;
+  letter-spacing: 0.3em;
+  transform: rotate(-6deg);
+  margin: 0;
+}
+
+.caseStamp.big {
+  font-size: 22px;
+  padding: 4px 14px;
+}
+
+.casePatience {
+  display: inline-flex;
+  gap: 3px;
+}
+
+.casePatience i {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  border: 1px solid var(--case-brass);
+}
+
+.casePatience i.on {
+  background: var(--case-brass);
+}
+
+.caseKind {
+  display: inline-block;
+  padding: 1px 6px;
+  border-radius: 4px;
+  font-size: 11px;
+  color: #fff;
+  background: var(--case-muted);
+  flex: none;
+}
+
+.caseKind.kind-physical {
+  background: #7a4b2a;
+}
+
+.caseKind.kind-document {
+  background: #45577a;
+}
+
+.caseKind.kind-testimony {
+  background: #6b4a6e;
+}
+
+.caseKind.kind-observation {
+  background: #4f6b55;
+}
+
+/* ---------- Briefing ---------- */
+.caseShell.briefingOnly {
+  background: #2b241f;
+}
+
+.caseBriefing {
+  position: fixed;
+  inset: 0;
+  z-index: 60;
+  display: grid;
+  place-items: center;
+  padding: 16px;
+  background: rgba(30, 24, 20, 0.72);
+  overflow-y: auto;
+}
+
+.caseDossier {
+  width: min(760px, 100%);
+  max-height: calc(100dvh - 32px);
+  display: flex;
+  flex-direction: column;
+  border-radius: 14px;
+  background: var(--case-paper);
+  color: var(--case-ink);
+  box-shadow: 0 30px 80px rgba(0, 0, 0, 0.35);
+  overflow: hidden;
+}
+
+.caseDossierHead {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 20px 24px 14px;
+  border-bottom: 1px dashed var(--case-line);
+}
+
+.caseDossierHead > div {
+  flex: 1;
+  min-width: 0;
+}
+
+.caseDossierHead h1 {
+  font-family: var(--case-serif);
+  font-size: clamp(22px, 3vw, 30px);
+  margin: 2px 0 0;
+}
+
+.caseDossierBody {
+  padding: 18px 24px;
+  overflow-y: auto;
+  font-family: var(--case-serif);
+  font-size: 16.5px;
+  line-height: 1.95;
+}
+
+.caseDossierBody h2 {
+  font-size: 21px;
+  margin: 0 0 10px;
+}
+
+.caseDossierBody p {
+  margin: 0 0 12px;
+}
+
+.caseVictim {
+  display: flex;
+  gap: 10px;
+  padding: 10px 12px;
+  border-left: 3px solid var(--case-red);
+  background: var(--case-red-soft);
+}
+
+.caseVictim b {
+  flex: none;
+}
+
+.caseCastGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 210px), 1fr));
+  gap: 10px;
+  margin: 12px 0;
+}
+
+.caseCastCard {
+  padding: 12px;
+  border: 1px solid var(--case-line);
+  border-radius: 10px;
+  background: var(--case-card);
+  font-family: system-ui, sans-serif;
+  line-height: 1.6;
+}
+
+.caseCastCard b {
+  font-family: var(--case-serif);
+  font-size: 17px;
+}
+
+.caseCastCard small {
+  display: block;
+  color: var(--case-muted);
+}
+
+.caseCastCard p {
+  margin: 6px 0 0;
+  font-size: 14px;
+}
+
+.caseGoal {
+  display: flex;
+  gap: 8px;
+  align-items: flex-start;
+  padding: 10px 12px;
+  border: 1px solid var(--case-brass);
+  border-radius: 8px;
+  background: #f7efdc;
+}
+
+.caseGoal svg {
+  margin-top: 6px;
+  flex: none;
+}
+
+.caseRules {
+  margin: 12px 0 0;
+  font-family: system-ui, sans-serif;
+  font-size: 14.5px;
+  line-height: 1.75;
+}
+
+.caseRules div {
+  display: grid;
+  grid-template-columns: 76px 1fr;
+  gap: 10px;
+  padding: 8px 0;
+  border-bottom: 1px dashed var(--case-line);
+}
+
+.caseRules dt {
+  font-weight: 700;
+  font-family: var(--case-serif);
+}
+
+.caseRules dd {
+  margin: 0;
+}
+
+.caseDossierFoot {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+  padding: 14px 24px 18px;
+  border-top: 1px dashed var(--case-line);
+}
+
+.caseDots {
+  display: flex;
+  gap: 6px;
+}
+
+.caseDots button {
+  width: 9px;
+  height: 9px;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: var(--case-line);
+  cursor: pointer;
+}
+
+.caseDots button.active {
+  background: var(--case-ink);
+}
+
+.caseDossierNav {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.caseToast {
+  position: fixed;
+  left: 50%;
+  bottom: 20px;
+  transform: translateX(-50%);
+  z-index: 70;
+}
+
+/* ---------- Play layout ---------- */
+.caseShell {
+  height: 100dvh;
+  display: grid;
+  grid-template-columns: minmax(230px, 280px) minmax(0, 1fr) minmax(250px, 310px);
+  grid-template-rows: auto minmax(0, 1fr);
+  grid-template-areas:
+    "top top top"
+    "cast main folder";
+  background: var(--case-paper);
+  color: var(--case-ink);
+  overflow: hidden;
+}
+
+.caseTop {
+  grid-area: top;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  flex-wrap: wrap;
+  padding: 10px 18px;
+  border-bottom: 1px solid var(--case-line);
+  background: var(--case-card);
+}
+
+.caseTitle {
+  min-width: 0;
+}
+
+.caseTitle .eyebrow {
+  text-decoration: none;
+}
+
+.caseTitle h1 {
+  font-family: var(--case-serif);
+  font-size: 19px;
+  margin: 0;
+  white-space: nowrap;
+}
+
+.caseClock {
+  display: grid;
+  gap: 4px;
+  min-width: 160px;
+  font-size: 13px;
+}
+
+.caseClock b {
+  font-size: 18px;
+  font-variant-numeric: tabular-nums;
+}
+
+.caseClock progress {
+  width: 100%;
+  height: 6px;
+  appearance: none;
+  border: 0;
+  border-radius: 99px;
+  background: var(--case-line);
+  overflow: hidden;
+}
+
+.caseClock progress::-webkit-progress-bar {
+  background: var(--case-line);
+}
+
+.caseClock progress::-webkit-progress-value {
+  background: var(--case-brass);
+}
+
+.caseClock progress::-moz-progress-bar {
+  background: var(--case-brass);
+}
+
+.caseClock.danger b {
+  color: var(--case-red);
+}
+
+.caseClock.danger progress::-webkit-progress-value {
+  background: var(--case-red);
+}
+
+.caseClock.danger progress::-moz-progress-bar {
+  background: var(--case-red);
+}
+
+.caseProgress {
+  margin: 0;
+  color: var(--case-muted);
+  font-size: 13px;
+}
+
+.caseTools {
+  display: flex;
+  gap: 8px;
+  margin-left: auto;
+  flex-wrap: wrap;
+}
+
+.caseRail {
+  min-height: 0;
+  overflow-y: auto;
+  padding: 14px;
+  background: #efe6d8;
+}
+
+.caseRail h2 {
+  font-family: var(--case-serif);
+  font-size: 16px;
+  margin: 0 0 10px;
+}
+
+.caseCastRail {
+  grid-area: cast;
+  border-right: 1px solid var(--case-line);
+}
+
+.caseFolderRail {
+  grid-area: folder;
+  border-left: 1px solid var(--case-line);
+}
+
+.caseDossierCard {
+  display: block;
+  width: 100%;
+  text-align: left;
+  margin-bottom: 8px;
+  padding: 10px 12px;
+  border: 1px solid var(--case-line);
+  border-radius: 10px;
+  background: var(--case-card);
+  color: inherit;
+  cursor: pointer;
+  font: inherit;
+}
+
+.caseDossierCard.active {
+  border-color: var(--case-ink);
+  box-shadow: inset 3px 0 0 var(--case-ink);
+}
+
+.caseDossierCard:disabled {
+  cursor: default;
+}
+
+.caseDossierName {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+}
+
+.caseDossierName b {
+  font-family: var(--case-serif);
+  font-size: 16px;
+}
+
+.caseDossierCard > small {
+  display: block;
+  color: var(--case-muted);
+  font-size: 12px;
+}
+
+.caseDossierCard p {
+  margin: 6px 0 0;
+  font-size: 13px;
+  line-height: 1.6;
+}
+
+.caseDossierCount {
+  display: block;
+  margin-top: 6px;
+  color: var(--case-brass);
+  font-size: 12px;
+}
+
+.caseMain {
+  grid-area: main;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+/* ---------- Log ---------- */
+.caseLog {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  padding: 18px clamp(16px, 4vw, 40px) 12px;
+  font-family: var(--case-serif);
+  font-size: 16px;
+  line-height: 1.85;
+}
+
+.caseLine {
+  max-width: 720px;
+  margin: 0 auto 10px;
+}
+
+.caseLine.narration {
+  color: var(--case-muted);
+}
+
+.caseLine.npc {
+  display: grid;
+  grid-template-columns: 4.5em 1fr;
+  gap: 10px;
+}
+
+.caseLine.npc b {
+  text-align: right;
+  color: var(--case-brass);
+  font-weight: 700;
+}
+
+.caseLine.player {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.caseLine.player span {
+  max-width: 85%;
+  padding: 6px 12px;
+  border-radius: 12px 12px 2px 12px;
+  background: #e5dccd;
+}
+
+.caseLine.evidence {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  width: fit-content;
+  padding: 3px 10px;
+  border: 1px solid var(--case-brass);
+  border-radius: 99px;
+  background: #f7efdc;
+  color: var(--case-brass);
+  font: inherit;
+  font-size: 14px;
+  cursor: pointer;
+}
+
+.caseLine.break {
+  display: flex;
+  gap: 8px;
+  align-items: flex-start;
+  padding: 8px 12px;
+  border: 2px solid var(--case-red);
+  border-radius: 6px;
+  color: var(--case-red);
+  font-weight: 700;
+  background: var(--case-red-soft);
+}
+
+.caseLine.break svg {
+  margin-top: 6px;
+  flex: none;
+}
+
+.caseLine.fail {
+  color: var(--case-red);
+  font-size: 13.5px;
+  font-family: system-ui, sans-serif;
+}
+
+.caseLine.event {
+  display: flex;
+  gap: 8px;
+  padding: 8px 12px;
+  border-left: 3px solid var(--case-brass);
+  background: #f7efdc;
+}
+
+.caseLine.event svg,
+.caseLine.note svg {
+  margin-top: 6px;
+  flex: none;
+}
+
+.caseLine.note {
+  display: flex;
+  gap: 8px;
+  padding: 8px 12px;
+  border: 1px dashed var(--case-muted);
+  border-radius: 6px;
+  background: #fffdf6;
+}
+
+.caseLine.verdict {
+  padding: 8px 12px;
+  border-left: 3px solid var(--case-green);
+  color: var(--case-green);
+  background: #e9f1e7;
+}
+
+.caseLine.pending {
+  color: var(--case-muted);
+  font-style: italic;
+}
+
+.caseInlineError {
+  margin: 0 16px 8px;
+}
+
+/* ---------- Dock ---------- */
+.caseDock {
+  flex: none;
+  max-height: 52%;
+  display: flex;
+  flex-direction: column;
+  border-top: 1px solid var(--case-line);
+  background: var(--case-card);
+}
+
+.caseDockTabs {
+  display: flex;
+  gap: 4px;
+  padding: 8px 14px 0;
+}
+
+.caseDockTabs button {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 7px 14px;
+  border: 1px solid transparent;
+  border-bottom: 0;
+  border-radius: 8px 8px 0 0;
+  background: transparent;
+  color: var(--case-muted);
+  cursor: pointer;
+  font: inherit;
+}
+
+.caseDockTabs button.active {
+  border-color: var(--case-line);
+  background: var(--case-paper);
+  color: var(--case-ink);
+  font-weight: 700;
+}
+
+.caseDockBody {
+  overflow-y: auto;
+  padding: 12px 14px 14px;
+  border-top: 1px solid var(--case-line);
+  background: var(--case-paper);
+}
+
+.caseDockBody h3 {
+  font-size: 13px;
+  color: var(--case-muted);
+  margin: 10px 0 6px;
+  font-weight: 600;
+}
+
+.casePeople {
+  display: flex;
+  gap: 6px;
+  overflow-x: auto;
+  padding-bottom: 4px;
+}
+
+.casePerson {
+  display: grid;
+  justify-items: center;
+  gap: 3px;
+  flex: none;
+  padding: 6px 12px;
+  border: 1px solid var(--case-line);
+  border-radius: 10px;
+  background: var(--case-card);
+  color: inherit;
+  cursor: pointer;
+  font: inherit;
+}
+
+.casePerson b {
+  font-family: var(--case-serif);
+}
+
+.casePerson.active {
+  border-color: var(--case-ink);
+  background: #fff;
+}
+
+.casePerson.silent {
+  opacity: 0.55;
+}
+
+.casePerson small {
+  font-size: 11px;
+  color: var(--case-red);
+}
+
+.caseStatements {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 6px;
+}
+
+.caseStatements li {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 10px;
+  border: 1px solid var(--case-line);
+  border-radius: 8px;
+  background: var(--case-card);
+  font-family: var(--case-serif);
+  line-height: 1.6;
+}
+
+.caseStatements li.broken span {
+  color: var(--case-muted);
+  text-decoration: line-through;
+  text-decoration-color: var(--case-red);
+}
+
+.caseStatements em {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  flex: none;
+  color: var(--case-red);
+  font-style: normal;
+  font-size: 13px;
+  font-family: system-ui, sans-serif;
+}
+
+.caseChallenge {
+  flex: none;
+  padding: 6px 10px;
+  border: 1px solid var(--case-red);
+  border-radius: 6px;
+  background: #fff;
+  color: var(--case-red);
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.caseChallenge:hover:not(:disabled) {
+  background: var(--case-red);
+  color: #fff;
+}
+
+.caseChallenge:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.caseOptions {
+  display: grid;
+  gap: 6px;
+}
+
+.caseOption {
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+  width: 100%;
+  padding: 9px 12px;
+  border: 1px solid var(--case-line);
+  border-radius: 8px;
+  background: #fff;
+  color: inherit;
+  text-align: left;
+  cursor: pointer;
+  font: inherit;
+  font-family: var(--case-serif);
+  line-height: 1.6;
+}
+
+.caseOption:hover:not(:disabled) {
+  border-color: var(--case-ink);
+}
+
+.caseTag {
+  flex: none;
+  margin-top: 3px;
+  padding: 0 6px;
+  border-radius: 4px;
+  font-family: system-ui, sans-serif;
+  font-size: 12px;
+  line-height: 20px;
+  color: #fff;
+  background: var(--case-muted);
+}
+
+.caseOption.press .caseTag {
+  background: #8a4a2b;
+}
+
+.caseOption.comfort .caseTag {
+  background: var(--case-green);
+}
+
+.caseOption.bluff .caseTag {
+  background: var(--case-red);
+}
+
+.caseSay {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 6px;
+  margin-top: 12px;
+}
+
+.caseSay input {
+  min-width: 0;
+  padding: 9px 12px;
+  border: 1px solid var(--case-line);
+  border-radius: 8px;
+  background: #fff;
+  font: inherit;
+}
+
+.caseSay small {
+  grid-column: 1 / -1;
+  color: var(--case-muted);
+  font-size: 12px;
+}
+
+.caseScene section + section {
+  margin-top: 6px;
+}
+
+.caseScene h3 {
+  color: var(--case-ink);
+  font-family: var(--case-serif);
+  font-size: 15px;
+  margin-bottom: 2px;
+}
+
+.caseScene p {
+  margin: 0 0 6px;
+  color: var(--case-muted);
+  font-size: 13px;
+}
+
+.caseSpots {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.caseSpots button {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 7px 12px;
+  border: 1px solid var(--case-line);
+  border-radius: 8px;
+  background: #fff;
+  color: inherit;
+  cursor: pointer;
+  font: inherit;
+}
+
+.caseSpots button:hover:not(:disabled) {
+  border-color: var(--case-ink);
+}
+
+.caseSpots button.done {
+  background: transparent;
+  color: var(--case-muted);
+  cursor: default;
+}
+
+.caseDeadline {
+  margin: 0;
+  padding: 16px;
+  color: var(--case-red);
+  font-weight: 700;
+}
+
+/* ---------- Evidence ---------- */
+.caseFolder,
+.casePickerList {
+  display: grid;
+  gap: 6px;
+}
+
+.caseEvidence {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  align-items: center;
+  gap: 4px 8px;
+  width: 100%;
+  padding: 8px 10px;
+  border: 1px solid var(--case-line);
+  border-radius: 8px;
+  background: var(--case-card);
+  color: inherit;
+  text-align: left;
+  cursor: pointer;
+  font: inherit;
+}
+
+.caseEvidence b {
+  font-size: 14px;
+}
+
+.caseEvidence p {
+  grid-column: 1 / -1;
+  margin: 2px 0 0;
+  font-size: 13px;
+  line-height: 1.7;
+  color: var(--case-ink);
+}
+
+.caseEvidence.selected {
+  border-color: var(--case-red);
+  box-shadow: 0 0 0 2px var(--case-red-soft);
+}
+
+/* ---------- Modals ---------- */
+.caseModal {
+  position: fixed;
+  inset: 0;
+  z-index: 60;
+  display: grid;
+  place-items: center;
+  padding: 16px;
+  background: rgba(30, 24, 20, 0.6);
+}
+
+.caseModalCard {
+  width: min(640px, 100%);
+  max-height: calc(100dvh - 32px);
+  display: flex;
+  flex-direction: column;
+  border-radius: 14px;
+  background: var(--case-paper);
+  color: var(--case-ink);
+  box-shadow: 0 30px 80px rgba(0, 0, 0, 0.35);
+  overflow: hidden;
+}
+
+.caseModalCard.wide {
+  width: min(820px, 100%);
+}
+
+.caseModalCard > header {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 18px 20px 10px;
+}
+
+.caseModalCard > header h2 {
+  font-family: var(--case-serif);
+  font-size: 19px;
+  margin: 4px 0;
+  line-height: 1.5;
+}
+
+.caseModalCard > .casePickerList,
+.caseAccuseBody {
+  padding: 4px 20px 12px;
+  overflow-y: auto;
+}
+
+.caseModalCard > footer {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  padding: 12px 20px 16px;
+  border-top: 1px dashed var(--case-line);
+}
+
+.caseConfirm {
+  margin-right: auto;
+  color: var(--case-red);
+  font-weight: 700;
+}
+
+.caseSteps {
+  display: flex;
+  gap: 6px;
+  padding: 0 20px 10px;
+  overflow-x: auto;
+}
+
+.caseSteps button {
+  flex: none;
+  padding: 6px 12px;
+  border: 1px solid var(--case-line);
+  border-radius: 99px;
+  background: transparent;
+  color: var(--case-muted);
+  cursor: pointer;
+  font: inherit;
+  font-size: 14px;
+}
+
+.caseSteps button.done {
+  color: var(--case-green);
+  border-color: var(--case-green);
+}
+
+.caseSteps button.active {
+  background: var(--case-ink);
+  border-color: var(--case-ink);
+  color: #fff;
+}
+
+.caseChoiceGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 170px), 1fr));
+  gap: 8px;
+}
+
+.caseChoiceGrid.single {
+  grid-template-columns: 1fr;
+}
+
+.caseChoiceGrid button {
+  display: grid;
+  gap: 2px;
+  padding: 14px;
+  border: 1px solid var(--case-line);
+  border-radius: 10px;
+  background: var(--case-card);
+  color: inherit;
+  text-align: left;
+  cursor: pointer;
+  font: inherit;
+}
+
+.caseChoiceGrid button b {
+  font-family: var(--case-serif);
+  font-size: 16px;
+}
+
+.caseChoiceGrid button small {
+  color: var(--case-muted);
+}
+
+.caseChoiceGrid button.selected {
+  border-color: var(--case-red);
+  box-shadow: 0 0 0 2px var(--case-red-soft);
+}
+
+.casePillars {
+  margin: 0 0 10px;
+  padding-left: 20px;
+  line-height: 1.8;
+  font-weight: 600;
+}
+
+/* ---------- Verdict ---------- */
+.caseVerdict {
+  flex: none;
+  max-height: 60%;
+  overflow-y: auto;
+  padding: 20px clamp(16px, 4vw, 40px) 24px;
+  border-top: 1px solid var(--case-line);
+  background: var(--case-card);
+  font-family: var(--case-serif);
+  line-height: 1.9;
+}
+
+.caseVerdict.solved .caseStamp {
+  border-color: var(--case-green);
+  color: var(--case-green);
+}
+
+.caseVerdict h2 {
+  font-size: 24px;
+  margin: 10px 0 8px;
+}
+
+.caseVerdict p {
+  margin: 0 0 10px;
+  max-width: 720px;
+}
+
+.caseEpilogue {
+  color: var(--case-muted);
+  font-style: italic;
+}
+
+.caseScore {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  list-style: none;
+  padding: 0;
+  margin: 12px 0;
+  font-family: system-ui, sans-serif;
+  font-size: 13px;
+}
+
+.caseScore li {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 3px 10px;
+  border-radius: 99px;
+}
+
+.caseScore li.ok {
+  background: #e3efe0;
+  color: var(--case-green);
+}
+
+.caseScore li.miss {
+  background: var(--case-red-soft);
+  color: var(--case-red);
+}
+
+.caseMobileNav {
+  display: none;
+}
+
+/* ---------- Narrow screens: one panel at a time ---------- */
+@media (max-width: 800px) {
+  /* The app's top bar takes its own row here; fill what is left, not the viewport. */
+  .caseShell {
+    height: 100%;
+    min-height: 0;
+  }
+}
+
+@media (max-width: 1100px) {
+  .caseShell {
+    grid-template-columns: minmax(0, 1fr) minmax(240px, 290px);
+    grid-template-areas:
+      "top top"
+      "main folder";
+  }
+
+  .caseCastRail {
+    display: none;
+  }
+}
+
+@media (max-width: 760px) {
+  .caseShell {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-rows: auto minmax(0, 1fr) auto;
+    grid-template-areas:
+      "top"
+      "main"
+      "nav";
+  }
+
+  .caseTop {
+    gap: 8px 12px;
+    padding: 8px 16px;
+  }
+
+  .caseTitle h1 {
+    font-size: 16px;
+  }
+
+  .caseClock {
+    min-width: 120px;
+    flex: 1;
+  }
+
+  .caseProgress {
+    display: none;
+  }
+
+  .caseTools {
+    width: 100%;
+    margin-left: 0;
+  }
+
+  .caseTools .button {
+    flex: 1;
+    justify-content: center;
+    padding-inline: 8px;
+  }
+
+  .caseShell .caseMain,
+  .caseShell .caseCastRail,
+  .caseShell .caseFolderRail {
+    grid-area: main;
+    display: none;
+  }
+
+  .caseShell[data-view="investigate"] .caseMain,
+  .caseShell[data-view="people"] .caseCastRail,
+  .caseShell[data-view="evidence"] .caseFolderRail {
+    display: flex;
+    flex-direction: column;
+  }
+
+  .caseShell[data-view="people"] .caseCastRail,
+  .caseShell[data-view="evidence"] .caseFolderRail {
+    display: block;
+    border: 0;
+  }
+
+  .caseDock {
+    max-height: 58%;
+  }
+
+  .caseLog {
+    padding-inline: 16px;
+    font-size: 15.5px;
+  }
+
+  .caseLine.npc {
+    grid-template-columns: 1fr;
+    gap: 0;
+  }
+
+  .caseLine.npc b {
+    text-align: left;
+    font-size: 13px;
+  }
+
+  .caseStatements li {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .caseChallenge {
+    align-self: flex-end;
+  }
+
+  .caseMobileNav {
+    grid-area: nav;
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    border-top: 1px solid var(--case-line);
+    background: var(--case-card);
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+
+  .caseMobileNav button {
+    display: grid;
+    justify-items: center;
+    gap: 2px;
+    padding: 8px 4px;
+    border: 0;
+    background: transparent;
+    color: var(--case-muted);
+    font: inherit;
+    font-size: 12px;
+    cursor: pointer;
+  }
+
+  .caseMobileNav button.active {
+    color: var(--case-ink);
+    font-weight: 700;
+  }
+
+  .caseDossierBody,
+  .caseDossierHead,
+  .caseDossierFoot {
+    padding-inline: 16px;
+  }
+
+  .caseRules div {
+    grid-template-columns: 1fr;
+    gap: 2px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .caseLog {
+    scroll-behavior: auto;
+  }
+}

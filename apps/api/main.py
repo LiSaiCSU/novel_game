@@ -22,6 +22,7 @@ from apps.api.rate_limit import rate_limiter
 from apps.api.routers import (
     admin,
     auth,
+    cases,
     catalog,
     commerce,
     creator,
@@ -231,6 +232,7 @@ def create_app() -> FastAPI:
     app.include_router(support.admin_router, prefix="/api/v1")
     app.include_router(playthroughs.router, prefix="/api/v1")
     app.include_router(gameplay.router, prefix="/api/v1")
+    app.include_router(cases.router, prefix="/api/v1")
     app.include_router(user_settings.router, prefix="/api/v1")
     app.include_router(media.router)
 

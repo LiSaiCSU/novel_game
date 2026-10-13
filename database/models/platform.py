@@ -670,3 +670,24 @@ class AuditLogORM(Base):
     created_at: Mapped[datetime] = mapped_column(
         sa.DateTime(timezone=True), default=utcnow, index=True
     )
+
+
+class CaseRunORM(TimestampMixin, Base):
+    """One player's attempt at an authored deduction case.
+
+    ``state`` holds the full engine state, including what the player has not
+    yet discovered; the API only ever returns the projection from
+    ``engine.case.view``.
+    """
+
+    __tablename__ = "case_runs"
+
+    id: Mapped[str] = mapped_column(sa.String(36), primary_key=True)
+    user_id: Mapped[str] = mapped_column(
+        sa.String(36), sa.ForeignKey("users.id", ondelete="CASCADE"), index=True
+    )
+    case_key: Mapped[str] = mapped_column(sa.String(80), index=True)
+    case_version: Mapped[int] = mapped_column(sa.Integer, default=1)
+    status: Mapped[str] = mapped_column(sa.String(24), default="briefing", index=True)
+    ending: Mapped[str | None] = mapped_column(sa.String(80), nullable=True)
+    state: Mapped[dict[str, Any]] = mapped_column(JSONType, default=dict)

@@ -6,6 +6,7 @@ import {
   ChevronUp,
   Compass,
   CircleDollarSign,
+  Fingerprint,
   Gauge,
   LifeBuoy,
   LogIn,
@@ -31,6 +32,7 @@ type CurrentUser = {
 type NotificationInbox = { unread_total: number };
 
 const primaryNavigation = [
+  { href: "/case", label: "推理对决", icon: Fingerprint },
   { href: "/library", label: "作品库", icon: Compass },
   { href: "/play", label: "我的故事", icon: BookOpenText },
   { href: "/pricing", label: "价格与权益", icon: CircleDollarSign },
@@ -54,7 +56,7 @@ export function AppShell({ children }: { children: ReactNode }) {
   const [announcement, setAnnouncement] = useState<Announcement>();
   const [unreadNotifications, setUnreadNotifications] = useState(0);
   const accountArea = useRef<HTMLDivElement>(null);
-  const immersive = /^(?:\/play\/[^/]+|\/creator\/[^/]+)$/.test(pathname);
+  const immersive = /^(?:\/play\/[^/]+|\/creator\/[^/]+|\/case\/[^/]+)$/.test(pathname);
 
   useEffect(() => {
     let active = true;

@@ -55,18 +55,10 @@ def _extra_body(settings: Settings, attribute: str = "llm_extra_body") -> dict[s
     return parsed
 
 
-def build_orchestrator(
-    *,
-    settings: Settings | None = None,
-    pack: ContentPack | None = None,
-    provider: Any | None = None,
-    registry: Any | None = None,
-    lock_backend: LockBackend | None = None,
-    idempotency_store: IdempotencyStore | None = None,
-) -> GameOrchestrator:
-    settings = settings or get_settings()
-    pack = pack or load_content_pack(settings.content_path, settings.content_pack)
-
+def build_llm_client(
+    settings: Settings, *, provider: Any | None = None, registry: Any | None = None
+) -> LLMClient:
+    """The one LLM client every game mode uses: routing, prompts, vendor switches."""
     if registry is None:
         from prompts.registry import PromptRegistry
 
@@ -78,7 +70,7 @@ def build_orchestrator(
         if settings.llm_reasoning_extra_body.strip()
         else narrative_extra_body
     )
-    llm = LLMClient(
+    return LLMClient(
         provider if provider is not None else build_provider(settings),
         ModelRouter(settings),
         registry,
@@ -98,6 +90,22 @@ def build_orchestrator(
         },
         truncation_retries=settings.llm_truncation_retries,
     )
+
+
+def build_orchestrator(
+    *,
+    settings: Settings | None = None,
+    pack: ContentPack | None = None,
+    provider: Any | None = None,
+    registry: Any | None = None,
+    lock_backend: LockBackend | None = None,
+    idempotency_store: IdempotencyStore | None = None,
+) -> GameOrchestrator:
+    settings = settings or get_settings()
+    pack = pack or load_content_pack(settings.content_path, settings.content_pack)
+
+    llm = build_llm_client(settings, provider=provider, registry=registry)
+    registry = llm.registry
 
     embedder = build_embedder(settings)
     knowledge = KnowledgeService(pack)

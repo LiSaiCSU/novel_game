@@ -1,6 +1,13 @@
 "use client";
 
-import { ArrowRight, BookOpenText, PenTool, ShieldCheck, Sparkles, WalletCards } from "lucide-react";
+import {
+  ArrowRight,
+  BookOpenText,
+  PenTool,
+  ShieldCheck,
+  Sparkles,
+  WalletCards,
+} from "lucide-react";
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { api } from "@/lib/api";
@@ -48,7 +55,7 @@ export function LandingPage() {
   }, []);
 
   const name = user?.display_name.trim() || user?.email.split("@")[0];
-  const primaryHref = user ? "/play" : "/register";
+  const primaryHref = user ? "/case" : "/register";
 
   return (
     <div className="landingPage">
@@ -59,14 +66,16 @@ export function LandingPage() {
           <p className="eyebrow">INTERACTIVE NARRATIVE STUDIO</p>
           <h1>
             让每一次选择，
-            <br />都成为世界的一部分。
+            <br />
+            都成为世界的一部分。
           </h1>
           <p>
             进入可持续生长的文字冒险：探索正式发布的作品、保存属于你的故事，并在需要时亲手创作新的世界。
           </p>
           <div className="landingActions">
             <Link className="button primary" href={primaryHref}>
-              {user ? `${name ?? "继续"}，继续故事` : "免费开始一段故事"} <ArrowRight size={17} />
+              {user ? `${name ?? "侦探"}，接手一件案子` : "免费开始一段故事"}{" "}
+              <ArrowRight size={17} />
             </Link>
             <Link className="button landingSecondary" href="/library">
               先浏览作品

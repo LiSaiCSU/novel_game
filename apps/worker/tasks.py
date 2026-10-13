@@ -25,6 +25,7 @@ from database.models.platform import (
     AssetORM,
     AuditLogORM,
     AuthSessionORM,
+    CaseRunORM,
     ContentReleaseORM,
     DataExportORM,
     EmailTokenORM,
@@ -154,6 +155,7 @@ async def scrub_account(session: Any, user: UserORM, *, reason: str = "") -> Non
     await session.execute(sa.delete(EmailTokenORM).where(EmailTokenORM.user_id == user.id))
     await session.execute(sa.delete(LlmCredentialORM).where(LlmCredentialORM.user_id == user.id))
     await session.execute(sa.delete(UserNotificationORM).where(UserNotificationORM.user_id == user.id))
+    await session.execute(sa.delete(CaseRunORM).where(CaseRunORM.user_id == user.id))
     # Support conversations are personal correspondence, not a financial
     # ledger. Delete the case and its append-only replies with the account;
     # the generic audit action remains as non-content integrity evidence.
@@ -399,6 +401,15 @@ async def build_data_export(settings: Settings, export_id: str, user_id: str) ->
                 .scalars()
                 .all()
             )
+            case_runs = list(
+                (
+                    await session.execute(
+                        sa.select(CaseRunORM).where(CaseRunORM.user_id == user_id)
+                    )
+                )
+                .scalars()
+                .all()
+            )
             payload = {
                 "format": "narrative-personal-export-v1",
                 "exported_at": datetime.now(UTC),
@@ -572,6 +583,21 @@ async def build_data_export(settings: Settings, export_id: str, user_id: str) ->
                         "created_at": row.created_at,
                     }
                     for row in notifications
+                ],
+                # Only what the player saw: the transcript and the verdict,
+                # never the authored solution held in the engine state.
+                "case_runs": [
+                    {
+                        "id": row.id,
+                        "case_key": row.case_key,
+                        "status": row.status,
+                        "ending": row.ending,
+                        "log": (row.state or {}).get("log", []),
+                        "result": (row.state or {}).get("result"),
+                        "created_at": row.created_at,
+                        "updated_at": row.updated_at,
+                    }
+                    for row in case_runs
                 ],
             }
             encoded = json.dumps(

@@ -1,0 +1,752 @@
+key: egret_purser
+version: 1
+title: 白鹭号·账房夜案
+tagline: 雾散之前，替一个孩子找到真正的凶手
+setting: 民国二十年腊月 · 长江下游 · 客货轮「白鹭号」
+estimated_minutes: 20—30 分钟
+minutes_total: 120
+action_minutes: 5
+goal: 靠岸之前，指认杀死账房先生沈墨卿的真凶，说清凶器与动机，并拿出撑得住的证据。
+victim: 沈墨卿，五十岁，白鹭号的账房先生。在这条船上记了十二年账，一个铜板都要对清楚。
+
+briefing:
+  - title: 民国二十年，腊月
+    body: |
+      招商局的客货轮「白鹭号」从汉口出发，顺江开往上海。船上有四十来位客人、二十多名船员，货舱里压着三百包生丝——都是上海宋记丝行的货。
+
+      今夜江上起了大雾，船只能摸着水慢慢走。头等舱的客人在餐厅里打了半夜的牌，二等舱早早熄了灯。
+
+      十一点四十分，一声尖叫把整条船吵醒了。
+  - title: 你是谁
+    body: |
+      你叫林知微，白鹭号的随船医生，跑这条航线已经第三年。
+
+      你不是巡捕，也不是侦探。但你会看伤口，会看死人身上留下的时间，也会看活人说谎时手往哪里放。
+
+      船长冯德昌信得过你——去年大副从舷梯上摔下来，是你把他从鬼门关拉回来的。
+  - title: 死了一个人
+    body: |
+      死者叫沈墨卿，白鹭号的账房先生，出了名的刻板。
+
+      发现他的是茶房小顺。小顺端着宵夜推开账房的门，看见沈先生倒在桌边，后脑一片血。你赶到时，人已经没了气息，身子还温着。
+
+      账房的保险柜开着。小顺的袖口上全是血。
+  - title: 一个现成的凶手
+    body: |
+      船上的人很快有了结论：穷茶房、手上有血、保险柜开着——还用问吗？
+
+      只有你觉得哪里不对：保险柜没有撬痕；桌上摆着两只茶杯；炭盆里有烧过纸的灰。
+
+      船长把你叫到驾驶台。雾正在散，船会在两点二十分靠上吴淞口，水上巡捕房的汽艇已经在那里等着。
+
+      「林医生，」船长说，「靠岸之前，你给我一个更好的答案。给不出来，我只能把小顺交出去。」
+
+      现在是零点二十分。你有两个小时。
+
+rules:
+  - title: 时间
+    body: 距离靠岸还有 120 分钟。勘查一处地方、问一句话、出示一件证据，都要花 5 分钟。看着顶上的时钟，别把时间花在没用的地方。
+  - title: 勘查
+    body: 账房、餐厅、驾驶台和货舱里藏着物证。找到的东西会进入你的「证据夹」。不是每一处都有用，也不是每一件都和凶案有关。
+  - title: 说法
+    body: 每个人都有自己的说法，列在他们的名字下面。有些是真话，有些是谎话。谎话会被证据戳穿。
+  - title: 出示证据
+    body: 这是你最锋利的手段。选中一句说法，再从证据夹里挑一件能戳穿它的东西。戳穿了，对方只能改口——改口往往会带出新的线索。挑错了，对方会不耐烦。
+  - title: 耐心
+    body: 每个人的耐心有限（名字旁的圆点）。出示错的证据、没有凭据的逼问、诈人被识破，都会消耗耐心。耐心见底，这个人就不会再开口。
+  - title: 诈
+    body: 标着「诈」的选项是虚张声势。成了，能替你省下一大段功夫；砸了，对方的耐心掉得更快。
+  - title: 指认
+    body: 你可以随时发起指认，但只有一次机会。你要说清三件事：谁、用什么、为什么，再挑出能撑住这三点的证据。证据不够，凶手当场就能把你驳回去。时间耗尽时，巡捕房上船，你必须立刻指认。
+  - title: 卡住了
+    body: 用「整理思路」。林医生会翻一遍笔记，提醒你哪里还没对上。它同样要花 5 分钟。
+
+opening: 零点二十分。账房门口守着两个水手，船长把钥匙交到你手里。船上的几个人都被请回了各自的地方，等你去问话。从哪里开始？
+
+characters:
+  - key: xiaoshun
+    name: 小顺
+    role: 茶房 · 十六岁
+    description: 汉口人，上船一年。瘦得像根竹竿，袖口和前襟上全是干了的血。被两个水手看在茶水间里，一直在发抖。
+    voice: 说话结巴，急了带汉口腔，称人「先生」，害怕时会反复说同一句话。
+    patience: 3
+    intro: （他一看见你就站了起来，又被水手按回凳子上）林、林医生……人不是我杀的，真的不是……
+    statements:
+      - key: xs_found
+        text: 十一点四十，我端宵夜去账房，一推门，先生就倒在地上了。
+        initial: true
+      - key: xs_untouched
+        text: 我什么都没碰！我吓坏了，扭头就去喊人。
+        initial: true
+        lie: true
+        contradicted_by: [watch_chain]
+        on_break:
+          lines:
+            - （小顺盯着那截空表链，嘴唇抖了半天，终于从怀里摸出一样东西，双手捧着递过来。）
+            - 我……我蹲下去想看看先生还有没有气，表从他身上滑出来……我鬼迷心窍……我娘的药钱……
+            - （是沈先生的怀表。表蒙子碎了，指针停在十一点十二分。）
+          effects:
+            evidence: [watch]
+    options:
+      - key: xs_ask_room
+        kind: ask
+        label: 「你推门那一下，屋里是什么样子？别急，一样一样说。」
+        lines:
+          - 冷……舷窗开着一条缝，风往里灌。炭盆还在冒烟，一股烧纸的味儿。
+          - 先生趴在桌子边上，脑袋底下全是血……我就、我就……
+        effects:
+          evidence: [t_smoke]
+      - key: xs_ask_who
+        kind: ask
+        label: 「今晚十一点前后，你在头等舱那边见过谁走动？」
+        lines:
+          - 快十一点的时候，我给头等舱送热水。周太太的门敲了好几下都没人应，门缝里也没有灯。
+          - 别的……别的我就不晓得了，我一直在茶水间烧水。
+        effects:
+          evidence: [t_zhou_absent]
+      - key: xs_press
+        kind: press
+        label: 「偷了东西还嘴硬？在上海，偷死人的东西要判几年，你知道吗？」
+        requires:
+          unbroken: [xs_untouched]
+        lines:
+          - （他整个人缩成一团，哭得说不出整话）我没有……我没有……我没有……
+        effects:
+          patience: -2
+      - key: xs_comfort
+        kind: comfort
+        label: 「小顺，沈先生的表链是空的。我知道你娘病着——你说实话，我保你不进巡捕房。」
+        requires:
+          evidence: [watch_chain]
+          unbroken: [xs_untouched]
+        lines:
+          - （他愣愣地看着你，眼泪一下子涌了出来）……林医生，您说话算数？
+        effects:
+          breaks: [xs_untouched]
+          flags: [promised_xiaoshun]
+    wrong_present:
+      - （他茫然地看着你手里的东西）这……这跟我有啥关系？我不晓得……
+      - 林医生，我真的不晓得这是啥……
+    silent_line: （小顺把脸埋进胳膊里，不管你说什么，他都只是摇头。）
+
+  - key: zhou
+    name: 周韵琴
+    role: 头等舱乘客 · 三十四岁
+    description: 汉口周记绸布庄的寡妇，独自去上海。一身素色旗袍，唇上抹着少见的玫瑰紫。说话客客气气，眼睛却总躲着人。
+    voice: 措辞体面，带一点旧式人家的客气；被逼急了会冷下来，用「您」把人推远。
+    patience: 3
+    intro: 林医生。深更半夜的，船上出了人命，我一个寡妇人家，能知道些什么。
+    statements:
+      - key: zy_home
+        text: 我十点就回舱歇下了，一夜没出过门。
+        initial: true
+        lie: true
+        contradicted_by: [two_cups, t_zhou_absent]
+        on_break:
+          lines:
+            - （她盯着你看了很久，终于把手里绞着的帕子放下。）
+            - ……是，我去过账房。十点五十去的，待了不到一刻钟。
+            - 我没说，是怕人家问我深更半夜去找一个男人做什么。
+          effects:
+            statements: [zy_alive, zy_corridor]
+            evidence: [t_cane_sound]
+      - key: zy_alive
+        text: 我走的时候，沈先生还好好地坐在桌后，送我到门口。
+      - key: zy_corridor
+        text: 出门时走廊里黑着，迎面过来一个人，看不清脸。只听见「笃、笃」两声，像手杖点在甲板上，还有一股雪茄味。
+    options:
+      - key: zy_ask_noise
+        kind: ask
+        label: 「您的舱房离账房不远。夜里听见什么动静没有？」
+        requires:
+          unbroken: [zy_home]
+        lines:
+          - 睡着了，什么也没听见。
+          - （她回答得太快了。手指在帕子上绞了一下。）
+      - key: zy_press_ticket
+        kind: press
+        label: 「周太太，沈先生的保险柜里有一张借据，落款是您的名字。要我当着船长的面念出来吗？」
+        requires:
+          evidence: [pawn_ticket]
+          unbroken: [zy_home]
+        lines:
+          - （她的脸一下子白了，声音压得极低）……别念。我说。
+        effects:
+          breaks: [zy_home]
+          patience: -1
+          flags: [exposed_zhou]
+      - key: zy_ask_reason
+        kind: ask
+        label: 「您深夜去找沈先生，是为了押在他那儿的东西？」
+        requires:
+          broken: [zy_home]
+        lines:
+          - 为了我那对镯子。我想求他宽限到开春。
+          - 他答应了，还给我倒了杯茶。（她低下头）他是个好人，就是脾气直。
+        effects:
+          evidence: [t_zhou_reason]
+      - key: zy_ask_busy
+        kind: ask
+        label: 「您进门的时候，沈先生在忙什么？」
+        requires:
+          broken: [zy_home]
+        lines:
+          - 他在对一本账，翻过来翻过去，嘴里一直念「三百包、三百包」。
+          - 看见我进来，他就把账本合上了，像是不想让人看见。
+        effects:
+          evidence: [t_300]
+    wrong_present:
+      - 林医生，您拿这个给我看，是什么意思？
+      - 我说过了，我一夜没出门。您要是没有别的事——
+    silent_line: （周太太把舱门关上了。门里传来她冷冷的一句：「林医生，请回吧。」）
+
+  - key: han
+    name: 韩振
+    role: 二副 · 四十一岁
+    description: 山东人，跑船二十年。今夜十点到两点在驾驶台值班。手上全是老茧，靴底沾着黑乎乎的油泥。
+    voice: 说话短，句句带刺，不爱解释；一着急就是山东口音。
+    patience: 3
+    intro: 林医生，查案子是巡捕房的事。我还得回驾驶台看着。
+    statements:
+      - key: hz_bridge
+        text: 十点到两点，我一直在驾驶台，一步没离开。舵工老马能作证。
+        initial: true
+        lie: true
+        contradicted_by: [log_hand]
+        on_break:
+          lines:
+            - （他看了一眼日志上老马那几行歪歪扭扭的字，骂了一句粗话。）
+            - ……行。我下了一趟货舱。十一点出头走的，二十分就回来了。
+          effects:
+            statements: [hz_hold]
+      - key: hz_hold
+        text: 我下货舱是去查绑扎。雾天船晃，货松了要出人命。
+        lie: true
+        contradicted_by: [opium]
+        on_break:
+          lines:
+            - （他一把攥住你的胳膊，又松开，额头上全是汗。）
+            - 林医生……我一家老小指着这个。人不是我杀的，我对天发誓。你要查人命，我知道的都告诉你。
+          effects:
+            flags: [exposed_han]
+    options:
+      - key: hz_ask_shen
+        kind: ask
+        label: 「你跟沈先生熟吗？他这几天找过你没有？」
+        lines:
+          - 他管账，我管船，井水不犯河水。
+          - 不过……前天他来找我，问生丝在汉口过磅那天，是谁在舱口盯着。我说是宋老板自己带来的人。他听完就走了，脸色不大好。
+        effects:
+          evidence: [t_weighing]
+      - key: hz_bluff_ma
+        kind: bluff
+        label: 「老马已经都跟我说了——十一点出头，你不在驾驶台。」
+        requires:
+          unbroken: [hz_bridge]
+        lines:
+          - （他的脸色变了变）……老马这张嘴。
+        effects:
+          breaks: [hz_bridge]
+        gamble:
+          chance: 0.5
+          failure_lines:
+            - 老马？他斗大的字不识一筐，见了生人话都说不利索，能跟你说什么？
+            - 林医生，你诈我。
+          failure_patience: -2
+      - key: hz_ask_seen
+        kind: ask
+        label: 「你从货舱回驾驶台，要经过账房那条过道。路上看见谁了？」
+        requires:
+          broken: [hz_bridge]
+        lines:
+          - （他犹豫了一会儿，往四周看了看）
+          - 十一点一刻光景，宋老板从账房那头过来。手杖没拄，夹在胳肢窝底下，右边袖子湿了一大截。
+          - 他看见我，点了点头。我也点了点头。谁也没问谁。
+        effects:
+          evidence: [t_song_seen]
+      - key: hz_press_opium
+        kind: press
+        label: 「货舱最里头那四只『五金』箱子，箱盖上粉笔写着你的姓。要我请船长下去看看吗？」
+        requires:
+          evidence: [opium]
+          unbroken: [hz_bridge]
+        lines:
+          - （他的手在发抖）……别。我说实话。十一点出头我不在驾驶台，我下货舱了。
+        effects:
+          breaks: [hz_bridge]
+          flags: [exposed_han]
+          patience: -1
+    wrong_present:
+      - 这玩意儿说明得了什么？
+      - 林医生，我的时间也金贵，别拿这些糊弄我。
+    silent_line: （韩振背过身去，对着舵轮一言不发。你说什么，他都当没听见。）
+
+  - key: song
+    name: 宋伯庸
+    role: 丝绸商人 · 五十二岁
+    description: 上海宋记丝行的老板，货舱里那三百包生丝都是他的。灰呢长衫外罩马褂，拄一根银头手杖，嘴里总叼着一支金鹰牌吕宋雪茄。逢人先笑。
+    voice: 圆滑，客气，爱用生意人的口吻打比方；被戳到痛处会先笑，再把话题往别人身上推。
+    patience: 4
+    intro: 林医生，久仰。出了这种事，船上人人自危，我能帮的一定帮。（他笑着吐了口烟）
+    statements:
+      - key: sb_cards
+        text: 我整晚都在餐厅打牌，十一点半才散，回舱就睡了。
+        initial: true
+        lie: true
+        contradicted_by: [score_sheet]
+        on_break:
+          lines:
+            - （他看了一眼计分纸，笑了，把雪茄从嘴里拿下来。）
+            - 牌打闷了，出去透了口气——林医生，这也犯法？
+          effects:
+            statements: [sb_deck]
+      - key: sb_deck
+        text: 我就在甲板上抽了支雪茄，吹了一刻钟的风，没去过账房。
+        lie: true
+        contradicted_by: [cigar_ash, t_cane_sound]
+        on_break:
+          lines:
+            - （他盯着你手里的东西，脸上的笑一点一点收了回去。）
+            - ……我去过账房。生意上的事，跟沈先生谈了几句。
+          effects:
+            statements: [sb_left]
+      - key: sb_left
+        text: 十一点前我就走了，走的时候他好好的，还送我到门口。
+        lie: true
+        contradicted_by: [t_song_seen, score_sheet]
+        on_break:
+          lines:
+            - （他把手杖往地上重重一顿——笃。屋里的人都听见了。）
+            - 林医生，你一个看病的，懂什么叫生意？我累了。有话，跟我的律师说。
+            - （那只手杖的银头就在你眼前：一寸来宽的圆头，刻满了缠枝花纹。）
+          effects:
+            evidence: [cane]
+            flags: [song_cornered]
+            silence: true
+    options:
+      - key: sb_ask_buyer
+        kind: ask
+        label: 「宋老板这三百包生丝，到了上海交给谁？」
+        lines:
+          - 怡和洋行早定下了，码头上当场过磅，当场交割。
+          - （他吐了口烟）林医生对生意也有兴趣？
+        effects:
+          evidence: [t_song_buyer]
+      - key: sb_ask_cane
+        kind: ask
+        label: 「宋老板这根手杖做工真好，能借我看看吗？」
+        lines:
+          - （他把手杖往身后一收，笑容不变）家父留下的东西，不便给外人碰。
+          - （你还是看清了：银质的圆头，一寸来宽，刻满了缠枝花纹。）
+        effects:
+          evidence: [cane]
+      - key: sb_ask_sleeve
+        kind: ask
+        label: 「宋老板，您右边的袖子怎么湿了？」
+        requires:
+          evidence: [t_song_seen]
+        lines:
+          - 甲板上起雾，谁的袖子不湿？
+          - （他把右手往袖笼里缩了缩。可你已经看见了：右袖口比左边颜色深，拧过水的褶子还在，褶缝里透着一丝淡红。）
+        effects:
+          evidence: [wet_sleeve]
+      - key: sb_press_cotton
+        kind: press
+        label: 「宋老板，到了码头过磅之前，要不要先拆一包给怡和的人看看？」
+        requires:
+          evidence: [cotton]
+        lines:
+          - （雪茄从他指间掉在地上。）
+          - ……沈墨卿那个死脑筋！
+          - （他立刻闭上嘴，弯腰去捡雪茄。再直起身时，脸上又挂上了笑。）
+        effects:
+          evidence: [t_song_slip]
+          patience: -1
+      - key: sb_bluff_han
+        kind: bluff
+        label: 「韩二副说了——十一点一刻，他看见你从账房那头出来。」
+        requires:
+          broken: [sb_cards]
+          unbroken: [sb_deck]
+          lacks_evidence: [t_song_seen]
+        lines:
+          - （他沉默了好一阵，忽然笑了一声）……韩振那个山东佬。好，我是去过账房。
+        effects:
+          breaks: [sb_deck]
+        gamble:
+          chance: 0.45
+          failure_lines:
+            - 韩振？十一点他在驾驶台值班，全船都知道。
+            - （他笑着摇头）林医生，诈人也要先打个草稿。
+          failure_patience: -2
+      - key: sb_press_blind
+        kind: press
+        label: 「宋老板，明人不说暗话——人是不是你杀的？」
+        lines:
+          - （他哈哈大笑，笑得雪茄灰都抖落了）林医生，这话可要讲证据。
+        effects:
+          patience: -1
+    wrong_present:
+      - （他笑着摇头）林医生，这东西跟我有什么相干？
+      - 你一个看病的，学人家断案，可别断到我头上来。
+    silent_line: （宋伯庸闭着眼靠在椅背上，手搭在手杖的银头上。「等我的律师。」他只说这一句。）
+
+  - key: captain
+    name: 冯德昌
+    role: 船长 · 五十八岁
+    description: 白鹭号开了十五年。他不想出事，更不想冤枉人。是他把这件案子交到你手里的。
+    voice: 老派、沉稳，话不多，偶尔叹气。
+    suspect: false
+    patience: 5
+    intro: 林医生，问吧。我知道的都告诉你。
+    options:
+      - key: fd_ask_shen
+        kind: ask
+        label: 「沈先生这几天，有什么不对劲的地方吗？」
+        lines:
+          - 他这两天老对着货单发愣，半夜还在账房点灯。
+          - 前天他跟我说了一句：「这批货要是出了事，保险行要哭。」我当他说笑。
+        effects:
+          evidence: [t_captain]
+      - key: fd_ask_insurance
+        kind: ask
+        label: 「宋老板那批货保了四万块，比市价高出一截。您知道吗？」
+        requires:
+          evidence: [insurance]
+        lines:
+          - 知道。保险行的人在汉口上船看过，按生丝的价保的。
+          - （他压低了声音）要是货在路上出点什么事——比方说受潮、落水——四万块就落进宋老板口袋里了。
+    wrong_present:
+      - 林医生，这个我看不明白。你直说吧。
+    silent_line: （船长摆摆手）去问别人吧，林医生，时间不多了。
+
+locations:
+  - key: office
+    name: 账房 · 案发现场
+    description: 一间六尺见方的小屋。一张桌子、一只保险柜、一个炭盆、一扇舷窗。沈先生仍倒在桌边，船长让人原样守着。
+    spots:
+      - key: body
+        label: 检查尸体的伤口
+        narration: 你跪下去，拨开沈先生后脑沾了血的头发。
+        effects:
+          evidence: [wound]
+      - key: pockets
+        label: 翻看死者身上的东西
+        narration: 你解开沈先生的马甲。他身上东西不多，一支自来水笔、一串钥匙扣——钥匙扣是空的。
+        effects:
+          evidence: [watch_chain]
+      - key: desk
+        label: 查看办公桌
+        narration: 桌上的总账不见了，铜镇纸方方正正地压着几张货单，干干净净，没有一点血。
+        effects:
+          evidence: [two_cups]
+      - key: safe
+        label: 检查打开的保险柜
+        narration: 保险柜的门半开着。你蹲下去，一样一样地往外看。
+        effects:
+          evidence: [ledger_torn, insurance]
+      - key: safe_drawer
+        label: 摸一摸保险柜里的暗格
+        requires:
+          examined: [safe]
+        narration: 保险柜底板有一块是活的。你用指甲把它撬起来。
+        effects:
+          evidence: [pawn_ticket]
+      - key: brazier
+        label: 拨开炭盆里的灰
+        narration: 炭盆已经凉了大半。铁火钳挂在盆沿上，钳头扁平，干干净净。你用火钳拨开最上面一层灰。
+        effects:
+          evidence: [burnt_scrap]
+      - key: floor
+        label: 蹲下看看门后的地板
+        narration: 门后背光的地方，你差点漏看。
+        effects:
+          evidence: [cigar_ash]
+  - key: saloon
+    name: 头等舱餐厅
+    description: 牌桌还没收，烟灰缸堆得满满的。几位牌友被请回了舱房。
+    spots:
+      - key: cards
+        label: 看看牌桌上的计分纸
+        narration: 计分纸压在一只茶杯底下，用铅笔记得密密麻麻。你顺手叫来一位还没睡的牌友，问了几句。
+        effects:
+          evidence: [score_sheet]
+  - key: bridge
+    name: 驾驶台
+    description: 舵工老马把着舵，雾灯一明一暗。航海日志摊在海图桌上。
+    spots:
+      - key: log
+        label: 翻看今夜的航海日志
+        narration: 日志每十分钟记一次航向和水深。你一页一页往回翻。
+        effects:
+          evidence: [log_hand]
+  - key: hold
+    name: 货舱
+    description: 又冷又潮。三百包生丝一直码到舱顶，最里头堆着些杂货。
+    spots:
+      - key: crates
+        label: 到货舱最里头看看
+        narration: 你提着马灯，从生丝包中间侧身挤过去。
+        effects:
+          evidence: [opium]
+      - key: bales
+        label: 割开一包「生丝」
+        narration: 你借了水手的刀，挑了最底下一包，划开麻布。
+        effects:
+          evidence: [cotton]
+
+evidence:
+  - key: wound
+    name: 致命伤
+    kind: physical
+    description: 后脑偏左一处圆形凹陷，直径一寸左右。伤口边缘压着一圈细密的花纹——是某种雕花的圆头硬物砸出来的。尸体尚温，死亡时间大约在十点半到十一点半之间。
+  - key: watch_chain
+    name: 空表链
+    kind: physical
+    description: 沈先生的马甲上挂着怀表链，末端的搭扣是开着的，表不见了。他那块瑞士怀表，船上人人认得。
+  - key: two_cups
+    name: 两只茶杯
+    kind: physical
+    description: 一只紫砂杯是沈先生惯用的；另一只白瓷杯的杯沿上，留着一抹玫瑰紫的口红印。茶早就凉了。今晚有个女人来过账房。
+  - key: ledger_torn
+    name: 被撕的总账
+    kind: document
+    description: 保险柜没有撬痕，钥匙还插在锁上——是沈先生腰间那一把。钱匣里两百多块大洋原封未动。总账却被撕掉了一页：第四十七页，撕口很新。
+  - key: insurance
+    name: 保险单抄件
+    kind: document
+    description: 「宋记丝行，生丝三百包，投保额大洋四万元，受益人宋伯庸。」按市价算，这个保额高出了一大截。
+  - key: pawn_ticket
+    name: 借据
+    kind: document
+    description: 「周韵琴以翡翠镯一对作押，借大洋三百元，民国二十年腊月初三。」那对镯子用红绸包着，还好好地躺在暗格里。
+  - key: burnt_scrap
+    name: 烧剩的纸角
+    kind: physical
+    description: 炭盆里一片没烧尽的账页，纸色和总账一样。还能认出几行字：「……四十七页」「三百包过磅计重……与生丝不符，疑为棉……」
+  - key: cigar_ash
+    name: 雪茄头
+    kind: physical
+    description: 门后地板上一小撮雪茄灰，和一截剪下来的雪茄头。烟标上印着一只金色的鹰。沈先生不抽烟。
+  - key: score_sheet
+    name: 牌桌计分纸
+    kind: document
+    description: 宋伯庸那一栏，从第九局到第十三局是空的，旁边有人用铅笔写着「宋 暂离」。牌友说，第九局开局时刚过十一点；宋老板回来时已经是第十三局，大约十一点二十五。
+  - key: log_hand
+    name: 值班日志
+    kind: document
+    description: 二十三点整和二十三点三十分两条是韩二副的字，工工整整；二十三点十分和二十分两条却歪歪扭扭——是舵工老马的笔迹。老马平时从不记日志。
+  - key: opium
+    name: 「五金」木箱
+    kind: physical
+    description: 货舱最里头，四只钉着「五金」字样的木箱，箱缝里漏出一股甜腻的焦味——是烟土。箱盖上用粉笔画着一个「韩」字。
+  - key: cotton
+    name: 掉包的生丝
+    kind: physical
+    description: 麻包里是成捆的粗棉纱，只有最外面裹了一层生丝。你又割开两包，都一样。
+  - key: watch
+    name: 停走的怀表
+    kind: physical
+    description: 沈先生的瑞士怀表。表蒙子碎了，指针停在十一点十二分——是他倒地时摔停的。
+  - key: t_smoke
+    name: 小顺：炭盆在冒烟
+    kind: testimony
+    description: 十一点四十小顺推门时，炭盆还冒着烟，屋里一股烧纸的味道，舷窗开着一条缝。有人刚在这里烧过东西。
+  - key: t_zhou_absent
+    name: 小顺：周太太不在舱里
+    kind: testimony
+    description: 快十一点时，小顺去头等舱送热水。周太太的舱门敲了几下没人应，门缝里也没有灯。
+  - key: t_cane_sound
+    name: 周韵琴：走廊里的手杖声
+    kind: testimony
+    description: 将近十一点，周太太离开账房时，走廊里迎面过来一个人，看不清脸，只听见「笃、笃」的手杖声，闻到一股雪茄味。那时沈先生还活着。
+  - key: t_zhou_reason
+    name: 周韵琴：沈先生答应宽限
+    kind: testimony
+    description: 周太太是去求沈先生宽限借款的。沈先生答应宽限到开春，还给她倒了杯茶——她没有理由杀他。
+  - key: t_300
+    name: 周韵琴：「三百包」
+    kind: testimony
+    description: 周太太进门时，沈先生正对着一本账翻来覆去，嘴里念着「三百包、三百包」。看见她，便把账本合上了。
+  - key: t_weighing
+    name: 韩振：过磅的人
+    kind: testimony
+    description: 前天沈先生找韩振打听：生丝在汉口过磅那天，是谁在舱口盯着。答案是宋伯庸自己带来的人。
+  - key: t_song_seen
+    name: 韩振：十一点一刻的宋伯庸
+    kind: testimony
+    description: 十一点一刻左右，韩振从货舱回驾驶台，在账房那条过道口看见宋伯庸从账房方向过来：手杖没拄，夹在腋下，右边袖子湿了一大截。
+  - key: t_song_buyer
+    name: 宋伯庸：码头当场过磅
+    kind: testimony
+    description: 宋伯庸说，这批生丝到了上海码头要当场过磅，交割给怡和洋行。棉纱冒充生丝，一上秤就会露馅。
+  - key: cane
+    name: 银头手杖
+    kind: observation
+    description: 宋伯庸的手杖：银质圆头，一寸来宽，刻满缠枝花纹。他不让任何人碰。
+  - key: wet_sleeve
+    name: 湿袖口
+    kind: observation
+    description: 宋伯庸的右袖口比左边颜色深，拧过水的褶子还在，褶缝里透着一丝淡红。
+  - key: t_song_slip
+    name: 宋伯庸失言
+    kind: testimony
+    description: 听到「拆一包给怡和看看」，宋伯庸脱口而出：「沈墨卿那个死脑筋！」——他知道沈先生查过这批货。
+  - key: t_captain
+    name: 船长：沈先生的心事
+    kind: testimony
+    description: 沈先生这几天反复核对生丝货单，半夜还在账房点灯。他对船长说过：「这批货要是出了事，保险行要哭。」
+
+events:
+  - key: song_wants_off
+    at_minutes_left: 100
+    speaker: captain
+    text: （船长差人来传话）宋老板托人问，靠岸以后能不能让头等舱的客人先下船。我说，等林医生的话。
+  - key: lights
+    at_minutes_left: 60
+    text: 汽笛短鸣两声。雾里望见了吴淞口的灯。还有一个钟头。
+  - key: last_half
+    at_minutes_left: 30
+    speaker: captain
+    text: 林医生，半个钟头。巡捕房的汽艇已经在打灯了。再没有更好的答案，小顺我只能交出去。
+  - key: anchor
+    at_minutes_left: 10
+    text: 锚链哗啦啦地放下去。巡捕房的人正顺着舷梯往上走。你只剩最后一点时间。
+
+accusation:
+  culprit: song
+  weapon: cane
+  motive: fraud
+  weapons:
+    - key: paperweight
+      label: 桌上的铜镇纸
+    - key: tongs
+      label: 炭盆边的铁火钳
+    - key: cane
+      label: 宋伯庸的银头手杖
+    - key: wrench
+      label: 货舱里的铁扳手
+  motives:
+    - key: debt
+      label: 为了取回押在账房的东西
+    - key: robbery
+      label: 为了抢保险柜里的钱
+    - key: smuggling
+      label: 怕账房揭发船上的走私
+    - key: fraud
+      label: 生丝掉包骗保，被账房查了出来
+  max_evidence: 6
+  forced_line: 巡捕房的人上船了。船长看着你：「林医生，就是现在。」
+  pillars:
+    - key: opportunity
+      label: 他有时间，也到过现场
+      any_of:
+        - [t_song_seen]
+        - [score_sheet, cigar_ash]
+        - [score_sheet, t_cane_sound]
+      rebuttal: 我整晚都在牌桌上，十几双眼睛看着。你说我去过账房？证据呢？
+      established: 十一点到十一点二十五，他不在牌桌上；而那段时间，他就在账房。
+    - key: means
+      label: 凶器对得上
+      any_of:
+        - [wound, cane]
+        - [wound, wet_sleeve]
+      rebuttal: 凶器呢？你倒是说说，我拿什么杀的他？
+      established: 一寸来宽的圆形凹陷，边缘一圈缠枝花纹——和那根银头手杖分毫不差。
+    - key: motive
+      label: 他有杀人的理由
+      any_of:
+        - [burnt_scrap, insurance]
+        - [cotton, insurance]
+        - [cotton, t_song_slip]
+        - [burnt_scrap, cotton]
+      rebuttal: 我跟沈先生做了十年生意，我为什么要杀他？
+      established: 三百包生丝里装的是棉纱，四万块的保单等着一场「意外」。沈先生把这件事记在了第四十七页上。
+
+endings:
+  truth:
+    title: 雾散
+    text: |
+      你把证据一样一样摆在船长的桌上。宋伯庸看了很久，最后把手杖放在桌上，推到你面前。
+
+      「他要把那一页送到保险行去，」他说，「十年的交情，他一点情面都不讲。」
+
+      那一页账上记着三百包「生丝」的过磅重量——比真生丝轻了整整一成。宋伯庸本打算在长江口让这批货「受潮霉烂」，拿四万块的保险金填他在上海的窟窿。
+
+      巡捕房的人给他戴上了手铐。小顺被放了出来，站在舷梯边上，冲你深深鞠了一躬。
+
+      天快亮了。雾散得干干净净。
+  partial:
+    title: 证据不足
+    text: |
+      你指对了人，但你手上的东西撑不住。
+
+      宋伯庸一条一条地驳回去，最后笑着对巡捕说：「我的律师在码头上等着。」他被带去问话，第二天一早就保释出来了。
+
+      至少，小顺被放了。他站在舷梯边上看着你，不知道该不该道谢。
+  escaped:
+    title: 他笑了
+    text: |
+      你说出了那个名字。宋伯庸却笑了。
+
+      「林医生，」他说，「你拿什么证明？」
+
+      你答不上来。船长叹了口气，对巡捕摆了摆手。宋伯庸第一个走下舷梯，雪茄的烟在晨雾里散开。
+
+      小顺被带走的时候，一直回头看你。
+  wrong:
+    xiaoshun:
+      title: 现成的凶手
+      text: |
+        你说出了小顺的名字。船上的人都松了一口气——这正是他们想听的答案。
+
+        小顺没有喊冤。他只是愣愣地看着你，好像不认识你一样。
+
+        宋伯庸第一个走下舷梯，把雪茄头弹进了江里。
+    zhou:
+      title: 玫瑰紫
+      text: |
+        你说出了周韵琴的名字。她没有辩解，只是把那对翡翠镯摘下来，放在桌上。
+
+        巡捕带走了她。那张借据第二天就传遍了上海。
+
+        宋伯庸第一个走下舷梯，回头冲你点了点头，像是在道谢。
+    han:
+      title: 另一桩罪
+      text: |
+        你说出了韩振的名字。巡捕在货舱里搜出了四箱烟土——这桩罪他认了，杀人的罪他死也不认。
+
+        可巡捕房要的只是一个能结案的人。
+
+        宋伯庸第一个走下舷梯。货舱里那三百包「生丝」，他一包也没让人动过。
+  epilogues:
+    - flag: exposed_zhou
+      unless_culprit: zhou
+      text: 周太太下船时没有看你一眼。借据的事是你当着人逼出来的，她不会忘。
+    - flag: exposed_han
+      unless_culprit: han
+      text: 那四箱烟土，你最后还是告诉了船长。韩振被海关的人带走前，冲你咧了咧嘴，说不清是恨还是认命。
+    - flag: promised_xiaoshun
+      if_culprit: xiaoshun
+      text: 你答应过保他的。
+
+texts:
+  player_name: 林医生
+  list_separator: 、
+  examine: （{location}）{spot}
+  evidence_gained: 获得「{name}」
+  lie_broken: 戳穿：「{statement}」
+  present: 「{quote}」——那你看看这个。（出示「{evidence}」）
+  present_quote_cut: "{text}……"
+  present_failed: 「{evidence}」驳不倒这句话。
+  bluff_failed: 诈被识破了。
+  patience_lost: "{name}的耐心 {delta}"
+  accuse: 凶手是{culprit}。凶器是{weapon}，动机是：{motive}。我的证据——{exhibits}。
+  accuse_nothing: 什么也没有
+  hint_breakable: 你翻着笔记，停在{name}那句话上：「{statement}」——证据夹里，好像有一样东西跟这句话对不上。
+  hint_spot: "{name}说「{statement}」。你不太信——也许该去{location}再仔细看看。"
+  hint_person: "{name}说「{statement}」。能拆穿这句话的人，也许是{other}。"
+  hint_unmet: 还有人你没见过：{names}。每个人都有自己的说法。
+  hint_ready: 你把证据摊开排了一遍。时间、凶器、动机——也许已经够了。指认之前想清楚：每一点，你拿哪件东西去撑？
+  hint_unseen: 还有地方没看完：{locations}。
+  hint_exhausted: 能问的都问过了。剩下的，要靠你把手上的东西拼起来。

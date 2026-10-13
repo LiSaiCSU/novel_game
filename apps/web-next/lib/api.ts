@@ -51,6 +51,23 @@ const apiMessages: Record<string, string> = {
   "assigned operator is not active": "所选处理人员当前不可用。",
   "assigned operator must be an administrator": "处理人员必须是管理员。",
   "notification not found": "没有找到这条通知，或当前账号无权查看。",
+  "case run not found": "没有找到这份案卷，或当前账号无权查看。",
+  "case not found": "这件案子已经下架。",
+  "case has not begun": "请先读完案情。",
+  "time is up; only an accusation remains": "时间到了，你只能指认。",
+  "already examined": "这里已经看过了。",
+  "option is not available": "这句话现在问不了。",
+  "statement is not open to challenge": "这句话已经不能再反驳了。",
+  "character will not talk": "对方已经不再开口了。",
+  "evidence is not in hand": "证据夹里没有这件东西。",
+  "case is closed": "这件案子已经结案。",
+  "too many exhibits": "出示的证据太多了。",
+  "free questions are only possible during the investigation": "现在不能自由提问。",
+  "the character could not answer right now":
+    "对方一时没答上来（模型暂时不可用）。这次不算时间，换个说法，或先用选项。",
+  "no model is configured": "自由提问需要平台模型，目前未配置。请先使用选项。",
+  "platform inference quota exhausted": "今天的 AI 额度已用完，请先使用选项。",
+  "the character had nothing to say": "对方没听明白。这次不算时间，换个说法试试。",
   // Creator studio failures are addressed by code, because the server sends
   // an English operator message that a writer should never have to read.
   document_invalid: "草稿还有字段不符合要求，请按下方提示修改后会自动重新保存。",
@@ -85,7 +102,12 @@ export function documentProblems(error: unknown): DocumentProblem[] {
   if (!Array.isArray(raw)) return [];
   return raw.flatMap((item) =>
     item && typeof item === "object" && typeof (item as DocumentProblem).field === "string"
-      ? [{ field: String((item as DocumentProblem).field), message: String((item as DocumentProblem).message ?? "") }]
+      ? [
+          {
+            field: String((item as DocumentProblem).field),
+            message: String((item as DocumentProblem).message ?? ""),
+          },
+        ]
       : [],
   );
 }
